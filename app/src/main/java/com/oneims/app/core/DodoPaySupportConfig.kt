@@ -8,20 +8,13 @@ package com.oneims.app.core
  */
 object DodoPaySupportConfig {
     /**
-     * 公开支付页模板。可为完整 URL，也可带 query 占位。
-     * - 官方 Dodo Payments Checkout（`*.dodopayments.com`）：原样打开，不追加 proof 参数。
-     * - 自建 proof 结账页：客户端会追加 amount / client_ref / return_url 等公开参数。
-     *
-     * 当前为 Test Mode 链接；Live 审核通过后请换成正式 `checkout.dodopayments.com` 链接。
+     * 公开支付页模板。当前改回本地微信赞助码页，留空即可。
      */
-    const val SUPPORT_URL_TEMPLATE: String =
-        "https://test.checkout.dodopayments.com/buy/pdt_0Nj5PdEVXI4wD8vxMrKQ0?quantity=1"
+    const val SUPPORT_URL_TEMPLATE: String = ""
 
     /**
      * 公开 proof 验证基址（不含 path）。最终请求：
      * `{BASE}/api/public/payment-proofs/{payment_proof}`
-     *
-     * 官方 Dodo Checkout 暂不走此接口；留空则 App 只打开结账，不自动校验解锁。
      */
     const val PROOF_VERIFY_BASE_URL: String = ""
 

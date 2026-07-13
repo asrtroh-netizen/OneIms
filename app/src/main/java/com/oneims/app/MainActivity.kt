@@ -1334,8 +1334,6 @@ private fun AppRoot(
 
                 AppDestination.SPONSOR -> SponsorScreen(
                     onPublish = ::publish,
-                    pendingPaymentProof = pendingSupportProof,
-                    onPendingPaymentProofConsumed = { pendingSupportProof = null },
                 )
 
                 AppDestination.SETTINGS -> SettingsScreen(
