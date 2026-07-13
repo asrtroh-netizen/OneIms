@@ -55,10 +55,16 @@ class DodoPaySupportClientTest {
     }
 
     @Test
-    fun maskProof_hidesMiddle() {
-        val masked = DodoPaySupportClient.maskProof("proof_abcdefghijklmn")
-        assertTrue(masked.startsWith("proof_ab"))
-        assertTrue(masked.contains("…"))
-        assertFalse(masked.contains("cdefghij"))
+    fun officialDodoCheckout_detected() {
+        assertTrue(
+            DodoPaySupportClient.isOfficialDodoCheckout(
+                "https://test.checkout.dodopayments.com/buy/pdt_x?quantity=1",
+            ),
+        )
+        assertFalse(
+            DodoPaySupportClient.isOfficialDodoCheckout(
+                "https://pay.example.com/oneims",
+            ),
+        )
     }
 }

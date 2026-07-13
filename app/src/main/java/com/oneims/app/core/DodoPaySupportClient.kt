@@ -100,6 +100,10 @@ object DodoPaySupportClient {
     ): String? {
         val template = DodoPaySupportConfig.SUPPORT_URL_TEMPLATE.trim()
         if (template.isEmpty()) return null
+        // 官方 Dodo Payment Link 价格与结账参数由商户后台固定；追加 CarrierIMS 风格 query 可能干扰结账。
+        if (isOfficialDodoCheckout(template)) {
+            return template
+        }
         val base = Uri.parse(template)
         val builder = base.buildUpon()
         fun put(key: String, value: String) {
@@ -116,6 +120,15 @@ object DodoPaySupportClient {
         put("proof_key", DodoPaySupportConfig.PROOF_KEY)
         put("return_url", DodoPaySupportConfig.CALLBACK_URI)
         return builder.build().toString()
+    }
+
+    fun isOfficialDodoCheckout(url: String): Boolean {
+        val trimmed = url.trim().lowercase(Locale.US)
+        if (trimmed.isEmpty()) return false
+        // 纯字符串判断：JVM 单测里 android.net.Uri 是 stub，不能依赖 host 解析。
+        return trimmed.contains("://checkout.dodopayments.com/") ||
+            trimmed.contains("://test.checkout.dodopayments.com/") ||
+            trimmed.contains("://live.checkout.dodopayments.com/")
     }
 
     fun openCheckout(context: Context, url: String): Boolean {
