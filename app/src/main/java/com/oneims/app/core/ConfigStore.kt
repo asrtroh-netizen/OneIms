@@ -353,16 +353,12 @@ object ConfigStore {
     }
 
     /**
-     * 信号格显示样式（独家页）。
-     * AUTO = 跟随系统；FOUR/FIVE 分别写入不 inflate / inflate 的差分预设。
+     * 信号格显示样式（独家页）。AUTO / 四格 / 五格，与能力页「信号阈值」开关彼此独立。
      */
     enum class SignalBarDisplayMode {
         AUTO,
         FOUR_BARS,
         FIVE_BARS;
-
-        val adjustmentEnabled: Boolean
-            get() = this != AUTO
 
         companion object {
             fun fromStored(value: String?): SignalBarDisplayMode =
@@ -377,6 +373,7 @@ object ConfigStore {
         stored.getString(modeKey, null)?.let { value ->
             return SignalBarDisplayMode.fromStored(value)
         }
+        // 旧版曾用布尔开关兼作样式；仅在样式 key 缺失时迁移一次，不回写布尔。
         val legacyBoolKey = "${KEY_SIGNAL_STRENGTH_ADJUSTMENT}_$subId"
         if (stored.contains(legacyBoolKey)) {
             return if (stored.getBoolean(legacyBoolKey, false)) {
@@ -385,7 +382,6 @@ object ConfigStore {
                 SignalBarDisplayMode.AUTO
             }
         }
-        // 从旧版全局“固定 5 格”迁移一次。
         return if (
             subId == getSelectedSubId(context) &&
             stored.getString(LEGACY_KEY_SIGNAL_BAR_MODE, null) == "FIVE_BARS"
@@ -401,32 +397,34 @@ object ConfigStore {
         require(subId >= 0) { "Invalid subscription id: $subId" }
         val saved = prefs(context).edit()
             .putString("${KEY_SIGNAL_BAR_DISPLAY_MODE}_$subId", mode.name)
-            .putBoolean(
-                "${KEY_SIGNAL_STRENGTH_ADJUSTMENT}_$subId",
-                mode.adjustmentEnabled,
-            )
             .remove(LEGACY_KEY_SIGNAL_BAR_MODE)
             .commit()
         check(saved) { "Failed to persist signal-bar display mode" }
     }
 
-    /** 中国大陆 5G 信号等级阈值开关；由 [signalBarDisplayMode] 派生。 */
-    fun signalStrengthAdjustmentEnabled(context: Context, subId: Int): Boolean =
-        signalBarDisplayMode(context, subId).adjustmentEnabled
+    /**
+     * 能力页「5G 信号强度/阈值调整」开关。独立存储，不再由独家页格子模式派生。
+     */
+    fun signalStrengthAdjustmentEnabled(context: Context, subId: Int): Boolean {
+        if (subId < 0) return false
+        val stored = prefs(context)
+        val key = "${KEY_SIGNAL_STRENGTH_ADJUSTMENT}_$subId"
+        if (stored.contains(key)) {
+            return stored.getBoolean(key, false)
+        }
+        // 旧版串写：样式非 AUTO 即视为开启阈值；迁移后写入独立布尔，避免继续耦合。
+        val legacyEnabled = signalBarDisplayMode(context, subId) != SignalBarDisplayMode.AUTO
+        setSignalStrengthAdjustmentEnabled(context, subId, legacyEnabled)
+        return legacyEnabled
+    }
 
     @SuppressLint("ApplySharedPref")
     fun setSignalStrengthAdjustmentEnabled(context: Context, subId: Int, enabled: Boolean) {
-        val current = signalBarDisplayMode(context, subId)
-        setSignalBarDisplayMode(
-            context,
-            subId,
-            when {
-                !enabled -> SignalBarDisplayMode.AUTO
-                // 保留已选的 4 格，避免能力页布尔开关把 FOUR 冲成 FIVE。
-                current == SignalBarDisplayMode.FOUR_BARS -> SignalBarDisplayMode.FOUR_BARS
-                else -> SignalBarDisplayMode.FIVE_BARS
-            },
-        )
+        require(subId >= 0) { "Invalid subscription id: $subId" }
+        val saved = prefs(context).edit()
+            .putBoolean("${KEY_SIGNAL_STRENGTH_ADJUSTMENT}_$subId", enabled)
+            .commit()
+        check(saved) { "Failed to persist signal-strength adjustment preference" }
     }
 
     /**

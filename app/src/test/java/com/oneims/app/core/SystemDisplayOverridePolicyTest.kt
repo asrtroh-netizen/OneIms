@@ -244,4 +244,61 @@ class SystemDisplayOverridePolicyTest {
         )
         assertNull(signalBarSystemPreset(ConfigStore.SignalBarDisplayMode.AUTO))
     }
+
+    @Test
+    fun composeIndependent_bothOffReturnsNull() {
+        assertNull(
+            composeIndependentSignalPreset(
+                baseline = fourBarSignalPreset(),
+                adjustmentEnabled = false,
+                barMode = ConfigStore.SignalBarDisplayMode.AUTO,
+            ),
+        )
+    }
+
+    @Test
+    fun composeIndependent_adjustmentDoesNotForceFiveBars() {
+        val baseline = fourBarSignalPreset()
+        val composed = checkNotNull(
+            composeIndependentSignalPreset(
+                baseline = baseline,
+                adjustmentEnabled = true,
+                barMode = ConfigStore.SignalBarDisplayMode.AUTO,
+            ),
+        )
+        assertFalse(composed.inflateSignalStrength)
+        assertTrue(
+            composed.nrSsrsrpThresholds.contentEquals(fiveBarSignalPreset().nrSsrsrpThresholds),
+        )
+    }
+
+    @Test
+    fun composeIndependent_fiveBarsKeepsBaselineThresholdsWhenAdjustmentOff() {
+        val baseline = fourBarSignalPreset()
+        val composed = checkNotNull(
+            composeIndependentSignalPreset(
+                baseline = baseline,
+                adjustmentEnabled = false,
+                barMode = ConfigStore.SignalBarDisplayMode.FIVE_BARS,
+            ),
+        )
+        assertTrue(composed.inflateSignalStrength)
+        assertTrue(composed.nrSsrsrpThresholds.contentEquals(baseline.nrSsrsrpThresholds))
+    }
+
+    @Test
+    fun composeIndependent_bothOnMixesInflateAndSoftThresholds() {
+        val baseline = fourBarSignalPreset()
+        val composed = checkNotNull(
+            composeIndependentSignalPreset(
+                baseline = baseline,
+                adjustmentEnabled = true,
+                barMode = ConfigStore.SignalBarDisplayMode.FOUR_BARS,
+            ),
+        )
+        assertFalse(composed.inflateSignalStrength)
+        assertTrue(
+            composed.nrSsrsrpThresholds.contentEquals(fiveBarSignalPreset().nrSsrsrpThresholds),
+        )
+    }
 }

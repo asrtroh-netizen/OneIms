@@ -43,7 +43,8 @@ internal fun fiveBarSignalPreset() = SignalBarSystemPreset(
 )
 
 /**
- * 按独家页模式解析系统预设；AUTO 返回 null（恢复基线）。
+ * 按独家页模式解析「格子」相关预设；AUTO 返回 null。
+ * 阈值与格子已解耦，组合写入请用 [composeIndependentSignalPreset]。
  */
 internal fun signalBarSystemPreset(
     mode: ConfigStore.SignalBarDisplayMode,
@@ -53,7 +54,43 @@ internal fun signalBarSystemPreset(
     ConfigStore.SignalBarDisplayMode.FIVE_BARS -> fiveBarSignalPreset()
 }
 
-/** 能力页「信号强度调整」开启时走 5 格完整预设（含 inflate）。 */
+/**
+ * 能力页阈值开关 × 独家页格子模式 → 一次 CarrierConfig 写入。
+ * 两侧偏好独立：关阈值时阈值回基线，格子仍可生效；格子 AUTO 时 inflate 回基线，阈值仍可生效；
+ * 两侧都关返回 null，调用方应恢复基线。
+ */
+internal fun composeIndependentSignalPreset(
+    baseline: SignalBarSystemPreset,
+    adjustmentEnabled: Boolean,
+    barMode: ConfigStore.SignalBarDisplayMode,
+): SignalBarSystemPreset? {
+    if (!adjustmentEnabled && barMode == ConfigStore.SignalBarDisplayMode.AUTO) {
+        return null
+    }
+    val softThresholds = fiveBarSignalPreset()
+    val barPreset = signalBarSystemPreset(barMode)
+    return SignalBarSystemPreset(
+        inflateSignalStrength = when (barMode) {
+            ConfigStore.SignalBarDisplayMode.AUTO -> baseline.inflateSignalStrength
+            ConfigStore.SignalBarDisplayMode.FOUR_BARS -> false
+            ConfigStore.SignalBarDisplayMode.FIVE_BARS -> true
+        },
+        nrSsrsrpThresholds = if (adjustmentEnabled) {
+            softThresholds.nrSsrsrpThresholds.copyOf()
+        } else {
+            baseline.nrSsrsrpThresholds.copyOf()
+        },
+        lteRsrpThresholds = if (adjustmentEnabled) {
+            softThresholds.lteRsrpThresholds.copyOf()
+        } else {
+            baseline.lteRsrpThresholds.copyOf()
+        },
+        parametersUseForNrSignalBar = barPreset?.parametersUseForNrSignalBar
+            ?: baseline.parametersUseForNrSignalBar,
+    )
+}
+
+/** 能力页「信号强度调整」开启时的软阈值参考（不再捆绑格子数）。 */
 internal fun carrierImsSignalStrengthPreset() = fiveBarSignalPreset()
 
 /** @deprecated 旧名保留；现与 [fiveBarSignalPreset] 一致。 */
@@ -275,10 +312,57 @@ object SystemDisplayOverrideManager {
         enabled: Boolean,
     ): Boolean {
         requireValidSubId(subId)
-        if (!enabled) {
+        val barMode = ConfigStore.signalBarDisplayMode(context, subId)
+        return applyIndependentSignalPreferences(
+            context = context,
+            subId = subId,
+            adjustmentEnabled = enabled,
+            barMode = barMode,
+        )
+    }
+
+    /**
+     * 按当前两侧偏好组合写入或恢复基线。
+     * @return 是否对系统产生了写入/恢复动作
+     */
+    @Synchronized
+    fun applyIndependentSignalPreferences(
+        context: Context,
+        subId: Int,
+        adjustmentEnabled: Boolean,
+        barMode: ConfigStore.SignalBarDisplayMode,
+    ): Boolean {
+        requireValidSubId(subId)
+        val current = checkNotNull(readCurrentSignalPreset(context, subId)) {
+            "Signal CarrierConfig is unavailable for subId=$subId"
+        }
+        var baseline = readSignalBaseline(context, subId)
+        if (baseline == null) {
+            captureSignalBaseline(context, subId, current)
+            baseline = current.copy()
+        } else {
+            val pending = readSignalPending(context, subId)
+            val confirmed = readSignalConfirmed(context, subId)
+            if (!SystemDisplayOwnershipPolicy.canReapplySignal(
+                    current = current,
+                    baseline = baseline,
+                    pending = pending,
+                    confirmed = confirmed,
+                )
+            ) {
+                clearSignalOwnership(context, subId)
+                error("Signal CarrierConfig changed externally for subId=$subId")
+            }
+        }
+        val composed = composeIndependentSignalPreset(
+            baseline = baseline,
+            adjustmentEnabled = adjustmentEnabled,
+            barMode = barMode,
+        )
+        if (composed == null) {
             return restoreSignalBaseline(context, subId)
         }
-        return applySignalStrengthPreset(context, subId, fiveBarSignalPreset())
+        return applySignalStrengthPreset(context, subId, composed)
     }
 
     @Synchronized
@@ -347,42 +431,28 @@ object SystemDisplayOverrideManager {
     }
 
     /**
-     * @param enabled 是否把信号阈值写入系统（与 5G NR 耦合时由调用方决定）
+     * 能力页「信号阈值」应用入口。只更新阈值偏好，格子模式保持不动。
+     * @param enabled 是否把软阈值写入系统（与 5G NR 耦合时由调用方决定）
      * @param preferenceEnabled 能力页开关偏好；可与 [enabled] 解耦，避免 NR 关闭时误清用户勾选
-     * @param preferenceMode 独家页精确模式；开启写入时按该模式选四/五格预设，避免 FOUR 被冲成 FIVE
      */
     fun applySignalStrengthAdjustment(
         context: Context,
         subId: Int,
         enabled: Boolean,
         preferenceEnabled: Boolean = enabled,
-        preferenceMode: ConfigStore.SignalBarDisplayMode? = null,
     ): String {
         requireValidSubId(subId)
         return runCatching {
-            val modeToPersist = when {
-                !preferenceEnabled -> ConfigStore.SignalBarDisplayMode.AUTO
-                preferenceMode != null && preferenceMode.adjustmentEnabled -> preferenceMode
-                else -> {
-                    val current = ConfigStore.signalBarDisplayMode(context, subId)
-                    if (current == ConfigStore.SignalBarDisplayMode.FOUR_BARS) {
-                        ConfigStore.SignalBarDisplayMode.FOUR_BARS
-                    } else {
-                        ConfigStore.SignalBarDisplayMode.FIVE_BARS
-                    }
-                }
-            }
-            val systemChanged = if (!enabled) {
-                applySignalStrengthConfig(context, subId, enabled = false)
-            } else {
-                val preset = checkNotNull(signalBarSystemPreset(modeToPersist)) {
-                    "Signal bar preset missing for mode=$modeToPersist"
-                }
-                applySignalStrengthPreset(context, subId, preset)
-            }
-            ConfigStore.setSignalBarDisplayMode(context, subId, modeToPersist)
+            ConfigStore.setSignalStrengthAdjustmentEnabled(context, subId, preferenceEnabled)
+            val barMode = ConfigStore.signalBarDisplayMode(context, subId)
+            val systemChanged = applyIndependentSignalPreferences(
+                context = context,
+                subId = subId,
+                adjustmentEnabled = enabled,
+                barMode = barMode,
+            )
             when {
-                !enabled && systemChanged ->
+                !enabled && systemChanged && !preferenceEnabled ->
                     context.getString(R.string.signal_bar_system_restored)
                 !enabled ->
                     context.getString(R.string.signal_bar_local_saved_no_system_override)

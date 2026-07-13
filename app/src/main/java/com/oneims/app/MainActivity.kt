@@ -211,7 +211,9 @@ private fun AppRoot(
     var signalBarDisplayMode by remember {
         mutableStateOf(ConfigStore.signalBarDisplayMode(context, selectedSubId))
     }
-    val signalStrengthAdjustmentEnabled = signalBarDisplayMode.adjustmentEnabled
+    var signalStrengthAdjustmentEnabled by remember {
+        mutableStateOf(ConfigStore.signalStrengthAdjustmentEnabled(context, selectedSubId))
+    }
     var voWifiNameFormatIndex by remember { mutableStateOf<Int?>(null) }
     var voWifiCustomCarrierName by remember { mutableStateOf("") }
     var activeDataSims by remember { mutableStateOf(emptyList<SimCardInfo>()) }
@@ -434,6 +436,8 @@ private fun AppRoot(
     LaunchedEffect(selectedSubId, shizukuGranted) {
         reapplyStatus = ConfigStore.lastReapplyStatus(context)
         signalBarDisplayMode = ConfigStore.signalBarDisplayMode(context, selectedSubId)
+        signalStrengthAdjustmentEnabled =
+            ConfigStore.signalStrengthAdjustmentEnabled(context, selectedSubId)
         if (selectedSubId >= 0 && shizukuGranted) {
             advancedOptions = withContext(Dispatchers.IO) {
                 runCatching {
@@ -644,6 +648,11 @@ private fun AppRoot(
                                                     context,
                                                     targetSubId,
                                                 )
+                                            signalStrengthAdjustmentEnabled =
+                                                ConfigStore.signalStrengthAdjustmentEnabled(
+                                                    context,
+                                                    targetSubId,
+                                                )
                                         },
                                     ) {
                                         SafetyGuard.restoreDefaults(context, targetSubId).message
@@ -738,18 +747,12 @@ private fun AppRoot(
                             persistCapabilityUi()
                         },
                         onSignalStrengthAdjustmentChange = { enabled ->
-                            val nextMode = when {
-                                !enabled -> ConfigStore.SignalBarDisplayMode.AUTO
-                                signalBarDisplayMode == ConfigStore.SignalBarDisplayMode.FOUR_BARS ->
-                                    ConfigStore.SignalBarDisplayMode.FOUR_BARS
-                                else -> ConfigStore.SignalBarDisplayMode.FIVE_BARS
-                            }
-                            signalBarDisplayMode = nextMode
+                            signalStrengthAdjustmentEnabled = enabled
                             if (selectedSubId >= 0) {
-                                ConfigStore.setSignalBarDisplayMode(
+                                ConfigStore.setSignalStrengthAdjustmentEnabled(
                                     context,
                                     selectedSubId,
-                                    nextMode,
+                                    enabled,
                                 )
                             }
                         },
@@ -770,7 +773,6 @@ private fun AppRoot(
                             val targetWfcMode = wfcMode
                             val targetNr5g = nr5g
                             val targetSignal = signalStrengthAdjustmentEnabled
-                            val targetMode = signalBarDisplayMode
                             persistCapabilityUi(targetSubId)
                             runOperation(context.getString(R.string.action_apply_core)) {
                                 val coreResult = ImsController.applyAll(
@@ -784,7 +786,7 @@ private fun AppRoot(
                                 if (!coreResult.success) {
                                     throw IllegalStateException(coreResult.message)
                                 }
-                                // 同区「5G NR + 信号强度」并入一键，避免再单独点【应用 5G】。
+                                // 同区「5G NR + 信号阈值」并入一键；格子样式由独家页独立应用。
                                 val nrResult = ImsController.apply5g(
                                     context,
                                     targetSubId,
@@ -800,7 +802,6 @@ private fun AppRoot(
                                             subId = targetSubId,
                                             enabled = false,
                                             preferenceEnabled = true,
-                                            preferenceMode = targetMode,
                                         )
                                         context.getString(R.string.signal_bar_needs_nr_enabled)
                                     }
@@ -809,7 +810,6 @@ private fun AppRoot(
                                         subId = targetSubId,
                                         enabled = targetSignal && targetNr5g,
                                         preferenceEnabled = targetSignal,
-                                        preferenceMode = targetMode,
                                     )
                                 }
                                 "${coreResult.message}\n${nrResult.message}\n$signalMessage"

@@ -76,6 +76,11 @@ object SafetyGuard {
             ConfigStore.clearAppliedProfiles(context)
             ConfigStore.setFiveGDisplayConfig(context, SimpleFiveGDisplayConfig())
             ConfigStore.setSignalStrengthAdjustmentEnabled(context, subId, false)
+            ConfigStore.setSignalBarDisplayMode(
+                context,
+                subId,
+                ConfigStore.SignalBarDisplayMode.AUTO,
+            )
             displayOwnershipCleanup.getOrThrow()
             ConfigResult(true, context.getString(R.string.msg_restore_ok))
         } catch (e: Throwable) {
