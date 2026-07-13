@@ -116,4 +116,21 @@ Dodo Payments [Merchant Acceptance Policy](https://docs.dodopayments.com/miscell
 
 1. 个人：打开 https://app.dodopayments.com/ 用常用邮箱收 OTP  
 2. Verification → Individual → 按上表填产品信息 → KYC → 本人银行卡  
-3. 通过后建 Payment Link；若要喂进 OneIMS proof 契约，再开一轮对接（勿把 API Key 写进 APK）
+3. **审核中即可**开 Test Mode 建 Payment Link 测流程（见下）  
+4. 审核通过后切 Live，再建/复制产品换正式链接；若要喂进 OneIMS proof 契约，再开一轮对接（勿把 API Key 写进 APK）
+
+---
+
+## Test Mode（测试版怎么搞）
+
+官方：不必等验证完成即可用 Test Mode。
+
+1. 打开 https://app.dodopayments.com/  
+2. 打开 **Test Mode** 开关（与 Live 数据隔离）  
+3. 「创建产品」→ **一次性产品**（名称可用 `OneIMS Supporter Pack (Test)`，价格如 6）  
+4. 用 **无代码结账** 生成 Payment Link 并复制  
+5. 浏览器打开链接，用测试卡（**勿用真卡**）：  
+   - 成功：`4242424242424242`，有效期 `06/32`，CVV `123`  
+   - 失败：`4000000000000002`  
+6. 可选：把测试链接发给开发写入 `SUPPORT_URL_TEMPLATE`，用 OneIMS 测打开浏览器  
+7. Live 通过后：切回 Live → 复制产品到 Live（或重建）→ 换正式链接；测试链接不要留给正式用户  
