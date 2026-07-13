@@ -4,7 +4,7 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
-val oneImsVersionName = "2.0.2"
+val oneImsVersionName = "2.0.3"
 
 android {
     namespace = "com.oneims.app"
@@ -15,7 +15,7 @@ android {
         applicationId = "com.oneims.app"
         minSdk = 31          // Tensor Pixel（Pixel 6 起）最低 Android 12
         targetSdk = 36
-        versionCode = 11
+        versionCode = 12
         versionName = oneImsVersionName
     }
 
@@ -41,6 +41,12 @@ android {
     packaging {
         resources.excludes += "/META-INF/{AL2.0,LGPL2.1}"
     }
+
+    // HiddenApiBypass 会触发 Play 依赖元数据审查；本应用不走商店分发，直接关掉上报。
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
+    }
 }
 
 dependencies {
@@ -58,8 +64,8 @@ dependencies {
     implementation("dev.rikka.shizuku:api:13.1.5")
     implementation("dev.rikka.shizuku:provider:13.1.5")
 
-    // 访问 hidden API（绕过 Android 隐藏 API 反射限制）
-    implementation("org.lsposed.hiddenapibypass:hiddenapibypass:4.3")
+    // 访问 hidden API（绕过 Android 隐藏 API 反射限制；6.x 起明确覆盖 Android 17）
+    implementation("org.lsposed.hiddenapibypass:hiddenapibypass:6.1")
 
     // 协程（IO 线程执行阻塞的 provisioning / 网络自检）
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")

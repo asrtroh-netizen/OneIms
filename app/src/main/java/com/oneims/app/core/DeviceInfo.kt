@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Build
 import android.telephony.SubscriptionManager
+import com.oneims.app.BuildConfig
 import com.oneims.app.R
 
 /**
@@ -47,6 +48,13 @@ object DeviceInfo {
             SystemApiBroker.lastStrategy
         }
         return buildString {
+            append(
+                context.getString(
+                    R.string.dev_app_version,
+                    BuildConfig.VERSION_NAME,
+                    BuildConfig.VERSION_CODE,
+                ),
+            ).append('\n')
             append(context.getString(R.string.dev_model, Build.MANUFACTURER, Build.MODEL)).append('\n')
             append(context.getString(R.string.dev_device, Build.DEVICE)).append('\n')
             append(context.getString(R.string.dev_android, Build.VERSION.RELEASE, Build.VERSION.SDK_INT)).append('\n')

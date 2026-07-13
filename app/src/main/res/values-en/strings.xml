@@ -197,17 +197,18 @@
     <string name="compat_shizuku_off">Not running ❌</string>
     <string name="compat_strategy">④ Bypass strategy: %1$s</string>
     <string name="compat_strategy_delegate">Instrumentation permission proxy supported (patched devices) ✅</string>
-    <string name="compat_strategy_direct">No delegate API, using Shizuku direct ⚠️</string>
+    <string name="compat_strategy_direct">Delegate probe failed; non-root still tries Instrumentation, root uses Shizuku direct ⚠️</string>
     <string name="compat_sim">⑤ Active SIM: %1$d %2$s</string>
     <string name="compat_sim_no">❌ (no SIM detected)</string>
     <string name="compat_conclusion">—— Verdict: %1$s ——</string>
     <string name="compat_advice_full">All features safe to use.</string>
-    <string name="compat_advice_degraded">Usable, but via direct strategy; likely needs re-apply after reboot.</string>
+    <string name="compat_advice_degraded">Degraded: update the hidden-API compat layer and retry; root Shizuku can go direct, non-root still needs Instrumentation.</string>
     <string name="compat_advice_need_shizuku">Start and grant Shizuku first.</string>
     <string name="compat_advice_unsupported">Device does not meet prerequisites; not recommended to avoid impacting calls.</string>
 
     <!-- Device info -->
     <string name="dev_unknown">Unknown</string>
+    <string name="dev_app_version">App version: %1$s (%2$d)</string>
     <string name="dev_model">Model: %1$s %2$s</string>
     <string name="dev_device">Codename: %1$s</string>
     <string name="dev_android">Android: %1$s  (API %2$d)</string>
@@ -218,7 +219,7 @@
     <string name="dev_sim_count">Active SIMs: %1$d</string>
     <string name="dev_delegate">Instrumentation permission proxy: %1$s</string>
     <string name="dev_delegate_yes">Supported (new-patch compatible)</string>
-    <string name="dev_delegate_no">Unsupported (Shizuku direct)</string>
+    <string name="dev_delegate_no">Probe failed (non-root still tries Instrumentation)</string>
     <string name="dev_last_strategy">Last write strategy: %1$s</string>
     <string name="strategy_unused">Unused</string>
 

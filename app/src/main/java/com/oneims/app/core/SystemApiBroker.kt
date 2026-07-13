@@ -81,14 +81,6 @@ object SystemApiBroker {
 
     private fun resolveStartDelegateMethod(): java.lang.reflect.Method {
         val iface = activityManagerInterface()
-        val byExact = runCatching {
-            iface.getMethod(
-                "startDelegateShellPermissionIdentity",
-                Int::class.javaPrimitiveType,
-                Array<String>::class.java,
-            )
-        }.getOrNull()
-        if (byExact != null) return byExact
         val byBypass = runCatching {
             HiddenApiBypass.getDeclaredMethod(
                 iface,
@@ -98,11 +90,19 @@ object SystemApiBroker {
             )
         }.getOrNull()
         if (byBypass != null) return byBypass
+        val byExact = runCatching {
+            iface.getMethod(
+                "startDelegateShellPermissionIdentity",
+                Int::class.javaPrimitiveType,
+                Array<String>::class.java,
+            )
+        }.getOrNull()
+        if (byExact != null) return byExact
         val candidates = mutableListOf<java.lang.reflect.Method>()
-        candidates.addAll(iface.methods)
         runCatching { HiddenApiBypass.getDeclaredMethods(iface) }.getOrNull()
             ?.filterIsInstance<java.lang.reflect.Method>()
             ?.let { candidates.addAll(it) }
+        candidates.addAll(iface.methods)
         val fuzzy = candidates.firstOrNull { method ->
             method.name == "startDelegateShellPermissionIdentity" &&
                 method.parameterTypes.size == 2 &&
@@ -121,17 +121,24 @@ object SystemApiBroker {
             "clearDelegateShellPermissionIdentity",
             "dropDelegateShellPermissionIdentity",
         )
+        // API 37+ 上标准 getMethod 常被 hidden-API 过滤成 NoSuchMethodException；
+        // 先走 HiddenApiBypass，再回退公开反射与模糊名扫描。
         names.forEach { name ->
-            runCatching { iface.getMethod(name) }.getOrNull()?.let { return it }
             runCatching {
                 HiddenApiBypass.getDeclaredMethod(iface, name)
             }.getOrNull()?.let { return it }
+            runCatching { iface.getMethod(name) }.getOrNull()?.let { return it }
+            runCatching { iface.getDeclaredMethod(name) }.getOrNull()?.let { method ->
+                method.isAccessible = true
+                return method
+            }
         }
         val candidates = mutableListOf<java.lang.reflect.Method>()
-        candidates.addAll(iface.methods)
         runCatching { HiddenApiBypass.getDeclaredMethods(iface) }.getOrNull()
             ?.filterIsInstance<java.lang.reflect.Method>()
             ?.let { candidates.addAll(it) }
+        candidates.addAll(iface.methods)
+        runCatching { iface.declaredMethods.toList() }.getOrNull()?.let { candidates.addAll(it) }
         return candidates.firstOrNull { method ->
             method.parameterCount == 0 &&
                 (

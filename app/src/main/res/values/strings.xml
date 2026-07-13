@@ -198,17 +198,18 @@
     <string name="compat_shizuku_off">未运行 ❌</string>
     <string name="compat_strategy">④ 绕过策略: %1$s</string>
     <string name="compat_strategy_delegate">支持 Instrumentation 权限代理（新补丁机型）✅</string>
-    <string name="compat_strategy_direct">无委托 API，走 Shizuku 直调 ⚠️</string>
+    <string name="compat_strategy_direct">权限代理探测失败；非 root 仍尝试 Instrumentation，root 才走直调 ⚠️</string>
     <string name="compat_sim">⑤ 激活 SIM: %1$d %2$s</string>
     <string name="compat_sim_no">❌（未检测到 SIM）</string>
     <string name="compat_conclusion">—— 结论：本机%1$s ——</string>
     <string name="compat_advice_full">可放心使用全部功能。</string>
-    <string name="compat_advice_degraded">可用，但走直调策略，重启后大概率需重应用。</string>
+    <string name="compat_advice_degraded">可用性降级：请更新 Hidden/API 兼容层后重试；root Shizuku 可走直调，非 root 仍依赖 Instrumentation。</string>
     <string name="compat_advice_need_shizuku">先启动并授权 Shizuku 再来。</string>
     <string name="compat_advice_unsupported">本机不满足前置条件，不建议使用，以免影响通信。</string>
 
     <!-- 设备信息卡 -->
     <string name="dev_unknown">未知</string>
+    <string name="dev_app_version">应用版本: %1$s (%2$d)</string>
     <string name="dev_model">型号: %1$s %2$s</string>
     <string name="dev_device">代号: %1$s</string>
     <string name="dev_android">Android: %1$s  (API %2$d)</string>
@@ -219,7 +220,7 @@
     <string name="dev_sim_count">激活 SIM 数: %1$d</string>
     <string name="dev_delegate">Instrumentation 权限代理: %1$s</string>
     <string name="dev_delegate_yes">支持（新补丁兼容）</string>
-    <string name="dev_delegate_no">不支持（走 Shizuku 直调）</string>
+    <string name="dev_delegate_no">探测失败（非 root 仍尝试 Instrumentation）</string>
     <string name="dev_last_strategy">上次写入策略: %1$s</string>
     <string name="strategy_unused">未使用</string>
 

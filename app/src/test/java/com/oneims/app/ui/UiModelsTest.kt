@@ -19,17 +19,18 @@ class UiModelsTest {
     }
 
     @Test
-    fun destinations_keepStableFiveSectionOrder() {
+    fun destinations_keepStableSectionOrder() {
         assertEquals(
             listOf(
                 AppDestination.HOME,
                 AppDestination.CAPABILITIES,
                 AppDestination.EXPERIMENTAL,
                 AppDestination.DIAGNOSTICS,
+                AppDestination.SPONSOR,
                 AppDestination.SETTINGS,
             ),
             AppDestination.entries,
         )
-        assertTrue(AppDestination.entries.map { it.labelRes }.distinct().size == 5)
+        assertTrue(AppDestination.entries.map { it.labelRes }.distinct().size == 6)
     }
 }

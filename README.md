@@ -12,6 +12,15 @@
 
 📱 [Telegram · OneBoardX](https://t.me/OneBoardX)
 
+<br/>
+
+### ⬇️ 下载 APK（最新）
+
+**[OneIms 2.0.3 · GitHub Releases](https://github.com/asrtroh-netizen/OneIms/releases/tag/v2.0.3)**
+
+> 本仓库 **只提供 README + APK 发布**，**不开放源代码**。  
+> 需要交流 / 反馈请走 Telegram，别来仓库里翻源码啦～
+
 </div>
 
 ---
@@ -161,8 +170,8 @@ OneIms 的应对：
 * 短生命周期 **Instrumentation** 接收 shell 权限委托
 * **最小权限**委托 + 写入后回读
 * 失败原因尽量讲人话（完整细节进日志）
-* 兼容部分预览 / OEM 上 `stopDelegateShellPermissionIdentity` 反射差异  
-  （你的机子正常、别人的预览包翻车——很常见，不是玄学）
+* 兼容 Android 17 / 部分 OEM 上 `stopDelegateShellPermissionIdentity` 反射差异  
+  （`HiddenApiBypass 6.1` + 清理失败不冒充写入失败；机型预览包翻车很常见，不是玄学）
 
 目标：
 
@@ -270,7 +279,7 @@ Android 12  →  Android 17（含预览；机型 / 构建差异请以真机体�
 
 ## ⚠️ Disclaimer
 
-OneIms **不是**运营商官方软件。
+OneIms **不是**运营商官方软件，也 **不是开源项目**（本仓库不提供源代码）。
 
 不会：
 
@@ -280,6 +289,8 @@ OneIms **不是**运营商官方软件。
 
 它只是帮助你**理解并安全地调试自己的设备**。  
 用它之前请先确认你有权限修改本机配置；出问题请优先「一键还原」或重启。
+
+安装请只从本仓库 [Releases](https://github.com/asrtroh-netizen/OneIms/releases) 获取 APK。
 
 ---
 
