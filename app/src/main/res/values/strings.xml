@@ -1,0 +1,681 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">OneIms</string>
+
+    <!-- 通用 -->
+    <string name="please_select_sim">请先选卡</string>
+    <string name="refreshed">已刷新</string>
+    <string name="log_ready">就绪</string>
+
+    <!-- 底部导航 -->
+    <string name="tab_home">首页</string>
+    <string name="tab_power">能力</string>
+    <string name="tab_tools">排障</string>
+
+    <!-- 首页 -->
+    <string name="action_refresh">刷新</string>
+    <string name="action_compat">体检</string>
+    <string name="action_grant">授权</string>
+    <string name="action_restore">还原</string>
+    <string name="no_sim_hint">未读到 SIM，点「刷新」</string>
+    <string name="sim_chip">卡%1$d %2$s</string>
+    <string name="sim_pill_label">卡%1$d %2$s</string>
+    <string name="sim_tag_active">使用中</string>
+    <string name="sim_tag_standby">备用</string>
+    <string name="apply_recommended">按推荐一键开启</string>
+    <string name="shizuku_setup_title">起不来 Shizuku？没 WiFi 也能开</string>
+    <string name="setup_open_shizuku">开Shizuku</string>
+    <string name="setup_wireless_debug">无线调试</string>
+    <string name="setup_hotspot">开热点</string>
+    <string name="setup_copy_cmd">复制命令</string>
+    <string name="log_shizuku_opened">已打开 Shizuku 去配对</string>
+    <string name="log_shizuku_not_installed">未装，已跳市场</string>
+    <string name="log_open_failed">打开失败</string>
+    <string name="log_jumped_wireless">已跳无线调试</string>
+    <string name="log_jump_failed">跳转失败</string>
+    <string name="log_hotspot_opened">已开热点设置</string>
+    <string name="log_cmd_copied">免电脑命令已复制</string>
+    <string name="termux_hint">免电脑自助（需装 Termux + pkg install android-tools）：\n1) 无线调试页点「使用配对码配对设备」，记下 IP:配对端口 与 配对码；\n2) Termux 执行：adb pair localhost:配对端口 配对码\n3) 再执行：adb connect localhost:连接端口\n4) 启动 Shizuku：adb -s localhost:连接端口 shell sh /storage/emulated/0/Android/data/moe.shizuku.privileged.api/start.sh</string>
+
+    <!-- 能力页 -->
+    <string name="cap_group_radio_title">运营商能力与 5G</string>
+    <string name="cap_group_radio_sub">通话可靠性核心配置，含 WiFi 通话模式与 5G 能力</string>
+    <string name="cap_group_extra_title">增强能力与显示选项</string>
+    <string name="cap_group_extra_sub">视频通话、双卡互通，以及运营商显示与漫游细节</string>
+    <string name="cap_volte">VoLTE</string>
+    <string name="cap_volte_sub">4G 高清语音</string>
+    <string name="cap_vowifi">VoWiFi</string>
+    <string name="cap_vowifi_sub">WiFi 通话</string>
+    <string name="cap_vonr">VoNR</string>
+    <string name="cap_vonr_sub">5G 语音</string>
+    <string name="action_apply_core">应用核心能力</string>
+    <string name="cap_vilte">ViLTE</string>
+    <string name="cap_vilte_sub">视频通话</string>
+    <string name="cap_ut">UT</string>
+    <string name="cap_ut_sub">呼叫转移/等待</string>
+    <string name="cap_crosssim">Cross-SIM</string>
+    <string name="cap_crosssim_sub">双卡互通</string>
+    <string name="action_apply_extras">应用增强</string>
+    <string name="cap_5g_nr">5G NR</string>
+    <string name="cap_5g_nr_sub">NSA + SA</string>
+    <string name="signal_strength_adjust_title">5G信号强度调整</string>
+    <string name="signal_strength_adjust_subtitle">写入常用 5G 信号等级阈值，改善弱信号格数观感</string>
+    <string name="signal_strength_adjust_notice">开启后与 5G NR 一并在【应用核心能力】写入系统显示层阈值；不改真实基站信号。状态栏最终观感取决于系统 SystemUI。</string>
+    <string name="signal_bar_style_title">信号格显示样式</string>
+    <string name="signal_bar_style_auto">自动适配</string>
+    <string name="signal_bar_style_auto_sub">跟随系统 / 当前卡原有的信号格数显示</string>
+    <string name="signal_bar_style_four">固定 4 格</string>
+    <string name="signal_bar_style_four_sub">无论原本是几格，统一按 4 格语义尝试（弱信号仍可 1/4、2/4）</string>
+    <string name="signal_bar_style_five">固定 5 格</string>
+    <string name="signal_bar_style_five_sub">无论原本是几格，统一按 5 格语义尝试（弱信号仍可 2/5、3/5）</string>
+    <string name="signal_bar_style_notice">按上方所选卡写入系统显示层配置（CarrierConfig）。自动适配会清除本功能相关 override；固定 4/5 格会尝试切换 SystemUI 总柱数。最终是否可见取决于 ROM / SystemUI。</string>
+    <string name="signal_bar_style_apply">应用信号格显示样式</string>
+    <string name="signal_bar_style_system_applied">已写入可用配置，但系统状态栏总柱数是否变化取决于 SystemUI / ROM 支持。</string>
+    <string name="signal_bar_style_system_cleared">已清除信号格显示样式相关系统 override，恢复首次写入前的系统 / 运营商默认。</string>
+    <string name="signal_bar_style_system_cleared_noop">已保存「自动适配」；当前没有本功能写入的信号格系统覆盖需要清除。</string>
+    <string name="signal_bar_style_system_failed">信号格显示样式写入或回读失败：%1$s</string>
+    <string name="signal_bar_style_unsupported">当前系统暂不支持修改状态栏信号格样式。</string>
+    <string name="vowifi_name_title">VoWiFi 网络名称格式</string>
+    <string name="vowifi_name_format_pick_sub">当前：%1$s · 点击选择显示格式</string>
+    <string name="vowifi_name_format_pick_action">选择</string>
+    <string name="vowifi_name_preview">当前格式预览：%1$s</string>
+    <string name="vowifi_name_format_index">格式 index：%1$s</string>
+    <string name="vowifi_name_format_system_value">系统</string>
+    <string name="vowifi_name_format_system">跟随系统</string>
+    <string name="vowifi_name_format_carrier">运营商名</string>
+    <string name="vowifi_name_format_carrier_wifi_calling">运营商名 Wi-Fi Calling</string>
+    <string name="vowifi_name_format_wlan_call">WLAN Call</string>
+    <string name="vowifi_name_format_carrier_wlan_call">运营商名 WLAN Call</string>
+    <string name="vowifi_name_format_carrier_wifi">运营商名 Wi-Fi</string>
+    <string name="vowifi_name_format_wifi_calling_carrier">WiFi Calling | 运营商名</string>
+    <string name="vowifi_name_format_carrier_vowifi">运营商名 VoWifi</string>
+    <string name="vowifi_name_format_wifi_calling_hyphen">Wi-Fi Calling</string>
+    <string name="vowifi_name_format_wifi_hyphen">Wi-Fi</string>
+    <string name="vowifi_name_format_wifi_calling">WiFi Calling</string>
+    <string name="vowifi_name_format_vowifi">VoWifi</string>
+    <string name="vowifi_name_format_carrier_wifi_calling_plain">运营商名 WiFi Calling</string>
+    <string name="vowifi_name_format_wifi_call">WiFi Call</string>
+    <string name="vowifi_name_custom_carrier">自定义运营商显示名</string>
+    <string name="vowifi_name_custom_carrier_hint">例如 China Unicom、CMCC、CUNI、OneIMS；留空不覆盖运营商名。</string>
+    <string name="vowifi_name_system_notice">写入后最终显示取决于系统 SystemUI / 电话服务是否使用对应字段。</string>
+    <string name="vowifi_name_apply">应用 VoWiFi 名称</string>
+    <string name="vowifi_name_apply_success">已写入 VoWiFi 名称配置，可能需要飞行模式或重启后生效。最终显示取决于系统 SystemUI / 电话服务是否使用该字段。</string>
+    <string name="vowifi_name_follow_system_success">已恢复首次写入前的 VoWiFi 名称配置，可能需要飞行模式或重启后生效。</string>
+    <string name="vowifi_name_follow_system_no_override">当前没有 OneIMS 持有的 VoWiFi 名称覆盖，继续跟随系统。</string>
+    <string name="power_wfc_mode">WFC 模式</string>
+    <string name="action_set_wfc">设置模式</string>
+    <string name="power_identity_title">身份显示覆盖</string>
+    <string name="power_identity_sub">仅改显示层，不碰基带真实归属，不影响通信</string>
+    <string name="hint_carrier_name">运营商名称（留空不改）</string>
+    <string name="hint_ims_ua">IMS User Agent（留空不改）</string>
+    <string name="action_apply_identity">应用身份覆盖</string>
+    <string name="action_restore_identity_name">恢复运营商名称</string>
+    <string name="identity_current_name">当前系统显示：%1$s</string>
+    <string name="identity_invalid_control">输入不能包含换行或控制字符</string>
+    <string name="identity_invalid_length">输入过长，请精简后重试</string>
+
+    <!-- 排障页 -->
+    <string name="tool_health">健康</string>
+    <string name="tool_restart_ims">重新注册 IMS</string>
+    <string name="tool_apn">离线 APN 库</string>
+    <string name="tool_epdg">ePDG</string>
+    <string name="tool_diag">诊断</string>
+    <string name="tool_config">配置查看</string>
+    <string name="action_net_fix">修复网络受限（去感叹号）</string>
+    <string name="action_tiktok_fix">TikTok 常用预设（US）</string>
+    <string name="action_tiktok_fix_sub">一键将国家码覆盖为 US（短视频分流常用）</string>
+    <string name="sim_country_title">SIM 国家码覆盖</string>
+    <string name="sim_country_sub">写入 CarrierConfig 的 sim_country_iso_override（ISO-3166 两字母）。只改上层读取到的国家码，不改基带 MCC/MNC；重启或点清除可恢复意图。</string>
+    <string name="sim_country_input_label">国家码 ISO（两字母）</string>
+    <string name="sim_country_apply">应用国家码覆盖</string>
+    <string name="sim_country_clear">清除国家码覆盖</string>
+    <string name="sim_country_current">当前覆盖：%1$s</string>
+    <string name="sim_country_current_none">当前覆盖：无</string>
+    <string name="sim_country_preset_us">美国 US</string>
+    <string name="sim_country_preset_jp">日本 JP</string>
+    <string name="sim_country_preset_hk">香港 HK</string>
+    <string name="sim_country_preset_tw">台湾 TW</string>
+    <string name="sim_country_preset_gb">英国 GB</string>
+    <string name="sim_country_preset_kr">韩国 KR</string>
+    <string name="sim_country_preset_cn">中国 CN</string>
+    <string name="sim_country_preset_sg">新加坡 SG</string>
+    <string name="msg_sim_country_applied">已覆盖 SIM 国家码为 %1$s</string>
+    <string name="msg_sim_country_cleared">已清除 SIM 国家码覆盖</string>
+    <string name="msg_sim_country_readback_mismatch">国家码写入后回读不一致（期望 %1$s，实际 %2$s）</string>
+    <string name="confirm_sim_country_title">应用国家码覆盖？</string>
+    <string name="confirm_sim_country_message">将把当前选中卡的 SIM 国家码显示覆盖为「%1$s」。不改真实 MCC/MNC。</string>
+    <string name="confirm_sim_country_clear_title">清除国家码覆盖？</string>
+    <string name="confirm_sim_country_clear_message">将尝试清除当前选中卡的国家码覆盖。</string>
+    <string name="log_title">日志</string>
+    <string name="health_result">健康：%1$s\n%2$s</string>
+    <string name="health_ok">全部正常</string>
+    <string name="health_abnormal">有异常！</string>
+
+    <!-- 关于页 -->
+    <string name="guard_title">掉线守护</string>
+    <string name="guard_sub">开机/掉线自动重开</string>
+    <string name="guard_on">守护已开</string>
+    <string name="guard_off">守护已关</string>
+    <string name="update_title">应用更新</string>
+    <string name="current_version">当前 v%1$s</string>
+    <string name="action_check_update">检查更新</string>
+    <string name="checking_update">检查中…</string>
+    <string name="action_download_install">下载并安装</string>
+    <string name="download_started">开始下载 v%1$s，完成后将自动拉起安装</string>
+    <string name="update_downloading">正在下载更新…</string>
+    <string name="about_title">关于 OneIms</string>
+    <string name="about_version">v%1$s · Tensor Pixel · 免 root</string>
+    <string name="about_author">开发者</string>
+    <string name="about_author_name">小喵崽</string>
+    <string name="about_donate_title">捐赠支持</string>
+    <string name="about_donate_detail">永久免费 · 不增加广告 · 支持作者持续维护</string>
+
+    <!-- ePDG 自检结论 -->
+    <string name="epdg_reachable">ePDG 可达（%1$s），配置开了就该能用</string>
+    <string name="epdg_dns_fail">ePDG 解析失败：运营商大概率未放通，本机无解</string>
+    <string name="epdg_port_unreachable">ePDG 解析到 %1$s 但不可达：换个网络再试</string>
+    <string name="epdg_unavailable">无法自检：%1$s</string>
+    <string name="epdg_no_mccmnc">无有效 MCC/MNC，无法构造 ePDG 域名</string>
+
+    <!-- WFC 模式 -->
+    <string name="wfc_wifi_only">仅 WiFi</string>
+    <string name="wfc_cellular_preferred">蜂窝优先</string>
+    <string name="wfc_wifi_preferred">WiFi 优先</string>
+
+    <!-- 兼容性体检 -->
+    <string name="support_full">完全支持</string>
+    <string name="support_degraded">降级可用</string>
+    <string name="support_unsupported">不支持</string>
+    <string name="support_need_shizuku">需先配置 Shizuku</string>
+    <string name="compat_tensor">① Tensor 芯片: %1$s</string>
+    <string name="compat_yes">是 ✅</string>
+    <string name="compat_tensor_no">否 ❌（本工具面向 Tensor Pixel）</string>
+    <string name="compat_os">② 系统版本: Android %1$s (API %2$d) %3$s</string>
+    <string name="compat_os_bad">❌（需 Android 12+）</string>
+    <string name="compat_shizuku">③ Shizuku: %1$s</string>
+    <string name="compat_shizuku_granted">已授权 ✅</string>
+    <string name="compat_shizuku_running">已运行未授权 ⚠️</string>
+    <string name="compat_shizuku_off">未运行 ❌</string>
+    <string name="compat_strategy">④ 绕过策略: %1$s</string>
+    <string name="compat_strategy_delegate">支持 Instrumentation 权限代理（新补丁机型）✅</string>
+    <string name="compat_strategy_direct">无委托 API，走 Shizuku 直调 ⚠️</string>
+    <string name="compat_sim">⑤ 激活 SIM: %1$d %2$s</string>
+    <string name="compat_sim_no">❌（未检测到 SIM）</string>
+    <string name="compat_conclusion">—— 结论：本机%1$s ——</string>
+    <string name="compat_advice_full">可放心使用全部功能。</string>
+    <string name="compat_advice_degraded">可用，但走直调策略，重启后大概率需重应用。</string>
+    <string name="compat_advice_need_shizuku">先启动并授权 Shizuku 再来。</string>
+    <string name="compat_advice_unsupported">本机不满足前置条件，不建议使用，以免影响通信。</string>
+
+    <!-- 设备信息卡 -->
+    <string name="dev_unknown">未知</string>
+    <string name="dev_model">型号: %1$s %2$s</string>
+    <string name="dev_device">代号: %1$s</string>
+    <string name="dev_android">Android: %1$s  (API %2$d)</string>
+    <string name="dev_patch">安全补丁: %1$s</string>
+    <string name="dev_tensor">Tensor 芯片: %1$s</string>
+    <string name="dev_tensor_yes">是（受支持）</string>
+    <string name="dev_tensor_no">否（非 Tensor，可能不支持）</string>
+    <string name="dev_sim_count">激活 SIM 数: %1$d</string>
+    <string name="dev_delegate">Instrumentation 权限代理: %1$s</string>
+    <string name="dev_delegate_yes">支持（新补丁兼容）</string>
+    <string name="dev_delegate_no">不支持（走 Shizuku 直调）</string>
+    <string name="dev_last_strategy">上次写入策略: %1$s</string>
+    <string name="strategy_unused">未使用</string>
+
+    <!-- 守护服务通知 -->
+    <string name="guard_channel">IMS 守护</string>
+    <string name="guard_channel_desc">保持 VoLTE/VoWiFi 在线，掉线自动重应用</string>
+    <string name="guard_notif_title">OneIms 守护运行中</string>
+    <string name="guard_notif_text">电话/短信/上网优先，IMS 掉线自动恢复</string>
+
+    <!-- 运营商画像 -->
+    <string name="carrier_cmcc">中国移动</string>
+    <string name="carrier_cucc">中国联通</string>
+    <string name="carrier_ctcc">中国电信</string>
+    <string name="carrier_cn_unknown">中国（未知运营商 MNC=%1$s）</string>
+    <string name="carrier_unknown">未知运营商</string>
+    <string name="carrier_oversea">境外/其他（MCC=%1$s）</string>
+    <string name="carrier_note_cmcc">移动 VoLTE/VoNR 支持好；VoWiFi 视地区，建议蜂窝优先保通话。</string>
+    <string name="carrier_note_cucc">联通无 VoLTE 时易回落，务必开 VoLTE；VoWiFi 视地区。</string>
+    <string name="carrier_note_ctcc">电信已无 2G/3G，必须开 VoLTE 才能通话；VoWiFi 视地区。</string>
+    <string name="carrier_note_cn_unknown">识别为国内卡但 MNC 不在已知段，先稳妥开 VoLTE。</string>
+    <string name="carrier_note_oversea">非国内卡，仅稳妥推荐 VoLTE；其余按需自行勾选。</string>
+
+    <!-- 健康检查 -->
+    <string name="health_sim_ready">SIM 就绪: %1$s</string>
+    <string name="health_voice">语音能力: %1$s</string>
+    <string name="health_data">数据能力: %1$s</string>
+    <string name="health_net_type">网络类型: %1$s</string>
+    <string name="yes">是</string>
+    <string name="no">否</string>
+    <string name="net_5g">5G(NR)</string>
+    <string name="net_4g">4G(LTE)</string>
+    <string name="net_3g">3G</string>
+    <string name="net_2g">2G</string>
+    <string name="net_none">无数据网络</string>
+    <string name="net_other">其他(%1$d)</string>
+    <string name="net_unknown">未知</string>
+
+    <!-- IMS 配置结果消息 -->
+    <string name="msg_health_rollback">检测到基本通信异常（电话/数据/短信），已自动还原配置保命。IMS 未启用。</string>
+    <string name="msg_apply_ok">配置已下发（persistent=false，重启后需重应用）。基本通信正常。</string>
+    <string name="msg_apply_partial">CarrierConfig 已生效，但以下 provisioning 未完整写入：%1$s</string>
+    <string name="msg_write_not_started">配置未写入：%1$s</string>
+    <string name="msg_write_rollback">写入失败，且已确认回滚成功：%1$s</string>
+    <string name="msg_write_rollback_failed">写入失败：%1$s；自动回滚也失败：%2$s。请立即重启手机并检查基本通信。</string>
+    <string name="msg_no_history">无历史配置，跳过重应用</string>
+    <string name="msg_reapply_wrong_sim">上次成功配置属于 subId=%1$d，当前选中 subId=%2$d 且无本卡快照，已拒绝跨卡重放，避免误写。</string>
+    <string name="msg_wfc_set">WFC 模式已设为「%1$s」</string>
+    <string name="msg_wfc_readback">已写入，回读=%1$d（可能需重启生效）</string>
+    <string name="msg_set_failed">设置失败：%1$s</string>
+    <string name="msg_extras_on">已开启：%1$s</string>
+    <string name="msg_none">无</string>
+    <string name="msg_write_failed">写入失败：%1$s</string>
+    <string name="msg_5g">5G：%1$s</string>
+    <string name="msg_5g_nsa_sa">NSA+SA 已开 </string>
+    <string name="msg_tiktok_ok">已将 SIM 国家码覆盖为「%1$s」（TikTok 预设，重启或清除可复原）</string>
+    <string name="msg_apn_no_mccmnc">当前 SIM 缺少有效订阅或 MCC/MNC，无法修复 IMS APN</string>
+    <plurals name="msg_apn_ok">
+        <item quantity="other">IMS APN 修复完成：拆分 %1$d 条混合类型，并已确认专用 ims 条目。请重新注册 IMS；必要时重启。</item>
+    </plurals>
+    <string name="msg_apn_failed">修复 IMS APN 失败：%1$s</string>
+    <string name="msg_apn_profile_mismatch">所选 APN 不是当前 SIM 可安全应用的专用 IMS 模板</string>
+    <string name="msg_apn_profile_applied">已采用离线模板「%1$s」（APN=%2$s）。\n%3$s</string>
+    <string name="msg_ims_restart_registered">IMS 已重新注册（%1$s）</string>
+    <string name="msg_ims_restart_pending">IMS 重启请求已完成，8 秒内尚未注册。请确认信号与运营商放通，再运行诊断或重启手机。</string>
+    <string name="msg_ims_restart_unverified">IMS 重启请求已完成，但本系统未返回可读的注册状态。请到系统 SIM 页面或拨号实测确认。</string>
+    <string name="msg_ims_restart_failed">重新注册 IMS 失败：%1$s</string>
+    <string name="msg_captive_restore">已恢复强制门户检测</string>
+    <string name="msg_captive_fix">已忽略强制门户检测（去掉"已连接但受限/感叹号"）</string>
+    <string name="msg_net_fix_failed">网络修复失败：%1$s</string>
+    <string name="msg_restore_ok">已清空覆盖配置，恢复运营商默认（如仍异常请重启一次）</string>
+    <string name="msg_restore_failed">还原失败：%1$s</string>
+    <string name="ims_reg">IMS 注册: %1$s</string>
+    <string name="ims_reg_yes">已注册（%1$s）</string>
+    <string name="ims_reg_no">未注册/未知</string>
+    <string name="ims_volte_avail">VoLTE 可用: %1$s</string>
+    <string name="ims_vowifi_avail">VoWiFi 可用: %1$s</string>
+    <string name="ims_wfc_mode">当前 WFC 模式: %1$s</string>
+    <string name="unknown">未知</string>
+    <string name="tech_lte">LTE（VoLTE）</string>
+    <string name="tech_iwlan">IWLAN（VoWiFi）</string>
+    <string name="tech_crosssim">跨 SIM</string>
+    <string name="tech_nr">NR（VoNR）</string>
+    <string name="tech_3g">3G</string>
+    <string name="tech_none">未注册</string>
+    <string name="identity_applied">已覆盖显示：%1$s（persistent=false，重启/还原可复原）</string>
+    <string name="identity_carrier_name">运营商名=%1$s</string>
+    <string name="identity_ims_ua">IMS UA</string>
+    <string name="identity_none">未填写任何要覆盖的显示项</string>
+    <string name="identity_failed">覆盖失败：%1$s</string>
+    <string name="identity_name_restored">已关闭运营商名称覆盖并恢复系统默认显示</string>
+    <string name="identity_target_preview">当前目标：卡%1$d · %2$s · subId=%3$d</string>
+    <string name="system_target_preview">当前目标：卡%1$d · %2$s · subId=%3$d</string>
+    <string name="identity_target_applied">已写入卡%1$d · %2$s · subId=%3$d：%4$s</string>
+    <string name="identity_readback_failed">卡%1$d 身份覆盖未生效：目标 subId=%2$d 回读失败</string>
+    <string name="identity_readback_mismatch">卡%1$d 身份覆盖未生效：目标 subId=%2$d 回读不一致</string>
+    <string name="config_dump_failed">读取 CarrierConfig 失败（需 Shizuku 已授权且选中有效 SIM）</string>
+    <string name="config_dump_title">CarrierConfig 关键项（subId=%1$d）:</string>
+    <string name="config_dump_empty">(空)</string>
+    <string name="config_dump_footer">——\n命中 %1$d 项 / 全量 %2$d 项（仅显示关键项，其余略）</string>
+
+    <!-- 更新检查 -->
+    <string name="update_http_fail">检查更新失败：HTTP %1$d（仓库未配置或网络不可达）</string>
+    <string name="update_net_fail">检查更新失败：%1$s</string>
+    <string name="update_net_exception">网络异常</string>
+    <string name="update_no_version">未解析到版本信息</string>
+    <string name="update_found">发现新版本 %1$s（当前 %2$s）</string>
+    <string name="update_found_no_apk">发现新版本 %1$s，但该 Release 未附带 APK</string>
+    <string name="update_latest">已是最新版本（%1$s）</string>
+
+    <!-- Pixel Material 3 界面 -->
+    <string name="tab_settings">设置</string>
+    <string name="tab_sponsor">赞助</string>
+    <string name="home_subtitle">安全、清晰地管理 Pixel IMS</string>
+    <string name="home_ready_title">设备已就绪</string>
+    <string name="home_setup_needed_title">还差一步即可使用</string>
+    <string name="home_status_shizuku_off">请先启动 Shizuku</string>
+    <string name="home_status_permission">授予 Shizuku 权限后即可写入配置</string>
+    <string name="home_status_no_sim">未检测到可用 SIM</string>
+    <string name="home_status_ready">已授权并选中移动网络</string>
+    <string name="home_safety_note">所有核心写入都以电话、短信和数据可用为最高优先级</string>
+    <string name="home_quick_actions">快速开始</string>
+    <string name="home_quick_actions_sub">先确认设备状态，再应用运营商建议</string>
+    <string name="action_refresh_sub">重新读取权限与 SIM</string>
+    <string name="action_compat_sub">检查设备支持程度</string>
+    <string name="action_grant_sub">允许 OneIms 使用系统能力</string>
+    <string name="action_restore_sub">清空覆盖并恢复默认</string>
+    <string name="no_sim_detail">确认电话权限和 SIM 状态后重试</string>
+    <string name="shizuku_setup_subtitle">配对、无线调试与免电脑启动入口</string>
+    <string name="setup_open_shizuku_sub">打开配对与授权页面</string>
+    <string name="setup_wireless_debug_sub">进入系统开发者选项</string>
+    <string name="setup_hotspot_sub">无路由器时创建本机网络</string>
+    <string name="setup_copy_cmd_sub">复制 Termux 启动步骤</string>
+    <string name="home_device_details">设备详情</string>
+    <string name="home_device_details_expand">展开</string>
+    <string name="home_device_details_collapse">收起</string>
+    <string name="home_emergency_title">应急恢复</string>
+    <string name="home_emergency_subtitle">仅在通信异常或需要撤销覆盖时使用</string>
+    <string name="home_emergency_detail">清空当前 SIM 的 CarrierConfig 覆盖并恢复运营商默认值。</string>
+
+    <string name="capabilities_title">IMS 能力</string>
+    <string name="capabilities_subtitle">按需启用通话、WiFi 与 5G 能力</string>
+    <string name="capabilities_select_sim_notice">请先在下方选择 SIM，并确认 Shizuku 已运行且授权；条件不满足时不会执行写入。</string>
+    <string name="sim_switcher_hint">先选卡，下面所有设置只对这张卡生效</string>
+    <string name="mobile_network_title">移动网络</string>
+    <string name="mobile_network_subtitle">运营商方案推荐</string>
+    <string name="diagnostics_title">诊断与修复</string>
+    <string name="diagnostics_subtitle">先只读检查，再执行有风险的修复</string>
+    <string name="diagnostics_prereq_short">请选择 SIM 并授权 Shizuku</string>
+    <string name="diagnostics_select_sim_notice">@string/diagnostics_prereq_short</string>
+    <string name="diagnostics_checks">只读检查</string>
+    <string name="diagnostics_checks_sub">不会修改系统配置</string>
+    <string name="tool_health_sub">检查电话、数据与 SIM</string>
+    <string name="tool_epdg_sub">验证 VoWiFi 网关连通</string>
+    <string name="tool_diag_sub">查询 IMS 注册技术</string>
+    <string name="tool_config_sub">读取当前关键配置</string>
+    <string name="diagnostics_fix_order">建议顺序：先诊断，再重新注册 IMS；仅 Android 17 仍不注册时修复 APN。</string>
+    <string name="diagnostics_repairs">修复工具</string>
+    <string name="diagnostics_repairs_sub">逐项确认并记录结果</string>
+    <string name="tool_restart_ims_sub">安全重启 IMS 栈并复查注册状态</string>
+    <string name="tool_apn_sub">全球配置内置本机，当前 SIM 优先匹配</string>
+    <string name="action_net_fix_sub">调整系统门户检测行为</string>
+    <string name="log_subtitle">最近结果置顶，可长按选择或一键复制</string>
+    <string name="action_copy_log">复制</string>
+    <string name="action_clear_log">清空</string>
+    <string name="log_copied">日志已复制</string>
+    <string name="log_cleared">日志已清空</string>
+
+    <string name="settings_title">设置</string>
+    <string name="settings_subtitle">外观、守护与应用维护</string>
+    <string name="appearance_title">外观</string>
+    <string name="appearance_subtitle">跟随 Pixel 的主题与壁纸色彩</string>
+    <string name="theme_system">跟随系统</string>
+    <string name="theme_system_sub">随系统亮色或深色模式自动切换</string>
+    <string name="theme_light">浅色</string>
+    <string name="theme_light_sub">始终使用明亮界面</string>
+    <string name="theme_dark">深色</string>
+    <string name="theme_dark_sub">始终使用深色界面</string>
+    <string name="dynamic_color_title">壁纸动态色</string>
+    <string name="dynamic_color_sub">使用 Pixel 系统生成的 Material You 色板</string>
+    <string name="guard_section_title">可靠性</string>
+    <string name="guard_section_subtitle">在重启或 IMS 掉线后恢复上次配置</string>
+    <string name="update_check_subtitle">从已配置的发布仓库获取新版本</string>
+    <!-- 统一操作反馈与高风险确认 -->
+    <string name="operation_already_running">已有操作正在进行，请稍候</string>
+    <string name="operation_failed">操作失败：%1$s</string>
+    <string name="operation_unknown_error">未知错误</string>
+    <string name="operation_feedback_permission_delegate_failed">权限代理启动失败，配置未写入。请重启 Shizuku 后重试；仍失败请复制排障日志。</string>
+    <string name="operation_feedback_rollback_failed">配置写入与自动回滚均失败。请立即重启手机并检查电话、数据和短信；详情已写入排障日志。</string>
+    <string name="operation_feedback_failure_logged">操作失败，完整原因已写入排障日志。</string>
+    <string name="operation_feedback_result_logged">操作完成，完整结果已写入排障日志。</string>
+    <string name="shizuku_permission_granted_message">Shizuku 授权成功</string>
+    <string name="shizuku_permission_denied_message">Shizuku 授权未通过</string>
+    <string name="shizuku_not_running_message">Shizuku 尚未运行，请先完成配对</string>
+    <string name="shizuku_permission_required_message">请先在首页授予 Shizuku 权限，再执行系统写入</string>
+    <string name="shizuku_already_granted_message">Shizuku 已授权，无需重复操作</string>
+    <string name="shizuku_permission_requested">授权请求已发送</string>
+    <string name="phone_permission_denied_message">未授予电话权限，SIM 与 IMS 状态将无法读取</string>
+    <string name="confirm_restore_title">恢复运营商默认设置？</string>
+    <string name="confirm_restore_message">这会清空当前 SIM 的临时 CarrierConfig 覆盖。基本通信异常时可用它应急恢复。</string>
+    <string name="confirm_identity_title">应用身份显示覆盖？</string>
+    <string name="confirm_identity_message">仅修改显示层信息，重启或执行还原后可恢复。</string>
+    <string name="confirm_restore_identity_title">恢复系统运营商名称？</string>
+    <string name="confirm_restore_identity_message">这会关闭自定义名称覆盖，恢复当前 SIM 的系统默认运营商显示。</string>
+    <string name="confirm_restart_ims_title">重新注册当前 SIM 的 IMS？</string>
+    <string name="confirm_restart_ims_message">这会短暂注销并重建当前卡槽的 IMS。通话中不要执行；移动数据与首选网络类型不会被修改。</string>
+    <string name="confirm_apn_title">修复当前 SIM 的 IMS APN？</string>
+    <string name="confirm_apn_message">系统允许混合 APN；此修复只建议 Android 17 已开能力但仍不注册时使用。它优先处理当前订阅；若系统只有运营商全局模板，则同 MCC/MNC 的卡会共享改动。失败时回滚本次操作。</string>
+    <string name="confirm_apn_profile_message">准备使用离线候选「%1$s」：APN=%2$s，协议=%3$s，来源=%4$s。仅在 Android 17 已开能力但仍不注册时继续；写入会限定当前订阅，失败时回滚。</string>
+    <string name="confirm_network_fix_title">调整网络检测？</string>
+    <string name="confirm_network_fix_message">这会修改系统强制门户检测设置，可能改变网络感叹号与受限提示。</string>
+    <string name="confirm_tiktok_title">应用 TikTok 常用预设（US）？</string>
+    <string name="confirm_tiktok_message">将把当前选中卡的国家码覆盖为 US。可用「清除国家码覆盖」或重启恢复意图。</string>
+    <string name="action_continue">继续</string>
+    <string name="action_cancel">取消</string>
+
+    <!-- 离线 APN 数据库 -->
+    <string name="apn_catalog_title">离线 APN 库</string>
+    <string name="apn_catalog_search">搜索运营商、国家、APN 或 MCC/MNC</string>
+    <string name="apn_catalog_clear_search">清除搜索</string>
+    <string name="apn_catalog_summary">%1$d 条 · %2$d 个 PLMN · %3$d 个区域 · 当前显示 %4$d 条</string>
+    <string name="apn_catalog_loading">正在建立本机索引…</string>
+    <string name="apn_catalog_identity">%1$s · %2$s · %3$s</string>
+    <string name="apn_catalog_profile">APN %1$s · 类型 %2$s · 协议 %3$s</string>
+    <string name="apn_catalog_load_failed">离线 APN 库读取失败：%1$s</string>
+    <string name="apn_catalog_empty">没有匹配项，请尝试国家、ISO、MCC/MNC、运营商或 APN 关键词。</string>
+    <string name="apn_catalog_select_hint">选择条目可查看可用操作；数据仅作离线候选，不代表运营商放通。</string>
+    <string name="apn_catalog_safe_ims">该条是当前 SIM 可用的专用 ims 模板，仍需确认后才会写入。</string>
+    <string name="apn_catalog_browse_only">该条不是当前 SIM 的专用 ims 模板，只能查看或复制。</string>
+    <string name="apn_catalog_copy">复制配置</string>
+    <string name="apn_catalog_generic_ims">通用 IMS</string>
+    <string name="apn_catalog_apply_ims">用于 IMS 修复</string>
+    <string name="apn_catalog_copied">APN 配置已复制</string>
+    <string name="apn_catalog_apply_target">即将应用到：卡%1$d · %2$s · subId=%3$d</string>
+    <string name="apn_catalog_clipboard">运营商：%1$s\n国家/区域：%2$s\nMCC/MNC：%3$s\nAPN：%4$s\n类型：%5$s\n协议：%6$s\n用户名：%7$s\n密码：%8$s\n来源：%9$s</string>
+    <string name="tool_apn_sub_short">按国家或运营商搜索，应用到选中 SIM</string>
+    <string name="guard_sub_short">IMS 掉线时自动重应用配置</string>
+    <string name="five_g_display_in_app_only">保存显示策略，并尝试写入系统 5G 显示配置</string>
+
+    <!-- Pixel IMS 公开行为兼容高级工具（独立实现） -->
+    <string name="tab_experimental">独家</string>
+    <string name="experimental_title">独家功能</string>
+    <string name="experimental_subtitle">身份覆盖、离线 APN、控制中心切卡与专家工具</string>
+    <string name="advanced_options_title">运营商显示与漫游选项</string>
+    <string name="advanced_apply">应用高级选项</string>
+    <string name="advanced_apply_summary">仅把下列开关写入当前选中的 SIM</string>
+    <string name="advanced_wfc_roaming">漫游时启用 WiFi 通话</string>
+    <string name="advanced_wfc_roaming_desc">SIM 漫游时默认开启 WiFi 通话</string>
+    <string name="advanced_show_wfc_mode">显示 WiFi 通话模式</string>
+    <string name="advanced_show_wfc_mode_desc">允许在系统设置中编辑 WiFi 通话偏好</string>
+    <string name="advanced_show_wfc_roaming_mode">显示漫游 WiFi 通话模式</string>
+    <string name="advanced_show_wfc_roaming_mode_desc">允许为漫游状态单独选择 WiFi 通话偏好</string>
+    <string name="advanced_wifi_only">允许仅 WiFi 模式</string>
+    <string name="advanced_wifi_only_desc">运营商框架支持时显示仅 WiFi 通话选项</string>
+    <string name="advanced_allow_apn_add">允许新增 APN</string>
+    <string name="advanced_allow_apn_add_desc">在系统 APN 页面显示新增入口</string>
+    <string name="advanced_vowifi_icon">显示 VoWiFi 状态栏图标</string>
+    <string name="advanced_vowifi_icon_desc">请求系统界面显示 WiFi 通话图标</string>
+    <string name="advanced_data_rat_icon">始终显示数据制式图标</string>
+    <string name="advanced_data_rat_icon_desc">系统支持时保持 LTE/5G 数据制式可见</string>
+    <string name="advanced_4g_for_lte">LTE 显示为 4G</string>
+    <string name="advanced_4g_for_lte_desc">把 LTE 网络的状态栏标签显示为 4G</string>
+    <string name="advanced_hide_lte_plus">隐藏 LTE+ 标签</string>
+    <string name="advanced_hide_lte_plus_desc">载波聚合时仍使用普通 LTE/4G 标签</string>
+    <string name="advanced_show_ims_status">显示 IMS 注册状态</string>
+    <string name="advanced_show_ims_status_desc">在系统状态页面公开 IMS 注册详情</string>
+    <string name="advanced_ss_over_cdma">通过 CDMA 使用补充业务</string>
+    <string name="advanced_ss_over_cdma_desc">启用运营商 CDMA 补充业务处理</string>
+    <string name="advanced_enhanced_4g">增强型 4G LTE 开关</string>
+    <string name="advanced_enhanced_4g_desc">显示并启用系统的增强型 4G LTE 控件</string>
+    <string name="msg_pixel_ims_options_applied">高级 IMS 选项已应用；图标未立即刷新时请重启系统界面或手机。</string>
+    <string name="msg_pixel_ims_options_failed">高级 IMS 选项应用失败：%1$s</string>
+
+    <string name="advanced_export_title">完整 CarrierConfig 导出</string>
+    <string name="advanced_export_desc">把当前 SIM 所有可读 CarrierConfig 条目导出到诊断日志，不修改任何值。</string>
+    <string name="advanced_export_action">导出完整配置</string>
+    <string name="config_full_dump_title">=== 完整 CarrierConfig · subId %1$d ===</string>
+    <string name="config_full_dump_footer">=== 共 %1$d 项 ===</string>
+
+    <string name="advanced_expert_title">受限专家编辑器</string>
+    <string name="advanced_expert_desc">仅接受当前配置中已存在且类型可识别的键；网络选择、紧急通信和卫星相关键会被拦截。</string>
+    <string name="advanced_expert_key">CarrierConfig 键</string>
+    <string name="advanced_expert_value">值（数组以英文逗号分隔）</string>
+    <string name="advanced_expert_apply">校验并应用</string>
+    <string name="advanced_expert_confirm_title">确认应用专家值？</string>
+    <string name="advanced_expert_confirm_message">这可能改变当前 SIM 的运营商行为。OneIms 只会应用下面这一项：\n\n%1$s = %2$s</string>
+    <string name="msg_expert_invalid_input">键或值无效，或命中通信安全限制。请输入标准 CarrierConfig 键，且值中不要包含控制字符。</string>
+    <string name="msg_expert_unknown_key">当前 SIM 未公开这个 CarrierConfig 键：%1$s</string>
+    <string name="msg_expert_applied">专家 CarrierConfig 值已应用：%1$s</string>
+    <string name="msg_expert_failed">专家 CarrierConfig 值应用失败：%1$s</string>
+
+    <string name="five_g_display_title">5G 显示增强</string>
+    <string name="five_g_display_enable">启用 5G 显示增强</string>
+    <string name="five_g_mode_conservative">保守显示</string>
+    <string name="five_g_mode_conservative_sub">只按网络类型显示 5G SA / 5G NSA / 5G Advanced，不按速率升级</string>
+    <string name="five_g_mode_cn_speed">内地速率显示</string>
+    <string name="five_g_mode_cn_speed_sub">达到速率阈值后升级显示为 5G+ / 5G-A</string>
+    <string name="five_g_mode_cool">炫酷文字显示</string>
+    <string name="five_g_mode_cool_sub">逻辑与内地速率显示一致，文案更醒目（5G+ 极速 / 5G-A 满血）</string>
+    <string name="five_g_mode_custom">自定义阈值</string>
+    <string name="five_g_mode_custom_sub">自己设置下方 4 个速率阈值</string>
+    <string name="five_g_threshold_plus_dl">5G+ 下行阈值（Mbps）</string>
+    <string name="five_g_threshold_a_dl">5G-A 下行阈值（Mbps）</string>
+    <string name="five_g_threshold_ul_enhanced">上行增强阈值（Mbps）</string>
+    <string name="five_g_threshold_ul_super">超级上行阈值（Mbps）</string>
+    <string name="five_g_system_icon_config">系统图标配置字符串</string>
+    <string name="five_g_system_icon_config_sub">仅用于 Android CarrierConfig；5G_PLUS 不会新增为界面模式</string>
+    <string name="five_g_unknown_operator">未知运营商</string>
+    <string name="five_g_uplink_enhanced">上行增强</string>
+    <string name="five_g_super_uplink">超级上行</string>
+    <string name="five_g_cool_plus">5G+ 极速</string>
+    <string name="five_g_cool_a">5G-A 满血</string>
+    <string name="five_g_apply">应用 5G 显示增强</string>
+    <string name="five_g_system_applied">已写入系统 5G 显示配置，最终显示取决于系统 SystemUI 是否支持；可能需要切换飞行模式或重启后生效。</string>
+    <string name="five_g_system_restored">已保存本地显示策略，并恢复首次写入前的系统 5G 图标配置；可能需要切换飞行模式或重启后生效。</string>
+    <string name="five_g_local_saved_no_system_override">已保存本地显示策略；当前没有 OneIms 写入的系统 5G 图标覆盖需要恢复。</string>
+    <string name="five_g_system_apply_failed">本地显示策略已保存，但系统 5G 配置写入或回读失败：%1$s</string>
+
+    <string name="signal_bar_system_applied">已应用 5G 信号强度调整，可能需要飞行模式或重启后生效。</string>
+    <string name="signal_bar_system_restored">已关闭 5G 信号强度调整并恢复首次写入前的系统默认阈值，可能需要飞行模式或重启后生效。</string>
+    <string name="signal_bar_local_saved_no_system_override">已关闭 5G 信号强度调整；当前没有 OneIMS 写入的系统阈值需要恢复。</string>
+    <string name="signal_bar_system_apply_failed">5G 信号强度调整写入或回读失败：%1$s</string>
+    <string name="signal_bar_needs_nr_enabled">已保留「5G信号强度调整」开关，但未写入系统阈值：请先开启 5G NR 后再点【应用核心能力】。</string>
+    <string name="action_applying">应用中…</string>
+    <string name="action_processing">处理中…</string>
+
+    <string name="one_click_check_title">一键体检</string>
+    <string name="one_click_check_desc">一次性检查 Shizuku、选卡、基础通信、IMS 注册等关键状态，结果按清单方式展示。</string>
+    <string name="one_click_section_title">一键检测与修复</string>
+    <string name="one_click_check_action">一键检测</string>
+    <string name="one_click_fix_action">一键修复</string>
+    <string name="one_click_check_checking">正在检查…</string>
+    <string name="one_click_check_result_title">体检结果</string>
+    <string name="one_click_fix_title">一键修复</string>
+    <string name="one_click_fix_desc">对体检发现的问题尽量自动修复；修复不了的会给出手动处理指引，不会替你乱开关。</string>
+    <string name="diagnostic_user_sim_status">SIM 状态</string>
+    <string name="diagnostic_user_ims_status">IMS 状态</string>
+    <string name="diagnostic_user_current_network">当前网络</string>
+    <string name="diagnostic_user_data_sim">数据卡</string>
+    <string name="diagnostic_user_fix_suggestion">修复建议</string>
+    <string name="diagnostic_user_no_sim_selected">未选择 SIM</string>
+    <string name="diagnostic_user_unavailable">无法读取</string>
+    <string name="diagnostic_user_normal">正常</string>
+    <string name="diagnostic_user_abnormal">异常</string>
+    <string name="diagnostic_user_unknown">未知</string>
+    <string name="diagnostic_user_registered">已注册</string>
+    <string name="diagnostic_user_not_registered">未注册</string>
+    <string name="diagnostic_user_available">可用</string>
+    <string name="diagnostic_user_unavailable_state">不可用</string>
+    <string name="diagnostic_user_sim_slot">卡%1$d</string>
+    <string name="diagnostic_user_no_fix_needed">无需修复</string>
+    <string name="diagnostic_user_privilege_required">高级修复需要授权支持</string>
+    <string name="diagnostic_user_fix_needed">需要修复</string>
+    <string name="diagnostic_check_shizuku_running">Shizuku 服务运行</string>
+    <string name="diagnostic_check_shizuku_running_yes">Shizuku 正在运行</string>
+    <string name="diagnostic_check_shizuku_running_no">Shizuku 未运行</string>
+    <string name="diagnostic_check_shizuku_start_guidance">请先启动 Shizuku；可在排障页顶部的自救入口中打开配对或无线调试。</string>
+    <string name="diagnostic_check_shizuku_permission">Shizuku 授权</string>
+    <string name="diagnostic_check_shizuku_permission_unavailable">Shizuku 未运行，无法检查授权</string>
+    <string name="diagnostic_check_authorized">已授权</string>
+    <string name="diagnostic_check_not_authorized">未授权</string>
+    <string name="diagnostic_check_permission_guidance">请在首页点击授权，并在 Shizuku 系统对话框中同意。</string>
+    <string name="diagnostic_check_sim_selected">SIM 卡已选择</string>
+    <string name="diagnostic_check_selected_sub_id">已选中 subId=%1$d</string>
+    <string name="diagnostic_check_select_sim_guidance">请在能力页顶部的选卡胶囊中选择一张卡。</string>
+    <string name="diagnostic_check_communication_health">基础通信健康（SIM/语音/数据）</string>
+    <string name="diagnostic_check_read_failed">读取失败</string>
+    <string name="diagnostic_check_health_guidance">基础通信异常时，先用一键还原恢复运营商默认，再重新配置。</string>
+    <string name="diagnostic_check_ims_registration">IMS 注册状态</string>
+    <string name="diagnostic_check_ims_guidance">IMS 未注册可能与配置切换、弱信号或运营商限制有关；可先重启 IMS，再检查 VoLTE/VoWiFi。</string>
+    <string name="diagnostic_check_no_sim_cannot_check">未选卡，无法检查</string>
+    <string name="diagnostic_check_select_sim_first">请先选择一张 SIM 卡</string>
+    <string name="diagnostic_check_guard">掉线守护</string>
+    <string name="diagnostic_check_enabled">已开启</string>
+    <string name="diagnostic_check_disabled">未开启</string>
+    <string name="diagnostic_check_guard_guidance">掉线守护可在 IMS 意外掉线时重新应用配置；可在实验功能页按需开启。</string>
+    <string name="diagnostic_fix_permission_requested">已发起授权请求，请在系统弹窗中同意后重新体检。</string>
+    <string name="diagnostic_fix_sim_not_found">未找到对应 SIM 卡</string>
+    <string name="one_click_fix_fixing">正在修复…</string>
+    <string name="one_click_fix_result_title">修复结果</string>
+    <string name="one_click_fix_result_fixed">已修复</string>
+    <string name="one_click_fix_result_guidance">建议手动处理：%1$s</string>
+    <string name="one_click_fix_result_ok">本身正常，无需处理</string>
+    <string name="one_click_fix_result_unknown">无法判定，无需处理</string>
+    <string name="one_click_close">关闭</string>
+
+    <string name="reapply_trigger_manual">手动操作</string>
+    <string name="reapply_trigger_quick_tile">快捷设置磁贴</string>
+    <string name="reapply_trigger_shizuku_ready">Shizuku 恢复就绪</string>
+    <string name="reapply_trigger_ims_not_registered">IMS 注册掉线</string>
+    <string name="action_reapply">重应用最近配置</string>
+    <string name="reapply_status_none">尚未执行过重应用</string>
+    <string name="reapply_status_success">成功</string>
+    <string name="reapply_status_failed">失败</string>
+    <string name="reapply_status_line">最近重应用：%1$s · %2$s · %3$s</string>
+    <string name="reapply_combined_result">核心配置：%1$s\n高级选项：%2$s</string>
+    <string name="reapply_explanation">CarrierConfig 覆盖使用临时模式（persistent=false），重启手机或 Shizuku 后可能被系统清除，因此 OneIms 会幂等重放最近一次成功配置。触发原因和结果会记录在下方。</string>
+
+    <string name="tile_ims_status_label">IMS 状态</string>
+    <string name="tile_ims_registered">IMS 已注册</string>
+    <string name="tile_ims_not_registered">IMS 未注册</string>
+    <string name="tile_ims_unknown">IMS 状态未知</string>
+    <string name="tile_volte_label">VoLTE 配置</string>
+    <string name="tile_volte_applied">VoLTE 配置已重应用</string>
+    <string name="tile_volte_failed">重应用失败</string>
+    <string name="tile_no_saved_profile">没有已保存的配置</string>
+    <string name="qs_tile_title">OneIMS</string>
+    <string name="qs_tile_service_label">OneIMS 切卡</string>
+    <string name="qs_tile_feature_title">控制中心快捷切卡</string>
+    <string name="qs_tile_feature_desc">可将 OneIMS 添加到控制中心磁贴，快速切换默认移动数据卡。</string>
+    <string name="qs_tile_open_editor">打开系统磁贴编辑</string>
+    <string name="qs_tile_manual_guide">请下拉控制中心，点击编辑，将 OneIMS 磁贴拖入快捷开关区域。</string>
+    <string name="qs_tile_permission_required">切卡需要授权支持</string>
+    <string name="qs_tile_single_sim">当前只有一张可用 SIM</string>
+    <string name="qs_tile_switching">正在切换数据卡…</string>
+    <string name="qs_tile_current_unknown">当前数据卡未知</string>
+    <string name="qs_tile_current_sim">当前：卡%1$d · %2$s</string>
+    <string name="data_switch_refresh">刷新 SIM 状态</string>
+    <string name="data_switch_to_card">切到卡%1$d</string>
+    <string name="data_switch_current_tag"> · 当前数据</string>
+    <string name="data_switch_row">卡%1$d · %2$s · subId=%3$d%4$s</string>
+    <string name="data_switch_switching">正在切换当前数据卡…</string>
+    <string name="data_switch_success">已切换到卡%1$d</string>
+    <string name="data_switch_failed">切换失败：%1$s</string>
+    <string name="data_switch_mobile_data_restore_failed">已切换数据卡，但移动数据被系统关闭，请手动开启。</string>
+    <string name="data_switch_mobile_data_state_unknown">已切换数据卡，但无法确认移动数据开关状态，请检查是否仍可上网。</string>
+    <string name="data_switch_readback_failed">切换后回读未生效</string>
+    <string name="data_switch_no_permission">切卡需要授权支持</string>
+    <string name="data_switch_invalid_target">目标 SIM 不可用</string>
+    <string name="data_switch_already_current">已经是当前数据卡</string>
+    <string name="data_switch_no_sim">未检测到可用 SIM</string>
+    <string name="data_switch_single_sim">当前只有一张可用 SIM</string>
+    <string name="data_switch_confirm_title">确定切换到卡%1$d · %2$s 吗？</string>
+    <string name="data_switch_confirm_message">只切换默认移动数据 SIM；不会修改 IMS、APN、5G 或 CarrierConfig。切换期间网络可能短暂中断。</string>
+    <string name="data_switch_confirm_action">切换</string>
+    <string name="ims_sim_header">SIM %1$d · %2$s · subId %3$d</string>
+
+    <string name="action_back">返回</string>
+
+    <string name="sponsor_title">赞赏支持</string>
+    <string name="sponsor_subtitle">支付宝与微信本地赞赏码</string>
+    <string name="sponsor_intro_title">支持 OneIMS</string>
+    <string name="sponsor_intro">如果 OneIMS 帮你点亮了 VoLTE / VoWiFi / 5G，\n可以随缘投喂一杯咖啡 ☕\n感谢每一位支持 OneIMS 的朋友。</string>
+    <string name="sponsor_alipay_title">支付宝赞赏</string>
+    <string name="sponsor_alipay_desc">感谢投喂，OneIMS 会继续折腾下去。</string>
+    <string name="sponsor_wechat_title">微信赞赏</string>
+    <string name="sponsor_wechat_desc">随缘支持一下，作者继续给 Pixel 和运营商劝架。</string>
+    <string name="sponsor_qr_missing">暂未配置赞赏码</string>
+    <string name="sponsor_qr_interaction_hint">点击二维码可放大；长按可查看保存提示</string>
+    <string name="sponsor_long_press_hint">可截图保存后扫码赞赏</string>
+    <string name="sponsor_save_local">保存到本地</string>
+    <string name="sponsor_saved">赞赏码已保存到相册 Pictures/OneIMS</string>
+    <string name="sponsor_save_failed">保存失败，请重试或截图保存</string>
+    <string name="sponsor_close_preview">关闭</string>
+    <string name="sponsor_voluntary_notice">赞赏完全自愿，不影响 OneIMS 的任何功能使用。</string>
+    <string name="settings_tools_title">工具与支持</string>
+    <string name="settings_tools_subtitle">控制中心快捷入口</string>
+    <string name="settings_sponsor_title">赞赏支持</string>
+    <string name="settings_sponsor_subtitle">查看支付宝与微信本地赞赏码</string>
+</resources>

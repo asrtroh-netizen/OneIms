@@ -1,0 +1,682 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">OneIms</string>
+
+    <!-- Common -->
+    <string name="please_select_sim">Select a SIM first</string>
+    <string name="refreshed">Refreshed</string>
+    <string name="log_ready">Ready</string>
+
+    <!-- Bottom nav -->
+    <string name="tab_home">Home</string>
+    <string name="tab_power">Features</string>
+    <string name="tab_tools">Fix</string>
+
+    <!-- Home -->
+    <string name="action_refresh">Refresh</string>
+    <string name="action_compat">Check</string>
+    <string name="action_grant">Grant</string>
+    <string name="action_restore">Restore</string>
+    <string name="no_sim_hint">No SIM found, tap "Refresh"</string>
+    <string name="sim_chip">SIM%1$d %2$s</string>
+    <string name="sim_tag_active">Active</string>
+    <string name="sim_tag_standby">Standby</string>
+    <string name="apply_recommended">Apply recommended</string>
+    <string name="shizuku_setup_title">Can\'t start Shizuku? Works without WiFi</string>
+    <string name="setup_open_shizuku">Open Shizuku</string>
+    <string name="setup_wireless_debug">Wireless debug</string>
+    <string name="setup_hotspot">Hotspot</string>
+    <string name="setup_copy_cmd">Copy cmd</string>
+    <string name="log_shizuku_opened">Opened Shizuku for pairing</string>
+    <string name="log_shizuku_not_installed">Not installed, opened store</string>
+    <string name="log_open_failed">Failed to open</string>
+    <string name="log_jumped_wireless">Opened wireless debugging</string>
+    <string name="log_jump_failed">Jump failed</string>
+    <string name="log_hotspot_opened">Opened hotspot settings</string>
+    <string name="log_cmd_copied">PC-free command copied</string>
+    <string name="termux_hint">PC-free setup (install Termux + pkg install android-tools):\n1) On the wireless-debug page tap \"Pair device with pairing code\", note IP:pair-port and the code;\n2) In Termux run: adb pair localhost:pair-port code\n3) Then run: adb connect localhost:connect-port\n4) Start Shizuku: adb -s localhost:connect-port shell sh /storage/emulated/0/Android/data/moe.shizuku.privileged.api/start.sh</string>
+
+    <!-- Features -->
+    <string name="cap_group_radio_title">Carrier features &amp; 5G</string>
+    <string name="cap_group_radio_sub">Core calling reliability, plus WiFi calling mode and 5G capabilities</string>
+    <string name="cap_group_extra_title">Extras &amp; display options</string>
+    <string name="cap_group_extra_sub">Video calling, dual-SIM interworking, and carrier display/roaming details</string>
+    <string name="cap_volte">VoLTE</string>
+    <string name="cap_volte_sub">HD voice over 4G</string>
+    <string name="cap_vowifi">VoWiFi</string>
+    <string name="cap_vowifi_sub">WiFi calling</string>
+    <string name="cap_vonr">VoNR</string>
+    <string name="cap_vonr_sub">Voice over 5G</string>
+    <string name="action_apply_core">Apply core features</string>
+    <string name="cap_vilte">ViLTE</string>
+    <string name="cap_vilte_sub">Video calling</string>
+    <string name="cap_ut">UT</string>
+    <string name="cap_ut_sub">Call forwarding/waiting</string>
+    <string name="cap_crosssim">Cross-SIM</string>
+    <string name="cap_crosssim_sub">Dual-SIM interworking</string>
+    <string name="action_apply_extras">Apply enhanced</string>
+    <string name="cap_5g_nr">5G NR</string>
+    <string name="cap_5g_nr_sub">NSA + SA</string>
+    <string name="signal_strength_adjust_title">5G signal strength adjustment</string>
+    <string name="signal_strength_adjust_subtitle">Writes common 5G signal-level thresholds to improve weak-signal bar appearance</string>
+    <string name="signal_strength_adjust_notice">When enabled, thresholds are written with 5G NR via Apply core features. This does not change real base-station signal. Final status-bar look depends on SystemUI.</string>
+    <string name="signal_bar_style_title">Signal bar display style</string>
+    <string name="signal_bar_style_auto">Automatic</string>
+    <string name="signal_bar_style_auto_sub">Follow the system / original bar count for this SIM</string>
+    <string name="signal_bar_style_four">Fixed 4 bars</string>
+    <string name="signal_bar_style_four_sub">Try a 4-bar style regardless of the original count (weak signal can still show 1/4 or 2/4)</string>
+    <string name="signal_bar_style_five">Fixed 5 bars</string>
+    <string name="signal_bar_style_five_sub">Try a 5-bar style regardless of the original count (weak signal can still show 2/5 or 3/5)</string>
+    <string name="signal_bar_style_notice">Writes system display CarrierConfig for the SIM selected above. Auto clears this feature\'s overrides; fixed 4/5 bars try to change SystemUI bar count. Visibility still depends on the ROM / SystemUI.</string>
+    <string name="signal_bar_style_apply">Apply signal bar display style</string>
+    <string name="signal_bar_style_system_applied">Writable config applied, but whether the status-bar bar count changes depends on SystemUI / ROM support.</string>
+    <string name="signal_bar_style_system_cleared">Cleared signal-bar style system overrides and restored the pre-write system / carrier defaults.</string>
+    <string name="signal_bar_style_system_cleared_noop">Saved Automatic; there is no signal-bar system override from this feature to clear.</string>
+    <string name="signal_bar_style_system_failed">Signal bar style write or readback failed: %1$s</string>
+    <string name="signal_bar_style_unsupported">This system currently does not support changing the status-bar signal style.</string>
+    <string name="vowifi_name_title">VoWiFi network name format</string>
+    <string name="vowifi_name_format_pick_sub">Current: %1$s · Tap to choose display format</string>
+    <string name="vowifi_name_format_pick_action">Choose</string>
+    <string name="vowifi_name_preview">Current preview: %1$s</string>
+    <string name="vowifi_name_format_index">Format index: %1$s</string>
+    <string name="vowifi_name_format_system_value">system</string>
+    <string name="vowifi_name_format_system">Follow system</string>
+    <string name="vowifi_name_format_carrier">Carrier name</string>
+    <string name="vowifi_name_format_carrier_wifi_calling">Carrier name Wi-Fi Calling</string>
+    <string name="vowifi_name_format_wlan_call">WLAN Call</string>
+    <string name="vowifi_name_format_carrier_wlan_call">Carrier name WLAN Call</string>
+    <string name="vowifi_name_format_carrier_wifi">Carrier name Wi-Fi</string>
+    <string name="vowifi_name_format_wifi_calling_carrier">WiFi Calling | Carrier name</string>
+    <string name="vowifi_name_format_carrier_vowifi">Carrier name VoWifi</string>
+    <string name="vowifi_name_format_wifi_calling_hyphen">Wi-Fi Calling</string>
+    <string name="vowifi_name_format_wifi_hyphen">Wi-Fi</string>
+    <string name="vowifi_name_format_wifi_calling">WiFi Calling</string>
+    <string name="vowifi_name_format_vowifi">VoWifi</string>
+    <string name="vowifi_name_format_carrier_wifi_calling_plain">Carrier name WiFi Calling</string>
+    <string name="vowifi_name_format_wifi_call">WiFi Call</string>
+    <string name="vowifi_name_custom_carrier">Custom carrier display name</string>
+    <string name="vowifi_name_custom_carrier_hint">Examples: China Unicom, CMCC, CUNI, OneIMS. Leave blank to keep the carrier name unchanged.</string>
+    <string name="vowifi_name_system_notice">The final display depends on whether SystemUI / the phone service uses these fields.</string>
+    <string name="vowifi_name_apply">Apply VoWiFi name</string>
+    <string name="vowifi_name_apply_success">VoWiFi name configuration written. Airplane mode or a reboot may be required. The final display depends on SystemUI / phone-service support.</string>
+    <string name="vowifi_name_follow_system_success">Restored the VoWiFi name configuration captured before the first write. Airplane mode or a reboot may be required.</string>
+    <string name="vowifi_name_follow_system_no_override">OneIMS does not own a VoWiFi name override for this SIM; it continues to follow the system.</string>
+    <string name="power_wfc_mode">WFC mode</string>
+    <string name="action_set_wfc">Set mode</string>
+    <string name="power_identity_title">Identity display override</string>
+    <string name="power_identity_sub">Display layer only, no baseband change, no impact on calls</string>
+    <string name="hint_carrier_name">Carrier name (blank = keep)</string>
+    <string name="hint_ims_ua">IMS User Agent (blank = keep)</string>
+    <string name="action_apply_identity">Apply identity override</string>
+    <string name="action_restore_identity_name">Restore carrier name</string>
+    <string name="identity_current_name">Current system display: %1$s</string>
+    <string name="identity_invalid_control">Input cannot contain line breaks or control characters</string>
+    <string name="identity_invalid_length">Input is too long; shorten it and try again</string>
+
+    <!-- Fix -->
+    <string name="tool_health">Health</string>
+    <string name="tool_restart_ims">Re-register IMS</string>
+    <string name="tool_apn">Offline APN library</string>
+    <string name="tool_epdg">ePDG</string>
+    <string name="tool_diag">Diagnose</string>
+    <string name="tool_config">View config</string>
+    <string name="action_net_fix">Fix restricted network (remove !)</string>
+    <string name="action_tiktok_fix">TikTok preset (US)</string>
+    <string name="action_tiktok_fix_sub">One-tap override country ISO to US</string>
+    <string name="sim_country_title">SIM country ISO override</string>
+    <string name="sim_country_sub">Writes CarrierConfig sim_country_iso_override (ISO-3166 alpha-2). Changes the country code apps read; does not change baseband MCC/MNC.</string>
+    <string name="sim_country_input_label">Country ISO (2 letters)</string>
+    <string name="sim_country_apply">Apply country override</string>
+    <string name="sim_country_clear">Clear country override</string>
+    <string name="sim_country_current">Current override: %1$s</string>
+    <string name="sim_country_current_none">Current override: none</string>
+    <string name="sim_country_preset_us">United States US</string>
+    <string name="sim_country_preset_jp">Japan JP</string>
+    <string name="sim_country_preset_hk">Hong Kong HK</string>
+    <string name="sim_country_preset_tw">Taiwan TW</string>
+    <string name="sim_country_preset_gb">United Kingdom GB</string>
+    <string name="sim_country_preset_kr">Korea KR</string>
+    <string name="sim_country_preset_cn">China CN</string>
+    <string name="sim_country_preset_sg">Singapore SG</string>
+    <string name="msg_sim_country_applied">SIM country ISO overridden to %1$s</string>
+    <string name="msg_sim_country_cleared">SIM country ISO override cleared</string>
+    <string name="msg_sim_country_readback_mismatch">Country ISO readback mismatch (expected %1$s, got %2$s)</string>
+    <string name="confirm_sim_country_title">Apply country override?</string>
+    <string name="confirm_sim_country_message">Override the selected SIM country display to \"%1$s\". Real MCC/MNC is unchanged.</string>
+    <string name="confirm_sim_country_clear_title">Clear country override?</string>
+    <string name="confirm_sim_country_clear_message">Attempt to clear the country ISO override on the selected SIM.</string>
+    <string name="log_title">Log</string>
+    <string name="health_result">Health: %1$s\n%2$s</string>
+    <string name="health_ok">All normal</string>
+    <string name="health_abnormal">Abnormal!</string>
+
+    <!-- About -->
+    <string name="guard_title">Drop guard</string>
+    <string name="guard_sub">Auto re-apply on boot/drop</string>
+    <string name="guard_on">Guard on</string>
+    <string name="guard_off">Guard off</string>
+    <string name="update_title">App update</string>
+    <string name="current_version">Current v%1$s</string>
+    <string name="action_check_update">Check update</string>
+    <string name="checking_update">Checking…</string>
+    <string name="action_download_install">Download &amp; install</string>
+    <string name="download_started">Downloading v%1$s, install will launch when done</string>
+    <string name="update_downloading">Downloading update…</string>
+    <string name="about_title">About OneIms</string>
+    <string name="about_version">v%1$s · Tensor Pixel · rootless</string>
+    <string name="about_author">Developer</string>
+    <string name="about_author_name">小喵崽</string>
+    <string name="about_donate_title">Support the project</string>
+    <string name="about_donate_detail">Always free · No ads added · Donations help keep it maintained</string>
+
+    <!-- ePDG check results -->
+    <string name="epdg_reachable">ePDG reachable (%1$s); should work if enabled</string>
+    <string name="epdg_dns_fail">ePDG DNS failed: carrier likely not provisioned, no local fix</string>
+    <string name="epdg_port_unreachable">ePDG resolved to %1$s but unreachable: try another network</string>
+    <string name="epdg_unavailable">Cannot check: %1$s</string>
+    <string name="epdg_no_mccmnc">No valid MCC/MNC to build ePDG domain</string>
+
+    <!-- WFC mode -->
+    <string name="wfc_wifi_only">WiFi only</string>
+    <string name="wfc_cellular_preferred">Cellular preferred</string>
+    <string name="wfc_wifi_preferred">WiFi preferred</string>
+
+    <!-- Compatibility check -->
+    <string name="support_full">Fully supported</string>
+    <string name="support_degraded">Degraded</string>
+    <string name="support_unsupported">Unsupported</string>
+    <string name="support_need_shizuku">Set up Shizuku first</string>
+    <string name="compat_tensor">① Tensor chip: %1$s</string>
+    <string name="compat_yes">Yes ✅</string>
+    <string name="compat_tensor_no">No ❌ (this tool targets Tensor Pixel)</string>
+    <string name="compat_os">② OS: Android %1$s (API %2$d) %3$s</string>
+    <string name="compat_os_bad">❌ (needs Android 12+)</string>
+    <string name="compat_shizuku">③ Shizuku: %1$s</string>
+    <string name="compat_shizuku_granted">Granted ✅</string>
+    <string name="compat_shizuku_running">Running, not granted ⚠️</string>
+    <string name="compat_shizuku_off">Not running ❌</string>
+    <string name="compat_strategy">④ Bypass strategy: %1$s</string>
+    <string name="compat_strategy_delegate">Instrumentation permission proxy supported (patched devices) ✅</string>
+    <string name="compat_strategy_direct">No delegate API, using Shizuku direct ⚠️</string>
+    <string name="compat_sim">⑤ Active SIM: %1$d %2$s</string>
+    <string name="compat_sim_no">❌ (no SIM detected)</string>
+    <string name="compat_conclusion">—— Verdict: %1$s ——</string>
+    <string name="compat_advice_full">All features safe to use.</string>
+    <string name="compat_advice_degraded">Usable, but via direct strategy; likely needs re-apply after reboot.</string>
+    <string name="compat_advice_need_shizuku">Start and grant Shizuku first.</string>
+    <string name="compat_advice_unsupported">Device does not meet prerequisites; not recommended to avoid impacting calls.</string>
+
+    <!-- Device info -->
+    <string name="dev_unknown">Unknown</string>
+    <string name="dev_model">Model: %1$s %2$s</string>
+    <string name="dev_device">Codename: %1$s</string>
+    <string name="dev_android">Android: %1$s  (API %2$d)</string>
+    <string name="dev_patch">Security patch: %1$s</string>
+    <string name="dev_tensor">Tensor chip: %1$s</string>
+    <string name="dev_tensor_yes">Yes (supported)</string>
+    <string name="dev_tensor_no">No (non-Tensor, may be unsupported)</string>
+    <string name="dev_sim_count">Active SIMs: %1$d</string>
+    <string name="dev_delegate">Instrumentation permission proxy: %1$s</string>
+    <string name="dev_delegate_yes">Supported (new-patch compatible)</string>
+    <string name="dev_delegate_no">Unsupported (Shizuku direct)</string>
+    <string name="dev_last_strategy">Last write strategy: %1$s</string>
+    <string name="strategy_unused">Unused</string>
+
+    <!-- Guard notification -->
+    <string name="guard_channel">IMS Guard</string>
+    <string name="guard_channel_desc">Keep VoLTE/VoWiFi online, auto re-apply on drop</string>
+    <string name="guard_notif_title">OneIms guard running</string>
+    <string name="guard_notif_text">Calls/SMS/data first; auto-recover on IMS drop</string>
+
+    <!-- Carrier profiles -->
+    <string name="carrier_cmcc">China Mobile</string>
+    <string name="carrier_cucc">China Unicom</string>
+    <string name="carrier_ctcc">China Telecom</string>
+    <string name="carrier_cn_unknown">China (unknown carrier MNC=%1$s)</string>
+    <string name="carrier_unknown">Unknown carrier</string>
+    <string name="carrier_oversea">Overseas/other (MCC=%1$s)</string>
+    <string name="carrier_note_cmcc">Mobile has good VoLTE/VoNR; VoWiFi varies by region, cellular-preferred keeps calls safe.</string>
+    <string name="carrier_note_cucc">Unicom drops back easily without VoLTE, enable it; VoWiFi varies by region.</string>
+    <string name="carrier_note_ctcc">Telecom has no 2G/3G; VoLTE is required for calls; VoWiFi varies by region.</string>
+    <string name="carrier_note_cn_unknown">Detected as a China SIM but MNC is unknown; enable VoLTE conservatively.</string>
+    <string name="carrier_note_oversea">Non-China SIM; only VoLTE recommended; pick others as needed.</string>
+
+    <!-- Health check -->
+    <string name="health_sim_ready">SIM ready: %1$s</string>
+    <string name="health_voice">Voice: %1$s</string>
+    <string name="health_data">Data: %1$s</string>
+    <string name="health_net_type">Network: %1$s</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="net_5g">5G(NR)</string>
+    <string name="net_4g">4G(LTE)</string>
+    <string name="net_3g">3G</string>
+    <string name="net_2g">2G</string>
+    <string name="net_none">No data network</string>
+    <string name="net_other">Other(%1$d)</string>
+    <string name="net_unknown">Unknown</string>
+
+    <!-- IMS config result messages -->
+    <string name="msg_health_rollback">Basic comms abnormal (call/data/SMS); config auto-restored to stay safe. IMS not enabled.</string>
+    <string name="msg_apply_ok">Config applied (persistent=false, re-apply after reboot). Basic comms OK.</string>
+    <string name="msg_apply_partial">CarrierConfig applied, but these provisioning writes were incomplete: %1$s</string>
+    <string name="msg_write_not_started">No configuration was written: %1$s</string>
+    <string name="msg_write_rollback">Write failed; rollback was confirmed successful: %1$s</string>
+    <string name="msg_write_rollback_failed">Write failed: %1$s; automatic rollback also failed: %2$s. Restart now and verify basic communications.</string>
+    <string name="msg_no_history">No saved config, skip re-apply</string>
+    <string name="msg_reapply_wrong_sim">Last successful config belongs to subId=%1$d, but the selected subId=%2$d has no local snapshot. Cross-SIM replay refused.</string>
+    <string name="msg_wfc_set">WFC mode set to "%1$s"</string>
+    <string name="msg_wfc_readback">Written, readback=%1$d (may need reboot)</string>
+    <string name="msg_set_failed">Set failed: %1$s</string>
+    <string name="msg_extras_on">Enabled: %1$s</string>
+    <string name="msg_none">none</string>
+    <string name="msg_write_failed">Write failed: %1$s</string>
+    <string name="msg_5g">5G: %1$s</string>
+    <string name="msg_5g_nsa_sa">NSA+SA enabled </string>
+    <string name="msg_tiktok_ok">SIM country ISO overridden to "%1$s" (TikTok preset)</string>
+    <string name="msg_apn_no_mccmnc">The selected SIM has no valid subscription or MCC/MNC; IMS APN cannot be repaired</string>
+    <plurals name="msg_apn_ok">
+        <item quantity="one">IMS APN repair complete: split %1$d mixed row and confirmed a dedicated ims entry. Re-register IMS; restart if needed.</item>
+        <item quantity="other">IMS APN repair complete: split %1$d mixed rows and confirmed a dedicated ims entry. Re-register IMS; restart if needed.</item>
+    </plurals>
+    <string name="msg_apn_failed">Failed to repair IMS APN: %1$s</string>
+    <string name="msg_apn_profile_mismatch">The selected APN is not a dedicated IMS template that can be safely applied to this SIM</string>
+    <string name="msg_apn_profile_applied">Used offline profile "%1$s" (APN=%2$s).\n%3$s</string>
+    <string name="msg_ims_restart_registered">IMS re-registered (%1$s)</string>
+    <string name="msg_ims_restart_pending">IMS reset completed but registration did not return within 8 seconds. Check signal and carrier provisioning, then diagnose again or restart the phone.</string>
+    <string name="msg_ims_restart_unverified">IMS reset completed, but this system did not expose a readable registration state. Verify in the system SIM page or with a test call.</string>
+    <string name="msg_ims_restart_failed">Failed to re-register IMS: %1$s</string>
+    <string name="msg_captive_restore">Captive portal detection restored</string>
+    <string name="msg_captive_fix">Captive portal detection ignored (removes "connected but limited/!")</string>
+    <string name="msg_net_fix_failed">Network fix failed: %1$s</string>
+    <string name="msg_restore_ok">Overrides cleared, carrier defaults restored (reboot once if still abnormal)</string>
+    <string name="msg_restore_failed">Restore failed: %1$s</string>
+    <string name="ims_reg">IMS registration: %1$s</string>
+    <string name="ims_reg_yes">Registered (%1$s)</string>
+    <string name="ims_reg_no">Not registered/unknown</string>
+    <string name="ims_volte_avail">VoLTE available: %1$s</string>
+    <string name="ims_vowifi_avail">VoWiFi available: %1$s</string>
+    <string name="ims_wfc_mode">Current WFC mode: %1$s</string>
+    <string name="unknown">Unknown</string>
+    <string name="tech_lte">LTE (VoLTE)</string>
+    <string name="tech_iwlan">IWLAN (VoWiFi)</string>
+    <string name="tech_crosssim">Cross-SIM</string>
+    <string name="tech_nr">NR (VoNR)</string>
+    <string name="tech_3g">3G</string>
+    <string name="tech_none">Not registered</string>
+    <string name="identity_applied">Display overridden: %1$s (persistent=false, reboot/restore reverts)</string>
+    <string name="identity_carrier_name">carrier name=%1$s</string>
+    <string name="identity_ims_ua">IMS UA</string>
+    <string name="identity_none">No display item entered to override</string>
+    <string name="identity_failed">Override failed: %1$s</string>
+    <string name="identity_name_restored">Carrier-name override disabled; system display restored</string>
+    <string name="system_target_preview">Current target: SIM %1$d · %2$s · subId=%3$d</string>
+    <string name="config_dump_failed">Failed to read CarrierConfig (needs Shizuku granted and a valid SIM selected)</string>
+    <string name="config_dump_title">CarrierConfig key items (subId=%1$d):</string>
+    <string name="config_dump_empty">(empty)</string>
+    <string name="config_dump_footer">——\nMatches: %1$d / total: %2$d (key items only, rest omitted)</string>
+
+    <!-- Update check -->
+    <string name="update_http_fail">Update check failed: HTTP %1$d (repo unconfigured or unreachable)</string>
+    <string name="update_net_fail">Update check failed: %1$s</string>
+    <string name="update_net_exception">Network error</string>
+    <string name="update_no_version">No version info parsed</string>
+    <string name="update_found">New version %1$s (current %2$s)</string>
+    <string name="update_found_no_apk">New version %1$s, but this release has no APK</string>
+    <string name="update_latest">Already latest (%1$s)</string>
+
+    <!-- Pixel Material 3 UI -->
+    <string name="tab_settings">Settings</string>
+    <string name="tab_sponsor">Sponsor</string>
+    <string name="home_subtitle">Manage Pixel IMS safely and clearly</string>
+    <string name="home_ready_title">Device ready</string>
+    <string name="home_setup_needed_title">One more step</string>
+    <string name="home_status_shizuku_off">Start Shizuku first</string>
+    <string name="home_status_permission">Grant Shizuku access to apply settings</string>
+    <string name="home_status_no_sim">No active SIM detected</string>
+    <string name="home_status_ready">Authorized with a mobile network selected</string>
+    <string name="home_safety_note">Calls, messages, and data always take priority over IMS changes</string>
+    <string name="home_quick_actions">Quick start</string>
+    <string name="home_quick_actions_sub">Check device status before applying carrier recommendations</string>
+    <string name="action_refresh_sub">Reload permission and SIM status</string>
+    <string name="action_compat_sub">Check device support</string>
+    <string name="action_grant_sub">Allow OneIms to use system capabilities</string>
+    <string name="action_restore_sub">Clear overrides and restore defaults</string>
+    <string name="no_sim_detail">Check phone permission and SIM status, then retry</string>
+    <string name="shizuku_setup_subtitle">Pairing, wireless debugging, and PC-free startup</string>
+    <string name="setup_open_shizuku_sub">Open pairing and authorization</string>
+    <string name="setup_wireless_debug_sub">Open Android developer options</string>
+    <string name="setup_hotspot_sub">Create a local network without a router</string>
+    <string name="setup_copy_cmd_sub">Copy the Termux startup steps</string>
+    <string name="home_device_details">Device details</string>
+    <string name="home_device_details_expand">Expand</string>
+    <string name="home_device_details_collapse">Collapse</string>
+    <string name="home_emergency_title">Emergency restore</string>
+    <string name="home_emergency_subtitle">Use only to undo overrides or recover communications</string>
+    <string name="home_emergency_detail">Clears CarrierConfig overrides for the selected SIM and restores carrier defaults.</string>
+
+    <string name="capabilities_title">IMS features</string>
+    <string name="capabilities_subtitle">Configure calling, WiFi, and 5G capabilities</string>
+    <string name="capabilities_select_sim_notice">Choose a SIM below and ensure Shizuku is running and granted. Writes stay disabled until both are ready.</string>
+    <string name="sim_switcher_hint">Pick a SIM first — every setting below applies only to that SIM</string>
+    <string name="mobile_network_title">Mobile network</string>
+    <string name="mobile_network_subtitle">Carrier profile recommendation</string>
+    <string name="diagnostics_title">Diagnostics &amp; repair</string>
+    <string name="diagnostics_subtitle">Run read-only checks before higher-risk repairs</string>
+    <string name="diagnostics_select_sim_notice">The offline APN library remains available; privileged diagnostics and repairs require a selected SIM and Shizuku.</string>
+    <string name="diagnostics_checks">Read-only checks</string>
+    <string name="diagnostics_checks_sub">These actions do not modify system settings</string>
+    <string name="tool_health_sub">Check calls, data, and SIM</string>
+    <string name="tool_epdg_sub">Verify the VoWiFi gateway</string>
+    <string name="tool_diag_sub">Query IMS registration technology</string>
+    <string name="tool_config_sub">Read active key settings</string>
+    <string name="diagnostics_fix_order">Recommended order: diagnose, re-register IMS, then repair APN only if Android 17 still will not register.</string>
+    <string name="diagnostics_repairs">Repair tools</string>
+    <string name="diagnostics_repairs_sub">Each action is confirmed and logged</string>
+    <string name="tool_restart_ims_sub">Safely reset the IMS stack and recheck registration</string>
+    <string name="tool_apn_sub">Global carrier profiles stored locally, with current-SIM matching</string>
+    <string name="action_net_fix_sub">Adjust Android captive-portal detection</string>
+    <string name="log_subtitle">Newest results first; select text or copy everything</string>
+    <string name="action_copy_log">Copy</string>
+    <string name="action_clear_log">Clear</string>
+    <string name="log_copied">Log copied</string>
+    <string name="log_cleared">Log cleared</string>
+
+    <string name="settings_title">Settings</string>
+    <string name="settings_subtitle">Appearance, reliability, and maintenance</string>
+    <string name="appearance_title">Appearance</string>
+    <string name="appearance_subtitle">Follow Pixel themes and wallpaper colors</string>
+    <string name="theme_system">Use system setting</string>
+    <string name="theme_system_sub">Switch automatically with Android light or dark theme</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_light_sub">Always use the light theme</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_dark_sub">Always use the dark theme</string>
+    <string name="dynamic_color_title">Wallpaper colors</string>
+    <string name="dynamic_color_sub">Use the Material You palette generated by Pixel</string>
+    <string name="guard_section_title">Reliability</string>
+    <string name="guard_section_subtitle">Restore the last settings after restart or IMS drop</string>
+    <string name="update_check_subtitle">Fetch a new version from the configured release repository</string>
+    <!-- Unified feedback and high-risk confirmation -->
+    <string name="operation_already_running">Another operation is running. Please wait.</string>
+    <string name="operation_failed">Operation failed: %1$s</string>
+    <string name="operation_unknown_error">Unknown error</string>
+    <string name="operation_feedback_permission_delegate_failed">The permission proxy could not start, so no configuration was written. Restart Shizuku and retry; copy the diagnostics log if it still fails.</string>
+    <string name="operation_feedback_rollback_failed">Both the configuration write and automatic rollback failed. Restart now and check calls, data, and SMS; details are in Diagnostics.</string>
+    <string name="operation_feedback_failure_logged">The operation failed. Full details are available in Diagnostics.</string>
+    <string name="operation_feedback_result_logged">The operation completed. Full results are available in Diagnostics.</string>
+    <string name="shizuku_permission_granted_message">Shizuku permission granted</string>
+    <string name="shizuku_permission_denied_message">Shizuku permission was not granted</string>
+    <string name="shizuku_not_running_message">Shizuku is not running. Complete pairing first.</string>
+    <string name="shizuku_permission_required_message">Grant Shizuku on Home before changing system settings.</string>
+    <string name="shizuku_already_granted_message">Shizuku is already granted</string>
+    <string name="shizuku_permission_requested">Permission request sent</string>
+    <string name="phone_permission_denied_message">Phone permission denied; SIM and IMS status cannot be read</string>
+    <string name="confirm_restore_title">Restore carrier defaults?</string>
+    <string name="confirm_restore_message">This clears temporary CarrierConfig overrides for the selected SIM. Use it to recover basic communications.</string>
+    <string name="confirm_identity_title">Apply display identity override?</string>
+    <string name="confirm_identity_message">Only display-layer values are changed. Restart or restore to revert them.</string>
+    <string name="confirm_restore_identity_title">Restore the system carrier name?</string>
+    <string name="confirm_restore_identity_message">This disables the custom-name override and restores the selected SIM\'s system carrier display.</string>
+    <string name="confirm_restart_ims_title">Re-register IMS for this SIM?</string>
+    <string name="confirm_restart_ims_message">This briefly deregisters and rebuilds IMS for the selected slot. Do not run it during a call; mobile data and preferred network type are unchanged.</string>
+    <string name="confirm_apn_title">Repair the IMS APN for this SIM?</string>
+    <string name="confirm_apn_message">Android permits mixed APNs; use this only when IMS stays unregistered on Android 17. It prefers the selected subscription; if only a carrier-global template exists, SIMs with the same MCC/MNC share the change. This attempt is rolled back on failure.</string>
+    <string name="confirm_apn_profile_message">Use offline candidate "%1$s": APN=%2$s, protocol=%3$s, source=%4$s. Continue only when IMS remains unregistered on Android 17 after being enabled. The write is scoped to this subscription and rolled back on failure.</string>
+    <string name="confirm_network_fix_title">Adjust network detection?</string>
+    <string name="confirm_network_fix_message">This changes Android captive-portal detection and may alter restricted-network warnings.</string>
+    <string name="confirm_tiktok_title">Apply the TikTok US preset?</string>
+    <string name="confirm_tiktok_message">This overrides the selected SIM country display to US. Clear or reboot to revert intent.</string>
+    <string name="action_continue">Continue</string>
+    <string name="action_cancel">Cancel</string>
+
+    <!-- Offline APN catalog -->
+    <string name="apn_catalog_title">Offline APN library</string>
+    <string name="apn_catalog_search">Search carrier, APN, region code, or MCC/MNC</string>
+    <string name="apn_catalog_clear_search">Clear search</string>
+    <string name="apn_catalog_summary">Profiles: %1$d · PLMNs: %2$d · Regions: %3$d · Showing: %4$d</string>
+    <string name="apn_catalog_loading">Building the on-device index…</string>
+    <string name="apn_catalog_identity">%1$s · %2$s · %3$s</string>
+    <string name="apn_catalog_profile">APN %1$s · type %2$s · protocol %3$s</string>
+    <string name="apn_catalog_load_failed">Failed to read the offline APN library: %1$s</string>
+    <string name="apn_catalog_empty">No match. Try a country, ISO, MCC/MNC, carrier, or APN keyword.</string>
+    <string name="apn_catalog_select_hint">Select a profile to see available actions. Offline candidates do not guarantee carrier provisioning.</string>
+    <string name="apn_catalog_safe_ims">This is a dedicated ims template for the current SIM. A separate confirmation is still required.</string>
+    <string name="apn_catalog_browse_only">This is not a dedicated ims template for the current SIM; it can only be viewed or copied.</string>
+    <string name="apn_catalog_copy">Copy profile</string>
+    <string name="apn_catalog_generic_ims">Generic IMS</string>
+    <string name="apn_catalog_apply_ims">Use for IMS repair</string>
+    <string name="apn_catalog_copied">APN profile copied</string>
+    <string name="apn_catalog_clipboard">Carrier: %1$s\nCountry/region: %2$s\nMCC/MNC: %3$s\nAPN: %4$s\nTypes: %5$s\nProtocol: %6$s\nUsername: %7$s\nPassword: %8$s\nSource: %9$s</string>
+
+    <!-- Pixel IMS public-behavior compatible tools (independent implementation) -->
+    <string name="tab_experimental">Labs</string>
+    <string name="experimental_title">Experimental features</string>
+    <string name="experimental_subtitle">Early-access features: identity override, the offline APN catalog, and the expert editor live here; more will be added over time.</string>
+    <string name="advanced_options_title">Carrier display and roaming options</string>
+    <string name="advanced_apply">Apply advanced options</string>
+    <string name="advanced_apply_summary">Applies only the switches below to the selected SIM</string>
+    <string name="advanced_wfc_roaming">Wi-Fi calling while roaming</string>
+    <string name="advanced_wfc_roaming_desc">Enable Wi-Fi calling by default while the SIM is roaming</string>
+    <string name="advanced_show_wfc_mode">Show Wi-Fi calling mode</string>
+    <string name="advanced_show_wfc_mode_desc">Allow the system settings page to edit Wi-Fi calling preference</string>
+    <string name="advanced_show_wfc_roaming_mode">Show roaming Wi-Fi calling mode</string>
+    <string name="advanced_show_wfc_roaming_mode_desc">Allow a separate Wi-Fi calling preference while roaming</string>
+    <string name="advanced_wifi_only">Allow Wi-Fi only mode</string>
+    <string name="advanced_wifi_only_desc">Expose Wi-Fi-only calling if the carrier framework supports it</string>
+    <string name="advanced_allow_apn_add">Allow adding APNs</string>
+    <string name="advanced_allow_apn_add_desc">Show the add action on the system APN page</string>
+    <string name="advanced_vowifi_icon">Show VoWiFi status icon</string>
+    <string name="advanced_vowifi_icon_desc">Ask System UI to display the Wi-Fi calling icon</string>
+    <string name="advanced_data_rat_icon">Always show data type icon</string>
+    <string name="advanced_data_rat_icon_desc">Keep the LTE/5G data type visible when supported</string>
+    <string name="advanced_4g_for_lte">Show 4G for LTE</string>
+    <string name="advanced_4g_for_lte_desc">Use the 4G label for LTE networks</string>
+    <string name="advanced_hide_lte_plus">Hide LTE+ label</string>
+    <string name="advanced_hide_lte_plus_desc">Use the regular LTE/4G label for carrier aggregation</string>
+    <string name="advanced_show_ims_status">Show IMS registration status</string>
+    <string name="advanced_show_ims_status_desc">Expose IMS registration details on system status pages</string>
+    <string name="advanced_ss_over_cdma">Supplementary services over CDMA</string>
+    <string name="advanced_ss_over_cdma_desc">Enable carrier supplementary-service handling over CDMA</string>
+    <string name="advanced_enhanced_4g">Enhanced 4G LTE switch</string>
+    <string name="advanced_enhanced_4g_desc">Expose and enable the system Enhanced 4G LTE control</string>
+    <string name="msg_pixel_ims_options_applied">Advanced IMS options applied. Restart System UI or reboot if an icon does not refresh immediately.</string>
+    <string name="msg_pixel_ims_options_failed">Could not apply advanced IMS options: %1$s</string>
+
+    <string name="advanced_export_title">Full CarrierConfig export</string>
+    <string name="advanced_export_desc">Export every readable CarrierConfig entry for the selected SIM to diagnostics. No value is changed.</string>
+    <string name="advanced_export_action">Export full config</string>
+    <string name="config_full_dump_title">=== Full CarrierConfig · subId %1$d ===</string>
+    <string name="config_full_dump_footer">=== %1$d entries ===</string>
+
+    <string name="advanced_expert_title">Restricted expert editor</string>
+    <string name="advanced_expert_desc">Only existing, type-recognized CarrierConfig keys are accepted. Network selection, emergency and satellite keys are blocked.</string>
+    <string name="advanced_expert_key">CarrierConfig key</string>
+    <string name="advanced_expert_value">Value (arrays use commas)</string>
+    <string name="advanced_expert_apply">Validate and apply</string>
+    <string name="advanced_expert_confirm_title">Apply expert value?</string>
+    <string name="advanced_expert_confirm_message">This may change carrier behavior for the selected SIM. OneIms will apply only the entered key:\n\n%1$s = %2$s</string>
+    <string name="msg_expert_invalid_input">Invalid or safety-blocked key/value. Use a standard CarrierConfig key and a value without control characters.</string>
+    <string name="msg_expert_unknown_key">The selected SIM does not expose this CarrierConfig key: %1$s</string>
+    <string name="msg_expert_applied">Expert CarrierConfig value applied: %1$s</string>
+    <string name="msg_expert_failed">Could not apply expert CarrierConfig value: %1$s</string>
+
+    <string name="five_g_display_title">5G display enhancement</string>
+    <string name="five_g_display_in_app_only">Save the display strategy and attempt to write the system 5G display configuration</string>
+    <string name="five_g_display_enable">Enable 5G display enhancement</string>
+    <string name="five_g_mode_conservative">Conservative</string>
+    <string name="five_g_mode_conservative_sub">Shows 5G SA / 5G NSA / 5G Advanced by network type only, never upgraded by speed</string>
+    <string name="five_g_mode_cn_speed">Mainland speed-based</string>
+    <string name="five_g_mode_cn_speed_sub">Upgrades to 5G+ / 5G-A once the speed threshold is reached</string>
+    <string name="five_g_mode_cool">Flashy labels</string>
+    <string name="five_g_mode_cool_sub">Same logic as speed-based mode, with punchier labels (5G+ Turbo / 5G-A Full)</string>
+    <string name="five_g_mode_custom">Custom thresholds</string>
+    <string name="five_g_mode_custom_sub">Set the 4 speed thresholds below yourself</string>
+    <string name="five_g_threshold_plus_dl">5G+ downlink threshold (Mbps)</string>
+    <string name="five_g_threshold_a_dl">5G-A downlink threshold (Mbps)</string>
+    <string name="five_g_threshold_ul_enhanced">Uplink boost threshold (Mbps)</string>
+    <string name="five_g_threshold_ul_super">Super uplink threshold (Mbps)</string>
+    <string name="five_g_system_icon_config">System icon configuration string</string>
+    <string name="five_g_system_icon_config_sub">Used only for Android CarrierConfig; 5G_PLUS is not exposed as another UI mode</string>
+    <string name="five_g_unknown_operator">Unknown carrier</string>
+    <string name="five_g_uplink_enhanced">Uplink boost</string>
+    <string name="five_g_super_uplink">Super uplink</string>
+    <string name="five_g_cool_plus">5G+ Turbo</string>
+    <string name="five_g_cool_a">5G-A Full</string>
+    <string name="five_g_apply">Apply 5G display enhancement</string>
+    <string name="five_g_system_applied">System 5G display configuration written. The final icon depends on SystemUI support and may require airplane mode or a reboot.</string>
+    <string name="five_g_system_restored">Local display strategy saved and the system 5G icon configuration restored to its pre-OneIms baseline. Airplane mode or a reboot may be required.</string>
+    <string name="five_g_local_saved_no_system_override">Local display strategy saved. There is no OneIms system 5G icon override to restore.</string>
+    <string name="five_g_system_apply_failed">The local display strategy was saved, but the system 5G configuration write or readback failed: %1$s</string>
+
+    <string name="signal_bar_system_applied">5G signal strength adjustment applied. Airplane mode or a reboot may be required.</string>
+    <string name="signal_bar_system_restored">5G signal strength adjustment disabled and the system baseline restored. Airplane mode or a reboot may be required.</string>
+    <string name="signal_bar_local_saved_no_system_override">5G signal strength adjustment disabled. OneIMS has no system threshold override to restore.</string>
+    <string name="signal_bar_system_apply_failed">5G signal strength adjustment write or readback failed: %1$s</string>
+    <string name="signal_bar_needs_nr_enabled">Kept the signal-strength toggle, but did not write system thresholds: enable 5G NR first, then tap Apply core features.</string>
+    <string name="action_applying">Applying…</string>
+    <string name="action_processing">Processing…</string>
+
+    <string name="one_click_check_title">One-click check</string>
+    <string name="one_click_check_desc">Checks Shizuku, SIM selection, basic connectivity, and IMS registration in one go, shown as a checklist.</string>
+    <string name="one_click_check_action">Check all status</string>
+    <string name="one_click_check_checking">Checking…</string>
+    <string name="one_click_check_result_title">Check results</string>
+    <string name="one_click_fix_title">One-click fix</string>
+    <string name="one_click_fix_desc">Automatically fixes what it can; anything it can\'t fix gets a manual guidance instead of blindly flipping switches.</string>
+    <string name="diagnostic_user_sim_status">SIM status</string>
+    <string name="diagnostic_user_ims_status">IMS status</string>
+    <string name="diagnostic_user_current_network">Current network</string>
+    <string name="diagnostic_user_data_sim">Data SIM</string>
+    <string name="diagnostic_user_fix_suggestion">Fix recommendation</string>
+    <string name="diagnostic_user_no_sim_selected">No SIM selected</string>
+    <string name="diagnostic_user_unavailable">Unable to read</string>
+    <string name="diagnostic_user_normal">Normal</string>
+    <string name="diagnostic_user_abnormal">Abnormal</string>
+    <string name="diagnostic_user_unknown">Unknown</string>
+    <string name="diagnostic_user_registered">Registered</string>
+    <string name="diagnostic_user_not_registered">Not registered</string>
+    <string name="diagnostic_user_available">Available</string>
+    <string name="diagnostic_user_unavailable_state">Unavailable</string>
+    <string name="diagnostic_user_sim_slot">SIM %1$d</string>
+    <string name="diagnostic_user_no_fix_needed">No fix needed</string>
+    <string name="diagnostic_user_privilege_required">Advanced fixes require authorization</string>
+    <string name="diagnostic_user_fix_needed">Fix needed</string>
+    <string name="diagnostic_check_shizuku_running">Shizuku service</string>
+    <string name="diagnostic_check_shizuku_running_yes">Shizuku is running</string>
+    <string name="diagnostic_check_shizuku_running_no">Shizuku is not running</string>
+    <string name="diagnostic_check_shizuku_start_guidance">Start Shizuku first. Pairing and wireless-debugging shortcuts are available at the top of Diagnostics.</string>
+    <string name="diagnostic_check_shizuku_permission">Shizuku authorization</string>
+    <string name="diagnostic_check_shizuku_permission_unavailable">Shizuku is not running, so authorization cannot be checked</string>
+    <string name="diagnostic_check_authorized">Authorized</string>
+    <string name="diagnostic_check_not_authorized">Not authorized</string>
+    <string name="diagnostic_check_permission_guidance">Tap Authorize on Home and approve the Shizuku system dialog.</string>
+    <string name="diagnostic_check_sim_selected">SIM selected</string>
+    <string name="diagnostic_check_selected_sub_id">Selected subId=%1$d</string>
+    <string name="diagnostic_check_select_sim_guidance">Choose a SIM from the selector at the top of Features.</string>
+    <string name="diagnostic_check_communication_health">Basic communications (SIM/voice/data)</string>
+    <string name="diagnostic_check_read_failed">Read failed</string>
+    <string name="diagnostic_check_health_guidance">If basic communications are unhealthy, restore carrier defaults first, then reconfigure.</string>
+    <string name="diagnostic_check_ims_registration">IMS registration</string>
+    <string name="diagnostic_check_ims_guidance">IMS may be unregistered after a config change, with weak signal, or because of carrier limits. Restart IMS, then check VoLTE/VoWiFi.</string>
+    <string name="diagnostic_check_no_sim_cannot_check">No SIM selected; cannot check</string>
+    <string name="diagnostic_check_select_sim_first">Select a SIM first</string>
+    <string name="diagnostic_check_guard">Dropout guard</string>
+    <string name="diagnostic_check_enabled">Enabled</string>
+    <string name="diagnostic_check_disabled">Disabled</string>
+    <string name="diagnostic_check_guard_guidance">The guard can reapply configuration after IMS drops. Enable it in Experimental if needed.</string>
+    <string name="diagnostic_fix_permission_requested">Authorization requested. Approve the system dialog, then run the check again.</string>
+    <string name="diagnostic_fix_sim_not_found">The target SIM was not found</string>
+    <string name="one_click_fix_action">Start fixing</string>
+    <string name="one_click_fix_fixing">Fixing…</string>
+    <string name="one_click_fix_result_title">Fix results</string>
+    <string name="one_click_fix_result_fixed">Fixed</string>
+    <string name="one_click_fix_result_guidance">Manual action suggested: %1$s</string>
+    <string name="one_click_fix_result_ok">Already fine, no action needed</string>
+    <string name="one_click_fix_result_unknown">Could not be determined, no action taken</string>
+    <string name="one_click_close">Close</string>
+
+    <string name="reapply_trigger_manual">manual action</string>
+    <string name="reapply_trigger_quick_tile">Quick Settings tile</string>
+    <string name="reapply_trigger_shizuku_ready">Shizuku became ready</string>
+    <string name="reapply_trigger_ims_not_registered">IMS registration dropped</string>
+    <string name="action_reapply">Reapply last profile</string>
+    <string name="reapply_status_none">No reapply has run yet</string>
+    <string name="reapply_status_success">succeeded</string>
+    <string name="reapply_status_failed">failed</string>
+    <string name="reapply_status_line">Last reapply: %1$s · %2$s · %3$s</string>
+    <string name="reapply_combined_result">Core profile: %1$s\nAdvanced options: %2$s</string>
+    <string name="reapply_explanation">The CarrierConfig override is temporary (persistent=false). It can be cleared after reboot or after Shizuku restarts, so OneIms reapplies the last successful profile. The action is idempotent and records its trigger and result below.</string>
+
+    <string name="tile_ims_status_label">IMS status</string>
+    <string name="tile_ims_registered">IMS registered</string>
+    <string name="tile_ims_not_registered">IMS not registered</string>
+    <string name="tile_ims_unknown">IMS status unknown</string>
+    <string name="tile_volte_label">VoLTE profile</string>
+    <string name="tile_volte_applied">VoLTE profile reapplied</string>
+    <string name="tile_volte_failed">Reapply failed</string>
+    <string name="tile_no_saved_profile">No saved profile</string>
+    <string name="qs_tile_title">OneIMS</string>
+    <string name="qs_tile_service_label">OneIMS SIM switch</string>
+    <string name="qs_tile_feature_title">Control Center SIM switch</string>
+    <string name="qs_tile_feature_desc">Add OneIMS to Quick Settings to switch the default mobile-data SIM.</string>
+    <string name="qs_tile_open_editor">Open system tile editor</string>
+    <string name="qs_tile_manual_guide">Pull down Quick Settings, tap Edit, then drag the OneIMS tile into the active area.</string>
+    <string name="qs_tile_permission_required">SIM switching requires authorization</string>
+    <string name="qs_tile_single_sim">Only one SIM is currently available</string>
+    <string name="qs_tile_switching">Switching data SIM…</string>
+    <string name="qs_tile_current_unknown">Current data SIM unknown</string>
+    <string name="qs_tile_current_sim">Current: SIM %1$d · %2$s</string>
+    <string name="data_switch_refresh">Refresh SIM status</string>
+    <string name="data_switch_to_card">Switch to SIM %1$d</string>
+    <string name="data_switch_current_tag"> · current data</string>
+    <string name="data_switch_row">SIM %1$d · %2$s · subId=%3$d%4$s</string>
+    <string name="data_switch_switching">Switching the current data SIM…</string>
+    <string name="data_switch_success">Switched to SIM %1$d</string>
+    <string name="data_switch_failed">Switch failed: %1$s</string>
+    <string name="data_switch_mobile_data_restore_failed">The data SIM was switched, but Android turned mobile data off. Turn it on manually.</string>
+    <string name="data_switch_mobile_data_state_unknown">The data SIM was switched, but the mobile-data state could not be confirmed. Check that data still works.</string>
+    <string name="data_switch_readback_failed">The default data SIM readback did not change</string>
+    <string name="data_switch_no_permission">SIM switching requires authorization</string>
+    <string name="data_switch_invalid_target">Target SIM is unavailable</string>
+    <string name="data_switch_already_current">Already the current data SIM</string>
+    <string name="data_switch_no_sim">No available SIM detected</string>
+    <string name="data_switch_single_sim">Only one SIM is currently available</string>
+    <string name="data_switch_confirm_title">Switch to SIM %1$d · %2$s?</string>
+    <string name="data_switch_confirm_message">This only changes the default mobile-data SIM. It does not modify IMS, APN, 5G, or CarrierConfig. Connectivity may briefly drop.</string>
+    <string name="data_switch_confirm_action">Switch</string>
+    <string name="ims_sim_header">SIM %1$d · %2$s · subId %3$d</string>
+    <string name="sim_pill_label">SIM %1$d %2$s</string>
+    <string name="identity_target_preview">Current target: SIM %1$d · %2$s · subId=%3$d</string>
+    <string name="identity_target_applied">Written to SIM %1$d · %2$s · subId=%3$d: %4$s</string>
+    <string name="identity_readback_failed">SIM %1$d identity override was not applied: readback failed for subId=%2$d</string>
+    <string name="identity_readback_mismatch">SIM %1$d identity override was not applied: readback differed for subId=%2$d</string>
+    <string name="diagnostics_prereq_short">Select a SIM and grant Shizuku access</string>
+    <string name="apn_catalog_apply_target">Will apply to: SIM %1$d · %2$s · subId=%3$d</string>
+    <string name="tool_apn_sub_short">Search by country or carrier and apply to the selected SIM</string>
+    <string name="guard_sub_short">Reapply the profile automatically when IMS disconnects</string>
+    <string name="one_click_section_title">One-click check and fix</string>
+
+    <string name="action_back">Back</string>
+
+    <string name="sponsor_title">Sponsor support</string>
+    <string name="sponsor_subtitle">Local Alipay and WeChat sponsorship QR codes</string>
+    <string name="sponsor_intro_title">Support OneIMS</string>
+    <string name="sponsor_intro">If OneIMS helped enable VoLTE, VoWiFi, or 5G for you,\nfeel free to send a coffee ☕\nThank you to every friend supporting OneIMS.</string>
+    <string name="sponsor_alipay_title">Alipay sponsorship</string>
+    <string name="sponsor_alipay_desc">Thank you for the coffee. OneIMS will keep experimenting.</string>
+    <string name="sponsor_wechat_title">WeChat sponsorship</string>
+    <string name="sponsor_wechat_desc">Optional support helps the author keep mediating between Pixel and carriers.</string>
+    <string name="sponsor_qr_missing">Sponsorship QR code is not configured yet</string>
+    <string name="sponsor_qr_interaction_hint">Tap to enlarge; long-press for a saving hint</string>
+    <string name="sponsor_long_press_hint">Take a screenshot to save and scan the sponsorship code</string>
+    <string name="sponsor_save_local">Save to device</string>
+    <string name="sponsor_saved">QR code saved to Pictures/OneIMS</string>
+    <string name="sponsor_save_failed">Could not save. Please retry or take a screenshot.</string>
+    <string name="sponsor_close_preview">Close</string>
+    <string name="sponsor_voluntary_notice">Sponsorship is entirely optional and never affects access to any OneIMS feature.</string>
+    <string name="settings_tools_title">Tools and support</string>
+    <string name="settings_tools_subtitle">Quick Settings shortcuts</string>
+    <string name="settings_sponsor_title">Sponsor support</string>
+    <string name="settings_sponsor_subtitle">View local Alipay and WeChat sponsorship QR codes</string>
+</resources>

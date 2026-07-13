@@ -1,0 +1,11 @@
+OneIms offline APN catalog
+
+This derived catalog contains APN configuration candidates from:
+- LineageOS android_vendor_apn @ f61eef690eac185e6f10a227cd8ac28ab7861557
+- Android Open Source Project device/sample @ 73f904fbeb872f5675cb5f18cd9dfb15856425a6
+
+Both sources and this derived data are distributed under Apache-2.0.
+The accompanying APN_CATALOG_LICENSE.txt contains the license text.
+
+APN values vary by plan, region, roaming state, and MVNO identity.
+OneIms treats these rows as offline candidates, never as a guarantee.

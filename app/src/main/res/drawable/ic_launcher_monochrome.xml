@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 13+ 主题图标沿用白环轮廓，实际颜色由 Pixel Launcher 统一着色。 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:fillType="evenOdd"
+        android:pathData="M54,29.16
+            A24.84,24.84 0,1 1,54,78.84
+            A24.84,24.84 0,1 1,54,29.16
+            M54,39.42
+            A14.58,14.58 0,1 0,54,68.58
+            A14.58,14.58 0,1 0,54,39.42" />
+</vector>

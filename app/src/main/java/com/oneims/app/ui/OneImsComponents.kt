@@ -1,0 +1,1007 @@
+package com.oneims.app.ui
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.material3.ripple
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountBox
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.NavigationRail
+import androidx.compose.material3.NavigationRailItem
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import com.oneims.app.R
+import com.oneims.app.core.formatCarrierShortName
+import com.oneims.app.model.SimInfo
+import com.oneims.app.ui.theme.OneImsTokens
+
+private val PageMaxWidth = 960.dp
+private val RailBreakpoint = 720.dp
+private val OneImsBrandRed = Color(0xFFD6242F)
+private val DockIslandShape = RoundedCornerShape(28.dp)
+
+@Composable
+fun OneImsScaffold(
+    selectedDestination: AppDestination,
+    onDestinationSelected: (AppDestination) -> Unit,
+    busyLabel: String?,
+    snackbarHostState: SnackbarHostState,
+    content: @Composable () -> Unit,
+) {
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val useNavigationRail = maxWidth >= RailBreakpoint
+
+        Scaffold(
+            containerColor = MaterialTheme.colorScheme.background,
+            snackbarHost = { SnackbarHost(snackbarHostState) },
+            bottomBar = {
+                if (!useNavigationRail) {
+                    // 参考图：悬浮胶囊岛 Dock（左右留白、圆角、图标+文字常显、选中胶囊高亮）。
+                    val dockColors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = MaterialTheme.colorScheme.primary,
+                        selectedTextColor = MaterialTheme.colorScheme.primary,
+                        indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.22f),
+                        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .navigationBarsPadding()
+                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                    ) {
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = DockIslandShape,
+                            color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.94f),
+                            tonalElevation = 4.dp,
+                            shadowElevation = 6.dp,
+                        ) {
+                            NavigationBar(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(min = 72.dp)
+                                    .clip(DockIslandShape),
+                                containerColor = Color.Transparent,
+                                tonalElevation = 0.dp,
+                            ) {
+                                AppDestination.entries.forEach { destination ->
+                                    NavigationBarItem(
+                                        selected = destination == selectedDestination,
+                                        onClick = { onDestinationSelected(destination) },
+                                        icon = {
+                                            Icon(
+                                                imageVector = destination.icon,
+                                                contentDescription = null,
+                                            )
+                                        },
+                                        label = {
+                                            Text(
+                                                text = stringResource(destination.labelRes),
+                                                style = MaterialTheme.typography.labelSmall,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis,
+                                            )
+                                        },
+                                        alwaysShowLabel = true,
+                                        colors = dockColors,
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+        ) { innerPadding ->
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+            ) {
+                if (useNavigationRail) {
+                    NavigationRail(
+                        modifier = Modifier.fillMaxHeight(),
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                        header = { OneImsMark() },
+                    ) {
+                        AppDestination.entries.forEach { destination ->
+                            NavigationRailItem(
+                                selected = destination == selectedDestination,
+                                onClick = { onDestinationSelected(destination) },
+                                icon = {
+                                    Icon(
+                                        imageVector = destination.icon,
+                                        contentDescription = null,
+                                    )
+                                },
+                                label = { Text(stringResource(destination.labelRes)) },
+                            )
+                        }
+                    }
+                }
+
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
+                ) {
+                    content()
+                    if (busyLabel != null) {
+                        LinearProgressIndicator(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .align(Alignment.TopCenter)
+                                .semantics { contentDescription = busyLabel },
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun OneImsMark() {
+    Surface(
+        modifier = Modifier
+            .padding(vertical = 16.dp)
+            .size(48.dp),
+        shape = RoundedCornerShape(16.dp),
+        color = OneImsBrandRed,
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Icon(
+                painter = painterResource(R.drawable.ic_launcher_monochrome),
+                contentDescription = null,
+                modifier = Modifier.size(40.dp),
+                tint = Color.White,
+            )
+        }
+    }
+}
+
+@Composable
+fun OneImsPage(
+    title: String,
+    subtitle: String,
+    sims: List<SimInfo> = emptyList(),
+    selectedSubId: Int = -1,
+    onSelectSim: ((Int) -> Unit)? = null,
+    simSelectionEnabled: Boolean = true,
+    content: LazyListScope.() -> Unit,
+) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.TopCenter,
+    ) {
+        LazyColumn(
+            modifier = Modifier
+                .widthIn(max = PageMaxWidth)
+                .fillMaxSize(),
+            contentPadding = PaddingValues(
+                start = 20.dp,
+                top = 28.dp,
+                end = 20.dp,
+                bottom = 36.dp,
+            ),
+            verticalArrangement = Arrangement.spacedBy(20.dp),
+        ) {
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top,
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(end = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        Text(
+                            text = title,
+                            style = MaterialTheme.typography.headlineLarge,
+                            color = MaterialTheme.colorScheme.onBackground,
+                        )
+                        Text(
+                            text = subtitle,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    if (sims.isNotEmpty() && onSelectSim != null) {
+                        SelectedSimPill(
+                            sims = sims,
+                            selectedSubId = selectedSubId,
+                            onSelectSim = onSelectSim,
+                            enabled = simSelectionEnabled,
+                        )
+                    }
+                }
+            }
+            content()
+        }
+    }
+}
+
+@Composable
+fun SectionBlock(
+    title: String,
+    description: String? = null,
+    content: @Composable () -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(
+            modifier = Modifier.padding(horizontal = 4.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            if (description != null) {
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+        SettingsGroup(content = content)
+    }
+}
+
+@Composable
+fun SettingsGroup(content: @Composable () -> Unit) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(OneImsTokens.cardCornerRadius),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+    ) {
+        Column(content = { content() })
+    }
+}
+
+@Composable
+fun GroupDivider() {
+    HorizontalDivider(
+        modifier = Modifier.padding(start = 76.dp),
+        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.65f),
+    )
+}
+
+/**
+ * OneIms 主确认动作的统一样式。普通单选、Tab、筛选胶囊与次要按钮不得复用此组件，
+ * 避免把页面层级全部抹平成同一种强调级别。
+ */
+@Composable
+fun OneImsPrimaryButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    loading: Boolean = false,
+    loadingText: String = stringResource(R.string.action_processing),
+) {
+    Button(
+        onClick = onClick,
+        enabled = enabled && !loading,
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = 52.dp),
+        shape = RoundedCornerShape(percent = 50),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color.White,
+            contentColor = Color.Black,
+            disabledContainerColor = Color.White.copy(alpha = 0.38f),
+            disabledContentColor = Color.Black.copy(alpha = 0.38f),
+        ),
+        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 14.dp),
+    ) {
+        if (loading) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(18.dp),
+                color = Color.Black,
+                strokeWidth = 2.dp,
+            )
+            Spacer(modifier = Modifier.width(10.dp))
+        }
+        Text(
+            text = if (loading) loadingText else text,
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.SemiBold,
+        )
+    }
+}
+
+@Composable
+fun SettingsSwitchRow(
+    title: String,
+    subtitle: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    enabled: Boolean = true,
+    icon: ImageVector? = null,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = OneImsTokens.rowMinHeight)
+            .toggleable(
+                value = checked,
+                enabled = enabled,
+                role = Role.Switch,
+                interactionSource = interactionSource,
+                indication = ripple(color = OneImsTokens.pressedOverlay()),
+                onValueChange = onCheckedChange,
+            )
+            .padding(horizontal = OneImsTokens.cardPaddingHorizontal, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        if (icon != null) {
+            LeadingIcon(icon)
+        }
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = if (enabled) MaterialTheme.colorScheme.onSurface
+                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+            )
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant
+                else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f),
+            )
+        }
+        Switch(
+            checked = checked,
+            onCheckedChange = null,
+            enabled = enabled,
+        )
+    }
+}
+
+@Composable
+fun SettingsChoiceRow(
+    title: String,
+    subtitle: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    enabled: Boolean = true,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 68.dp)
+            .selectable(
+                selected = selected,
+                enabled = enabled,
+                role = Role.RadioButton,
+                interactionSource = interactionSource,
+                indication = ripple(color = OneImsTokens.pressedOverlay()),
+                onClick = onClick,
+            )
+            .padding(horizontal = OneImsTokens.cardPaddingHorizontal, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        RadioButton(selected = selected, onClick = null, enabled = enabled)
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = if (enabled) {
+                    MaterialTheme.colorScheme.onSurface
+                } else {
+                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                },
+            )
+            Text(
+                subtitle,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                    alpha = if (enabled) 1f else 0.38f,
+                ),
+            )
+        }
+    }
+}
+
+@Composable
+fun SettingsActionRow(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    onClick: (() -> Unit)?,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    trailingText: String? = null,
+    iconContainerColor: Color = MaterialTheme.colorScheme.secondaryContainer,
+    iconColor: Color = MaterialTheme.colorScheme.onSecondaryContainer,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val interaction = if (onClick != null) {
+        Modifier.clickable(
+            enabled = enabled,
+            role = Role.Button,
+            interactionSource = interactionSource,
+            indication = ripple(color = OneImsTokens.pressedOverlay()),
+            onClick = onClick,
+        )
+    } else {
+        Modifier
+    }
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = OneImsTokens.rowMinHeight)
+            .then(interaction)
+            .padding(horizontal = OneImsTokens.cardPaddingHorizontal, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        LeadingIcon(
+            icon = icon,
+            containerColor = iconContainerColor,
+            contentColor = iconColor,
+        )
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = if (enabled) MaterialTheme.colorScheme.onSurface
+                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+            )
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant
+                else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        if (trailingText != null) {
+            Text(
+                trailingText,
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        } else {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+@Composable
+private fun LeadingIcon(
+    icon: ImageVector,
+    containerColor: Color = MaterialTheme.colorScheme.secondaryContainer,
+    contentColor: Color = MaterialTheme.colorScheme.onSecondaryContainer,
+) {
+    Surface(
+        modifier = Modifier.size(40.dp),
+        shape = CircleShape,
+        color = containerColor,
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(OneImsTokens.iconSize),
+                tint = contentColor,
+            )
+        }
+    }
+}
+
+data class ActionSpec(
+    val icon: ImageVector,
+    val title: String,
+    val subtitle: String,
+    val onClick: () -> Unit,
+    val enabled: Boolean = true,
+    val danger: Boolean = false,
+)
+
+@Composable
+fun ActionGrid(actions: List<ActionSpec>) {
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+        val columns = when {
+            maxWidth >= 760.dp -> 4
+            maxWidth >= 520.dp -> 3
+            else -> 2
+        }
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            actions.chunked(columns).forEach { rowActions ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(IntrinsicSize.Min),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    rowActions.forEach { action ->
+                        ActionTile(
+                            action = action,
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight(),
+                        )
+                    }
+                    repeat(columns - rowActions.size) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ActionTile(
+    action: ActionSpec,
+    modifier: Modifier = Modifier,
+) {
+    val container = if (action.danger) {
+        MaterialTheme.colorScheme.errorContainer
+    } else {
+        MaterialTheme.colorScheme.surfaceContainerHigh
+    }
+    val contentColor = if (action.danger) {
+        MaterialTheme.colorScheme.onErrorContainer
+    } else {
+        MaterialTheme.colorScheme.onSurface
+    }
+    val interactionSource = remember { MutableInteractionSource() }
+    Surface(
+        modifier = modifier
+            .heightIn(min = 124.dp)
+            .clickable(
+                enabled = action.enabled,
+                role = Role.Button,
+                interactionSource = interactionSource,
+                indication = ripple(color = OneImsTokens.pressedOverlay()),
+                onClick = action.onClick,
+            ),
+        shape = RoundedCornerShape(OneImsTokens.cardCornerRadius),
+        color = container,
+    ) {
+        Column(
+            modifier = Modifier.padding(18.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Icon(
+                imageVector = action.icon,
+                contentDescription = null,
+                tint = if (action.enabled) contentColor else contentColor.copy(alpha = 0.38f),
+            )
+            Text(
+                text = action.title,
+                style = MaterialTheme.typography.titleMedium,
+                color = if (action.enabled) contentColor else contentColor.copy(alpha = 0.38f),
+            )
+            Text(
+                text = action.subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = if (action.enabled) contentColor.copy(alpha = 0.78f)
+                else contentColor.copy(alpha = 0.38f),
+            )
+        }
+    }
+}
+
+/**
+ * 顶部状态卡：原有"图标+标题+副标题"结构保持不变（审美不变），
+ * 在其下按需追加两块只读内容——不改变 Hero 本身的配色与形状语言，只是在同一张卡片里延伸：
+ * 1. [sims] 非空时，追加胶囊分页（[SimStatusCapsulePager]）展示每张卡的状态，左右滑动切换；
+ * 2. [deviceInfo] 非空时，追加可展开/收起的设备详情文本（原「设备详情」区块的内容原样搬入）。
+ * 两块均只读展示，不提供选卡等交互，选卡与运营商配置已迁移到「能力」页。
+ */
+@Composable
+fun StatusHero(
+    ready: Boolean,
+    title: String,
+    subtitle: String,
+    supportingText: String,
+    sims: List<SimInfo> = emptyList(),
+    selectedSubId: Int = -1,
+    deviceInfo: String = "",
+) {
+    val containerColor = if (ready) {
+        MaterialTheme.colorScheme.primaryContainer
+    } else {
+        MaterialTheme.colorScheme.errorContainer
+    }
+    val contentColor = if (ready) {
+        MaterialTheme.colorScheme.onPrimaryContainer
+    } else {
+        MaterialTheme.colorScheme.onErrorContainer
+    }
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.extraLarge,
+        color = containerColor,
+    ) {
+        Column(
+            modifier = Modifier.padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp),
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(18.dp),
+            ) {
+                Icon(
+                    imageVector = if (ready) Icons.Filled.CheckCircle else Icons.Filled.Warning,
+                    contentDescription = null,
+                    modifier = Modifier.size(38.dp),
+                    tint = contentColor,
+                )
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Text(
+                        title,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = contentColor,
+                    )
+                    Text(
+                        subtitle,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = contentColor,
+                    )
+                    Text(
+                        supportingText,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = contentColor.copy(alpha = 0.78f),
+                    )
+                }
+            }
+
+            if (sims.isNotEmpty()) {
+                HorizontalDivider(color = contentColor.copy(alpha = 0.16f))
+                SimStatusCapsulePager(
+                    sims = sims,
+                    selectedSubId = selectedSubId,
+                    contentColor = contentColor,
+                    pillContainerColor = contentColor.copy(alpha = 0.12f),
+                )
+            }
+
+            if (deviceInfo.isNotBlank()) {
+                var expanded by remember { mutableStateOf(false) }
+                HorizontalDivider(color = contentColor.copy(alpha = 0.16f))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(role = Role.Button) { expanded = !expanded },
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = stringResource(R.string.home_device_details),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = contentColor,
+                    )
+                    Text(
+                        text = stringResource(
+                            if (expanded) {
+                                R.string.home_device_details_collapse
+                            } else {
+                                R.string.home_device_details_expand
+                            },
+                        ),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = contentColor.copy(alpha = 0.78f),
+                    )
+                }
+                AnimatedVisibility(visible = expanded) {
+                    Text(
+                        text = deviceInfo,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontFamily = FontFamily.Monospace,
+                        color = contentColor.copy(alpha = 0.9f),
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 胶囊状 SIM 状态分页：一次只显示一张卡的状态，可左右滑动切换到下一张；
+ * 仅只读展示（卡槽、运营商名、是否为当前生效卡），不承担选卡交互——选卡已迁移到「能力」页顶部。
+ */
+@Composable
+fun SimStatusCapsulePager(
+    sims: List<SimInfo>,
+    selectedSubId: Int,
+    contentColor: Color,
+    pillContainerColor: Color,
+    modifier: Modifier = Modifier,
+) {
+    if (sims.isEmpty()) return
+    val initialPage = sims.indexOfFirst { it.subscriptionId == selectedSubId }
+        .let { if (it >= 0) it else 0 }
+    val pagerState = rememberPagerState(
+        initialPage = initialPage,
+        pageCount = { sims.size },
+    )
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxWidth(),
+        ) { page ->
+            val sim = sims[page]
+            val isActive = sim.subscriptionId == selectedSubId
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(percent = 50),
+                color = pillContainerColor,
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 18.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .then(
+                                Modifier.background(
+                                    color = if (isActive) contentColor else contentColor.copy(alpha = 0.35f),
+                                    shape = CircleShape,
+                                ),
+                            ),
+                    )
+                    Text(
+                        text = stringResource(
+                            R.string.sim_chip,
+                            sim.slotIndex + 1,
+                            sim.carrierName,
+                        ),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = contentColor,
+                        modifier = Modifier.weight(1f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        text = stringResource(
+                            if (isActive) R.string.sim_tag_active else R.string.sim_tag_standby,
+                        ),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = contentColor.copy(alpha = if (isActive) 0.9f else 0.6f),
+                    )
+                }
+            }
+        }
+        if (sims.size > 1) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+            ) {
+                repeat(sims.size) { index ->
+                    val active = pagerState.currentPage == index
+                    Box(
+                        modifier = Modifier
+                            .padding(horizontal = 3.dp)
+                            .size(if (active) 7.dp else 5.dp)
+                            .then(
+                                Modifier.background(
+                                    color = if (active) contentColor else contentColor.copy(alpha = 0.3f),
+                                    shape = CircleShape,
+                                ),
+                            ),
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 右上角选卡胶囊：双卡时点击切换选中 SIM，选中项前置 6dp 圆点。
+ */
+@Composable
+fun SelectedSimPill(
+    sims: List<SimInfo>,
+    selectedSubId: Int,
+    onSelectSim: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+) {
+    if (sims.isEmpty()) return
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+        horizontalAlignment = Alignment.End,
+    ) {
+        sims.forEach { sim ->
+            val selected = sim.subscriptionId == selectedSubId
+            val shortName = formatCarrierShortName(sim.carrierName)
+            val containerColor = if (selected) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.surfaceContainerHigh
+            }
+            val contentColor = if (selected) {
+                MaterialTheme.colorScheme.onPrimary
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            }
+            val interactionSource = remember(sim.subscriptionId) { MutableInteractionSource() }
+            Surface(
+                modifier = Modifier
+                    .heightIn(min = OneImsTokens.simPillHeight, max = OneImsTokens.simPillHeight)
+                    .selectable(
+                        selected = selected,
+                        enabled = enabled,
+                        role = Role.RadioButton,
+                        interactionSource = interactionSource,
+                        indication = ripple(color = OneImsTokens.pressedOverlay()),
+                        onClick = { onSelectSim(sim.subscriptionId) },
+                    ),
+                shape = RoundedCornerShape(percent = 50),
+                color = containerColor,
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    if (selected) {
+                        Box(
+                            modifier = Modifier
+                                .size(OneImsTokens.simPillDotSize)
+                                .background(contentColor, CircleShape),
+                        )
+                    }
+                    Text(
+                        text = stringResource(R.string.sim_pill_label, sim.slotIndex + 1, shortName),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = contentColor.copy(alpha = if (enabled) 1f else 0.38f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** @deprecated 使用 [SelectedSimPill] */
+@Composable
+fun SimCapsuleSwitcher(
+    sims: List<SimInfo>,
+    selectedSubId: Int,
+    onSelectSim: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) = SelectedSimPill(sims, selectedSubId, onSelectSim, modifier)
+
+@Composable
+fun InlineNotice(
+    text: String,
+    danger: Boolean = false,
+    modifier: Modifier = Modifier,
+) {
+    val container = if (danger) MaterialTheme.colorScheme.errorContainer
+    else MaterialTheme.colorScheme.secondaryContainer
+    val content = if (danger) MaterialTheme.colorScheme.onErrorContainer
+    else MaterialTheme.colorScheme.onSecondaryContainer
+
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        color = container,
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 18.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Icon(
+                imageVector = if (danger) Icons.Filled.Warning else Icons.Filled.CheckCircle,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+                tint = content,
+            )
+            Text(
+                text,
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.bodyMedium,
+                color = content,
+            )
+        }
+    }
+}
+

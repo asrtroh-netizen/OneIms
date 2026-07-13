@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 深浅模式共用正式红底白环启动页，避免主题切换造成品牌闪烁。 -->
+    <style name="Theme.OneIms" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">#D6242F</item>
+        <item name="android:windowSplashScreenBackground">#D6242F</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">#D6242F</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
+
+</resources>

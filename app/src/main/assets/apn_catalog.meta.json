@@ -1,0 +1,20 @@
+{
+  "catalogVersion": "2026.07.10",
+  "records": 6712,
+  "imsRecords": 628,
+  "plmns": 1498,
+  "mccs": 220,
+  "countries": 167,
+  "sha256": "DA9FB987C316179F859894985D0EABFC3DAEA4A8A1EA15D47D176B661BEAA01B",
+  "sources": {
+    "lineageOs": {
+      "revision": "f61eef690eac185e6f10a227cd8ac28ab7861557",
+      "url": "https://github.com/LineageOS/android_vendor_apn"
+    },
+    "aosp": {
+      "revision": "73f904fbeb872f5675cb5f18cd9dfb15856425a6",
+      "url": "https://android.googlesource.com/device/sample/+/73f904fbeb872f5675cb5f18cd9dfb15856425a6/etc/apns-full-conf.xml"
+    }
+  },
+  "license": "Apache-2.0"
+}
