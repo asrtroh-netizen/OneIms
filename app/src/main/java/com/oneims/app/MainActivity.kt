@@ -35,10 +35,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import android.content.Intent
+import androidx.core.util.Consumer
 import com.oneims.app.core.CarrierProfiles
 import com.oneims.app.core.ApnCatalogEntry
 import com.oneims.app.core.CompatChecker
 import com.oneims.app.core.ConfigStore
+import com.oneims.app.core.DodoPaySupportClient
 import com.oneims.app.core.DeviceInfo
 import com.oneims.app.core.EpdgChecker
 import com.oneims.app.core.GuardService
@@ -175,6 +178,32 @@ private fun AppRoot(
     val snackbarHostState = remember { SnackbarHostState() }
 
     var destination by remember { mutableStateOf(AppDestination.HOME) }
+    var pendingSupportProof by remember { mutableStateOf<String?>(null) }
+    fun consumeSupportIntent(intent: Intent?) {
+        val data = intent?.data?.toString() ?: return
+        val proof = DodoPaySupportClient.extractDodopayPaymentProof(data) ?: return
+        pendingSupportProof = proof
+        destination = AppDestination.SPONSOR
+    }
+
+    LaunchedEffect(Unit) {
+        val activity = context as? ComponentActivity ?: return@LaunchedEffect
+        consumeSupportIntent(activity.intent)
+    }
+
+    DisposableEffect(Unit) {
+        val activity = context as? ComponentActivity
+        if (activity == null) {
+            return@DisposableEffect onDispose { }
+        }
+        val listener = Consumer<Intent> { intent ->
+            activity.setIntent(intent)
+            consumeSupportIntent(intent)
+        }
+        activity.addOnNewIntentListener(listener)
+        onDispose { activity.removeOnNewIntentListener(listener) }
+    }
+
     var shizukuRunning by remember { mutableStateOf(ShizukuManager.isRunning()) }
     var shizukuGranted by remember { mutableStateOf(ShizukuManager.isGranted()) }
     var sims by remember { mutableStateOf(emptyList<SimInfo>()) }
@@ -1305,6 +1334,8 @@ private fun AppRoot(
 
                 AppDestination.SPONSOR -> SponsorScreen(
                     onPublish = ::publish,
+                    pendingPaymentProof = pendingSupportProof,
+                    onPendingPaymentProofConsumed = { pendingSupportProof = null },
                 )
 
                 AppDestination.SETTINGS -> SettingsScreen(
@@ -1358,6 +1389,9 @@ private fun AppRoot(
                             if (!QuickSettingsTileHelper.openTileEditor(context)) {
                                 publish(context.getString(R.string.qs_tile_manual_guide))
                             }
+                        },
+                        onOpenSupportAuthor = {
+                            destination = AppDestination.SPONSOR
                         },
                     ),
                 )

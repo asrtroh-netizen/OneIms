@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
@@ -74,6 +75,13 @@ fun SettingsScreen(
                     subtitle = stringResource(R.string.qs_tile_feature_desc),
                     onClick = actions.onOpenTileSettings,
                 )
+                GroupDivider()
+                SettingsActionRow(
+                    icon = Icons.Filled.Favorite,
+                    title = stringResource(R.string.settings_sponsor_title),
+                    subtitle = stringResource(R.string.settings_sponsor_subtitle),
+                    onClick = actions.onOpenSupportAuthor,
+                )
             }
         }
 
@@ -128,7 +136,7 @@ fun SettingsScreen(
         }
 
         item {
-            // 「关于」只保留可核对的事实性条目；赞赏已独立为底栏「赞助」分页。
+            // 「关于」保留事实条目，并提供跳转到支持作者页的入口。
             SectionBlock(title = stringResource(R.string.about_title)) {
                 SettingsActionRow(
                     icon = Icons.Filled.Info,
@@ -146,6 +154,13 @@ fun SettingsScreen(
                     title = stringResource(R.string.about_author),
                     subtitle = stringResource(R.string.about_author_name),
                     onClick = null,
+                )
+                GroupDivider()
+                SettingsActionRow(
+                    icon = Icons.Filled.Favorite,
+                    title = stringResource(R.string.about_support_oneims),
+                    subtitle = stringResource(R.string.about_support_oneims_sub),
+                    onClick = actions.onOpenSupportAuthor,
                 )
             }
         }

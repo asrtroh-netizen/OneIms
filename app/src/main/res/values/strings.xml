@@ -332,7 +332,7 @@
 
     <!-- Pixel Material 3 界面 -->
     <string name="tab_settings">设置</string>
-    <string name="tab_sponsor">赞助</string>
+    <string name="tab_sponsor">支持作者</string>
     <string name="home_subtitle">安全、清晰地管理 Pixel IMS</string>
     <string name="home_ready_title">设备已就绪</string>
     <string name="home_setup_needed_title">还差一步即可使用</string>
@@ -659,24 +659,40 @@
 
     <string name="action_back">返回</string>
 
-    <string name="sponsor_title">赞赏支持</string>
-    <string name="sponsor_subtitle">支付宝与微信本地赞赏码</string>
-    <string name="sponsor_intro_title">支持 OneIMS</string>
-    <string name="sponsor_intro">如果 OneIMS 帮你点亮了 VoLTE / VoWiFi / 5G，\n可以随缘投喂一杯咖啡 ☕\n感谢每一位支持 OneIMS 的朋友。</string>
-    <string name="sponsor_alipay_title">支付宝赞赏</string>
-    <string name="sponsor_alipay_desc">感谢投喂，OneIMS 会继续折腾下去。</string>
-    <string name="sponsor_wechat_title">微信赞赏</string>
-    <string name="sponsor_wechat_desc">随缘支持一下，作者继续给 Pixel 和运营商劝架。</string>
-    <string name="sponsor_qr_missing">暂未配置赞赏码</string>
-    <string name="sponsor_qr_interaction_hint">点击二维码可放大；长按可查看保存提示</string>
-    <string name="sponsor_long_press_hint">可截图保存后扫码赞赏</string>
-    <string name="sponsor_save_local">保存到本地</string>
-    <string name="sponsor_saved">赞赏码已保存到相册 Pictures/OneIMS</string>
-    <string name="sponsor_save_failed">保存失败，请重试或截图保存</string>
-    <string name="sponsor_close_preview">关闭</string>
-    <string name="sponsor_voluntary_notice">赞赏完全自愿，不影响 OneIMS 的任何功能使用。</string>
+    <string name="sponsor_title">支持作者</string>
+    <string name="sponsor_subtitle">DodoPay 自愿支持</string>
+    <string name="sponsor_intro_title">写在前面</string>
+    <string name="sponsor_intro">如果 OneIMS 帮你点亮了 VoLTE / VoWiFi / 5G，\n可以随缘支持一下 ☕\n感谢每一位支持 OneIMS 的朋友。</string>
+    <string name="sponsor_amount_title">支持金额</string>
+    <string name="sponsor_amount_subtitle">预设或自定义，完全自愿</string>
+    <string name="sponsor_custom_amount">自定义金额（元）</string>
+    <string name="sponsor_amount_invalid">请输入大于 0 且不超过 999 的金额</string>
+    <string name="sponsor_profile_title">昵称与留言</string>
+    <string name="sponsor_nickname_label">昵称</string>
+    <string name="sponsor_message_label">留言</string>
+    <string name="sponsor_message_hint">给 OneIMS 留句话吧</string>
+    <string name="sponsor_channel_title">支付渠道</string>
+    <string name="sponsor_channel_desc">将使用系统浏览器打开 DodoPay 支付页。App 不保存支付密钥，也不在本地伪造支付成功。</string>
+    <string name="sponsor_link_missing">暂未配置 DodoPay 支持链接</string>
+    <string name="sponsor_cta">支持 OneIMS</string>
+    <string name="sponsor_verifying">正在验证…</string>
+    <string name="sponsor_opened_browser">已打开支付页，完成后请返回 OneIMS</string>
+    <string name="sponsor_open_failed">无法打开支付页，请检查是否安装浏览器</string>
+    <string name="sponsor_refresh_status">支付后刷新状态</string>
+    <string name="sponsor_refresh_hint">支付页面已关闭，如已完成支持请稍后刷新状态。</string>
+    <string name="sponsor_thanks_title">感谢支持 OneIMS ❤️</string>
+    <string name="sponsor_thanks_body">你的支持会帮助 OneIMS 继续维护。核心功能仍全部免费可用。</string>
+    <string name="sponsor_supporter_badge">OneIMS 支持者 · 感谢陪伴</string>
+    <string name="sponsor_feed_title">支持记录</string>
+    <string name="sponsor_feed_loading">正在加载支持记录…</string>
+    <string name="sponsor_feed_failed">暂时无法加载支持记录</string>
+    <string name="sponsor_feed_empty">还没有公开留言</string>
+    <string name="sponsor_feed_author_reply">作者回复：%1$s</string>
+    <string name="sponsor_voluntary_notice">支持完全自愿，不影响 OneIMS 的任何功能使用。</string>
     <string name="settings_tools_title">工具与支持</string>
     <string name="settings_tools_subtitle">控制中心快捷入口</string>
-    <string name="settings_sponsor_title">赞赏支持</string>
-    <string name="settings_sponsor_subtitle">查看支付宝与微信本地赞赏码</string>
+    <string name="settings_sponsor_title">支持作者</string>
+    <string name="settings_sponsor_subtitle">通过 DodoPay 自愿支持 OneIMS</string>
+    <string name="about_support_oneims">支持 OneIMS</string>
+    <string name="about_support_oneims_sub">打开支持作者页面</string>
 </resources>
