@@ -26,21 +26,25 @@ internal data class SignalBarSystemPreset(
     )
 }
 
-/** 固定 4 格：不 inflate，配合偏「硬」的阈值。 */
+/** 固定 4 格（PLMN/显示层）：不 inflate；LTE/parameters 服务格数观感，不碰 CarrierIMS 的 NR SSRSRP。 */
 internal fun fourBarSignalPreset() = SignalBarSystemPreset(
     inflateSignalStrength = false,
+    // NR 占位：真正开启阈值时由 [carrierImsNrSsrsrpThresholds] 覆盖；格子路径组合时用基线 NR。
     nrSsrsrpThresholds = intArrayOf(-110, -90, -80, -65),
     lteRsrpThresholds = intArrayOf(-128, -118, -108, -98),
     parametersUseForNrSignalBar = 1,
 )
 
-/** 固定 5 格：inflate=true，SystemUI 总 level +1。 */
+/** 固定 5 格（PLMN/显示层）：inflate=true，SystemUI 总 level +1。 */
 internal fun fiveBarSignalPreset() = SignalBarSystemPreset(
     inflateSignalStrength = true,
     nrSsrsrpThresholds = intArrayOf(-115, -105, -95, -85),
     lteRsrpThresholds = intArrayOf(-125, -115, -105, -95),
     parametersUseForNrSignalBar = 1,
 )
+
+/** CarrierIMS `ImsModifier` 对齐的 NR SSRSRP 单键阈值。 */
+internal fun carrierImsNrSsrsrpThresholds(): IntArray = intArrayOf(-128, -118, -108, -98)
 
 /**
  * 按独家页模式解析「格子」相关预设；AUTO 返回 null。
@@ -55,9 +59,10 @@ internal fun signalBarSystemPreset(
 }
 
 /**
- * 能力页阈值开关 × 独家页格子模式 → 一次 CarrierConfig 写入。
- * 两侧偏好独立：关阈值时阈值回基线，格子仍可生效；格子 AUTO 时 inflate 回基线，阈值仍可生效；
- * 两侧都关返回 null，调用方应恢复基线。
+ * 能力页阈值（CarrierIMS）× 独家页格子（PLMN/inflate）→ 一次 CarrierConfig 写入。
+ * - 阈值开：只替换 NR SSRSRP 为 CarrierIMS 常量，不改 inflate
+ * - 格子 FOUR/FIVE：只改 inflate + LTE/parameters；NR 仍按阈值开关决定
+ * - 两侧都关：返回 null，调用方恢复基线
  */
 internal fun composeIndependentSignalPreset(
     baseline: SignalBarSystemPreset,
@@ -67,7 +72,6 @@ internal fun composeIndependentSignalPreset(
     if (!adjustmentEnabled && barMode == ConfigStore.SignalBarDisplayMode.AUTO) {
         return null
     }
-    val softThresholds = fiveBarSignalPreset()
     val barPreset = signalBarSystemPreset(barMode)
     return SignalBarSystemPreset(
         inflateSignalStrength = when (barMode) {
@@ -76,25 +80,27 @@ internal fun composeIndependentSignalPreset(
             ConfigStore.SignalBarDisplayMode.FIVE_BARS -> true
         },
         nrSsrsrpThresholds = if (adjustmentEnabled) {
-            softThresholds.nrSsrsrpThresholds.copyOf()
+            carrierImsNrSsrsrpThresholds()
         } else {
             baseline.nrSsrsrpThresholds.copyOf()
         },
-        lteRsrpThresholds = if (adjustmentEnabled) {
-            softThresholds.lteRsrpThresholds.copyOf()
-        } else {
-            baseline.lteRsrpThresholds.copyOf()
-        },
+        lteRsrpThresholds = barPreset?.lteRsrpThresholds?.copyOf()
+            ?: baseline.lteRsrpThresholds.copyOf(),
         parametersUseForNrSignalBar = barPreset?.parametersUseForNrSignalBar
             ?: baseline.parametersUseForNrSignalBar,
     )
 }
 
-/** 能力页「信号强度调整」开启时的软阈值参考（不再捆绑格子数）。 */
-internal fun carrierImsSignalStrengthPreset() = fiveBarSignalPreset()
+/** @deprecated 仅作命名兼容；请用 [carrierImsNrSsrsrpThresholds] + [composeIndependentSignalPreset]。 */
+internal fun carrierImsSignalStrengthPreset() = SignalBarSystemPreset(
+    inflateSignalStrength = false,
+    nrSsrsrpThresholds = carrierImsNrSsrsrpThresholds(),
+    lteRsrpThresholds = intArrayOf(-128, -118, -108, -98),
+    parametersUseForNrSignalBar = 1,
+)
 
-/** @deprecated 旧名保留；现与 [fiveBarSignalPreset] 一致。 */
-internal fun chinaMainlandSignalStrengthPreset() = fiveBarSignalPreset()
+/** @deprecated 旧名保留。 */
+internal fun chinaMainlandSignalStrengthPreset() = carrierImsSignalStrengthPreset()
 
 internal object FiveGIconConfigurationPolicy {
     private const val CONSERVATIVE =

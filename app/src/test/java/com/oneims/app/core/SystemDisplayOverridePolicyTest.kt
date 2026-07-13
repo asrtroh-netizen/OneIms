@@ -66,16 +66,19 @@ class SystemDisplayOverridePolicyTest {
         assertEquals(1, five.parametersUseForNrSignalBar)
         assertArrayEquals(intArrayOf(-110, -90, -80, -65), four.nrSsrsrpThresholds)
         assertArrayEquals(intArrayOf(-115, -105, -95, -85), five.nrSsrsrpThresholds)
-        // 能力页别名走 5 格完整预设，不再是单键 SSRSRP。
+        // 能力页 CarrierIMS 别名只保证 NR SSRSRP 常量，不再等于五格完整预设。
+        assertArrayEquals(intArrayOf(-128, -118, -108, -98), carrierImsNrSsrsrpThresholds())
         assertTrue(
-            SystemDisplayOwnershipPolicy.signalPresetsEqual(
-                carrierImsSignalStrengthPreset(),
-                fiveBarSignalPreset(),
-            ),
+            carrierImsSignalStrengthPreset().nrSsrsrpThresholds
+                .contentEquals(carrierImsNrSsrsrpThresholds()),
         )
         assertTrue(
+            chinaMainlandSignalStrengthPreset().nrSsrsrpThresholds
+                .contentEquals(carrierImsNrSsrsrpThresholds()),
+        )
+        assertFalse(
             SystemDisplayOwnershipPolicy.signalPresetsEqual(
-                chinaMainlandSignalStrengthPreset(),
+                carrierImsSignalStrengthPreset(),
                 fiveBarSignalPreset(),
             ),
         )
@@ -257,7 +260,7 @@ class SystemDisplayOverridePolicyTest {
     }
 
     @Test
-    fun composeIndependent_adjustmentDoesNotForceFiveBars() {
+    fun composeIndependent_adjustmentUsesCarrierImsNrOnly() {
         val baseline = fourBarSignalPreset()
         val composed = checkNotNull(
             composeIndependentSignalPreset(
@@ -267,13 +270,12 @@ class SystemDisplayOverridePolicyTest {
             ),
         )
         assertFalse(composed.inflateSignalStrength)
-        assertTrue(
-            composed.nrSsrsrpThresholds.contentEquals(fiveBarSignalPreset().nrSsrsrpThresholds),
-        )
+        assertTrue(composed.nrSsrsrpThresholds.contentEquals(carrierImsNrSsrsrpThresholds()))
+        assertTrue(composed.lteRsrpThresholds.contentEquals(baseline.lteRsrpThresholds))
     }
 
     @Test
-    fun composeIndependent_fiveBarsKeepsBaselineThresholdsWhenAdjustmentOff() {
+    fun composeIndependent_fiveBarsKeepsBaselineNrWhenAdjustmentOff() {
         val baseline = fourBarSignalPreset()
         val composed = checkNotNull(
             composeIndependentSignalPreset(
@@ -284,10 +286,13 @@ class SystemDisplayOverridePolicyTest {
         )
         assertTrue(composed.inflateSignalStrength)
         assertTrue(composed.nrSsrsrpThresholds.contentEquals(baseline.nrSsrsrpThresholds))
+        assertTrue(
+            composed.lteRsrpThresholds.contentEquals(fiveBarSignalPreset().lteRsrpThresholds),
+        )
     }
 
     @Test
-    fun composeIndependent_bothOnMixesInflateAndSoftThresholds() {
+    fun composeIndependent_bothOnMixesInflateAndCarrierImsNr() {
         val baseline = fourBarSignalPreset()
         val composed = checkNotNull(
             composeIndependentSignalPreset(
@@ -297,8 +302,9 @@ class SystemDisplayOverridePolicyTest {
             ),
         )
         assertFalse(composed.inflateSignalStrength)
+        assertTrue(composed.nrSsrsrpThresholds.contentEquals(carrierImsNrSsrsrpThresholds()))
         assertTrue(
-            composed.nrSsrsrpThresholds.contentEquals(fiveBarSignalPreset().nrSsrsrpThresholds),
+            composed.lteRsrpThresholds.contentEquals(fourBarSignalPreset().lteRsrpThresholds),
         )
     }
 }
