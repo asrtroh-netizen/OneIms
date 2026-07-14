@@ -14,8 +14,6 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
@@ -182,48 +180,6 @@ fun DiagnosticsScreen(
                                 subtitle = stringResource(R.string.tool_config_sub),
                                 onClick = actions.onDumpConfig,
                                 enabled = state.actionsEnabled,
-                            ),
-                        ),
-                    )
-                }
-            }
-        }
-
-        item {
-            // 原「首页」的 Shizuku 起不来自救入口，原样搬入。
-            SectionBlock(
-                title = stringResource(R.string.shizuku_setup_title),
-                description = stringResource(R.string.shizuku_setup_subtitle),
-            ) {
-                Column(
-                    modifier = Modifier.padding(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    ActionGrid(
-                        listOf(
-                            ActionSpec(
-                                icon = Icons.Filled.Phone,
-                                title = stringResource(R.string.setup_open_shizuku),
-                                subtitle = stringResource(R.string.setup_open_shizuku_sub),
-                                onClick = actions.onOpenShizuku,
-                            ),
-                            ActionSpec(
-                                icon = Icons.Filled.Build,
-                                title = stringResource(R.string.setup_wireless_debug),
-                                subtitle = stringResource(R.string.setup_wireless_debug_sub),
-                                onClick = actions.onOpenWirelessDebugging,
-                            ),
-                            ActionSpec(
-                                icon = Icons.Filled.LocationOn,
-                                title = stringResource(R.string.setup_hotspot),
-                                subtitle = stringResource(R.string.setup_hotspot_sub),
-                                onClick = actions.onOpenHotspot,
-                            ),
-                            ActionSpec(
-                                icon = Icons.Filled.Share,
-                                title = stringResource(R.string.setup_copy_cmd),
-                                subtitle = stringResource(R.string.setup_copy_cmd_sub),
-                                onClick = actions.onCopySetupCommand,
                             ),
                         ),
                     )
