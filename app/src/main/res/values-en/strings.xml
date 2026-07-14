@@ -508,17 +508,17 @@
 
     <string name="home_quick_actions">Quick start</string>
     <string name="home_quick_actions_sub">Check device status before applying carrier recommendations</string>
-    <string name="home_adb_prep_title">Activate OneKuku outdoors (no PC)</string>
-    <string name="home_adb_prep_sub">No PC and no public Wi‑Fi needed; Wireless debugging is still required. Use a personal hotspot outdoors.</string>
-    <string name="home_adb_prep_steps">3 steps: ① Open Wireless debugging (enter the 6-digit code the first time) → ② Optional hotspot → ③ Tap Start core. We then try to pin adbd to localhost:5555 so it can survive turning Wi‑Fi off.</string>
+    <string name="home_adb_prep_title">Activate on the go</string>
+    <string name="home_adb_prep_sub">No PC, and no public Wi‑Fi needed. You do need Wireless debugging; outdoors, a personal hotspot is enough.</string>
+    <string name="home_adb_prep_steps">① Turn on Wireless debugging (enter the 6-digit code the first time)\n② No Wi‑Fi outdoors? Turn on hotspot\n③ Tap Start core — the app handles the rest</string>
     <string name="home_adb_open_wireless">Open wireless debugging</string>
-    <string name="home_adb_open_wireless_sub">Developer options</string>
+    <string name="home_adb_open_wireless_sub">Jump to system settings</string>
     <string name="home_adb_open_hotspot">Personal hotspot</string>
-    <string name="home_adb_open_hotspot_sub">When there is no Wi‑Fi</string>
+    <string name="home_adb_open_hotspot_sub">Use this when there\'s no Wi‑Fi</string>
     <string name="home_adb_start_core">Start core</string>
-    <string name="home_adb_start_core_sub">Embedded ADB pair &amp; launch</string>
-    <string name="home_adb_copy_guide">Copy full guide</string>
-    <string name="home_adb_copy_guide_sub">Manual fallback steps</string>
+    <string name="home_adb_start_core_sub">Pair and launch OneKuku</string>
+    <string name="home_adb_copy_guide">Copy backup steps</string>
+    <string name="home_adb_copy_guide_sub">Handy if you get stuck</string>
     <string name="action_refresh_sub">Reload permission and SIM status</string>
     <string name="action_compat_sub">Check device support</string>
     <string name="action_grant_sub">Allow OneIms to use system capabilities</string>

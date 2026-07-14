@@ -513,17 +513,17 @@
 
     <string name="home_quick_actions">快速开始</string>
     <string name="home_quick_actions_sub">先确认设备状态，再应用运营商建议</string>
-    <string name="home_adb_prep_title">出门激活 OneKuku（免电脑）</string>
-    <string name="home_adb_prep_sub">不用电脑、也不用外网 WiFi；但必须开「无线调试」。出门可开个人热点。</string>
-    <string name="home_adb_prep_steps">三步：① 打开无线调试（首次输入 6 位配对码）→ ② 可选开热点 → ③ 点「启动核心」。成功后会尝试固定到本机 5555，方便关 WiFi 后仍保活。</string>
+    <string name="home_adb_prep_title">出门也能激活</string>
+    <string name="home_adb_prep_sub">不用电脑，也不用连外面的 WiFi。需要打开系统「无线调试」；外面没网时，开个个人热点就行。</string>
+    <string name="home_adb_prep_steps">① 先打开无线调试（第一次会要你输 6 位配对码）\n② 外面没 WiFi 就开热点\n③ 再点「启动核心」——后面交给 App 里的 ADB 搞定</string>
     <string name="home_adb_open_wireless">打开无线调试</string>
-    <string name="home_adb_open_wireless_sub">系统开发者选项</string>
+    <string name="home_adb_open_wireless_sub">去系统设置里开一下</string>
     <string name="home_adb_open_hotspot">开个人热点</string>
-    <string name="home_adb_open_hotspot_sub">出门无 WiFi 时用</string>
+    <string name="home_adb_open_hotspot_sub">出门没 WiFi 时用这个</string>
     <string name="home_adb_start_core">启动核心</string>
-    <string name="home_adb_start_core_sub">内嵌 ADB 配对并拉起</string>
-    <string name="home_adb_copy_guide">复制完整指引</string>
-    <string name="home_adb_copy_guide_sub">备用手动步骤</string>
+    <string name="home_adb_start_core_sub">配对并拉起 OneKuku</string>
+    <string name="home_adb_copy_guide">复制备用步骤</string>
+    <string name="home_adb_copy_guide_sub">卡住时可以对照着做</string>
     <string name="action_refresh_sub">重新读取权限与 SIM</string>
     <string name="action_compat_sub">检查设备支持程度</string>
     <string name="action_grant_sub">允许 OneIms 使用系统能力</string>
