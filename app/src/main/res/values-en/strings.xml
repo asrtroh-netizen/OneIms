@@ -450,11 +450,21 @@
 
     <string name="onekuku_settings_status">OneKuku status: %1$s</string>
     <string name="onekuku_settings_boot_check">Auto-check on boot</string>
-    <string name="onekuku_settings_boot_check_sub">Check and try restore after boot or when the service is ready</string>
+    <string name="onekuku_settings_boot_check_sub">After reboot, check whether call settings are still valid</string>
+    <string name="onekuku_settings_auto_restore">Auto restore</string>
+    <string name="onekuku_settings_auto_restore_sub">When settings are lost, wake OneKuku and restore automatically</string>
+    <string name="onekuku_settings_check_status">Check OneKuku status</string>
+    <string name="onekuku_settings_check_status_sub">Read-only check — no write, no restore</string>
+    <string name="onekuku_settings_state_inactive">Inactive</string>
+    <string name="onekuku_settings_state_sleeping">Sleeping</string>
+    <string name="onekuku_settings_state_running">Running</string>
+    <string name="onekuku_settings_state_invalid">Invalid</string>
+    <string name="onekuku_settings_restore_on">Auto restore enabled</string>
+    <string name="onekuku_settings_restore_off">Auto restore disabled</string>
     <string name="onekuku_settings_auto_sleep">Auto-sleep when idle</string>
-    <string name="onekuku_settings_auto_sleep_sub">Sleep after restore completes — no always-on drain</string>
+    <string name="onekuku_settings_auto_sleep_sub">After restore, OneKuku sleeps automatically — no always-on drain</string>
     <string name="onekuku_settings_reactivate">Reactivate OneKuku</string>
-    <string name="onekuku_settings_reactivate_sub">Prepare the core service again</string>
+    <string name="onekuku_settings_reactivate_sub">Try to activate the OneKuku core service</string>
     <string name="onekuku_settings_view_status">View status</string>
     <string name="onekuku_settings_view_status_sub">Read-only check of SIM and calling features</string>
     <string name="onekuku_settings_boot_on">Boot auto-check enabled</string>

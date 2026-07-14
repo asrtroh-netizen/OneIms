@@ -1,6 +1,8 @@
 package com.oneims.app.onekuku
 
+import android.content.Context
 import android.util.Log
+import com.oneims.app.core.ConfigStore
 
 /**
  * 执行结束后进入休眠；失败只记日志，不阻断主流程。
@@ -23,6 +25,19 @@ object OneKukuSleepController {
                 success = false,
                 state = OneKukuHiddenRunner.currentState(),
                 message = "sleep failed: ${error.message}",
+            )
+        }
+    }
+
+    fun sleepIfEnabled(context: Context): OneKukuCommandResult {
+        return if (ConfigStore.isOneKukuAutoSleep(context)) {
+            sleep()
+        } else {
+            Log.i(TAG, "auto-sleep disabled, keep current state")
+            OneKukuCommandResult(
+                success = true,
+                state = OneKukuHiddenRunner.currentState(),
+                message = "auto-sleep disabled",
             )
         }
     }

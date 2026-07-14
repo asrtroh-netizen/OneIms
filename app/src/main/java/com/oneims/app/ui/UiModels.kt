@@ -62,6 +62,7 @@ data class HomeUiState(
     val actionsEnabled: Boolean,
     val reapplyStatus: ConfigStore.ReapplyStatus? = null,
     val bootAutoCheck: Boolean = true,
+    val autoRestore: Boolean = true,
     val autoSleep: Boolean = true,
     val oneKukuDetailOverride: String? = null,
 )
@@ -73,6 +74,7 @@ data class HomeActions(
     val onCheckOneKukuStatus: () -> Unit,
     val onStatusCheck: () -> Unit,
     val onBootAutoCheckChange: (Boolean) -> Unit,
+    val onAutoRestoreChange: (Boolean) -> Unit,
     val onAutoSleepChange: (Boolean) -> Unit,
 )
 

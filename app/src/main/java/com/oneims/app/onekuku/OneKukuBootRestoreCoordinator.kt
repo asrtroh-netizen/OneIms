@@ -65,7 +65,7 @@ object OneKukuBootRestoreCoordinator {
         if (snapshots.isEmpty()) {
             OneKukuBootRestoreStore.setNoSnapshotNote(context, true)
             OneKukuBootRestoreStore.writeHint(context, OneKukuBootUiHint.NO_SNAPSHOT_SLEEPING)
-            OneKukuSleepController.sleep()
+            OneKukuSleepController.sleepIfEnabled(context)
             return
         }
         OneKukuBootRestoreStore.setNoSnapshotNote(context, false)
@@ -90,7 +90,13 @@ object OneKukuBootRestoreCoordinator {
         if (!needsRestore) {
             Log.i(TAG, "configs still valid, stay sleeping")
             OneKukuBootRestoreStore.writeHint(context, OneKukuBootUiHint.READY_SLEEPING)
-            OneKukuSleepController.sleep()
+            OneKukuSleepController.sleepIfEnabled(context)
+            return
+        }
+
+        if (!ConfigStore.isOneKukuAutoRestore(context)) {
+            Log.i(TAG, "config invalid but auto-restore disabled")
+            OneKukuBootRestoreStore.writeHint(context, OneKukuBootUiHint.NEEDS_ACTIVATION)
             return
         }
 
@@ -120,16 +126,16 @@ object OneKukuBootRestoreCoordinator {
         when {
             anySuccess && !anyFailure -> {
                 OneKukuBootRestoreStore.writeHint(context, OneKukuBootUiHint.RESTORE_COMPLETE)
-                OneKukuSleepController.sleep()
+                OneKukuSleepController.sleepIfEnabled(context)
             }
             anySuccess -> {
                 OneKukuBootRestoreStore.writeHint(context, OneKukuBootUiHint.RESTORE_COMPLETE)
-                OneKukuSleepController.sleep()
+                OneKukuSleepController.sleepIfEnabled(context)
             }
             else -> {
                 OneKukuBootRestoreStore.writeHint(context, OneKukuBootUiHint.NEEDS_ACTIVATION)
                 notifyNeedsRestore(context)
-                OneKukuSleepController.sleep()
+                OneKukuSleepController.sleepIfEnabled(context)
             }
         }
     }

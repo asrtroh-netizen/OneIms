@@ -454,11 +454,22 @@
 
     <string name="onekuku_settings_status">OneKuku 状态：%1$s</string>
     <string name="onekuku_settings_boot_check">开机自动检查</string>
-    <string name="onekuku_settings_boot_check_sub">开机或服务就绪后自动检查并尝试恢复</string>
+    <string name="onekuku_settings_boot_check_sub">重启后自动检查通话配置是否仍然有效</string>
+
+    <string name="onekuku_settings_auto_restore">自动恢复</string>
+    <string name="onekuku_settings_auto_restore_sub">检测到配置失效时，自动尝试唤醒 OneKuku 恢复</string>
+    <string name="onekuku_settings_check_status">检查 OneKuku 状态</string>
+    <string name="onekuku_settings_check_status_sub">只检查，不写入，不恢复</string>
+    <string name="onekuku_settings_state_inactive">未激活</string>
+    <string name="onekuku_settings_state_sleeping">休眠中</string>
+    <string name="onekuku_settings_state_running">执行中</string>
+    <string name="onekuku_settings_state_invalid">失效</string>
+    <string name="onekuku_settings_restore_on">已开启自动恢复</string>
+    <string name="onekuku_settings_restore_off">已关闭自动恢复</string>
     <string name="onekuku_settings_auto_sleep">用完自动休眠</string>
-    <string name="onekuku_settings_auto_sleep_sub">恢复完成后进入休眠，不常驻</string>
+    <string name="onekuku_settings_auto_sleep_sub">恢复完成后 OneKuku 自动进入休眠，不常驻不耗电</string>
     <string name="onekuku_settings_reactivate">重新激活 OneKuku</string>
-    <string name="onekuku_settings_reactivate_sub">重新准备核心服务</string>
+    <string name="onekuku_settings_reactivate_sub">尝试激活 OneKuku 核心服务</string>
     <string name="onekuku_settings_view_status">查看状态</string>
     <string name="onekuku_settings_view_status_sub">只读检查当前 SIM 与通话能力</string>
     <string name="onekuku_settings_boot_on">已开启开机自动检查</string>

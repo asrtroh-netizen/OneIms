@@ -56,6 +56,7 @@ object ConfigStore {
     private const val KEY_SIM_COUNTRY_HAS = "sim_country_draft_has"
     private const val KEY_SIM_COUNTRY_ISO = "sim_country_draft_iso"
     private const val KEY_ONEKUKU_AUTO_SLEEP = "onekuku_auto_sleep"
+    private const val KEY_ONEKUKU_AUTO_RESTORE = "onekuku_auto_restore"
 
     data class Applied(
         val subId: Int,
@@ -453,5 +454,13 @@ object ConfigStore {
 
     fun setOneKukuAutoSleep(context: Context, enabled: Boolean) {
         prefs(context).edit().putBoolean(KEY_ONEKUKU_AUTO_SLEEP, enabled).apply()
+    }
+
+    /** 检测到配置失效时是否自动唤醒恢复；默认开启。 */
+    fun isOneKukuAutoRestore(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_ONEKUKU_AUTO_RESTORE, true)
+
+    fun setOneKukuAutoRestore(context: Context, enabled: Boolean) {
+        prefs(context).edit().putBoolean(KEY_ONEKUKU_AUTO_RESTORE, enabled).apply()
     }
 }

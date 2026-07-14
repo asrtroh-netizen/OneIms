@@ -271,6 +271,12 @@ fun HomeScreen(
                             onCheckedChange = actions.onBootAutoCheckChange,
                         )
                         SettingsSwitchRow(
+                            title = stringResource(R.string.onekuku_settings_auto_restore),
+                            subtitle = stringResource(R.string.onekuku_settings_auto_restore_sub),
+                            checked = state.autoRestore,
+                            onCheckedChange = actions.onAutoRestoreChange,
+                        )
+                        SettingsSwitchRow(
                             title = stringResource(R.string.onekuku_settings_auto_sleep),
                             subtitle = stringResource(R.string.onekuku_settings_auto_sleep_sub),
                             checked = state.autoSleep,
@@ -287,11 +293,11 @@ fun HomeScreen(
                         )
                         SettingsActionRow(
                             icon = Icons.Filled.Search,
-                            title = stringResource(R.string.onekuku_settings_view_status),
-                            subtitle = stringResource(R.string.onekuku_settings_view_status_sub),
+                            title = stringResource(R.string.onekuku_settings_check_status),
+                            subtitle = stringResource(R.string.onekuku_settings_check_status_sub),
                             onClick = {
                                 openDialog = null
-                                actions.onStatusCheck()
+                                actions.onCheckOneKukuStatus()
                             },
                         )
                     }

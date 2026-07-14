@@ -98,6 +98,7 @@ import com.oneims.app.onekuku.OneKukuCommandDispatcher
 import com.oneims.app.onekuku.OneKukuHiddenRunner
 import com.oneims.app.onekuku.OneKukuRunnerState
 import com.oneims.app.onekuku.OneKukuSnapshotStore
+import com.oneims.app.onekuku.OneKukuSleepController
 import com.oneims.app.core.OneKukuBootRestoreService
 import com.oneims.app.ui.OneKukuCardPolicy
 import com.oneims.app.ui.OneKukuHomeTools
@@ -228,6 +229,9 @@ private fun AppRoot(
     var oneKukuRestoring by remember { mutableStateOf(false) }
     var oneKukuBootAutoCheck by remember {
         mutableStateOf(ConfigStore.isOneKukuBootAutoCheck(context))
+    }
+    var oneKukuAutoRestore by remember {
+        mutableStateOf(ConfigStore.isOneKukuAutoRestore(context))
     }
     var oneKukuAutoSleep by remember {
         mutableStateOf(ConfigStore.isOneKukuAutoSleep(context))
@@ -737,6 +741,7 @@ private fun AppRoot(
                         actionsEnabled = actionsAvailable,
                         reapplyStatus = reapplyStatus,
                         bootAutoCheck = oneKukuBootAutoCheck,
+                        autoRestore = oneKukuAutoRestore,
                         autoSleep = oneKukuAutoSleep,
                         oneKukuDetailOverride = oneKukuDetailOverride,
                     ),
@@ -745,11 +750,25 @@ private fun AppRoot(
                         onActivateOneKuku = {
                             when {
                                 !OneKukuManager.isRunning() -> {
-                                    ShizukuSetupHelper.openShizukuApp(context)
+                                    OneKukuManager.requestActivation()
                                     publish(context.getString(R.string.onekuku_msg_need_prepare))
+                                    OneKukuBootRestoreStore.writeHint(
+                                        context,
+                                        OneKukuBootUiHint.NEEDS_ACTIVATION,
+                                    )
+                                    bootUiHint = OneKukuBootUiHint.NEEDS_ACTIVATION
                                 }
                                 OneKukuManager.isGranted() -> {
+                                    OneKukuHiddenRunner.installBridge(OneKukuPrivilegeBridgeImpl)
+                                    OneKukuHiddenRunner.wake()
+                                    OneKukuSleepController.sleepIfEnabled(context)
                                     refreshAll()
+                                    oneKukuTaskComplete = false
+                                    OneKukuBootRestoreStore.writeHint(
+                                        context,
+                                        OneKukuBootUiHint.READY_SLEEPING,
+                                    )
+                                    bootUiHint = OneKukuBootUiHint.READY_SLEEPING
                                     publish(context.getString(R.string.onekuku_msg_already_active))
                                 }
                                 else -> {
@@ -757,6 +776,31 @@ private fun AppRoot(
                                     publish(context.getString(R.string.onekuku_msg_permission_requested))
                                 }
                             }
+                            shizukuRunning = OneKukuManager.isRunning()
+                            shizukuGranted = OneKukuManager.isGranted()
+                        },
+                        onCheckOneKukuStatus = {
+                            oneKukuTaskComplete = false
+                            shizukuRunning = OneKukuManager.isRunning()
+                            shizukuGranted = OneKukuManager.isGranted()
+                            OneKukuHiddenRunner.installBridge(OneKukuPrivilegeBridgeImpl)
+                            val check = OneKukuCommandDispatcher.dispatch(
+                                context = context,
+                                command = OneKukuCommand.CHECK_ONEKUKU_STATUS,
+                                subId = selectedSubId,
+                            )
+                            publish(
+                                when {
+                                    !OneKukuManager.isRunning() ->
+                                        context.getString(R.string.onekuku_settings_state_invalid)
+                                    !OneKukuManager.isGranted() ->
+                                        context.getString(R.string.onekuku_settings_state_inactive)
+                                    check.success ->
+                                        context.getString(R.string.onekuku_msg_status_ok)
+                                    else ->
+                                        OneKukuHomeTools.sanitizeUserText(check.message)
+                                },
+                            )
                         },
                         onRestoreCallConfig = {
                             shizukuRunning = OneKukuManager.isRunning()
@@ -819,11 +863,6 @@ private fun AppRoot(
                                     }
                                 }
                             }
-                        },
-                        onCheckOneKukuStatus = {
-                            oneKukuTaskComplete = false
-                            refreshAll()
-                            publish(context.getString(R.string.onekuku_msg_status_ok))
                         },
                         onStatusCheck = {
                             if (busyLabel != null) {
@@ -905,6 +944,19 @@ private fun AppRoot(
                                         R.string.onekuku_settings_boot_on
                                     } else {
                                         R.string.onekuku_settings_boot_off
+                                    },
+                                ),
+                            )
+                        },
+                        onAutoRestoreChange = { enabled ->
+                            ConfigStore.setOneKukuAutoRestore(context, enabled)
+                            oneKukuAutoRestore = enabled
+                            publish(
+                                context.getString(
+                                    if (enabled) {
+                                        R.string.onekuku_settings_restore_on
+                                    } else {
+                                        R.string.onekuku_settings_restore_off
                                     },
                                 ),
                             )

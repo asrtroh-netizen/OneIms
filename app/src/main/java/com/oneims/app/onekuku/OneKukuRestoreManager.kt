@@ -41,12 +41,12 @@ object OneKukuRestoreManager {
             is SnapshotMatchResult.NoSnapshot -> {
                 val msg = "no snapshot"
                 Log.w(TAG, msg)
-                OneKukuSleepController.sleep()
+                OneKukuSleepController.sleepIfEnabled(context)
                 return OneKukuCommandResult(false, OneKukuRunnerState.SLEEPING, msg)
             }
             is SnapshotMatchResult.NoMatchingSim -> {
                 Log.w(TAG, OneKukuSnapshotStore.MSG_NO_MATCHING_SIM)
-                OneKukuSleepController.sleep()
+                OneKukuSleepController.sleepIfEnabled(context)
                 return OneKukuCommandResult(
                     false,
                     OneKukuRunnerState.SLEEPING,
@@ -110,7 +110,7 @@ object OneKukuRestoreManager {
                     status = status,
                     verifiedAt = System.currentTimeMillis(),
                 )
-                OneKukuSleepController.sleep()
+                OneKukuSleepController.sleepIfEnabled(context)
                 val message = buildString {
                     append("restore $status ($successCount/$total)")
                     if (failures.isNotEmpty()) {
@@ -130,19 +130,19 @@ object OneKukuRestoreManager {
     }
 
     fun restoreIms(context: Context, subId: Int): OneKukuCommandResult =
-        step("ims") { restoreIms(context, subId, requireSnapshot(context, subId)) }
+        step("ims", context) { restoreIms(context, subId, requireSnapshot(context, subId)) }
 
     fun restoreWfc(context: Context, subId: Int): OneKukuCommandResult =
-        step("wfc") { restoreWfc(context, subId, requireSnapshot(context, subId)) }
+        step("wfc", context) { restoreWfc(context, subId, requireSnapshot(context, subId)) }
 
     fun restoreFiveG(context: Context, subId: Int): OneKukuCommandResult =
-        step("nr5g") { restoreFiveG(context, subId, requireSnapshot(context, subId)) }
+        step("nr5g", context) { restoreFiveG(context, subId, requireSnapshot(context, subId)) }
 
     fun restoreVoWifiName(context: Context, subId: Int): OneKukuCommandResult =
-        step("vowifi_name") { restoreVoWifiName(context, subId, requireSnapshot(context, subId)) }
+        step("vowifi_name", context) { restoreVoWifiName(context, subId, requireSnapshot(context, subId)) }
 
     fun restoreIdentity(context: Context, subId: Int): OneKukuCommandResult =
-        step("identity") { restoreIdentity(context, subId, requireSnapshot(context, subId)) }
+        step("identity", context) { restoreIdentity(context, subId, requireSnapshot(context, subId)) }
 
     fun verify(context: Context, subId: Int): OneKukuCommandResult {
         val ok = runCatching {
@@ -159,6 +159,7 @@ object OneKukuRestoreManager {
 
     private fun step(
         name: String,
+        context: Context,
         block: () -> ConfigResult,
     ): OneKukuCommandResult {
         OneKukuHiddenRunner.markExecuting()
@@ -168,7 +169,7 @@ object OneKukuRestoreManager {
             ConfigResult(false, it.message ?: "error")
         }
         Log.i(TAG, "step=$name success=${result.success} msg=${result.message}")
-        OneKukuSleepController.sleep()
+        OneKukuSleepController.sleepIfEnabled(context)
         return OneKukuCommandResult(
             success = result.success,
             state = OneKukuRunnerState.SLEEPING,

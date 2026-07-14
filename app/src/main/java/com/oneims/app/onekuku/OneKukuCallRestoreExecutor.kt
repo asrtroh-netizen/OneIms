@@ -37,7 +37,7 @@ object OneKukuCallRestoreExecutor {
 
         val sim = sims.firstOrNull { it.subscriptionId == selectedSubId }
         if (sim == null || selectedSubId < 0) {
-            OneKukuSleepController.sleep()
+            OneKukuSleepController.sleepIfEnabled(context)
             val msg = context.getString(R.string.onekuku_restore_need_sim)
             persistHistory(
                 context = context,
@@ -58,7 +58,7 @@ object OneKukuCallRestoreExecutor {
         val snapshot = (resolved as? SnapshotMatchResult.Matched)?.snapshot
         when (resolved) {
             is SnapshotMatchResult.NoSnapshot -> {
-                OneKukuSleepController.sleep()
+                OneKukuSleepController.sleepIfEnabled(context)
                 val msg = context.getString(R.string.onekuku_restore_no_snapshot)
                 persistHistory(
                     context, restoreId, startedAt, sim, selectedSubId, statusBefore,
@@ -67,7 +67,7 @@ object OneKukuCallRestoreExecutor {
                 return Report(OneKukuHomeTools.RestoreOutcome.FAILURE, msg)
             }
             is SnapshotMatchResult.NoMatchingSim -> {
-                OneKukuSleepController.sleep()
+                OneKukuSleepController.sleepIfEnabled(context)
                 val msg = context.getString(R.string.onekuku_restore_sim_mismatch)
                 persistHistory(
                     context, restoreId, startedAt, sim, selectedSubId, statusBefore,
@@ -81,7 +81,7 @@ object OneKukuCallRestoreExecutor {
         if (!ensureOneKukuReady(context)) {
             OneKukuHiddenRunner.markFailed("OneKuku inactive")
             OneKukuBootRestoreStore.writeHint(context, OneKukuBootUiHint.NEEDS_ACTIVATION)
-            OneKukuSleepController.sleep()
+            OneKukuSleepController.sleepIfEnabled(context)
             val msg = context.getString(R.string.onekuku_restore_onekuku_inactive)
             persistHistory(
                 context, restoreId, startedAt, sim, selectedSubId, statusBefore,
@@ -95,7 +95,7 @@ object OneKukuCallRestoreExecutor {
             command = OneKukuCommand.RESTORE_ALL_CALL_CONFIGS,
             subId = selectedSubId,
         )
-        OneKukuSleepController.sleep()
+        OneKukuSleepController.sleepIfEnabled(context)
 
         val detailOk = result.detail.values.count { it }
         val detailTotal = result.detail.size

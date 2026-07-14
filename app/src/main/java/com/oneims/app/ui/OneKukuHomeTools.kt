@@ -348,12 +348,12 @@ object OneKukuHomeTools {
         serviceRunning: Boolean,
     ): String = when {
         state == OneKukuCardState.RUNNING ->
-            context.getString(R.string.onekuku_pill_running)
+            context.getString(R.string.onekuku_settings_state_running)
         state == OneKukuCardState.INACTIVE && !serviceRunning ->
-            context.getString(R.string.onekuku_pill_invalid)
+            context.getString(R.string.onekuku_settings_state_invalid)
         state == OneKukuCardState.INACTIVE ->
-            context.getString(R.string.onekuku_pill_inactive)
-        else -> context.getString(R.string.onekuku_pill_sleeping)
+            context.getString(R.string.onekuku_settings_state_inactive)
+        else -> context.getString(R.string.onekuku_settings_state_sleeping)
     }
 
     fun classifyRestoreOutcome(
