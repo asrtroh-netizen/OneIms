@@ -7,7 +7,7 @@ import android.service.quicksettings.TileService
 import android.util.Log
 import android.widget.Toast
 import com.oneims.app.R
-import com.oneims.app.shizuku.ShizukuManager
+import com.oneims.app.core.OneKukuManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -40,7 +40,7 @@ class DataSimSwitchTileService : TileService() {
                 return@launch
             }
             when {
-                !ShizukuManager.isRunning() || !ShizukuManager.isGranted() -> {
+                !OneKukuManager.isRunning() || !OneKukuManager.isGranted() -> {
                     showMessage(getString(R.string.qs_tile_permission_required))
                     refreshTile()
                 }
@@ -115,7 +115,7 @@ class DataSimSwitchTileService : TileService() {
         val defaultSubId = DataSimSwitchManagerImpl.getDefaultDataSubId()
         val current = sims.firstOrNull { it.subId == defaultSubId }
         when {
-            !ShizukuManager.isRunning() || !ShizukuManager.isGranted() -> updateTile(
+            !OneKukuManager.isRunning() || !OneKukuManager.isGranted() -> updateTile(
                 state = Tile.STATE_UNAVAILABLE,
                 subtitle = getString(R.string.qs_tile_permission_required),
             )

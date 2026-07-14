@@ -5,7 +5,7 @@ import android.content.Context
 import android.telephony.SubscriptionManager
 import android.util.Log
 import com.oneims.app.R
-import com.oneims.app.shizuku.ShizukuManager
+import com.oneims.app.core.OneKukuManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -98,7 +98,7 @@ object DataSimSwitchManagerImpl : DataSimSwitchManager {
                 context.getString(R.string.data_switch_invalid_target),
             )
         }
-        if (!ShizukuManager.isRunning() || !ShizukuManager.isGranted()) {
+        if (!OneKukuManager.isRunning() || !OneKukuManager.isGranted()) {
             return DataSimSwitchResult.Failed(
                 context.getString(R.string.data_switch_no_permission),
             )

@@ -23,19 +23,19 @@
     <string name="sim_tag_active">使用中</string>
     <string name="sim_tag_standby">备用</string>
     <string name="apply_recommended">按推荐一键开启</string>
-    <string name="shizuku_setup_title">起不来 Shizuku？没 WiFi 也能开</string>
-    <string name="setup_open_shizuku">开Shizuku</string>
+    <string name="shizuku_setup_title">OneKuku 起不来？没 WiFi 也能准备</string>
+    <string name="setup_open_shizuku">准备 OneKuku</string>
     <string name="setup_wireless_debug">无线调试</string>
     <string name="setup_hotspot">开热点</string>
     <string name="setup_copy_cmd">复制命令</string>
-    <string name="log_shizuku_opened">已打开 Shizuku 去配对</string>
+    <string name="log_shizuku_opened">已打开 OneKuku 准备页</string>
     <string name="log_shizuku_not_installed">未装，已跳市场</string>
     <string name="log_open_failed">打开失败</string>
     <string name="log_jumped_wireless">已跳无线调试</string>
     <string name="log_jump_failed">跳转失败</string>
     <string name="log_hotspot_opened">已开热点设置</string>
     <string name="log_cmd_copied">免电脑命令已复制</string>
-    <string name="termux_hint">免电脑自助（需装 Termux + pkg install android-tools）：\n1) 无线调试页点「使用配对码配对设备」，记下 IP:配对端口 与 配对码；\n2) Termux 执行：adb pair localhost:配对端口 配对码\n3) 再执行：adb connect localhost:连接端口\n4) 启动 Shizuku：adb -s localhost:连接端口 shell sh /storage/emulated/0/Android/data/moe.shizuku.privileged.api/start.sh</string>
+    <string name="termux_hint">免电脑自助（需装 Termux + pkg install android-tools）：\n1) 无线调试页点「使用配对码配对设备」，记下 IP:配对端口 与 配对码；\n2) Termux 执行：adb pair localhost:配对端口 配对码\n3) 再执行：adb connect localhost:连接端口\n4) 启动 OneKuku 核心服务（按准备页指引完成）</string>
 
     <!-- 能力页 -->
     <string name="cap_group_radio_title">运营商能力与 5G</string>
@@ -186,13 +186,13 @@
     <string name="support_full">完全支持</string>
     <string name="support_degraded">降级可用</string>
     <string name="support_unsupported">不支持</string>
-    <string name="support_need_shizuku">需先配置 Shizuku</string>
+    <string name="support_need_shizuku">需先激活 OneKuku</string>
     <string name="compat_tensor">① Tensor 芯片: %1$s</string>
     <string name="compat_yes">是 ✅</string>
     <string name="compat_tensor_no">否 ❌（本工具面向 Tensor Pixel）</string>
     <string name="compat_os">② 系统版本: Android %1$s (API %2$d) %3$s</string>
     <string name="compat_os_bad">❌（需 Android 12+）</string>
-    <string name="compat_shizuku">③ Shizuku: %1$s</string>
+    <string name="compat_shizuku">③ OneKuku: %1$s</string>
     <string name="compat_shizuku_granted">已授权 ✅</string>
     <string name="compat_shizuku_running">已运行未授权 ⚠️</string>
     <string name="compat_shizuku_off">未运行 ❌</string>
@@ -203,8 +203,8 @@
     <string name="compat_sim_no">❌（未检测到 SIM）</string>
     <string name="compat_conclusion">—— 结论：本机%1$s ——</string>
     <string name="compat_advice_full">可放心使用全部功能。</string>
-    <string name="compat_advice_degraded">可用性降级：请更新 Hidden/API 兼容层后重试；root Shizuku 可走直调，非 root 仍依赖 Instrumentation。</string>
-    <string name="compat_advice_need_shizuku">先启动并授权 Shizuku 再来。</string>
+    <string name="compat_advice_degraded">可用性降级：请更新 Hidden/API 兼容层后重试；Root 通道可走直调，非 Root 仍依赖委托。</string>
+    <string name="compat_advice_need_shizuku">请先激活 OneKuku 核心服务再来。</string>
     <string name="compat_advice_unsupported">本机不满足前置条件，不建议使用，以免影响通信。</string>
 
     <!-- 设备信息卡 -->
@@ -316,7 +316,7 @@
     <string name="identity_target_applied">已写入卡%1$d · %2$s · subId=%3$d：%4$s</string>
     <string name="identity_readback_failed">卡%1$d 身份覆盖未生效：目标 subId=%2$d 回读失败</string>
     <string name="identity_readback_mismatch">卡%1$d 身份覆盖未生效：目标 subId=%2$d 回读不一致</string>
-    <string name="config_dump_failed">读取 CarrierConfig 失败（需 Shizuku 已授权且选中有效 SIM）</string>
+    <string name="config_dump_failed">读取 CarrierConfig 失败（需 OneKuku 已激活且选中有效 SIM）</string>
     <string name="config_dump_title">CarrierConfig 关键项（subId=%1$d）:</string>
     <string name="config_dump_empty">(空)</string>
     <string name="config_dump_footer">——\n命中 %1$d 项 / 全量 %2$d 项（仅显示关键项，其余略）</string>
@@ -336,8 +336,8 @@
     <string name="home_subtitle">安全、清晰地管理 Pixel IMS</string>
     <string name="home_ready_title">设备已就绪</string>
     <string name="home_setup_needed_title">还差一步即可使用</string>
-    <string name="home_status_shizuku_off">请先启动 Shizuku</string>
-    <string name="home_status_permission">授予 Shizuku 权限后即可写入配置</string>
+    <string name="home_status_shizuku_off">请先激活 OneKuku</string>
+    <string name="home_status_permission">激活 OneKuku 后即可写入配置</string>
     <string name="home_status_no_sim">未检测到可用 SIM</string>
     <string name="home_status_ready">已授权并选中移动网络</string>
     <string name="home_safety_note">所有核心写入都以电话、短信和数据可用为最高优先级</string>
@@ -454,8 +454,8 @@
     <string name="action_grant_sub">允许 OneIms 使用系统能力</string>
     <string name="action_restore_sub">清空覆盖并恢复默认</string>
     <string name="no_sim_detail">确认电话权限和 SIM 状态后重试</string>
-    <string name="shizuku_setup_subtitle">配对、无线调试与免电脑启动入口</string>
-    <string name="setup_open_shizuku_sub">打开配对与授权页面</string>
+    <string name="shizuku_setup_subtitle">配对、无线调试与免电脑准备入口</string>
+    <string name="setup_open_shizuku_sub">打开 OneKuku 准备与授权</string>
     <string name="setup_wireless_debug_sub">进入系统开发者选项</string>
     <string name="setup_hotspot_sub">无路由器时创建本机网络</string>
     <string name="setup_copy_cmd_sub">复制 Termux 启动步骤</string>
@@ -468,13 +468,13 @@
 
     <string name="capabilities_title">IMS 能力</string>
     <string name="capabilities_subtitle">按需启用通话、WiFi 与 5G 能力</string>
-    <string name="capabilities_select_sim_notice">请先在下方选择 SIM，并确认 Shizuku 已运行且授权；条件不满足时不会执行写入。</string>
+    <string name="capabilities_select_sim_notice">请先在下方选择 SIM，并确认 OneKuku 已激活；条件不满足时不会执行写入。</string>
     <string name="sim_switcher_hint">先选卡，下面所有设置只对这张卡生效</string>
     <string name="mobile_network_title">移动网络</string>
     <string name="mobile_network_subtitle">运营商方案推荐</string>
     <string name="diagnostics_title">诊断与修复</string>
     <string name="diagnostics_subtitle">先只读检查，再执行有风险的修复</string>
-    <string name="diagnostics_prereq_short">请选择 SIM 并授权 Shizuku</string>
+    <string name="diagnostics_prereq_short">请选择 SIM 并激活 OneKuku</string>
     <string name="diagnostics_select_sim_notice">@string/diagnostics_prereq_short</string>
     <string name="diagnostics_checks">只读检查</string>
     <string name="diagnostics_checks_sub">不会修改系统配置</string>
@@ -513,15 +513,15 @@
     <string name="operation_already_running">已有操作正在进行，请稍候</string>
     <string name="operation_failed">操作失败：%1$s</string>
     <string name="operation_unknown_error">未知错误</string>
-    <string name="operation_feedback_permission_delegate_failed">权限代理启动失败，配置未写入。请重启 Shizuku 后重试；仍失败请复制排障日志。</string>
+    <string name="operation_feedback_permission_delegate_failed">权限代理启动失败，配置未写入。请重新激活 OneKuku 后重试；仍失败请复制排障日志。</string>
     <string name="operation_feedback_rollback_failed">配置写入与自动回滚均失败。请立即重启手机并检查电话、数据和短信；详情已写入排障日志。</string>
     <string name="operation_feedback_failure_logged">操作失败，完整原因已写入排障日志。</string>
     <string name="operation_feedback_result_logged">操作完成，完整结果已写入排障日志。</string>
-    <string name="shizuku_permission_granted_message">Shizuku 授权成功</string>
-    <string name="shizuku_permission_denied_message">Shizuku 授权未通过</string>
-    <string name="shizuku_not_running_message">Shizuku 尚未运行，请先完成配对</string>
-    <string name="shizuku_permission_required_message">请先在首页授予 Shizuku 权限，再执行系统写入</string>
-    <string name="shizuku_already_granted_message">Shizuku 已授权，无需重复操作</string>
+    <string name="shizuku_permission_granted_message">OneKuku 激活成功</string>
+    <string name="shizuku_permission_denied_message">OneKuku 激活未通过</string>
+    <string name="shizuku_not_running_message">OneKuku 尚未就绪，请先完成准备</string>
+    <string name="shizuku_permission_required_message">请先在首页激活 OneKuku，再执行系统写入</string>
+    <string name="shizuku_already_granted_message">OneKuku 已激活，无需重复操作</string>
     <string name="shizuku_permission_requested">授权请求已发送</string>
     <string name="phone_permission_denied_message">未授予电话权限，SIM 与 IMS 状态将无法读取</string>
     <string name="confirm_restore_title">恢复运营商默认设置？</string>
@@ -653,7 +653,7 @@
     <string name="action_processing">处理中…</string>
 
     <string name="one_click_check_title">一键体检</string>
-    <string name="one_click_check_desc">一次性检查 Shizuku、选卡、基础通信、IMS 注册等关键状态，结果按清单方式展示。</string>
+    <string name="one_click_check_desc">一次性检查 OneKuku、选卡、基础通信、IMS 注册等关键状态，结果按清单方式展示。</string>
     <string name="one_click_section_title">一键检测与修复</string>
     <string name="one_click_check_action">一键检测</string>
     <string name="one_click_fix_action">一键修复</string>
@@ -679,15 +679,15 @@
     <string name="diagnostic_user_no_fix_needed">无需修复</string>
     <string name="diagnostic_user_privilege_required">高级修复需要授权支持</string>
     <string name="diagnostic_user_fix_needed">需要修复</string>
-    <string name="diagnostic_check_shizuku_running">Shizuku 服务运行</string>
-    <string name="diagnostic_check_shizuku_running_yes">Shizuku 正在运行</string>
-    <string name="diagnostic_check_shizuku_running_no">Shizuku 未运行</string>
-    <string name="diagnostic_check_shizuku_start_guidance">请先启动 Shizuku；可在排障页顶部的自救入口中打开配对或无线调试。</string>
-    <string name="diagnostic_check_shizuku_permission">Shizuku 授权</string>
-    <string name="diagnostic_check_shizuku_permission_unavailable">Shizuku 未运行，无法检查授权</string>
+    <string name="diagnostic_check_shizuku_running">OneKuku 服务运行</string>
+    <string name="diagnostic_check_shizuku_running_yes">OneKuku 正在运行</string>
+    <string name="diagnostic_check_shizuku_running_no">OneKuku 未运行</string>
+    <string name="diagnostic_check_shizuku_start_guidance">请先激活 OneKuku；可在排障页顶部的自救入口中打开配对或无线调试。</string>
+    <string name="diagnostic_check_shizuku_permission">OneKuku 授权</string>
+    <string name="diagnostic_check_shizuku_permission_unavailable">OneKuku 未运行，无法检查授权</string>
     <string name="diagnostic_check_authorized">已授权</string>
     <string name="diagnostic_check_not_authorized">未授权</string>
-    <string name="diagnostic_check_permission_guidance">请在首页点击授权，并在 Shizuku 系统对话框中同意。</string>
+    <string name="diagnostic_check_permission_guidance">请在首页点击激活，并在系统对话框中同意。</string>
     <string name="diagnostic_check_sim_selected">SIM 卡已选择</string>
     <string name="diagnostic_check_selected_sub_id">已选中 subId=%1$d</string>
     <string name="diagnostic_check_select_sim_guidance">请在能力页顶部的选卡胶囊中选择一张卡。</string>
@@ -714,7 +714,7 @@
 
     <string name="reapply_trigger_manual">手动操作</string>
     <string name="reapply_trigger_quick_tile">快捷设置磁贴</string>
-    <string name="reapply_trigger_shizuku_ready">Shizuku 恢复就绪</string>
+    <string name="reapply_trigger_shizuku_ready">OneKuku 恢复就绪</string>
     <string name="reapply_trigger_ims_not_registered">IMS 注册掉线</string>
     <string name="action_reapply">重应用最近配置</string>
     <string name="reapply_status_none">尚未执行过重应用</string>
@@ -722,7 +722,7 @@
     <string name="reapply_status_failed">失败</string>
     <string name="reapply_status_line">最近重应用：%1$s · %2$s · %3$s</string>
     <string name="reapply_combined_result">核心配置：%1$s\n高级选项：%2$s</string>
-    <string name="reapply_explanation">CarrierConfig 覆盖使用临时模式（persistent=false），重启手机或 Shizuku 后可能被系统清除，因此 OneIms 会幂等重放最近一次成功配置。触发原因和结果会记录在下方。</string>
+    <string name="reapply_explanation">CarrierConfig 覆盖使用临时模式（persistent=false），重启手机或 OneKuku 后可能被系统清除，因此 OneIms 会幂等重放最近一次成功配置。触发原因和结果会记录在下方。</string>
 
     <string name="tile_ims_status_label">IMS 状态</string>
     <string name="tile_ims_registered">IMS 已注册</string>

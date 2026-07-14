@@ -4,7 +4,7 @@ import android.content.Context
 import android.os.Build
 import androidx.annotation.StringRes
 import com.oneims.app.R
-import com.oneims.app.shizuku.ShizukuManager
+import com.oneims.app.core.OneKukuManager
 
 /** 本机支持度结论。展示名走字符串资源 [labelRes]，支持中/英。 */
 enum class SupportLevel(@StringRes val labelRes: Int) {
@@ -44,8 +44,8 @@ object CompatChecker {
             if (sdkOk) context.getString(R.string.compat_yes) else context.getString(R.string.compat_os_bad),
         )
 
-        val shizukuRunning = ShizukuManager.isRunning()
-        val shizukuGranted = ShizukuManager.isGranted()
+        val shizukuRunning = OneKukuManager.isRunning()
+        val shizukuGranted = OneKukuManager.isGranted()
         lines += context.getString(
             R.string.compat_shizuku,
             context.getString(

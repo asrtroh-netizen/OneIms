@@ -195,12 +195,12 @@ object SystemApiBroker {
         try {
             ensureExempt()
             check(Shizuku.pingBinder()) {
-                "Shizuku service is not running"
+                "OneKuku core service is not running"
             }
             check(
                 Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED,
             ) {
-                "Shizuku permission is not granted"
+                "OneKuku is not activated"
             }
         } catch (error: Throwable) {
             throw BrokerExecutionException(

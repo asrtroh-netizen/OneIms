@@ -3,7 +3,7 @@ package com.oneims.app.core
 import android.content.Context
 import com.oneims.app.R
 import com.oneims.app.model.ConfigResult
-import com.oneims.app.shizuku.ShizukuManager
+import com.oneims.app.core.OneKukuManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -63,8 +63,8 @@ object OneClickDiagnosticsManager {
      * 后台线程（IO dispatcher）执行，不要直接在 Compose 主线程调用。
      */
     fun runCheck(context: Context, subId: Int): List<DiagnosticCheckItem> {
-        val shizukuRunning = ShizukuManager.isRunning()
-        val shizukuGranted = shizukuRunning && ShizukuManager.isGranted()
+        val shizukuRunning = OneKukuManager.isRunning()
+        val shizukuGranted = shizukuRunning && OneKukuManager.isGranted()
 
         val items = mutableListOf<DiagnosticCheckItem>()
 
@@ -193,8 +193,8 @@ object OneClickDiagnosticsManager {
      * 面向用户的体检摘要：隐藏 Shizuku API/delegate 等技术项，只展示能理解的状态与建议。
      */
     fun runUserFacingCheck(context: Context, subId: Int): List<UserFacingDiagnosticItem> {
-        val shizukuRunning = ShizukuManager.isRunning()
-        val shizukuGranted = shizukuRunning && ShizukuManager.isGranted()
+        val shizukuRunning = OneKukuManager.isRunning()
+        val shizukuGranted = shizukuRunning && OneKukuManager.isGranted()
         val items = mutableListOf<UserFacingDiagnosticItem>()
 
         val simReady = if (subId >= 0) {
@@ -319,7 +319,7 @@ object OneClickDiagnosticsManager {
 
     /**
      * 只对 [item.fixable] 为 true 的项执行；调用方应先确认这一点，避免对不可修复项做无意义调用。
-     * 每一项都直接转调既有能力，不新增写入逻辑：授权走 [ShizukuManager.requestPermission]，
+     * 每一项都直接转调既有能力，不新增写入逻辑：授权走 [OneKukuManager.requestPermission]，
      * 健康异常走 [SafetyGuard.restoreDefaults]，IMS 未注册走 [ImsController.restartImsRegistration]。
      */
     suspend fun autoFix(
@@ -332,7 +332,7 @@ object OneClickDiagnosticsManager {
         }
         when (item.id) {
             ID_SHIZUKU_GRANTED -> {
-                ShizukuManager.requestPermission()
+                OneKukuManager.requestActivation()
                 // 授权走系统弹窗异步回调，这里只能确认"已发起请求"，不能同步判定用户是否同意。
                 FixOutcome(
                     item.id,

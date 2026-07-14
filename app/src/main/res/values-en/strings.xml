@@ -22,19 +22,19 @@
     <string name="sim_tag_active">Active</string>
     <string name="sim_tag_standby">Standby</string>
     <string name="apply_recommended">Apply recommended</string>
-    <string name="shizuku_setup_title">Can\'t start Shizuku? Works without WiFi</string>
-    <string name="setup_open_shizuku">Open Shizuku</string>
+    <string name="shizuku_setup_title">Can\'t start OneKuku? Works without WiFi</string>
+    <string name="setup_open_shizuku">Prepare OneKuku</string>
     <string name="setup_wireless_debug">Wireless debug</string>
     <string name="setup_hotspot">Hotspot</string>
     <string name="setup_copy_cmd">Copy cmd</string>
-    <string name="log_shizuku_opened">Opened Shizuku for pairing</string>
+    <string name="log_shizuku_opened">Opened OneKuku prep page</string>
     <string name="log_shizuku_not_installed">Not installed, opened store</string>
     <string name="log_open_failed">Failed to open</string>
     <string name="log_jumped_wireless">Opened wireless debugging</string>
     <string name="log_jump_failed">Jump failed</string>
     <string name="log_hotspot_opened">Opened hotspot settings</string>
     <string name="log_cmd_copied">PC-free command copied</string>
-    <string name="termux_hint">PC-free setup (install Termux + pkg install android-tools):\n1) On the wireless-debug page tap \"Pair device with pairing code\", note IP:pair-port and the code;\n2) In Termux run: adb pair localhost:pair-port code\n3) Then run: adb connect localhost:connect-port\n4) Start Shizuku: adb -s localhost:connect-port shell sh /storage/emulated/0/Android/data/moe.shizuku.privileged.api/start.sh</string>
+    <string name="termux_hint">PC-free setup (install Termux + pkg install android-tools):\n1) On the wireless-debug page tap \"Pair device with pairing code\", note IP:pair-port and the code;\n2) In Termux run: adb pair localhost:pair-port code\n3) Then run: adb connect localhost:connect-port\n4) Start OneKuku: adb -s localhost:connect-port shell sh /storage/emulated/0/Android/data/OneKuku core service start script</string>
 
     <!-- Features -->
     <string name="cap_group_radio_title">Carrier features &amp; 5G</string>
@@ -185,25 +185,25 @@
     <string name="support_full">Fully supported</string>
     <string name="support_degraded">Degraded</string>
     <string name="support_unsupported">Unsupported</string>
-    <string name="support_need_shizuku">Set up Shizuku first</string>
+    <string name="support_need_shizuku">Activate OneKuku first</string>
     <string name="compat_tensor">① Tensor chip: %1$s</string>
     <string name="compat_yes">Yes ✅</string>
     <string name="compat_tensor_no">No ❌ (this tool targets Tensor Pixel)</string>
     <string name="compat_os">② OS: Android %1$s (API %2$d) %3$s</string>
     <string name="compat_os_bad">❌ (needs Android 12+)</string>
-    <string name="compat_shizuku">③ Shizuku: %1$s</string>
+    <string name="compat_shizuku">③ OneKuku: %1$s</string>
     <string name="compat_shizuku_granted">Granted ✅</string>
     <string name="compat_shizuku_running">Running, not granted ⚠️</string>
     <string name="compat_shizuku_off">Not running ❌</string>
     <string name="compat_strategy">④ Bypass strategy: %1$s</string>
     <string name="compat_strategy_delegate">Instrumentation permission proxy supported (patched devices) ✅</string>
-    <string name="compat_strategy_direct">Delegate probe failed; non-root still tries Instrumentation, root uses Shizuku direct ⚠️</string>
+    <string name="compat_strategy_direct">Delegate probe failed; non-root still tries Instrumentation, root uses OneKuku direct ⚠️</string>
     <string name="compat_sim">⑤ Active SIM: %1$d %2$s</string>
     <string name="compat_sim_no">❌ (no SIM detected)</string>
     <string name="compat_conclusion">—— Verdict: %1$s ——</string>
     <string name="compat_advice_full">All features safe to use.</string>
-    <string name="compat_advice_degraded">Degraded: update the hidden-API compat layer and retry; root Shizuku can go direct, non-root still needs Instrumentation.</string>
-    <string name="compat_advice_need_shizuku">Start and grant Shizuku first.</string>
+    <string name="compat_advice_degraded">Degraded: update the hidden-API compat layer and retry; Root channel can go direct, non-root still needs Instrumentation.</string>
+    <string name="compat_advice_need_shizuku">Activate OneKuku first.</string>
     <string name="compat_advice_unsupported">Device does not meet prerequisites; not recommended to avoid impacting calls.</string>
 
     <!-- Device info -->
@@ -312,7 +312,7 @@
     <string name="identity_failed">Override failed: %1$s</string>
     <string name="identity_name_restored">Carrier-name override disabled; system display restored</string>
     <string name="system_target_preview">Current target: SIM %1$d · %2$s · subId=%3$d</string>
-    <string name="config_dump_failed">Failed to read CarrierConfig (needs Shizuku granted and a valid SIM selected)</string>
+    <string name="config_dump_failed">Failed to read CarrierConfig (needs OneKuku activated and a valid SIM selected)</string>
     <string name="config_dump_title">CarrierConfig key items (subId=%1$d):</string>
     <string name="config_dump_empty">(empty)</string>
     <string name="config_dump_footer">——\nMatches: %1$d / total: %2$d (key items only, rest omitted)</string>
@@ -332,8 +332,8 @@
     <string name="home_subtitle">Manage Pixel IMS safely and clearly</string>
     <string name="home_ready_title">Device ready</string>
     <string name="home_setup_needed_title">One more step</string>
-    <string name="home_status_shizuku_off">Start Shizuku first</string>
-    <string name="home_status_permission">Grant Shizuku access to apply settings</string>
+    <string name="home_status_shizuku_off">Activate OneKuku first</string>
+    <string name="home_status_permission">Activate OneKuku to apply settings</string>
     <string name="home_status_no_sim">No active SIM detected</string>
     <string name="home_status_ready">Authorized with a mobile network selected</string>
     <string name="home_safety_note">Calls, messages, and data always take priority over IMS changes</string>
@@ -451,7 +451,7 @@
     <string name="action_restore_sub">Clear overrides and restore defaults</string>
     <string name="no_sim_detail">Check phone permission and SIM status, then retry</string>
     <string name="shizuku_setup_subtitle">Pairing, wireless debugging, and PC-free startup</string>
-    <string name="setup_open_shizuku_sub">Open pairing and authorization</string>
+    <string name="setup_open_shizuku_sub">Open OneKuku prep and authorization</string>
     <string name="setup_wireless_debug_sub">Open Android developer options</string>
     <string name="setup_hotspot_sub">Create a local network without a router</string>
     <string name="setup_copy_cmd_sub">Copy the Termux startup steps</string>
@@ -464,13 +464,13 @@
 
     <string name="capabilities_title">IMS features</string>
     <string name="capabilities_subtitle">Configure calling, WiFi, and 5G capabilities</string>
-    <string name="capabilities_select_sim_notice">Choose a SIM below and ensure Shizuku is running and granted. Writes stay disabled until both are ready.</string>
+    <string name="capabilities_select_sim_notice">Choose a SIM below and ensure OneKuku is activated. Writes stay disabled until both are ready.</string>
     <string name="sim_switcher_hint">Pick a SIM first — every setting below applies only to that SIM</string>
     <string name="mobile_network_title">Mobile network</string>
     <string name="mobile_network_subtitle">Carrier profile recommendation</string>
     <string name="diagnostics_title">Diagnostics &amp; repair</string>
     <string name="diagnostics_subtitle">Run read-only checks before higher-risk repairs</string>
-    <string name="diagnostics_select_sim_notice">The offline APN library remains available; privileged diagnostics and repairs require a selected SIM and Shizuku.</string>
+    <string name="diagnostics_select_sim_notice">The offline APN library remains available; privileged diagnostics and repairs require a selected SIM and OneKuku.</string>
     <string name="diagnostics_checks">Read-only checks</string>
     <string name="diagnostics_checks_sub">These actions do not modify system settings</string>
     <string name="tool_health_sub">Check calls, data, and SIM</string>
@@ -508,15 +508,15 @@
     <string name="operation_already_running">Another operation is running. Please wait.</string>
     <string name="operation_failed">Operation failed: %1$s</string>
     <string name="operation_unknown_error">Unknown error</string>
-    <string name="operation_feedback_permission_delegate_failed">The permission proxy could not start, so no configuration was written. Restart Shizuku and retry; copy the diagnostics log if it still fails.</string>
+    <string name="operation_feedback_permission_delegate_failed">The permission proxy could not start, so no configuration was written. Reactivate OneKuku and retry; copy the diagnostics log if it still fails.</string>
     <string name="operation_feedback_rollback_failed">Both the configuration write and automatic rollback failed. Restart now and check calls, data, and SMS; details are in Diagnostics.</string>
     <string name="operation_feedback_failure_logged">The operation failed. Full details are available in Diagnostics.</string>
     <string name="operation_feedback_result_logged">The operation completed. Full results are available in Diagnostics.</string>
-    <string name="shizuku_permission_granted_message">Shizuku permission granted</string>
-    <string name="shizuku_permission_denied_message">Shizuku permission was not granted</string>
-    <string name="shizuku_not_running_message">Shizuku is not running. Complete pairing first.</string>
-    <string name="shizuku_permission_required_message">Grant Shizuku on Home before changing system settings.</string>
-    <string name="shizuku_already_granted_message">Shizuku is already granted</string>
+    <string name="shizuku_permission_granted_message">OneKuku activated</string>
+    <string name="shizuku_permission_denied_message">OneKuku activation was not granted</string>
+    <string name="shizuku_not_running_message">OneKuku is not ready. Complete setup first.</string>
+    <string name="shizuku_permission_required_message">Activate OneKuku on Home before changing system settings.</string>
+    <string name="shizuku_already_granted_message">OneKuku is already activated</string>
     <string name="shizuku_permission_requested">Permission request sent</string>
     <string name="phone_permission_denied_message">Phone permission denied; SIM and IMS status cannot be read</string>
     <string name="confirm_restore_title">Restore carrier defaults?</string>
@@ -645,7 +645,7 @@
     <string name="action_processing">Processing…</string>
 
     <string name="one_click_check_title">One-click check</string>
-    <string name="one_click_check_desc">Checks Shizuku, SIM selection, basic connectivity, and IMS registration in one go, shown as a checklist.</string>
+    <string name="one_click_check_desc">Checks OneKuku, SIM selection, basic connectivity, and IMS registration in one go, shown as a checklist.</string>
     <string name="one_click_check_action">Check all status</string>
     <string name="one_click_check_checking">Checking…</string>
     <string name="one_click_check_result_title">Check results</string>
@@ -669,15 +669,15 @@
     <string name="diagnostic_user_no_fix_needed">No fix needed</string>
     <string name="diagnostic_user_privilege_required">Advanced fixes require authorization</string>
     <string name="diagnostic_user_fix_needed">Fix needed</string>
-    <string name="diagnostic_check_shizuku_running">Shizuku service</string>
-    <string name="diagnostic_check_shizuku_running_yes">Shizuku is running</string>
-    <string name="diagnostic_check_shizuku_running_no">Shizuku is not running</string>
-    <string name="diagnostic_check_shizuku_start_guidance">Start Shizuku first. Pairing and wireless-debugging shortcuts are available at the top of Diagnostics.</string>
-    <string name="diagnostic_check_shizuku_permission">Shizuku authorization</string>
-    <string name="diagnostic_check_shizuku_permission_unavailable">Shizuku is not running, so authorization cannot be checked</string>
+    <string name="diagnostic_check_shizuku_running">OneKuku service</string>
+    <string name="diagnostic_check_shizuku_running_yes">OneKuku is running</string>
+    <string name="diagnostic_check_shizuku_running_no">OneKuku is not running</string>
+    <string name="diagnostic_check_shizuku_start_guidance">Activate OneKuku first. Pairing and wireless-debugging shortcuts are available at the top of Diagnostics.</string>
+    <string name="diagnostic_check_shizuku_permission">OneKuku authorization</string>
+    <string name="diagnostic_check_shizuku_permission_unavailable">OneKuku is not running, so authorization cannot be checked</string>
     <string name="diagnostic_check_authorized">Authorized</string>
     <string name="diagnostic_check_not_authorized">Not authorized</string>
-    <string name="diagnostic_check_permission_guidance">Tap Authorize on Home and approve the Shizuku system dialog.</string>
+    <string name="diagnostic_check_permission_guidance">Tap Activate on Home and approve the system dialog.</string>
     <string name="diagnostic_check_sim_selected">SIM selected</string>
     <string name="diagnostic_check_selected_sub_id">Selected subId=%1$d</string>
     <string name="diagnostic_check_select_sim_guidance">Choose a SIM from the selector at the top of Features.</string>
@@ -705,7 +705,7 @@
 
     <string name="reapply_trigger_manual">manual action</string>
     <string name="reapply_trigger_quick_tile">Quick Settings tile</string>
-    <string name="reapply_trigger_shizuku_ready">Shizuku became ready</string>
+    <string name="reapply_trigger_shizuku_ready">OneKuku became ready</string>
     <string name="reapply_trigger_ims_not_registered">IMS registration dropped</string>
     <string name="action_reapply">Reapply last profile</string>
     <string name="reapply_status_none">No reapply has run yet</string>
@@ -713,7 +713,7 @@
     <string name="reapply_status_failed">failed</string>
     <string name="reapply_status_line">Last reapply: %1$s · %2$s · %3$s</string>
     <string name="reapply_combined_result">Core profile: %1$s\nAdvanced options: %2$s</string>
-    <string name="reapply_explanation">The CarrierConfig override is temporary (persistent=false). It can be cleared after reboot or after Shizuku restarts, so OneIms reapplies the last successful profile. The action is idempotent and records its trigger and result below.</string>
+    <string name="reapply_explanation">The CarrierConfig override is temporary (persistent=false). It can be cleared after reboot or after OneKuku restarts, so OneIms reapplies the last successful profile. The action is idempotent and records its trigger and result below.</string>
 
     <string name="tile_ims_status_label">IMS status</string>
     <string name="tile_ims_registered">IMS registered</string>
@@ -758,7 +758,7 @@
     <string name="identity_target_applied">Written to SIM %1$d · %2$s · subId=%3$d: %4$s</string>
     <string name="identity_readback_failed">SIM %1$d identity override was not applied: readback failed for subId=%2$d</string>
     <string name="identity_readback_mismatch">SIM %1$d identity override was not applied: readback differed for subId=%2$d</string>
-    <string name="diagnostics_prereq_short">Select a SIM and grant Shizuku access</string>
+    <string name="diagnostics_prereq_short">Select a SIM and activate OneKuku</string>
     <string name="apn_catalog_apply_target">Will apply to: SIM %1$d · %2$s · subId=%3$d</string>
     <string name="tool_apn_sub_short">Search by country or carrier and apply to the selected SIM</string>
     <string name="guard_sub_short">Reapply the profile automatically when IMS disconnects</string>

@@ -70,7 +70,7 @@ import com.oneims.app.model.EpdgResult
 import com.oneims.app.model.SimInfo
 import com.oneims.app.model.UpdateInfo
 import com.oneims.app.model.WfcMode
-import com.oneims.app.shizuku.ShizukuManager
+import com.oneims.app.core.OneKukuManager
 import com.oneims.app.ui.AppDestination
 import com.oneims.app.ui.ApnCatalogDialog
 import com.oneims.app.ui.CapabilitiesActions
@@ -206,8 +206,8 @@ private fun AppRoot(
         onDispose { activity.removeOnNewIntentListener(listener) }
     }
 
-    var shizukuRunning by remember { mutableStateOf(ShizukuManager.isRunning()) }
-    var shizukuGranted by remember { mutableStateOf(ShizukuManager.isGranted()) }
+    var shizukuRunning by remember { mutableStateOf(OneKukuManager.isRunning()) }
+    var shizukuGranted by remember { mutableStateOf(OneKukuManager.isGranted()) }
     var oneKukuTaskComplete by remember { mutableStateOf(false) }
     var oneKukuRestoring by remember { mutableStateOf(false) }
     var oneKukuBootAutoCheck by remember {
@@ -300,9 +300,10 @@ private fun AppRoot(
     }
 
     fun publish(message: String) {
-        appendLog(message)
-        val feedback = when (OperationFeedbackPolicy.classify(message)) {
-            OperationFeedbackKind.INLINE -> message
+        val sanitized = OneKukuHomeTools.sanitizeUserText(message)
+        appendLog(sanitized)
+        val feedback = when (OperationFeedbackPolicy.classify(sanitized)) {
+            OperationFeedbackKind.INLINE -> sanitized
             OperationFeedbackKind.PERMISSION_DELEGATION_FAILED ->
                 context.getString(R.string.operation_feedback_permission_delegate_failed)
             OperationFeedbackKind.ROLLBACK_FAILED ->
@@ -315,7 +316,7 @@ private fun AppRoot(
         scope.launch {
             snackbarHostState.showSnackbar(
                 message = feedback,
-                duration = if (feedback == message) {
+                duration = if (feedback == sanitized) {
                     SnackbarDuration.Short
                 } else {
                     SnackbarDuration.Long
@@ -338,8 +339,8 @@ private fun AppRoot(
                 ?: -1
             selectSim(fallback)
         }
-        shizukuRunning = ShizukuManager.isRunning()
-        shizukuGranted = ShizukuManager.isGranted()
+        shizukuRunning = OneKukuManager.isRunning()
+        shizukuGranted = OneKukuManager.isGranted()
         deviceInfo = DeviceInfo.summary(context)
         if (showFeedback) {
             publish(context.getString(R.string.refreshed))
@@ -457,8 +458,8 @@ private fun AppRoot(
     }
 
     fun ensurePrivilegedAccess(): Boolean {
-        shizukuRunning = ShizukuManager.isRunning()
-        shizukuGranted = ShizukuManager.isGranted()
+        shizukuRunning = OneKukuManager.isRunning()
+        shizukuGranted = OneKukuManager.isGranted()
         val message = when {
             !shizukuRunning -> context.getString(R.string.shizuku_not_running_message)
             !shizukuGranted -> context.getString(R.string.shizuku_permission_required_message)
@@ -607,11 +608,11 @@ private fun AppRoot(
 
     DisposableEffect(Unit) {
         val permissionListener = Shizuku.OnRequestPermissionResultListener { requestCode, _ ->
-            if (requestCode == ShizukuManager.REQUEST_CODE) {
+            if (requestCode == OneKukuManager.REQUEST_CODE) {
                 refreshAll()
                 publish(
                     context.getString(
-                        if (ShizukuManager.isGranted()) {
+                        if (OneKukuManager.isGranted()) {
                             R.string.onekuku_msg_activated
                         } else {
                             R.string.onekuku_msg_activation_denied
@@ -671,23 +672,23 @@ private fun AppRoot(
                         onSelectSim = { selectSim(it) },
                         onActivateOneKuku = {
                             when {
-                                !ShizukuManager.isRunning() -> {
+                                !OneKukuManager.isRunning() -> {
                                     ShizukuSetupHelper.openShizukuApp(context)
                                     publish(context.getString(R.string.onekuku_msg_need_prepare))
                                 }
-                                ShizukuManager.isGranted() -> {
+                                OneKukuManager.isGranted() -> {
                                     refreshAll()
                                     publish(context.getString(R.string.onekuku_msg_already_active))
                                 }
                                 else -> {
-                                    ShizukuManager.requestPermission()
+                                    OneKukuManager.requestActivation()
                                     publish(context.getString(R.string.onekuku_msg_permission_requested))
                                 }
                             }
                         },
                         onRestoreCallConfig = {
-                            shizukuRunning = ShizukuManager.isRunning()
-                            shizukuGranted = ShizukuManager.isGranted()
+                            shizukuRunning = OneKukuManager.isRunning()
+                            shizukuGranted = OneKukuManager.isGranted()
                             val targetSubId = selectedSubId
                             val simReady = targetSubId >= 0 &&
                                 sims.any { it.subscriptionId == targetSubId }
@@ -710,7 +711,7 @@ private fun AppRoot(
                                         ),
                                     ) {
                                         when {
-                                            !ShizukuManager.isRunning() -> {
+                                            !OneKukuManager.isRunning() -> {
                                                 ShizukuSetupHelper.openShizukuApp(context)
                                                 publish(
                                                     context.getString(
@@ -718,7 +719,7 @@ private fun AppRoot(
                                                     ),
                                                 )
                                             }
-                                            ShizukuManager.isGranted() -> {
+                                            OneKukuManager.isGranted() -> {
                                                 refreshAll()
                                                 publish(
                                                     context.getString(
@@ -727,7 +728,7 @@ private fun AppRoot(
                                                 )
                                             }
                                             else -> {
-                                                ShizukuManager.requestPermission()
+                                                OneKukuManager.requestActivation()
                                                 publish(
                                                     context.getString(
                                                         R.string.onekuku_msg_permission_requested,
@@ -825,8 +826,8 @@ private fun AppRoot(
                                     val message = try {
                                         refreshAll()
                                         withContext(Dispatchers.IO) {
-                                            val running = ShizukuManager.isRunning()
-                                            val granted = ShizukuManager.isGranted()
+                                            val running = OneKukuManager.isRunning()
+                                            val granted = OneKukuManager.isGranted()
                                             val statusLabel = OneKukuHomeTools.settingsStatusLabel(
                                                 context = context,
                                                 state = OneKukuCardPolicy.resolve(
