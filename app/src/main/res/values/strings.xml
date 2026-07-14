@@ -24,18 +24,26 @@
     <string name="sim_tag_standby">备用</string>
     <string name="apply_recommended">按推荐一键开启</string>
     <string name="shizuku_setup_title">OneKuku 起不来？没 WiFi 也能准备</string>
-    <string name="setup_open_shizuku">准备 OneKuku</string>
+    <string name="setup_open_shizuku">准备 OneKuku 核心</string>
     <string name="setup_wireless_debug">无线调试</string>
     <string name="setup_hotspot">开热点</string>
     <string name="setup_copy_cmd">复制命令</string>
-    <string name="log_shizuku_opened">已打开 OneKuku 准备页</string>
-    <string name="log_shizuku_not_installed">未装，已跳市场</string>
+    <string name="log_shizuku_opened">已打开 OneKuku 准备流程</string>
+    <string name="log_shizuku_not_installed">核心组件未就绪，请按准备流程安装</string>
     <string name="log_open_failed">打开失败</string>
     <string name="log_jumped_wireless">已跳无线调试</string>
     <string name="log_jump_failed">跳转失败</string>
     <string name="log_hotspot_opened">已开热点设置</string>
     <string name="log_cmd_copied">免电脑命令已复制</string>
     <string name="termux_hint">免电脑自助（需装 Termux + pkg install android-tools）：\n1) 无线调试页点「使用配对码配对设备」，记下 IP:配对端口 与 配对码；\n2) Termux 执行：adb pair localhost:配对端口 配对码\n3) 再执行：adb connect localhost:连接端口\n4) 启动 OneKuku 核心服务（按准备页指引完成）</string>
+    <string name="onekuku_adb_guide_script">OneKuku 核心激活（无线调试 + ADB，免电脑可用 Termux）：\n1) 系统「开发者选项」打开无线调试\n2) 点「使用配对码配对设备」，记下 配对端口 与 配对码\n3) Termux（pkg install android-tools）执行：\n   adb pair localhost:配对端口 配对码\n4) 再执行：adb connect localhost:连接端口\n5) 启动核心：\n   %1$s\n6) 回到 OneIMS 点「立即激活 OneKuku」完成授权\n\n说明：不需要去应用商店安装独立第三方通道 App；核心组件由 OneIMS 内置或官方源下载。</string>
+    <string name="onekuku_core_download_title">OneKuku 核心组件</string>
+    <string name="onekuku_core_download_desc">正在下载 OneKuku 核心组件</string>
+    <string name="onekuku_msg_adb_guide_ready">已打开无线调试并复制 ADB 启动指引，按步骤拉起核心后再回来授权</string>
+    <string name="onekuku_msg_installing_bundled_core">正在安装内置 OneKuku 核心组件，请确认安装</string>
+    <string name="onekuku_msg_downloading_core">正在解析并下载 OneKuku 核心组件…</string>
+    <string name="onekuku_msg_core_download_started">已开始下载 OneKuku 核心组件，完成后请安装</string>
+    <string name="onekuku_msg_core_download_failed">核心组件下载失败，请检查网络后重试，或将 onekuku-core.apk 放入 assets 后重打包</string>
 
     <!-- 能力页 -->
     <string name="cap_group_radio_title">运营商能力与 5G</string>
@@ -504,7 +512,7 @@
     <string name="action_restore_sub">清空覆盖并恢复默认</string>
     <string name="no_sim_detail">确认电话权限和 SIM 状态后重试</string>
     <string name="shizuku_setup_subtitle">配对、无线调试与免电脑准备入口</string>
-    <string name="setup_open_shizuku_sub">打开 OneKuku 准备与授权</string>
+    <string name="setup_open_shizuku_sub">安装/下载核心组件，或用无线调试 + ADB 拉起</string>
     <string name="setup_wireless_debug_sub">进入系统开发者选项</string>
     <string name="setup_hotspot_sub">无路由器时创建本机网络</string>
     <string name="setup_copy_cmd_sub">复制 Termux 启动步骤</string>

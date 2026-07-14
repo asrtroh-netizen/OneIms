@@ -60,6 +60,7 @@ import com.oneims.app.core.OneClickDiagnosticsManager
 import com.oneims.app.core.QuickSettingsTileHelper
 import com.oneims.app.core.SimCardInfo
 import com.oneims.app.core.ShizukuSetupHelper
+import com.oneims.app.core.OneKukuCoreComponent
 import com.oneims.app.core.SimpleFiveGDisplayConfig
 import com.oneims.app.core.SystemDisplayOverrideManager
 import com.oneims.app.core.SignalBarSystemStyleManager
@@ -397,6 +398,42 @@ private fun AppRoot(
                     SnackbarDuration.Long
                 },
             )
+        }
+    }
+
+    /** 方案 A+B：内置/下载核心组件，或无线调试 + ADB 引导；不跳应用市场。 */
+    fun prepareOneKukuCore() {
+        when (val result = OneKukuCoreComponent.prepare(context)) {
+            OneKukuCoreComponent.PrepareResult.OPENED_ADB_GUIDE ->
+                publish(context.getString(R.string.onekuku_msg_adb_guide_ready))
+            OneKukuCoreComponent.PrepareResult.INSTALLING_BUNDLED ->
+                publish(context.getString(R.string.onekuku_msg_installing_bundled_core))
+            OneKukuCoreComponent.PrepareResult.NEEDS_DOWNLOAD -> {
+                publish(context.getString(R.string.onekuku_msg_downloading_core))
+                scope.launch {
+                    val url = withContext(Dispatchers.IO) {
+                        OneKukuCoreComponent.resolveLatestCoreApkUrl()
+                    }
+                    if (url.isNullOrBlank()) {
+                        publish(context.getString(R.string.onekuku_msg_core_download_failed))
+                        return@launch
+                    }
+                    val ok = OneKukuCoreComponent.downloadOfficialCore(context, url)
+                    publish(
+                        context.getString(
+                            if (ok) {
+                                R.string.onekuku_msg_core_download_started
+                            } else {
+                                R.string.onekuku_msg_core_download_failed
+                            },
+                        ),
+                    )
+                }
+            }
+            OneKukuCoreComponent.PrepareResult.DOWNLOADING_CORE ->
+                publish(context.getString(R.string.onekuku_msg_core_download_started))
+            OneKukuCoreComponent.PrepareResult.FAILED ->
+                publish(context.getString(R.string.log_open_failed))
         }
     }
 
@@ -750,8 +787,7 @@ private fun AppRoot(
                         onActivateOneKuku = {
                             when {
                                 !OneKukuManager.isRunning() -> {
-                                    OneKukuManager.requestActivation()
-                                    publish(context.getString(R.string.onekuku_msg_need_prepare))
+                                    prepareOneKukuCore()
                                     OneKukuBootRestoreStore.writeHint(
                                         context,
                                         OneKukuBootUiHint.NEEDS_ACTIVATION,
@@ -1575,16 +1611,7 @@ private fun AppRoot(
                             }
                         },
                         onOpenShizuku = {
-                            val result = ShizukuSetupHelper.openShizukuApp(context)
-                            publish(
-                                context.getString(
-                                    when (result) {
-                                        0 -> R.string.log_shizuku_opened
-                                        1 -> R.string.log_shizuku_not_installed
-                                        else -> R.string.log_open_failed
-                                    },
-                                ),
-                            )
+                            prepareOneKukuCore()
                         },
                         onOpenWirelessDebugging = {
                             publish(
@@ -1612,7 +1639,7 @@ private fun AppRoot(
                             ShizukuSetupHelper.copyToClipboard(
                                 context,
                                 context.getString(R.string.app_name),
-                                context.getString(R.string.termux_hint),
+                                OneKukuCoreComponent.guidedActivationScript(context),
                             )
                             publish(context.getString(R.string.log_cmd_copied))
                         },

@@ -23,18 +23,26 @@
     <string name="sim_tag_standby">Standby</string>
     <string name="apply_recommended">Apply recommended</string>
     <string name="shizuku_setup_title">Can\'t start OneKuku? Works without WiFi</string>
-    <string name="setup_open_shizuku">Prepare OneKuku</string>
+    <string name="setup_open_shizuku">Prepare OneKuku core</string>
     <string name="setup_wireless_debug">Wireless debug</string>
     <string name="setup_hotspot">Hotspot</string>
     <string name="setup_copy_cmd">Copy cmd</string>
-    <string name="log_shizuku_opened">Opened OneKuku prep page</string>
-    <string name="log_shizuku_not_installed">Not installed, opened store</string>
+    <string name="log_shizuku_opened">Opened OneKuku prep flow</string>
+    <string name="log_shizuku_not_installed">Core component missing; follow prep flow to install</string>
     <string name="log_open_failed">Failed to open</string>
     <string name="log_jumped_wireless">Opened wireless debugging</string>
     <string name="log_jump_failed">Jump failed</string>
     <string name="log_hotspot_opened">Opened hotspot settings</string>
     <string name="log_cmd_copied">PC-free command copied</string>
-    <string name="termux_hint">PC-free setup (install Termux + pkg install android-tools):\n1) On the wireless-debug page tap \"Pair device with pairing code\", note IP:pair-port and the code;\n2) In Termux run: adb pair localhost:pair-port code\n3) Then run: adb connect localhost:connect-port\n4) Start OneKuku: adb -s localhost:connect-port shell sh /storage/emulated/0/Android/data/OneKuku core service start script</string>
+    <string name="termux_hint">PC-free setup (install Termux + pkg install android-tools):\n1) On the wireless-debug page tap \"Pair device with pairing code\", note IP:pair-port and the code;\n2) In Termux run: adb pair localhost:pair-port code\n3) Then run: adb connect localhost:connect-port\n4) Start OneKuku core per the prep guide</string>
+    <string name="onekuku_adb_guide_script">OneKuku core activation (wireless debugging + ADB; Termux works without a PC):\n1) Enable Wireless debugging in Developer options\n2) Tap \"Pair device with pairing code\" and note the pair-port and code\n3) In Termux (pkg install android-tools) run:\n   adb pair localhost:pair-port code\n4) Then: adb connect localhost:connect-port\n5) Start core:\n   %1$s\n6) Return to OneIMS and tap Activate OneKuku to grant access\n\nNote: You do not need the Play Store third-party channel app; the core is bundled or downloaded from the official source by OneIMS.</string>
+    <string name="onekuku_core_download_title">OneKuku core component</string>
+    <string name="onekuku_core_download_desc">Downloading OneKuku core component</string>
+    <string name="onekuku_msg_adb_guide_ready">Opened wireless debugging and copied the ADB start guide; start the core then return to authorize</string>
+    <string name="onekuku_msg_installing_bundled_core">Installing bundled OneKuku core; please confirm</string>
+    <string name="onekuku_msg_downloading_core">Resolving and downloading OneKuku core…</string>
+    <string name="onekuku_msg_core_download_started">Started downloading OneKuku core; install when finished</string>
+    <string name="onekuku_msg_core_download_failed">Core download failed. Check network, or place onekuku-core.apk in assets and rebuild</string>
 
     <!-- Features -->
     <string name="cap_group_radio_title">Carrier features &amp; 5G</string>
@@ -499,7 +507,7 @@
     <string name="action_restore_sub">Clear overrides and restore defaults</string>
     <string name="no_sim_detail">Check phone permission and SIM status, then retry</string>
     <string name="shizuku_setup_subtitle">Pairing, wireless debugging, and PC-free startup</string>
-    <string name="setup_open_shizuku_sub">Open OneKuku prep and authorization</string>
+    <string name="setup_open_shizuku_sub">Install/download core, or start via wireless debugging + ADB</string>
     <string name="setup_wireless_debug_sub">Open Android developer options</string>
     <string name="setup_hotspot_sub">Create a local network without a router</string>
     <string name="setup_copy_cmd_sub">Copy the Termux startup steps</string>

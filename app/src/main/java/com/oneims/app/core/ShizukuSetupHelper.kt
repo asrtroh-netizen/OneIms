@@ -56,9 +56,10 @@ object ShizukuSetupHelper {
     }.getOrDefault(false)
 
     /**
-     * 方案 A：一键打开 Shizuku app（跳到其自带的「无线调试启动」入口，配对在那完成）。
-     * 未安装则跳到应用商店/给出提示。返回 0=已打开 Shizuku，1=未装(尝试跳商店)，2=失败。
+     * @deprecated 改走 [OneKukuCoreComponent.prepare]，禁止再跳应用市场装独立通道 App。
+     * 保留兼容：已装则打开组件；未装返回 1（由调用方改走内置/下载），不再跳市场。
      */
+    @Deprecated("Use OneKukuCoreComponent.prepare")
     fun openShizukuApp(context: Context): Int {
         val launch = context.packageManager.getLaunchIntentForPackage(SHIZUKU_PKG)
         if (launch != null) {
@@ -66,15 +67,7 @@ object ShizukuSetupHelper {
                 context.startActivity(launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); 0
             }.getOrDefault(2)
         }
-        // 未安装：尝试跳应用市场
-        return runCatching {
-            context.startActivity(
-                Intent(Intent.ACTION_VIEW)
-                    .setData(android.net.Uri.parse("market://details?id=$SHIZUKU_PKG"))
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
-            )
-            1
-        }.getOrDefault(2)
+        return 1
     }
 
     /** 打开个人热点设置（给无线调试提供本地网络接口的兜底）。 */
