@@ -46,10 +46,13 @@
     <string name="onekuku_msg_embedded_adb_starting">Starting OneKuku core via embedded ADB…</string>
     <string name="onekuku_msg_embedded_adb_ok">Embedded ADB issued start; confirm core is ready then authorize</string>
     <string name="onekuku_msg_embedded_adb_fallback">Embedded ADB failed (%1$s); fell back to wireless-debug + command guide</string>
-    <string name="onekuku_msg_need_pairing_code">Open the wireless-debug pairing code and enter the 6 digits</string>
+    <string name="onekuku_msg_need_pairing_code">In Wireless debugging, tap Pair device with pairing code and enter the 6 digits here</string>
     <string name="onekuku_adb_pair_title">Enter wireless-debug pairing code</string>
+    <string name="onekuku_adb_pair_body">OneIms does not generate the 6-digit code. Open system Wireless debugging → Pair device with pairing code, then type the digits below and tap Pair and start.</string>
     <string name="onekuku_adb_pair_hint">6-digit code</string>
     <string name="onekuku_adb_pair_confirm">Pair and start</string>
+    <string name="onekuku_adb_pair_open_wireless">Open wireless debugging</string>
+    <string name="onekuku_msg_core_missing_hint">OneKuku core is not installed yet. Finish the install prompt, then tap Start core again.</string>
 
     <!-- Features -->
     <string name="cap_group_radio_title">Carrier features &amp; 5G</string>
@@ -510,7 +513,7 @@
     <string name="home_quick_actions_sub">Check device status before applying carrier recommendations</string>
     <string name="home_adb_prep_title">Activate on the go</string>
     <string name="home_adb_prep_sub">No PC, and no public Wi‑Fi needed. You do need Wireless debugging; outdoors, a personal hotspot is enough.</string>
-    <string name="home_adb_prep_steps">① Turn on Wireless debugging (enter the 6-digit code the first time)\n② No Wi‑Fi outdoors? Turn on hotspot\n③ Tap Start core — the app handles the rest</string>
+    <string name="home_adb_prep_steps">① Enable Wireless debugging\n② No Wi‑Fi outdoors? Turn on hotspot\n③ Tap Start core — a dialog appears the first time; then in system Wireless debugging tap Pair device with pairing code and enter the 6 digits</string>
     <string name="home_adb_open_wireless">Open wireless debugging</string>
     <string name="home_adb_open_wireless_sub">Jump to system settings</string>
     <string name="home_adb_open_hotspot">Personal hotspot</string>

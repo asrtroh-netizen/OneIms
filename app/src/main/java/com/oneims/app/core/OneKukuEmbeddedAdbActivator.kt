@@ -67,6 +67,12 @@ object OneKukuEmbeddedAdbActivator {
             Log.i(TAG, "mdns pair=${ports.pairPort} connect=${ports.connectPort}")
 
             val code = pairingCode?.trim().orEmpty()
+
+            // 系统已弹出配对页（能扫到 pair 端口）但用户还没填码 → 立刻要码，别先瞎连。
+            if (code.length < 6 && ports.pairPort != null) {
+                return@withContext Outcome.NeedPairingCode
+            }
+
             if (ports.pairPort != null && code.length >= 6) {
                 val paired = runCatching {
                     manager.pair(HOST, ports.pairPort, code)
@@ -76,13 +82,9 @@ object OneKukuEmbeddedAdbActivator {
                     false
                 }
                 if (!paired) return@withContext Outcome.Failed("pair_failed")
-            } else if (ports.connectPort == null) {
-                ShizukuSetupHelper.openWirelessDebugging(app)
-                return@withContext if (code.isEmpty()) {
-                    Outcome.NeedPairingCode
-                } else {
-                    Outcome.Failed("ports_missing")
-                }
+            } else if (code.length >= 6 && ports.pairPort == null) {
+                // 用户填了码，但系统配对页已关掉 / mDNS 没扫到
+                return@withContext Outcome.Failed("pair_port_missing")
             }
 
             val connected = runCatching {
@@ -96,7 +98,8 @@ object OneKukuEmbeddedAdbActivator {
                 false
             }
             if (!connected) {
-                return@withContext if (code.isEmpty()) {
+                // 未配对过的本机身份连不上时，回到要码；已填码则报失败。
+                return@withContext if (code.length < 6) {
                     Outcome.NeedPairingCode
                 } else {
                     Outcome.Failed("connect_failed")

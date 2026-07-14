@@ -18,6 +18,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -36,6 +38,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import android.content.Intent
 import androidx.core.util.Consumer
 import com.oneims.app.core.CarrierProfiles
@@ -413,7 +416,7 @@ private fun AppRoot(
                 OneKukuCoreComponent.PrepareResult.INSTALLING_BUNDLED ->
                     publish(context.getString(R.string.onekuku_msg_installing_bundled_core))
                 OneKukuCoreComponent.PrepareResult.NEEDS_DOWNLOAD -> {
-                    publish(context.getString(R.string.onekuku_msg_downloading_core))
+                    publish(context.getString(R.string.onekuku_msg_core_missing_hint))
                     scope.launch {
                         val url = withContext(Dispatchers.IO) {
                             OneKukuCoreComponent.resolveLatestCoreApkUrl()
@@ -422,6 +425,7 @@ private fun AppRoot(
                             publish(context.getString(R.string.onekuku_msg_core_download_failed))
                             return@launch
                         }
+                        publish(context.getString(R.string.onekuku_msg_downloading_core))
                         val ok = OneKukuCoreComponent.downloadOfficialCore(context, url)
                         publish(
                             context.getString(
@@ -444,7 +448,7 @@ private fun AppRoot(
                 val outcome = OneKukuEmbeddedAdbActivator.activate(context, pairingCode = null)
             ) {
                 is OneKukuEmbeddedAdbActivator.Outcome.NeedPairingCode -> {
-                    ShizukuSetupHelper.openWirelessDebugging(context)
+                    // 先弹窗让用户看见，再由弹窗内按钮跳系统设置——避免一跳走就「没让输入六位码」
                     adbPairCode = ""
                     adbPairDialogVisible = true
                     publish(context.getString(R.string.onekuku_msg_need_pairing_code))
@@ -1872,13 +1876,27 @@ private fun AppRoot(
             },
             title = { Text(context.getString(R.string.onekuku_adb_pair_title)) },
             text = {
-                OutlinedTextField(
-                    value = adbPairCode,
-                    onValueChange = { adbPairCode = it.filter { ch -> ch.isDigit() }.take(6) },
-                    label = { Text(context.getString(R.string.onekuku_adb_pair_hint)) },
-                    singleLine = true,
-                    enabled = !adbPairBusy,
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(
+                        text = context.getString(R.string.onekuku_adb_pair_body),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    OutlinedTextField(
+                        value = adbPairCode,
+                        onValueChange = { adbPairCode = it.filter { ch -> ch.isDigit() }.take(6) },
+                        label = { Text(context.getString(R.string.onekuku_adb_pair_hint)) },
+                        singleLine = true,
+                        enabled = !adbPairBusy,
+                    )
+                    TextButton(
+                        onClick = {
+                            ShizukuSetupHelper.openWirelessDebugging(context)
+                        },
+                        enabled = !adbPairBusy,
+                    ) {
+                        Text(context.getString(R.string.onekuku_adb_pair_open_wireless))
+                    }
+                }
             },
             confirmButton = {
                 OneImsPrimaryButton(

@@ -47,10 +47,13 @@
     <string name="onekuku_msg_embedded_adb_starting">正在用内嵌 ADB 拉起 OneKuku 核心…</string>
     <string name="onekuku_msg_embedded_adb_ok">内嵌 ADB 已发出启动指令，请确认核心就绪后授权</string>
     <string name="onekuku_msg_embedded_adb_fallback">内嵌 ADB 未成功（%1$s），已回落为无线调试 + 命令指引</string>
-    <string name="onekuku_msg_need_pairing_code">请打开无线调试里的配对码，输入 6 位数字完成配对</string>
+    <string name="onekuku_msg_need_pairing_code">请在系统无线调试里点「使用配对码配对设备」，把 6 位数字填进弹窗</string>
     <string name="onekuku_adb_pair_title">输入无线调试配对码</string>
+    <string name="onekuku_adb_pair_body">六位码不在 OneIms 里生成。请打开系统「无线调试」→「使用配对码配对设备」，把屏幕上的 6 位数字填到下面，再点配对并启动。</string>
     <string name="onekuku_adb_pair_hint">6 位配对码</string>
     <string name="onekuku_adb_pair_confirm">配对并启动</string>
+    <string name="onekuku_adb_pair_open_wireless">打开系统无线调试</string>
+    <string name="onekuku_msg_core_missing_hint">还没装 OneKuku 核心组件。请先完成安装提示，装好后再点「启动核心」。</string>
 
     <!-- 能力页 -->
     <string name="cap_group_radio_title">运营商能力与 5G</string>
@@ -515,7 +518,7 @@
     <string name="home_quick_actions_sub">先确认设备状态，再应用运营商建议</string>
     <string name="home_adb_prep_title">出门也能激活</string>
     <string name="home_adb_prep_sub">不用电脑，也不用连外面的 WiFi。需要打开系统「无线调试」；外面没网时，开个个人热点就行。</string>
-    <string name="home_adb_prep_steps">① 先打开无线调试（第一次会要你输 6 位配对码）\n② 外面没 WiFi 就开热点\n③ 再点「启动核心」——后面交给 App 里的 ADB 搞定</string>
+    <string name="home_adb_prep_steps">① 打开无线调试\n② 外面没 WiFi 就开热点\n③ 点「启动核心」——第一次会弹出输入框；再到系统无线调试里点「使用配对码配对设备」，把 6 位数字填回来</string>
     <string name="home_adb_open_wireless">打开无线调试</string>
     <string name="home_adb_open_wireless_sub">去系统设置里开一下</string>
     <string name="home_adb_open_hotspot">开个人热点</string>

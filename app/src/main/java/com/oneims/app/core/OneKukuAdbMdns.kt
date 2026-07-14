@@ -3,6 +3,10 @@ package com.oneims.app.core
 import android.content.Context
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
+import android.net.wifi.WifiManager
+import android.util.Log
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
 import java.util.concurrent.atomic.AtomicBoolean
@@ -10,6 +14,8 @@ import kotlin.coroutines.resume
 
 /**
  * 发现本机无线调试的配对/连接端口（`_adb-tls-pairing._tcp` / `_adb-tls-connect._tcp`）。
+ *
+ * 热点/本机回环场景下必须持有 MulticastLock，否则 NSD 经常扫不到端口。
  */
 object OneKukuAdbMdns {
 
@@ -18,16 +24,35 @@ object OneKukuAdbMdns {
         val connectPort: Int?,
     )
 
+    private const val TAG = "OneIMS-AdbMdns"
     private const val TYPE_PAIRING = "_adb-tls-pairing._tcp"
     private const val TYPE_CONNECT = "_adb-tls-connect._tcp"
-    private const val DISCOVER_TIMEOUT_MS = 8_000L
+    private const val DISCOVER_TIMEOUT_MS = 6_000L
 
     suspend fun discover(context: Context): Ports {
-        val nsd = context.applicationContext.getSystemService(Context.NSD_SERVICE) as? NsdManager
+        val app = context.applicationContext
+        val nsd = app.getSystemService(Context.NSD_SERVICE) as? NsdManager
             ?: return Ports(null, null)
-        val pair = withTimeoutOrNull(DISCOVER_TIMEOUT_MS) { discoverOne(nsd, TYPE_PAIRING) }
-        val connect = withTimeoutOrNull(DISCOVER_TIMEOUT_MS) { discoverOne(nsd, TYPE_CONNECT) }
-        return Ports(pairPort = pair, connectPort = connect)
+        val wifi = app.getSystemService(Context.WIFI_SERVICE) as? WifiManager
+        val lock = wifi?.createMulticastLock("onekuku-adb-mdns")?.apply {
+            setReferenceCounted(true)
+            acquire()
+        }
+        return try {
+            coroutineScope {
+                val pairDeferred = async {
+                    withTimeoutOrNull(DISCOVER_TIMEOUT_MS) { discoverOne(nsd, TYPE_PAIRING) }
+                }
+                val connectDeferred = async {
+                    withTimeoutOrNull(DISCOVER_TIMEOUT_MS) { discoverOne(nsd, TYPE_CONNECT) }
+                }
+                Ports(pairPort = pairDeferred.await(), connectPort = connectDeferred.await())
+            }
+        } finally {
+            runCatching {
+                if (lock?.isHeld == true) lock.release()
+            }.onFailure { Log.w(TAG, "release multicast lock", it) }
+        }
     }
 
     private suspend fun discoverOne(nsd: NsdManager, serviceType: String): Int? =
@@ -43,6 +68,7 @@ object OneKukuAdbMdns {
 
             discovery = object : NsdManager.DiscoveryListener {
                 override fun onStartDiscoveryFailed(serviceType: String?, errorCode: Int) {
+                    Log.w(TAG, "startDiscovery failed type=$serviceType code=$errorCode")
                     complete(null)
                 }
 
@@ -81,6 +107,7 @@ object OneKukuAdbMdns {
             runCatching {
                 nsd.discoverServices(serviceType, NsdManager.PROTOCOL_DNS_SD, discovery)
             }.onFailure {
+                Log.w(TAG, "discoverServices failed type=$serviceType", it)
                 complete(null)
             }
         }
