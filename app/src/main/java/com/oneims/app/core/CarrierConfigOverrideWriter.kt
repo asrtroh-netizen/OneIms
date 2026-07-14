@@ -10,7 +10,8 @@ import com.oneims.app.onekuku.OneKukuSnapshotStore
  * OneKuku 统一 CarrierConfig 写入门面。
  *
  * 铁律：只写调用方传入的 [subId]（必须是首页/全局选中卡）；禁止默认卡1 / slot0 / 默认数据卡；
- * 能持久则 persistent=true；写前记目标；同 subId 回读验真；单项失败不假成功。
+ * 优先 persistent=true；若系统拒绝（非 system app）则回退 persistent=false；
+ * 写前记目标；同 subId 回读验真；单项失败不假成功。
  */
 object CarrierConfigOverrideWriter {
     private const val TAG = "OneIMS-OneKuku"
@@ -20,10 +21,12 @@ object CarrierConfigOverrideWriter {
         val message: String,
         val detail: Map<String, Boolean> = emptyMap(),
         val targetLabel: String = "",
+        /** true=持久覆盖；false=临时覆盖（重启/服务重启可能丢失）。 */
+        val persistent: Boolean = true,
     )
 
     /**
-     * 对 [subId] 应用 persistent CarrierConfig 覆盖。
+     * 对 [subId] 应用 CarrierConfig 覆盖（优先持久，权限不足则临时）。
      * 先批量写入；回读后对失败 key 再逐项补写，单 key 失败不影响其它已成功项。
      */
     fun applyPersistentOverride(
@@ -39,18 +42,14 @@ object CarrierConfigOverrideWriter {
 
         val detail = linkedMapOf<String, Boolean>()
         val failures = mutableListOf<String>()
+        var usedPersistent = true
 
         val batchOk = runCatching {
-            SystemApiBroker.overrideConfig(
-                context = context,
-                subId = subId,
-                bundle = values,
-                persistent = true,
-            )
+            usedPersistent = overrideConfigBestEffort(context, subId, values)
             true
         }.getOrElse { error ->
             Log.w(TAG, "batch write failed: ${error.message}")
-            failures += "batch: ${error.message ?: "error"}"
+            failures += "batch: ${sanitizeOverrideError(error)}"
             false
         }
 
@@ -60,16 +59,12 @@ object CarrierConfigOverrideWriter {
             var ok = batchOk && verifyOverride(context, subId, single)
             if (!ok) {
                 ok = runCatching {
-                    SystemApiBroker.overrideConfig(
-                        context = context,
-                        subId = subId,
-                        bundle = single,
-                        persistent = true,
-                    )
+                    val persistent = overrideConfigBestEffort(context, subId, single)
+                    usedPersistent = usedPersistent && persistent
                     verifyOverride(context, subId, single)
                 }.getOrElse { error ->
                     Log.w(TAG, "key=$key failed: ${error.message}")
-                    failures += "$key: ${error.message ?: "error"}"
+                    failures += "$key: ${sanitizeOverrideError(error)}"
                     false
                 }
             }
@@ -84,16 +79,18 @@ object CarrierConfigOverrideWriter {
         if (successCount > 0) {
             saveSnapshotAfterSuccess(context, subId)
         }
+        val modeHint = if (usedPersistent) "persistent" else "temporary"
         if (allOk) {
             return Result(
                 success = true,
-                message = "ok · $target · $reason",
+                message = "ok · $target · $reason · $modeHint",
                 detail = detail,
                 targetLabel = target,
+                persistent = usedPersistent,
             )
         }
         val message = buildString {
-            append("partial/fail · $target · $reason · $successCount/${detail.size}")
+            append("partial/fail · $target · $reason · $successCount/${detail.size} · $modeHint")
             if (failures.isNotEmpty()) {
                 append(" · ")
                 append(failures.joinToString("; "))
@@ -104,11 +101,12 @@ object CarrierConfigOverrideWriter {
             message = message,
             detail = detail,
             targetLabel = target,
+            persistent = usedPersistent,
         )
     }
 
     /**
-     * 清除 persistent 覆盖。
+     * 清除覆盖。
      * - [keys] 为空：清空该 subId 全部 override（bundle=null）
      * - [keys] 非空：按当前配置类型写入“关闭/空”复位值；无法推断类型的 key 记失败
      */
@@ -123,10 +121,21 @@ object CarrierConfigOverrideWriter {
         Log.i(TAG, "clear target=$target reason=$reason keys=$keys")
         if (keys.isEmpty()) {
             return runCatching {
-                SystemApiBroker.overrideConfig(context, subId, null, persistent = true)
-                Result(true, "cleared all · $target · $reason", targetLabel = target)
+                val persistent = overrideConfigBestEffort(context, subId, null)
+                val modeHint = if (persistent) "persistent" else "temporary"
+                Result(
+                    success = true,
+                    message = "cleared all · $target · $reason · $modeHint",
+                    targetLabel = target,
+                    persistent = persistent,
+                )
             }.getOrElse {
-                Result(false, "clear failed · $target · ${it.message}", targetLabel = target)
+                Result(
+                    success = false,
+                    message = "clear failed · $target · ${sanitizeOverrideError(it)}",
+                    targetLabel = target,
+                    persistent = false,
+                )
             }
         }
         val current = SystemApiBroker.getCarrierConfig(context, subId)
@@ -211,6 +220,53 @@ object CarrierConfigOverrideWriter {
         }.onFailure {
             Log.w(TAG, "snapshot save failed: ${it.message}")
         }
+    }
+
+    /**
+     * @return 实际是否使用了 persistent=true
+     */
+    private fun overrideConfigBestEffort(
+        context: Context,
+        subId: Int,
+        bundle: PersistableBundle?,
+    ): Boolean {
+        return try {
+            SystemApiBroker.overrideConfig(
+                context = context,
+                subId = subId,
+                bundle = bundle,
+                persistent = true,
+            )
+            true
+        } catch (error: Throwable) {
+            if (!isPersistentPrivilegeDenied(error)) throw error
+            Log.w(TAG, "persistent=true denied, fallback to temporary: ${error.message}")
+            SystemApiBroker.overrideConfig(
+                context = context,
+                subId = subId,
+                bundle = bundle,
+                persistent = false,
+            )
+            false
+        }
+    }
+
+    internal fun isPersistentPrivilegeDenied(error: Throwable): Boolean {
+        val messages = generateSequence(error) { it.cause }
+            .mapNotNull { it.message }
+            .joinToString(" ")
+        return messages.contains("only can be invoked by system app", ignoreCase = true) ||
+            (
+                messages.contains("persistent=true", ignoreCase = true) &&
+                    messages.contains("system app", ignoreCase = true)
+                )
+    }
+
+    private fun sanitizeOverrideError(error: Throwable): String {
+        if (isPersistentPrivilegeDenied(error)) {
+            return "需要系统级持久写入权限；已尝试临时覆盖仍失败"
+        }
+        return error.message ?: error.javaClass.simpleName
     }
 
     private fun placeResetValue(

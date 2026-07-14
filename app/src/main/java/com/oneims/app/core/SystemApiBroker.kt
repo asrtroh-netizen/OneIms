@@ -322,7 +322,8 @@ object SystemApiBroker {
 
     /**
      * bundle=null 表示清空覆盖；非 root 一律走活动 Instrumentation，并在返回前验证目标键。
-     * OneKuku 业务写入应优先经 [CarrierConfigOverrideWriter]（默认 persistent=true）。
+     * OneKuku 业务写入应优先经 [CarrierConfigOverrideWriter]
+     *（先 persistent=true，权限不足自动回退 temporary）。
      */
     fun overrideConfig(context: Context, subId: Int, bundle: PersistableBundle?, persistent: Boolean) {
         require(subId >= 0) { "Invalid subscription id: $subId" }
