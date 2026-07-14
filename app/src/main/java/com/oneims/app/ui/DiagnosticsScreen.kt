@@ -87,7 +87,7 @@ fun DiagnosticsScreen(
                             R.string.system_target_preview,
                             selectedSim.slotIndex + 1,
                             formatCarrierShortName(selectedSim.carrierName),
-                            selectedSim.subscriptionId,
+                            
                         ),
                         modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 16.dp),
                         style = MaterialTheme.typography.bodySmall,

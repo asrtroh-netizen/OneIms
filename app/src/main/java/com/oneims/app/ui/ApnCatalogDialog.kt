@@ -391,7 +391,7 @@ private fun CatalogActions(
                     R.string.apn_catalog_apply_target,
                     sim.slotIndex + 1,
                     formatCarrierShortName(sim.carrierName),
-                    sim.subscriptionId,
+                    
                 ),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.primary,

@@ -137,26 +137,28 @@ fun resolveSimpleFiveGDisplay(
         }
 
         SimpleFiveGDisplayConfig.Mode.COOL -> when {
-            (isSa || isAdvanced) && dl >= thresholds.fiveGaDlThresholdMbps -> labels.coolFiveGa
+            isAdvanced -> labels.coolFiveGa
+            isSa && dl >= thresholds.fiveGaDlThresholdMbps -> labels.coolFiveGa
             isNsa && dl >= thresholds.fiveGaDlThresholdMbps -> labels.coolFiveGPlus
             dl >= thresholds.plusDlThresholdMbps -> labels.coolFiveGPlus
             isSa -> "5G SA"
             isNsa -> "5G NSA"
-            isAdvanced -> "5G Advanced"
             else -> "5G"
         }
 
         // CUSTOM 使用用户阈值；CN_SPEED 使用默认阈值。共同走同一套状态映射，
         // 避免切回内地速率模式后继续误用隐藏的自定义值。
+        // 说明：系统状态栏 CarrierConfig 通常只有 5G / 5G_PLUS；「5G-A」主要是应用内文案。
+        // NR Advanced 网络本身即按 5G-A 展示，不再强依赖下行是否冲过阈值。
         SimpleFiveGDisplayConfig.Mode.CUSTOM,
         SimpleFiveGDisplayConfig.Mode.CN_SPEED,
         -> when {
-            (isSa || isAdvanced) && dl >= thresholds.fiveGaDlThresholdMbps -> "5G-A"
+            isAdvanced -> "5G-A"
+            isSa && dl >= thresholds.fiveGaDlThresholdMbps -> "5G-A"
             isNsa && dl >= thresholds.fiveGaDlThresholdMbps -> "5G+"
             dl >= thresholds.plusDlThresholdMbps -> "5G+"
             isSa -> "5G SA"
             isNsa -> "5G NSA"
-            isAdvanced -> "5G Advanced"
             else -> "5G"
         }
 

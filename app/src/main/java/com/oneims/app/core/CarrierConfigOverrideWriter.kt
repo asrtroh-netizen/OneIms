@@ -188,7 +188,7 @@ object CarrierConfigOverrideWriter {
         val carrier = sim?.carrierName?.takeIf { it.isNotBlank() }
             ?: sim?.displayName?.takeIf { it.isNotBlank() }
             ?: "未知运营商"
-        return "当前目标：卡$slot · $carrier · subId=$subId"
+        return "当前目标：卡$slot · $carrier"
     }
 
     fun requireValidSubId(subId: Int) {

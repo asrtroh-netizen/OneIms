@@ -1732,7 +1732,6 @@ private fun AppRoot(
                             R.string.apn_catalog_apply_target,
                             sim.slotIndex + 1,
                             com.oneims.app.core.formatCarrierShortName(sim.carrierName),
-                            sim.subscriptionId,
                         ) + "\n\n" + (profile?.let { selected ->
                             context.getString(
                                 R.string.confirm_apn_profile_message,

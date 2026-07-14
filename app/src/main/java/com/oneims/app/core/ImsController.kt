@@ -550,7 +550,6 @@ object ImsController {
                         R.string.identity_target_applied,
                         it.slotIndex + 1,
                         formatCarrierShortName(it.carrierName),
-                        subId,
                         applied.joinToString("、"),
                     )
                 }

@@ -311,9 +311,9 @@
     <string name="identity_none">未填写任何要覆盖的显示项</string>
     <string name="identity_failed">覆盖失败：%1$s</string>
     <string name="identity_name_restored">已关闭运营商名称覆盖并恢复系统默认显示</string>
-    <string name="identity_target_preview">当前目标：卡%1$d · %2$s · subId=%3$d</string>
-    <string name="system_target_preview">当前目标：卡%1$d · %2$s · subId=%3$d</string>
-    <string name="identity_target_applied">已写入卡%1$d · %2$s · subId=%3$d：%4$s</string>
+    <string name="identity_target_preview">当前目标：卡%1$d · %2$s</string>
+    <string name="system_target_preview">当前目标：卡%1$d · %2$s</string>
+    <string name="identity_target_applied">已写入卡%1$d · %2$s：%3$s</string>
     <string name="identity_readback_failed">卡%1$d 身份覆盖未生效：目标 subId=%2$d 回读失败</string>
     <string name="identity_readback_mismatch">卡%1$d 身份覆盖未生效：目标 subId=%2$d 回读不一致</string>
     <string name="config_dump_failed">读取 CarrierConfig 失败（需 OneKuku 已激活且选中有效 SIM）</string>
@@ -608,7 +608,7 @@
     <string name="apn_catalog_generic_ims">通用 IMS</string>
     <string name="apn_catalog_apply_ims">用于 IMS 修复</string>
     <string name="apn_catalog_copied">APN 配置已复制</string>
-    <string name="apn_catalog_apply_target">即将应用到：卡%1$d · %2$s · subId=%3$d</string>
+    <string name="apn_catalog_apply_target">即将应用到：卡%1$d · %2$s</string>
     <string name="apn_catalog_clipboard">运营商：%1$s\n国家/区域：%2$s\nMCC/MNC：%3$s\nAPN：%4$s\n类型：%5$s\n协议：%6$s\n用户名：%7$s\n密码：%8$s\n来源：%9$s</string>
     <string name="tool_apn_sub_short">按国家或运营商搜索，应用到选中 SIM</string>
     <string name="guard_sub_short">IMS 掉线时自动重应用配置</string>
@@ -795,7 +795,7 @@
     <string name="data_switch_refresh">刷新 SIM 状态</string>
     <string name="data_switch_to_card">切到卡%1$d</string>
     <string name="data_switch_current_tag"> · 当前数据</string>
-    <string name="data_switch_row">卡%1$d · %2$s · subId=%3$d%4$s</string>
+    <string name="data_switch_row">卡%1$d · %2$s%3$s</string>
     <string name="data_switch_switching">正在切换当前数据卡…</string>
     <string name="data_switch_success">已切换到卡%1$d</string>
     <string name="data_switch_failed">切换失败：%1$s</string>

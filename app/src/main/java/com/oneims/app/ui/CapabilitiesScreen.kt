@@ -119,7 +119,7 @@ fun CapabilitiesScreen(
                                     R.string.system_target_preview,
                                     sim.slotIndex + 1,
                                     formatCarrierShortName(sim.carrierName),
-                                    sim.subscriptionId,
+                                    
                                 ),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.primary,
@@ -208,11 +208,6 @@ fun CapabilitiesScreen(
                     modifier = Modifier.padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    Text(
-                        text = stringResource(R.string.signal_strength_adjust_notice),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
                     OneImsPrimaryButton(
                         text = stringResource(R.string.action_apply_core),
                         onClick = actions.onApplyCore,
@@ -271,7 +266,7 @@ fun CapabilitiesScreen(
                                 R.string.system_target_preview,
                                 sim.slotIndex + 1,
                                 formatCarrierShortName(sim.carrierName),
-                                sim.subscriptionId,
+                                
                             ),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.primary,
@@ -313,12 +308,6 @@ fun CapabilitiesScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 20.dp),
-                    )
-                    Text(
-                        text = stringResource(R.string.vowifi_name_system_notice),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = 20.dp),
                     )
                     OneImsPrimaryButton(
                         text = stringResource(R.string.vowifi_name_apply),

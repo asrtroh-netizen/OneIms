@@ -311,7 +311,7 @@
     <string name="identity_none">No display item entered to override</string>
     <string name="identity_failed">Override failed: %1$s</string>
     <string name="identity_name_restored">Carrier-name override disabled; system display restored</string>
-    <string name="system_target_preview">Current target: SIM %1$d · %2$s · subId=%3$d</string>
+    <string name="system_target_preview">Current target: SIM %1$d · %2$s</string>
     <string name="config_dump_failed">Failed to read CarrierConfig (needs OneKuku activated and a valid SIM selected)</string>
     <string name="config_dump_title">CarrierConfig key items (subId=%1$d):</string>
     <string name="config_dump_empty">(empty)</string>
@@ -785,7 +785,7 @@
     <string name="data_switch_refresh">Refresh SIM status</string>
     <string name="data_switch_to_card">Switch to SIM %1$d</string>
     <string name="data_switch_current_tag"> · current data</string>
-    <string name="data_switch_row">SIM %1$d · %2$s · subId=%3$d%4$s</string>
+    <string name="data_switch_row">SIM %1$d · %2$s%3$s</string>
     <string name="data_switch_switching">Switching the current data SIM…</string>
     <string name="data_switch_success">Switched to SIM %1$d</string>
     <string name="data_switch_failed">Switch failed: %1$s</string>
@@ -802,12 +802,12 @@
     <string name="data_switch_confirm_action">Switch</string>
     <string name="ims_sim_header">SIM %1$d · %2$s · subId %3$d</string>
     <string name="sim_pill_label">SIM %1$d %2$s</string>
-    <string name="identity_target_preview">Current target: SIM %1$d · %2$s · subId=%3$d</string>
-    <string name="identity_target_applied">Written to SIM %1$d · %2$s · subId=%3$d: %4$s</string>
+    <string name="identity_target_preview">Current target: SIM %1$d · %2$s</string>
+    <string name="identity_target_applied">Written to SIM %1$d · %2$s: %3$s</string>
     <string name="identity_readback_failed">SIM %1$d identity override was not applied: readback failed for subId=%2$d</string>
     <string name="identity_readback_mismatch">SIM %1$d identity override was not applied: readback differed for subId=%2$d</string>
     <string name="diagnostics_prereq_short">Select a SIM and activate OneKuku</string>
-    <string name="apn_catalog_apply_target">Will apply to: SIM %1$d · %2$s · subId=%3$d</string>
+    <string name="apn_catalog_apply_target">Will apply to: SIM %1$d · %2$s</string>
     <string name="tool_apn_sub_short">Search by country or carrier and apply to the selected SIM</string>
     <string name="guard_sub_short">Reapply the profile automatically when IMS disconnects</string>
     <string name="one_click_section_title">One-click check and fix</string>
