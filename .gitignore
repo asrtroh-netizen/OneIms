@@ -8,6 +8,7 @@
 .externalNativeBuild
 .cxx
 /app/build/
+/bridge/build/
 *.apk
 !app/src/main/assets/onekuku-core.apk
 .cursor/
