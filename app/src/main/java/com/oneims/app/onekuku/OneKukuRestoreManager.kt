@@ -57,17 +57,43 @@ object OneKukuRestoreManager {
                 val snapshot = resolved.snapshot
                 val writeSubId = resolved.writeSubId
                 // 明确排除 APN：一键恢复通话不自动恢复 APN。
-        val detail = linkedMapOf<String, Boolean>()
-        detail["identity"] = retryStep { restoreIdentity(context, writeSubId, snapshot) }
-        detail["ims"] = retryStep { restoreIms(context, writeSubId, snapshot) }
-        detail["wfc"] = retryStep { restoreWfc(context, writeSubId, snapshot) }
-        detail["nr5g"] = retryStep { restoreFiveG(context, writeSubId, snapshot) }
-        detail["signal"] = retryStep { restoreSignal(context, writeSubId, snapshot) }
-        detail["vowifi_name"] = retryStep { restoreVoWifiName(context, writeSubId, snapshot) }
-        detail["verify"] = retryStep {
-            val result = verify(context, writeSubId)
-            ConfigResult(result.success, result.message)
-        }
+                val detail = linkedMapOf<String, Boolean>()
+                val failures = mutableListOf<String>()
+
+                fun runNamed(name: String, block: () -> ConfigResult): Boolean {
+                    val ok = retryStep {
+                        val result = block()
+                        if (!result.success) {
+                            failures += "$name: ${result.message}"
+                            Log.w(TAG, "item failed name=$name msg=${result.message}")
+                        }
+                        result
+                    }
+                    return ok
+                }
+
+                detail["identity"] = runNamed("identity") {
+                    restoreIdentity(context, writeSubId, snapshot)
+                }
+                detail["ims"] = runNamed("ims") {
+                    restoreIms(context, writeSubId, snapshot)
+                }
+                detail["wfc"] = runNamed("wfc") {
+                    restoreWfc(context, writeSubId, snapshot)
+                }
+                detail["nr5g"] = runNamed("nr5g") {
+                    restoreFiveG(context, writeSubId, snapshot)
+                }
+                detail["signal"] = runNamed("signal") {
+                    restoreSignal(context, writeSubId, snapshot)
+                }
+                detail["vowifi_name"] = runNamed("vowifi_name") {
+                    restoreVoWifiName(context, writeSubId, snapshot)
+                }
+                detail["verify"] = runNamed("verify") {
+                    val result = verify(context, writeSubId)
+                    ConfigResult(result.success, result.message)
+                }
 
                 val successCount = detail.values.count { it }
                 val total = detail.size
@@ -85,7 +111,13 @@ object OneKukuRestoreManager {
                     verifiedAt = System.currentTimeMillis(),
                 )
                 OneKukuSleepController.sleep()
-                val message = "restore $status ($successCount/$total)"
+                val message = buildString {
+                    append("restore $status ($successCount/$total)")
+                    if (failures.isNotEmpty()) {
+                        append(" · ")
+                        append(failures.joinToString("; "))
+                    }
+                }
                 Log.i(TAG, message)
                 return OneKukuCommandResult(
                     success = allOk || partial,

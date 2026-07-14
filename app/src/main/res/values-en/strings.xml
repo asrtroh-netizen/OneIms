@@ -377,7 +377,7 @@
     <string name="onekuku_msg_need_active">Activate OneKuku core service first</string>
     <string name="onekuku_msg_need_sim">Select an available SIM first</string>
     <string name="onekuku_msg_status_ok">OneKuku looks healthy and is sleeping</string>
-    <string name="onekuku_busy_restore">Restoring call settings</string>
+    <string name="onekuku_busy_restore">Restoring call settings…</string>
     <string name="onekuku_busy_status_check">Checking status</string>
     <string name="action_close">Close</string>
 
@@ -400,7 +400,7 @@
     <string name="onekuku_snapshot_five_g_display">5G display boost</string>
     <string name="onekuku_snapshot_meta">Snapshot binding</string>
     <string name="onekuku_snapshot_meta_value">SIM %1$d · %2$s · hash=%3$s</string>
-    <string name="onekuku_restore_no_matching_sim">No SIM matched the saved snapshot</string>
+    <string name="onekuku_restore_no_matching_sim">No SIM matched the snapshot. Confirm the previously configured SIM is inserted.</string>
 
     <string name="onekuku_detail_no_snapshot">No restore snapshot yet. Apply call settings once first.</string>
     <string name="onekuku_boot_channel">Call config restore</string>
@@ -445,6 +445,8 @@
 
     <string name="home_emergency_restore_detail">Wake OneKuku and restore the latest saved calling configuration. This does not clear settings.</string>
     <string name="onekuku_restore_need_sim">Select a ready SIM first</string>
+    <string name="onekuku_restore_sim_mismatch">No SIM matched the snapshot. Confirm the previously configured SIM is inserted.</string>
+    <string name="onekuku_restore_onekuku_inactive">OneKuku core service is inactive. Activate it before restoring.</string>
     <string name="onekuku_restore_no_snapshot">Nothing to restore. Apply a calling configuration first.</string>
     <string name="onekuku_restore_need_active_title">OneKuku inactive</string>
     <string name="onekuku_restore_need_active_body">OneKuku core service is inactive. Activate it before restoring.</string>

@@ -381,7 +381,7 @@
     <string name="onekuku_msg_need_active">请先激活 OneKuku 核心服务</string>
     <string name="onekuku_msg_need_sim">请先选择可用 SIM</string>
     <string name="onekuku_msg_status_ok">OneKuku 状态正常，核心服务休眠中</string>
-    <string name="onekuku_busy_restore">正在恢复通话配置</string>
+    <string name="onekuku_busy_restore">正在恢复通话配置…</string>
     <string name="onekuku_busy_status_check">正在检查状态</string>
     <string name="action_close">关闭</string>
 
@@ -404,7 +404,7 @@
     <string name="onekuku_snapshot_five_g_display">5G 显示增强</string>
     <string name="onekuku_snapshot_meta">快照绑定</string>
     <string name="onekuku_snapshot_meta_value">卡%1$d · %2$s · hash=%3$s</string>
-    <string name="onekuku_restore_no_matching_sim">未找到与快照匹配的 SIM</string>
+    <string name="onekuku_restore_no_matching_sim">未找到与快照匹配的 SIM，请确认当前插入的是之前配置过的 SIM</string>
 
     <string name="onekuku_detail_no_snapshot">暂无恢复快照，请先成功应用一次通话配置</string>
     <string name="onekuku_boot_channel">通话配置恢复</string>
@@ -450,6 +450,8 @@
     <string name="home_emergency_restore_detail">唤醒 OneKuku 并恢复最近保存的通话配置。不会清空配置。</string>
     <string name="onekuku_restore_need_sim">请先选择可用且就绪的 SIM</string>
     <string name="onekuku_restore_no_snapshot">暂无可恢复配置，请先应用一次通话配置</string>
+    <string name="onekuku_restore_sim_mismatch">未找到与快照匹配的 SIM，请确认当前插入的是之前配置过的 SIM</string>
+    <string name="onekuku_restore_onekuku_inactive">OneKuku 核心服务未激活，请先激活后恢复</string>
     <string name="onekuku_restore_need_active_title">OneKuku 未激活</string>
     <string name="onekuku_restore_need_active_body">OneKuku 核心服务未激活，请先激活后恢复</string>
     <string name="onekuku_restore_toast_success">通话配置已恢复</string>
