@@ -35,15 +35,15 @@ fun HomeScreen(
         simSelectionEnabled = state.actionsEnabled,
     ) {
         item {
-            // OneKu 总控卡：复用原顶部 Hero 外壳，按服务状态切换文案与主操作。
+            // OneKuku 总控卡：复用原顶部 Hero 外壳，按服务状态切换文案与主操作。
             StatusHero(
-                oneKuState = state.oneKuState,
+                oneKukuState = state.oneKukuState,
                 onPrimaryAction = {
-                    when (state.oneKuState) {
-                        OneKuCardState.INACTIVE -> actions.onActivateOneKu()
-                        OneKuCardState.SLEEPING -> actions.onRestoreCallConfig()
-                        OneKuCardState.RUNNING -> Unit
-                        OneKuCardState.COMPLETE -> actions.onCheckOneKuStatus()
+                    when (state.oneKukuState) {
+                        OneKukuCardState.INACTIVE -> actions.onActivateOneKuku()
+                        OneKukuCardState.SLEEPING -> actions.onRestoreCallConfig()
+                        OneKukuCardState.RUNNING -> Unit
+                        OneKukuCardState.COMPLETE -> actions.onCheckOneKukuStatus()
                     }
                 },
                 sims = state.sims,

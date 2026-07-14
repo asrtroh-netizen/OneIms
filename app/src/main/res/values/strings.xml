@@ -342,46 +342,46 @@
     <string name="home_status_ready">已授权并选中移动网络</string>
     <string name="home_safety_note">所有核心写入都以电话、短信和数据可用为最高优先级</string>
 
-    <!-- OneKu 首页总控卡（对用户隐藏底层通道名称） -->
-    <string name="oneku_title_inactive">还差一步即可使用</string>
-    <string name="oneku_subtitle_inactive">OneKu 核心服务未激活</string>
-    <string name="oneku_detail_inactive">重启后通话配置可能无法自动恢复</string>
-    <string name="oneku_hint_power">按需激活，用完休眠，不常驻不耗电</string>
-    <string name="oneku_pill_inactive">未激活</string>
-    <string name="oneku_action_activate">立即激活 OneKu</string>
-    <string name="oneku_action_activate_sub">后台自动准备恢复环境</string>
+    <!-- OneKuku 首页总控卡（对用户隐藏底层通道名称） -->
+    <string name="onekuku_title_inactive">还差一步即可使用</string>
+    <string name="onekuku_subtitle_inactive">OneKuku 核心服务未激活</string>
+    <string name="onekuku_detail_inactive">重启后通话配置可能无法自动恢复</string>
+    <string name="onekuku_hint_power">按需激活，用完休眠，不常驻不耗电</string>
+    <string name="onekuku_pill_inactive">未激活</string>
+    <string name="onekuku_action_activate">立即激活 OneKuku</string>
+    <string name="onekuku_action_activate_sub">后台自动准备恢复环境</string>
 
-    <string name="oneku_title_ready">设备已就绪</string>
-    <string name="oneku_subtitle_sleeping">OneKu 核心服务已激活</string>
-    <string name="oneku_detail_sleeping">重启后可尝试自动恢复通话配置</string>
-    <string name="oneku_pill_sleeping">休眠中</string>
-    <string name="oneku_action_restore">一键恢复通话</string>
-    <string name="oneku_action_restore_sub">后台唤醒 OneKu 并恢复配置</string>
+    <string name="onekuku_title_ready">设备已就绪</string>
+    <string name="onekuku_subtitle_sleeping">OneKuku 核心服务已激活</string>
+    <string name="onekuku_detail_sleeping">重启后可尝试自动恢复通话配置</string>
+    <string name="onekuku_pill_sleeping">休眠中</string>
+    <string name="onekuku_action_restore">一键恢复通话</string>
+    <string name="onekuku_action_restore_sub">后台唤醒 OneKuku 并恢复配置</string>
 
-    <string name="oneku_title_running">正在恢复通话配置</string>
-    <string name="oneku_subtitle_running">OneKu 核心服务执行中</string>
-    <string name="oneku_detail_running">正在恢复 IMS、VoWiFi、5G 等配置</string>
-    <string name="oneku_pill_running">执行中</string>
-    <string name="oneku_action_running">正在恢复…</string>
+    <string name="onekuku_title_running">正在恢复通话配置</string>
+    <string name="onekuku_subtitle_running">OneKuku 核心服务执行中</string>
+    <string name="onekuku_detail_running">正在恢复 IMS、VoWiFi、5G 等配置</string>
+    <string name="onekuku_pill_running">执行中</string>
+    <string name="onekuku_action_running">正在恢复…</string>
 
-    <string name="oneku_subtitle_complete">通话配置已恢复</string>
-    <string name="oneku_detail_complete">OneKu 已完成任务并进入休眠</string>
-    <string name="oneku_action_check">检查 OneKu 状态</string>
+    <string name="onekuku_subtitle_complete">通话配置已恢复</string>
+    <string name="onekuku_detail_complete">OneKuku 已完成任务并进入休眠</string>
+    <string name="onekuku_action_check">检查 OneKuku 状态</string>
 
-    <string name="oneku_stage_standby">待命</string>
-    <string name="oneku_stage_activate">激活</string>
-    <string name="oneku_stage_execute">执行</string>
-    <string name="oneku_stage_done">完成</string>
+    <string name="onekuku_stage_standby">待命</string>
+    <string name="onekuku_stage_activate">激活</string>
+    <string name="onekuku_stage_execute">执行</string>
+    <string name="onekuku_stage_done">完成</string>
 
-    <string name="oneku_msg_need_prepare">请先完成 OneKu 核心服务准备</string>
-    <string name="oneku_msg_already_active">OneKu 核心服务已激活</string>
-    <string name="oneku_msg_permission_requested">已发起 OneKu 激活请求</string>
-    <string name="oneku_msg_activated">OneKu 核心服务已激活</string>
-    <string name="oneku_msg_activation_denied">OneKu 激活未通过</string>
-    <string name="oneku_msg_need_active">请先激活 OneKu 核心服务</string>
-    <string name="oneku_msg_need_sim">请先选择可用 SIM</string>
-    <string name="oneku_msg_status_ok">OneKu 状态正常，核心服务休眠中</string>
-    <string name="oneku_busy_restore">正在恢复通话配置</string>
+    <string name="onekuku_msg_need_prepare">请先完成 OneKuku 核心服务准备</string>
+    <string name="onekuku_msg_already_active">OneKuku 核心服务已激活</string>
+    <string name="onekuku_msg_permission_requested">已发起 OneKuku 激活请求</string>
+    <string name="onekuku_msg_activated">OneKuku 核心服务已激活</string>
+    <string name="onekuku_msg_activation_denied">OneKuku 激活未通过</string>
+    <string name="onekuku_msg_need_active">请先激活 OneKuku 核心服务</string>
+    <string name="onekuku_msg_need_sim">请先选择可用 SIM</string>
+    <string name="onekuku_msg_status_ok">OneKuku 状态正常，核心服务休眠中</string>
+    <string name="onekuku_busy_restore">正在恢复通话配置</string>
     <string name="home_quick_actions">快速开始</string>
     <string name="home_quick_actions_sub">先确认设备状态，再应用运营商建议</string>
     <string name="action_refresh_sub">重新读取权限与 SIM</string>

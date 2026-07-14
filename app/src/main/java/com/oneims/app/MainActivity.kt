@@ -87,7 +87,7 @@ import com.oneims.app.ui.HomeScreen
 import com.oneims.app.ui.HomeUiState
 import com.oneims.app.ui.OneImsScaffold
 import com.oneims.app.ui.OneImsPrimaryButton
-import com.oneims.app.ui.OneKuCardPolicy
+import com.oneims.app.ui.OneKukuCardPolicy
 import com.oneims.app.ui.SettingsActions
 import com.oneims.app.ui.SettingsScreen
 import com.oneims.app.ui.SettingsUiState
@@ -207,8 +207,8 @@ private fun AppRoot(
 
     var shizukuRunning by remember { mutableStateOf(ShizukuManager.isRunning()) }
     var shizukuGranted by remember { mutableStateOf(ShizukuManager.isGranted()) }
-    var oneKuTaskComplete by remember { mutableStateOf(false) }
-    var oneKuRestoring by remember { mutableStateOf(false) }
+    var oneKukuTaskComplete by remember { mutableStateOf(false) }
+    var oneKukuRestoring by remember { mutableStateOf(false) }
     var sims by remember { mutableStateOf(emptyList<SimInfo>()) }
     var selectedSubId by remember { mutableIntStateOf(ConfigStore.getSelectedSubId(context)) }
     var deviceInfo by remember { mutableStateOf("") }
@@ -264,16 +264,16 @@ private fun AppRoot(
 
     val selectedSim = sims.firstOrNull { it.subscriptionId == selectedSubId }
     val actionsAvailable = busyLabel == null
-    val oneKuState = OneKuCardPolicy.resolve(
+    val oneKukuState = OneKukuCardPolicy.resolve(
         serviceReady = shizukuRunning && shizukuGranted,
-        isExecuting = oneKuRestoring,
-        taskComplete = oneKuTaskComplete,
+        isExecuting = oneKukuRestoring,
+        taskComplete = oneKukuTaskComplete,
     )
 
     LaunchedEffect(shizukuRunning, shizukuGranted) {
         if (!shizukuRunning || !shizukuGranted) {
-            oneKuTaskComplete = false
-            oneKuRestoring = false
+            oneKukuTaskComplete = false
+            oneKukuRestoring = false
         }
     }
     val phonePermissionLauncher = rememberLauncherForActivityResult(
@@ -605,9 +605,9 @@ private fun AppRoot(
                 publish(
                     context.getString(
                         if (ShizukuManager.isGranted()) {
-                            R.string.oneku_msg_activated
+                            R.string.onekuku_msg_activated
                         } else {
-                            R.string.oneku_msg_activation_denied
+                            R.string.onekuku_msg_activation_denied
                         },
                     ),
                 )
@@ -619,8 +619,8 @@ private fun AppRoot(
         val binderDeadListener = Shizuku.OnBinderDeadListener {
             shizukuRunning = false
             shizukuGranted = false
-            oneKuTaskComplete = false
-            oneKuRestoring = false
+            oneKukuTaskComplete = false
+            oneKukuRestoring = false
         }
 
         runCatching { Shizuku.addRequestPermissionResultListener(permissionListener) }
@@ -650,7 +650,7 @@ private fun AppRoot(
                     state = HomeUiState(
                         shizukuRunning = shizukuRunning,
                         shizukuGranted = shizukuGranted,
-                        oneKuState = oneKuState,
+                        oneKukuState = oneKukuState,
                         deviceInfo = deviceInfo,
                         sims = sims,
                         selectedSubId = selectedSubId,
@@ -668,28 +668,28 @@ private fun AppRoot(
                         onGrantShizuku = {
                             when {
                                 !ShizukuManager.isRunning() ->
-                                    publish(context.getString(R.string.oneku_msg_need_prepare))
+                                    publish(context.getString(R.string.onekuku_msg_need_prepare))
                                 ShizukuManager.isGranted() ->
-                                    publish(context.getString(R.string.oneku_msg_already_active))
+                                    publish(context.getString(R.string.onekuku_msg_already_active))
                                 else -> {
                                     ShizukuManager.requestPermission()
-                                    publish(context.getString(R.string.oneku_msg_permission_requested))
+                                    publish(context.getString(R.string.onekuku_msg_permission_requested))
                                 }
                             }
                         },
-                        onActivateOneKu = {
+                        onActivateOneKuku = {
                             when {
                                 !ShizukuManager.isRunning() -> {
                                     ShizukuSetupHelper.openShizukuApp(context)
-                                    publish(context.getString(R.string.oneku_msg_need_prepare))
+                                    publish(context.getString(R.string.onekuku_msg_need_prepare))
                                 }
                                 ShizukuManager.isGranted() -> {
                                     refreshAll()
-                                    publish(context.getString(R.string.oneku_msg_already_active))
+                                    publish(context.getString(R.string.onekuku_msg_already_active))
                                 }
                                 else -> {
                                     ShizukuManager.requestPermission()
-                                    publish(context.getString(R.string.oneku_msg_permission_requested))
+                                    publish(context.getString(R.string.onekuku_msg_permission_requested))
                                 }
                             }
                         },
@@ -698,22 +698,22 @@ private fun AppRoot(
                             shizukuGranted = ShizukuManager.isGranted()
                             when {
                                 !shizukuRunning || !shizukuGranted ->
-                                    publish(context.getString(R.string.oneku_msg_need_active))
+                                    publish(context.getString(R.string.onekuku_msg_need_active))
                                 selectedSubId < 0 ->
-                                    publish(context.getString(R.string.oneku_msg_need_sim))
+                                    publish(context.getString(R.string.onekuku_msg_need_sim))
                                 busyLabel != null ->
                                     publish(context.getString(R.string.operation_already_running))
                                 else -> {
                                     val targetSubId = selectedSubId
                                     val restoreSucceeded = booleanArrayOf(false)
-                                    oneKuTaskComplete = false
-                                    oneKuRestoring = true
+                                    oneKukuTaskComplete = false
+                                    oneKukuRestoring = true
                                     runOperation(
-                                        label = context.getString(R.string.oneku_busy_restore),
+                                        label = context.getString(R.string.onekuku_busy_restore),
                                         onComplete = {
-                                            oneKuRestoring = false
+                                            oneKukuRestoring = false
                                             if (restoreSucceeded[0]) {
-                                                oneKuTaskComplete = true
+                                                oneKukuTaskComplete = true
                                                 reapplyStatus =
                                                     ConfigStore.lastReapplyStatus(context)
                                             }
@@ -730,10 +730,10 @@ private fun AppRoot(
                                 }
                             }
                         },
-                        onCheckOneKuStatus = {
-                            oneKuTaskComplete = false
+                        onCheckOneKukuStatus = {
+                            oneKukuTaskComplete = false
                             refreshAll()
-                            publish(context.getString(R.string.oneku_msg_status_ok))
+                            publish(context.getString(R.string.onekuku_msg_status_ok))
                         },
                         onRestoreDefaults = {
                             if (ensurePrivilegedAccess()) {

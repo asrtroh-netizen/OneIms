@@ -338,46 +338,46 @@
     <string name="home_status_ready">Authorized with a mobile network selected</string>
     <string name="home_safety_note">Calls, messages, and data always take priority over IMS changes</string>
 
-    <!-- OneKu home control card (hides underlying privilege channel names) -->
-    <string name="oneku_title_inactive">One more step</string>
-    <string name="oneku_subtitle_inactive">OneKu core service is inactive</string>
-    <string name="oneku_detail_inactive">Call settings may not auto-restore after reboot</string>
-    <string name="oneku_hint_power">Activate on demand, sleep when idle — no always-on drain</string>
-    <string name="oneku_pill_inactive">Inactive</string>
-    <string name="oneku_action_activate">Activate OneKu</string>
-    <string name="oneku_action_activate_sub">Prepares the restore environment in the background</string>
+    <!-- OneKuku home control card (hides underlying privilege channel names) -->
+    <string name="onekuku_title_inactive">One more step</string>
+    <string name="onekuku_subtitle_inactive">OneKuku core service is inactive</string>
+    <string name="onekuku_detail_inactive">Call settings may not auto-restore after reboot</string>
+    <string name="onekuku_hint_power">Activate on demand, sleep when idle — no always-on drain</string>
+    <string name="onekuku_pill_inactive">Inactive</string>
+    <string name="onekuku_action_activate">Activate OneKuku</string>
+    <string name="onekuku_action_activate_sub">Prepares the restore environment in the background</string>
 
-    <string name="oneku_title_ready">Device ready</string>
-    <string name="oneku_subtitle_sleeping">OneKu core service is active</string>
-    <string name="oneku_detail_sleeping">Call settings can try to auto-restore after reboot</string>
-    <string name="oneku_pill_sleeping">Sleeping</string>
-    <string name="oneku_action_restore">Restore calling</string>
-    <string name="oneku_action_restore_sub">Wake OneKu and restore configuration</string>
+    <string name="onekuku_title_ready">Device ready</string>
+    <string name="onekuku_subtitle_sleeping">OneKuku core service is active</string>
+    <string name="onekuku_detail_sleeping">Call settings can try to auto-restore after reboot</string>
+    <string name="onekuku_pill_sleeping">Sleeping</string>
+    <string name="onekuku_action_restore">Restore calling</string>
+    <string name="onekuku_action_restore_sub">Wake OneKuku and restore configuration</string>
 
-    <string name="oneku_title_running">Restoring call settings</string>
-    <string name="oneku_subtitle_running">OneKu core service is working</string>
-    <string name="oneku_detail_running">Restoring IMS, VoWiFi, 5G and related settings</string>
-    <string name="oneku_pill_running">Working</string>
-    <string name="oneku_action_running">Restoring…</string>
+    <string name="onekuku_title_running">Restoring call settings</string>
+    <string name="onekuku_subtitle_running">OneKuku core service is working</string>
+    <string name="onekuku_detail_running">Restoring IMS, VoWiFi, 5G and related settings</string>
+    <string name="onekuku_pill_running">Working</string>
+    <string name="onekuku_action_running">Restoring…</string>
 
-    <string name="oneku_subtitle_complete">Call settings restored</string>
-    <string name="oneku_detail_complete">OneKu finished and went back to sleep</string>
-    <string name="oneku_action_check">Check OneKu status</string>
+    <string name="onekuku_subtitle_complete">Call settings restored</string>
+    <string name="onekuku_detail_complete">OneKuku finished and went back to sleep</string>
+    <string name="onekuku_action_check">Check OneKuku status</string>
 
-    <string name="oneku_stage_standby">Standby</string>
-    <string name="oneku_stage_activate">Active</string>
-    <string name="oneku_stage_execute">Run</string>
-    <string name="oneku_stage_done">Done</string>
+    <string name="onekuku_stage_standby">Standby</string>
+    <string name="onekuku_stage_activate">Active</string>
+    <string name="onekuku_stage_execute">Run</string>
+    <string name="onekuku_stage_done">Done</string>
 
-    <string name="oneku_msg_need_prepare">Finish preparing the OneKu core service first</string>
-    <string name="oneku_msg_already_active">OneKu core service is already active</string>
-    <string name="oneku_msg_permission_requested">OneKu activation requested</string>
-    <string name="oneku_msg_activated">OneKu core service activated</string>
-    <string name="oneku_msg_activation_denied">OneKu activation was not granted</string>
-    <string name="oneku_msg_need_active">Activate OneKu core service first</string>
-    <string name="oneku_msg_need_sim">Select an available SIM first</string>
-    <string name="oneku_msg_status_ok">OneKu looks healthy and is sleeping</string>
-    <string name="oneku_busy_restore">Restoring call settings</string>
+    <string name="onekuku_msg_need_prepare">Finish preparing the OneKuku core service first</string>
+    <string name="onekuku_msg_already_active">OneKuku core service is already active</string>
+    <string name="onekuku_msg_permission_requested">OneKuku activation requested</string>
+    <string name="onekuku_msg_activated">OneKuku core service activated</string>
+    <string name="onekuku_msg_activation_denied">OneKuku activation was not granted</string>
+    <string name="onekuku_msg_need_active">Activate OneKuku core service first</string>
+    <string name="onekuku_msg_need_sim">Select an available SIM first</string>
+    <string name="onekuku_msg_status_ok">OneKuku looks healthy and is sleeping</string>
+    <string name="onekuku_busy_restore">Restoring call settings</string>
     <string name="home_quick_actions">Quick start</string>
     <string name="home_quick_actions_sub">Check device status before applying carrier recommendations</string>
     <string name="action_refresh_sub">Reload permission and SIM status</string>
