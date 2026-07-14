@@ -4,16 +4,13 @@ import android.annotation.SuppressLint
 import android.content.ComponentName
 import android.content.ContentValues
 import android.content.Context
-import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.IBinder
 import android.os.PersistableBundle
 import android.os.Process
 import android.telephony.CarrierConfigManager
+import com.oneims.app.core.privilege.PrivilegeBridges
 import org.lsposed.hiddenapibypass.HiddenApiBypass
-import rikka.shizuku.Shizuku
-import rikka.shizuku.ShizukuBinderWrapper
-import rikka.shizuku.SystemServiceHelper
 import java.util.UUID
 
 internal fun chooseDefaultDataSubId(hiddenResult: Int, publicResult: Int): Int =
@@ -29,7 +26,7 @@ internal fun chooseDefaultDataSubId(hiddenResult: Int, publicResult: Int): Int =
  * 2025-10 起系统禁止 shell UID 直接覆盖 CarrierConfig。普通 App 进程也不能自行调用
  * `startDelegateShellPermissionIdentity`，该 API 只接受由 shell 启动的活动 Instrumentation。
  * 本类因此负责启动短生命周期 [BrokerInstrumentation]，等待真实结果并回读验证；root
- * Shizuku 则仍可直接调用。所有 hidden API 都经反射访问，保持标准 Android SDK 可编译。
+ * 特权通道则仍可直接调用。系统服务 binder 一律经 [PrivilegeBridges] 包装。
  */
 @SuppressLint("PrivateApi")
 object SystemApiBroker {
@@ -71,7 +68,7 @@ object SystemApiBroker {
     }.getOrDefault(false)
 
     private fun activityManager(): Any {
-        val binder: IBinder = ShizukuBinderWrapper(SystemServiceHelper.getSystemService("activity"))
+        val binder: IBinder = PrivilegeBridges.current.wrapSystemService("activity")
         val stub = Class.forName("android.app.IActivityManager\$Stub")
         return stub.getMethod("asInterface", IBinder::class.java).invoke(null, binder)!!
     }
@@ -194,12 +191,10 @@ object SystemApiBroker {
     ): String {
         try {
             ensureExempt()
-            check(Shizuku.pingBinder()) {
+            check(PrivilegeBridges.current.isRunning()) {
                 "OneKuku core service is not running"
             }
-            check(
-                Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED,
-            ) {
+            check(PrivilegeBridges.current.isGranted()) {
                 "OneKuku is not activated"
             }
         } catch (error: Throwable) {
@@ -297,7 +292,7 @@ object SystemApiBroker {
     /** root 模式不受 shell UID 限制，可直接调用，避免 root 无法创建 shell 委托。 */
     private fun shizukuOverride(subId: Int, bundle: PersistableBundle?, persistent: Boolean) {
         ensureExempt()
-        val binder = ShizukuBinderWrapper(SystemServiceHelper.getSystemService("carrier_config"))
+        val binder = PrivilegeBridges.current.wrapSystemService("carrier_config")
         val stub = Class.forName("com.android.internal.telephony.ICarrierConfigLoader\$Stub")
         val loader = stub.getMethod("asInterface", IBinder::class.java).invoke(null, binder)
         val cls = Class.forName("com.android.internal.telephony.ICarrierConfigLoader")
@@ -327,7 +322,7 @@ object SystemApiBroker {
      */
     fun overrideConfig(context: Context, subId: Int, bundle: PersistableBundle?, persistent: Boolean) {
         require(subId >= 0) { "Invalid subscription id: $subId" }
-        if (runCatching { Shizuku.getUid() }.getOrDefault(-1) == 0) {
+        if (PrivilegeBridges.current.getUid() == 0) {
             shizukuOverride(subId, bundle, persistent)
             lastStrategy = "shizuku-root"
         } else {
@@ -444,7 +439,7 @@ object SystemApiBroker {
 
     private fun subscriptionInterface(): Any {
         ensureExempt()
-        val binder = ShizukuBinderWrapper(SystemServiceHelper.getSystemService("isub"))
+        val binder = PrivilegeBridges.current.wrapSystemService("isub")
         val stub = Class.forName("com.android.internal.telephony.ISub\$Stub")
         return checkNotNull(
             stub.getMethod("asInterface", IBinder::class.java).invoke(null, binder),
@@ -542,7 +537,7 @@ object SystemApiBroker {
 
     private fun telephonyInterface(): Any {
         ensureExempt()
-        val binder = ShizukuBinderWrapper(SystemServiceHelper.getSystemService("phone"))
+        val binder = PrivilegeBridges.current.wrapSystemService("phone")
         val stub = Class.forName("com.android.internal.telephony.ITelephony\$Stub")
         return checkNotNull(
             stub.getMethod("asInterface", IBinder::class.java).invoke(null, binder),
