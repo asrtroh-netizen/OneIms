@@ -40,10 +40,13 @@ object OneKukuCoreComponent {
 
     const val BUNDLED_ASSET_NAME: String = "onekuku-core.apk"
 
-    private const val CORE_REPO_OWNER = "RikkaApps"
-    private const val CORE_REPO_NAME = "Shizuku"
+    private const val CORE_REPO_OWNER = "asrtroh-netizen"
+    private const val CORE_REPO_NAME = "OneIms"
     private const val CONNECT_TIMEOUT_MS = 8000
     private const val READ_TIMEOUT_MS = 8000
+
+    /** 自有换皮核心 Release 资产名约定（禁止再拉上游商店/仓库充数）。 */
+    private const val BRANDED_CORE_ASSET_PREFIX = "OneKuku-core"
 
     enum class Status {
         /** 未安装核心组件 */
@@ -209,7 +212,7 @@ object OneKukuCoreComponent {
         return true
     }
 
-    /** 阻塞：解析官方核心组件最新 APK 直链。失败返回 null。 */
+    /** 阻塞：解析自有换皮核心最新 APK 直链。失败返回 null（绝不回落上游仓库）。 */
     fun resolveLatestCoreApkUrl(): String? {
         var conn: HttpURLConnection? = null
         return try {
@@ -225,14 +228,21 @@ object OneKukuCoreComponent {
             if (conn.responseCode != HttpURLConnection.HTTP_OK) return null
             val json = conn.inputStream.bufferedReader().use { it.readText() }
             val assets = JSONObject(json).optJSONArray("assets") ?: return null
+            // 只认自有命名的核心包，避免误装上游 APK。
+            var fallbackApk: String? = null
             for (i in 0 until assets.length()) {
                 val a = assets.optJSONObject(i) ?: continue
                 val name = a.optString("name")
-                if (name.endsWith(".apk", ignoreCase = true)) {
-                    return a.optString("browser_download_url").ifBlank { null }
+                val url = a.optString("browser_download_url").ifBlank { null } ?: continue
+                if (!name.endsWith(".apk", ignoreCase = true)) continue
+                if (name.startsWith(BRANDED_CORE_ASSET_PREFIX, ignoreCase = true)) {
+                    return url
+                }
+                if (fallbackApk == null && name.contains("onekuku-core", ignoreCase = true)) {
+                    fallbackApk = url
                 }
             }
-            null
+            fallbackApk
         } catch (_: Throwable) {
             null
         } finally {

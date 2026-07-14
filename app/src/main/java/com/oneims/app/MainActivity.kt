@@ -409,7 +409,7 @@ private fun AppRoot(
         }
     }
 
-    /** 方案 A+B：内置/下载核心；已装则优先原生内嵌 ADB 拉起，失败再回落剪贴板引导。 */
+    /** 方案 A+B：内置/下载核心；已装则立刻弹六位码窗，再尝试内嵌 ADB 拉起。 */
     fun prepareOneKukuCore() {
         if (!OneKukuCoreComponent.isInstalled(context)) {
             when (val result = OneKukuCoreComponent.prepare(context)) {
@@ -442,18 +442,19 @@ private fun AppRoot(
             }
             return
         }
+        // 立刻弹窗：热点/mDNS 可能要数秒，不能等失败后才让用户看见输入框
+        adbPairCode = ""
+        adbPairDialogVisible = true
         scope.launch {
             publish(context.getString(R.string.onekuku_msg_embedded_adb_starting))
             when (
                 val outcome = OneKukuEmbeddedAdbActivator.activate(context, pairingCode = null)
             ) {
                 is OneKukuEmbeddedAdbActivator.Outcome.NeedPairingCode -> {
-                    // 先弹窗让用户看见，再由弹窗内按钮跳系统设置——避免一跳走就「没让输入六位码」
-                    adbPairCode = ""
-                    adbPairDialogVisible = true
                     publish(context.getString(R.string.onekuku_msg_need_pairing_code))
                 }
                 is OneKukuEmbeddedAdbActivator.Outcome.Success -> {
+                    adbPairDialogVisible = false
                     shizukuRunning = OneKukuManager.isRunning()
                     if (OneKukuManager.isRunning() && !OneKukuManager.isGranted()) {
                         OneKukuManager.requestActivation()
@@ -463,11 +464,15 @@ private fun AppRoot(
                     }
                 }
                 is OneKukuEmbeddedAdbActivator.Outcome.Failed -> {
-                    // 回落：打开无线调试 + 复制指引
-                    OneKukuCoreComponent.prepare(context)
+                    // 保留弹窗；只复制指引，禁止自动跳设置把输入框盖掉
+                    ShizukuSetupHelper.copyToClipboard(
+                        context,
+                        context.getString(R.string.app_name),
+                        OneKukuCoreComponent.guidedActivationScript(context),
+                    )
                     publish(
                         context.getString(
-                            R.string.onekuku_msg_embedded_adb_fallback,
+                            R.string.onekuku_msg_embedded_adb_fallback_keep_dialog,
                             outcome.reason,
                         ),
                     )

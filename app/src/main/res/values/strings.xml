@@ -43,17 +43,18 @@
     <string name="onekuku_msg_installing_bundled_core">正在安装内置 OneKuku 核心组件，请确认安装</string>
     <string name="onekuku_msg_downloading_core">正在解析并下载 OneKuku 核心组件…</string>
     <string name="onekuku_msg_core_download_started">已开始下载 OneKuku 核心组件，完成后请安装</string>
-    <string name="onekuku_msg_core_download_failed">核心组件下载失败，请检查网络后重试，或将 onekuku-core.apk 放入 assets 后重打包</string>
+    <string name="onekuku_msg_core_download_failed">未找到自有 OneKuku 核心包。请使用内置换皮 APK，或等待官方 OneKuku-core Release；不会再下载上游组件充数</string>
+    <string name="onekuku_msg_core_missing_hint">还没装 OneKuku 核心组件。请安装内置的 OneKuku 核心（不是上游通道 App）。</string>
     <string name="onekuku_msg_embedded_adb_starting">正在用内嵌 ADB 拉起 OneKuku 核心…</string>
     <string name="onekuku_msg_embedded_adb_ok">内嵌 ADB 已发出启动指令，请确认核心就绪后授权</string>
     <string name="onekuku_msg_embedded_adb_fallback">内嵌 ADB 未成功（%1$s），已回落为无线调试 + 命令指引</string>
+    <string name="onekuku_msg_embedded_adb_fallback_keep_dialog">内嵌 ADB 未成功（%1$s）。配对窗已保留：请到系统无线调试点「使用配对码配对设备」，填入 6 位数字后点配对；指引已复制到剪贴板</string>
     <string name="onekuku_msg_need_pairing_code">请在系统无线调试里点「使用配对码配对设备」，把 6 位数字填进弹窗</string>
     <string name="onekuku_adb_pair_title">输入无线调试配对码</string>
     <string name="onekuku_adb_pair_body">六位码不在 OneIms 里生成。请打开系统「无线调试」→「使用配对码配对设备」，把屏幕上的 6 位数字填到下面，再点配对并启动。</string>
     <string name="onekuku_adb_pair_hint">6 位配对码</string>
     <string name="onekuku_adb_pair_confirm">配对并启动</string>
     <string name="onekuku_adb_pair_open_wireless">打开系统无线调试</string>
-    <string name="onekuku_msg_core_missing_hint">还没装 OneKuku 核心组件。请先完成安装提示，装好后再点「启动核心」。</string>
 
     <!-- 能力页 -->
     <string name="cap_group_radio_title">运营商能力与 5G</string>

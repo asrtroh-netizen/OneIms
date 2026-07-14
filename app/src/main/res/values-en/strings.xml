@@ -46,6 +46,7 @@
     <string name="onekuku_msg_embedded_adb_starting">Starting OneKuku core via embedded ADB…</string>
     <string name="onekuku_msg_embedded_adb_ok">Embedded ADB issued start; confirm core is ready then authorize</string>
     <string name="onekuku_msg_embedded_adb_fallback">Embedded ADB failed (%1$s); fell back to wireless-debug + command guide</string>
+    <string name="onekuku_msg_embedded_adb_fallback_keep_dialog">Embedded ADB failed (%1$s). Pairing dialog kept open: in Wireless debugging tap Pair device with pairing code, enter the 6 digits, then confirm. Guide copied to clipboard</string>
     <string name="onekuku_msg_need_pairing_code">In Wireless debugging, tap Pair device with pairing code and enter the 6 digits here</string>
     <string name="onekuku_adb_pair_title">Enter wireless-debug pairing code</string>
     <string name="onekuku_adb_pair_body">OneIms does not generate the 6-digit code. Open system Wireless debugging → Pair device with pairing code, then type the digits below and tap Pair and start.</string>
