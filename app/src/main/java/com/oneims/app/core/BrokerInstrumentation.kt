@@ -137,6 +137,7 @@ class BrokerInstrumentation : Instrumentation() {
                     context = context,
                     subId = subId,
                     overrides = arguments.parcelable(BrokerProtocol.ARG_OVERRIDES),
+                    persistent = arguments.getInt(BrokerProtocol.ARG_PERSISTENT, 0) != 0,
                 )
                 "ok"
             }
@@ -176,6 +177,7 @@ class BrokerInstrumentation : Instrumentation() {
         context: Context,
         subId: Int,
         overrides: PersistableBundle?,
+        persistent: Boolean,
     ) {
         val manager = context.getSystemService(CarrierConfigManager::class.java)
             ?: error("CarrierConfigManager is unavailable")
@@ -187,13 +189,13 @@ class BrokerInstrumentation : Instrumentation() {
                 method.parameterTypes[1] == PersistableBundle::class.java
         }
         if (threeArgumentMethod != null) {
-            // 部分预览版把 boolean persistent 改成 int overrideType；0 均表示非持久覆盖。
-            val nonPersistent = when (threeArgumentMethod.parameterTypes[2]) {
-                Boolean::class.javaPrimitiveType -> false
-                Int::class.javaPrimitiveType -> 0
+            // 部分预览版把 boolean persistent 改成 int overrideType；1 表示持久覆盖。
+            val overrideMode = when (threeArgumentMethod.parameterTypes[2]) {
+                Boolean::class.javaPrimitiveType -> persistent
+                Int::class.javaPrimitiveType -> if (persistent) 1 else 0
                 else -> error("Unsupported overrideConfig third parameter")
             }
-            threeArgumentMethod.invoke(manager, subId, overrides, nonPersistent)
+            threeArgumentMethod.invoke(manager, subId, overrides, overrideMode)
             return
         }
 

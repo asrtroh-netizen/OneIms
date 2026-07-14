@@ -123,7 +123,12 @@ object PixelImsCompat {
                 putBoolean(CarrierConfigKeys.ENHANCED_4G_LTE_ON_BY_DEFAULT, options.enhanced4g)
                 putBoolean(CarrierConfigKeys.HIDE_ENHANCED_4G_LTE, !options.enhanced4g)
             }
-            SystemApiBroker.overrideConfig(context, subId, overrides, false)
+            run {
+                val write = CarrierConfigOverrideWriter.applyPersistentOverride(
+                    context, subId, overrides, reason = "PixelImsCompat",
+                )
+                check(write.success) { write.message }
+            }
             rollbackIfCommunicationDegraded(context, subId, before)?.let { return it }
             ConfigStore.saveAdvancedOptions(context, options)
             ConfigResult(true, context.getString(R.string.msg_pixel_ims_options_applied))
@@ -163,7 +168,12 @@ object PixelImsCompat {
             val before = SafetyGuard.healthCheck(context, subId)
             val overrides = PersistableBundle()
             putTypedValue(overrides, key, current.get(key), rawValue)
-            SystemApiBroker.overrideConfig(context, subId, overrides, false)
+            run {
+                val write = CarrierConfigOverrideWriter.applyPersistentOverride(
+                    context, subId, overrides, reason = "PixelImsCompat",
+                )
+                check(write.success) { write.message }
+            }
             rollbackIfCommunicationDegraded(context, subId, before)?.let { return it }
             ConfigResult(true, context.getString(R.string.msg_expert_applied, key))
         } catch (error: Throwable) {

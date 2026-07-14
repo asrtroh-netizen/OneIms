@@ -63,12 +63,19 @@ object SafetyGuard {
 
     /**
      * 一键还原：清空指定 SIM 的所有 CarrierConfig 覆盖，恢复运营商默认。
-     * 用 overrideConfig(subId, null, false) 实现，是本工具的应急保命锁。
+     * 经 [CarrierConfigOverrideWriter] 清空 persistent override，是本工具的应急保命锁。
      */
     fun restoreDefaults(context: Context, subId: Int): ConfigResult {
         return try {
-            // overrideConfig(bundle=null) 即清空覆盖；内部会选择 Instrumentation 或 root 直调。
-            SystemApiBroker.overrideConfig(context, subId, null, false)
+            val clear = CarrierConfigOverrideWriter.clearPersistentOverride(
+                context = context,
+                subId = subId,
+                keys = emptyList(),
+                reason = "restoreDefaults",
+            )
+            if (!clear.success) {
+                return ConfigResult(false, clear.message)
+            }
             val displayOwnershipCleanup = runCatching {
                 SystemDisplayOverrideManager.onAllOverridesCleared(context, subId)
             }

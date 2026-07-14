@@ -17,7 +17,7 @@ import com.oneims.app.model.WfcMode
  * OneIms 铁律贯穿：
  *   - 核心能力只做加法，绝不改首选网络类型、绝不禁蜂窝；
  *   - APN 修复是唯一会调整既有行的路径，必须由用户确认并由代理读回/回滚；
- *   - CarrierConfig 一律 persistent=false（重启即回滚，配错也能自愈）；
+ *   - CarrierConfig 经 [CarrierConfigOverrideWriter] 写当前 selectedSubId，优先 persistent=true；
  *   - [applyAll] 内置「写前 / 写后健康检查」，若基本通信（电话/数据/短信）被搞挂，
  *     立即自动 [SafetyGuard.restoreDefaults] 回滚，宁可不开 IMS 也要保命。
  */
@@ -74,9 +74,18 @@ object ImsController {
             if (enableVonr) {
                 CarrierConfigKeys.vonrBooleanTrueKeys.forEach { bundle.putBoolean(it, true) }
             }
-            // persistent=false：兼容新补丁 + 配错重启自愈
-            SystemApiBroker.overrideConfig(context, subId, bundle, false)
-            detail["carrier_config_override"] = true
+            // OneKuku：persistent override + 同 subId 回读；单项失败记入 detail
+            val write = CarrierConfigOverrideWriter.applyPersistentOverride(
+                context = context,
+                subId = subId,
+                values = bundle,
+                reason = "applyAll",
+            )
+            detail["carrier_config_override"] = write.success
+            if (!write.success && write.detail.values.none { it }) {
+                throw IllegalStateException(write.message)
+            }
+            write.detail.forEach { (key, ok) -> detail["cc:$key"] = ok }
 
             if (enableVolte) {
                 detail["provision_volte"] = runCatching {
@@ -229,11 +238,22 @@ object ImsController {
                     )
                 }
             }
-            SystemApiBroker.overrideConfig(context, subId, b, false)
+            if (b.keySet().isEmpty()) {
+                return ConfigResult(false, context.getString(R.string.msg_none))
+            }
+            val write = CarrierConfigOverrideWriter.applyPersistentOverride(
+                context = context,
+                subId = subId,
+                values = b,
+                reason = "applyCarrierExtras",
+            )
+            if (!write.success) {
+                return ConfigResult(false, write.message)
+            }
             val caps = listOfNotNull(
                 if (vilte) "ViLTE" else null, if (ut) "UT" else null, if (crossSim) "Cross-SIM" else null,
             ).joinToString("/").ifEmpty { context.getString(R.string.msg_none) }
-            ConfigResult(true, context.getString(R.string.msg_extras_on, caps))
+            ConfigResult(true, "${write.targetLabel}\n${context.getString(R.string.msg_extras_on, caps)}")
         } catch (e: Throwable) {
             ConfigResult(false, context.getString(R.string.msg_write_failed, OperationErrors.describe(e)))
         }
@@ -250,9 +270,20 @@ object ImsController {
             val b = PersistableBundle().apply {
                 if (enableSaNsa) putIntArray(CarrierConfigKeys.NR_AVAILABILITIES_INT_ARRAY, intArrayOf(1, 2))
             }
-            SystemApiBroker.overrideConfig(context, subId, b, false)
-            val nsa = if (enableSaNsa) context.getString(R.string.msg_5g_nsa_sa) else ""
-            ConfigResult(true, context.getString(R.string.msg_5g, nsa))
+            if (!enableSaNsa || b.keySet().isEmpty()) {
+                return ConfigResult(true, context.getString(R.string.msg_5g, ""))
+            }
+            val write = CarrierConfigOverrideWriter.applyPersistentOverride(
+                context = context,
+                subId = subId,
+                values = b,
+                reason = "apply5g",
+            )
+            if (!write.success) {
+                return ConfigResult(false, write.message)
+            }
+            val nsa = context.getString(R.string.msg_5g_nsa_sa)
+            ConfigResult(true, "${write.targetLabel}\n${context.getString(R.string.msg_5g, nsa)}")
         } catch (e: Throwable) {
             ConfigResult(false, context.getString(R.string.msg_write_failed, OperationErrors.describe(e)))
         }
@@ -462,8 +493,20 @@ object ImsController {
                 applied += context.getString(R.string.identity_ims_ua)
             }
             if (applied.isEmpty()) return ConfigResult(false, context.getString(R.string.identity_none))
-            SystemApiBroker.overrideConfig(context, subId, b, false)
-            val readback = SystemApiBroker.getCarrierConfig(context, subId)
+            val write = CarrierConfigOverrideWriter.applyPersistentOverride(
+                context = context,
+                subId = subId,
+                values = b,
+                reason = "applyIdentityOverride",
+            )
+            if (!write.success) {
+                return ConfigResult(false, write.message)
+            }
+            val readback = CarrierConfigOverrideWriter.readConfigForSubId(
+                context,
+                subId,
+                b.keySet(),
+            )
             if (readback == null) {
                 return ConfigResult(
                     false,
@@ -501,16 +544,25 @@ object ImsController {
                     )
                 }
             }
-            val targetLabel = sim?.let {
-                context.getString(
-                    R.string.identity_target_applied,
-                    it.slotIndex + 1,
-                    formatCarrierShortName(it.carrierName),
-                    subId,
-                    applied.joinToString("、"),
-                )
+            val targetLabel = write.targetLabel.ifBlank {
+                sim?.let {
+                    context.getString(
+                        R.string.identity_target_applied,
+                        it.slotIndex + 1,
+                        formatCarrierShortName(it.carrierName),
+                        subId,
+                        applied.joinToString("、"),
+                    )
+                }
             } ?: context.getString(R.string.identity_applied, applied.joinToString("、"))
-            ConfigResult(true, targetLabel)
+            ConfigResult(
+                true,
+                if (targetLabel.contains(applied.first())) {
+                    targetLabel
+                } else {
+                    "$targetLabel · ${applied.joinToString("、")}"
+                },
+            )
         } catch (e: Throwable) {
             ConfigResult(false, context.getString(R.string.identity_failed, OperationErrors.describe(e)))
         }
@@ -523,8 +575,16 @@ object ImsController {
                 putBoolean(CarrierConfigKeys.CARRIER_NAME_OVERRIDE, false)
                 putString(CarrierConfigKeys.CARRIER_NAME_STRING, "")
             }
-            SystemApiBroker.overrideConfig(context, subId, bundle, false)
-            ConfigResult(true, context.getString(R.string.identity_name_restored))
+            val write = CarrierConfigOverrideWriter.applyPersistentOverride(
+                context = context,
+                subId = subId,
+                values = bundle,
+                reason = "clearCarrierNameOverride",
+            )
+            if (!write.success) {
+                return ConfigResult(false, write.message)
+            }
+            ConfigResult(true, "${write.targetLabel}\n${context.getString(R.string.identity_name_restored)}")
         } catch (e: Throwable) {
             ConfigResult(
                 false,

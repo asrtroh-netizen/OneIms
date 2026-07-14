@@ -48,7 +48,12 @@ object SimCountryIsoManager {
             val bundle = PersistableBundle().apply {
                 putString(CarrierConfigKeys.SIM_COUNTRY_ISO_OVERRIDE, iso)
             }
-            SystemApiBroker.overrideConfig(context, subId, bundle, persistent = false)
+            run {
+                val write = CarrierConfigOverrideWriter.applyPersistentOverride(
+                    context, subId, bundle, reason = "SimCountryIso",
+                )
+                check(write.success) { write.message }
+            }
             val readback = readCurrent(context, subId)
             if (readback != null && !readback.equals(iso, ignoreCase = true)) {
                 return ConfigResult(
@@ -76,7 +81,12 @@ object SimCountryIsoManager {
             val bundle = PersistableBundle().apply {
                 putString(CarrierConfigKeys.SIM_COUNTRY_ISO_OVERRIDE, "")
             }
-            SystemApiBroker.overrideConfig(context, subId, bundle, persistent = false)
+            run {
+                val write = CarrierConfigOverrideWriter.applyPersistentOverride(
+                    context, subId, bundle, reason = "SimCountryIso",
+                )
+                check(write.success) { write.message }
+            }
             ConfigResult(true, context.getString(R.string.msg_sim_country_cleared))
         } catch (e: Throwable) {
             ConfigResult(

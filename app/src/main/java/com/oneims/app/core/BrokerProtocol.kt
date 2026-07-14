@@ -26,6 +26,8 @@ internal object BrokerProtocol {
     const val ARG_REQUEST_ID = "broker_request_id"
     const val ARG_SUB_ID = "broker_sub_id"
     const val ARG_OVERRIDES = "broker_overrides"
+    /** 1 = persistent override，0 = non-persistent（兼容旧调用方）。 */
+    const val ARG_PERSISTENT = "broker_persistent"
     const val ARG_SETTING_KEY = "broker_setting_key"
     const val ARG_SETTING_VALUE = "broker_setting_value"
     const val ARG_CONTENT_VALUES = "broker_content_values"

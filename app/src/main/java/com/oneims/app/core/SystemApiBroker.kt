@@ -320,10 +320,12 @@ object SystemApiBroker {
         m2.invoke(loader, subId, bundle)
     }
 
-    /** bundle=null 表示清空覆盖；非 root 一律走活动 Instrumentation，并在返回前验证目标键。 */
+    /**
+     * bundle=null 表示清空覆盖；非 root 一律走活动 Instrumentation，并在返回前验证目标键。
+     * OneKuku 业务写入应优先经 [CarrierConfigOverrideWriter]（默认 persistent=true）。
+     */
     fun overrideConfig(context: Context, subId: Int, bundle: PersistableBundle?, persistent: Boolean) {
         require(subId >= 0) { "Invalid subscription id: $subId" }
-        require(!persistent) { "Persistent carrier overrides are not allowed on current Android patches" }
         if (runCatching { Shizuku.getUid() }.getOrDefault(-1) == 0) {
             shizukuOverride(subId, bundle, persistent)
             lastStrategy = "shizuku-root"
@@ -332,6 +334,7 @@ object SystemApiBroker {
             executeBroker(context, BrokerProtocol.OP_OVERRIDE_CONFIG) {
                 putInt(BrokerProtocol.ARG_SUB_ID, subId)
                 putParcelable(BrokerProtocol.ARG_OVERRIDES, bundle)
+                putInt(BrokerProtocol.ARG_PERSISTENT, if (persistent) 1 else 0)
             }
         }
         if (bundle != null) {

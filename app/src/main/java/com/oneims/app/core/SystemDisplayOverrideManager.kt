@@ -224,9 +224,11 @@ object SystemDisplayOverrideManager {
         val overrides = PersistableBundle().apply {
             putString(CarrierConfigKeys.FIVE_G_ICON_CONFIGURATION_STRING, validated)
         }
-        SystemApiBroker.overrideConfig(context, subId, overrides, persistent = false)
-        check(verify5GIconConfig(context, subId, validated)) {
-            "5G icon CarrierConfig readback mismatch for subId=$subId"
+        val write5g = CarrierConfigOverrideWriter.applyPersistentOverride(
+            context, subId, overrides, reason = "apply5GIconConfig",
+        )
+        check(write5g.success && verify5GIconConfig(context, subId, validated)) {
+            write5g.message.ifBlank { "5G icon CarrierConfig readback mismatch for subId=$subId" }
         }
         confirmFiveGApplied(context, subId, validated)
         return validated
@@ -252,7 +254,10 @@ object SystemDisplayOverrideManager {
         val overrides = PersistableBundle().apply {
             putString(CarrierConfigKeys.FIVE_G_ICON_CONFIGURATION_STRING, baseline)
         }
-        SystemApiBroker.overrideConfig(context, subId, overrides, persistent = false)
+        val writeClear = CarrierConfigOverrideWriter.applyPersistentOverride(
+            context, subId, overrides, reason = "clear5GIconConfig",
+        )
+        check(writeClear.success) { writeClear.message }
         check(verify5GIconConfig(context, subId, baseline)) {
             "5G icon baseline readback mismatch for subId=$subId"
         }
@@ -399,12 +404,13 @@ object SystemDisplayOverrideManager {
             }
         }
         recordSignalIntent(context, subId, preset)
-        SystemApiBroker.overrideConfig(
+        val writeSignal = CarrierConfigOverrideWriter.applyPersistentOverride(
             context,
             subId,
             preset.toPersistableBundle(),
-            persistent = false,
+            reason = "applySignalStrengthPreset",
         )
+        check(writeSignal.success) { writeSignal.message }
         check(verifySignalBarConfig(context, subId, preset)) {
             "Signal threshold CarrierConfig readback mismatch for subId=$subId"
         }
@@ -597,12 +603,13 @@ object SystemDisplayOverrideManager {
             clearSignalOwnership(context, subId)
             return false
         }
-        SystemApiBroker.overrideConfig(
+        val writeBaseline = CarrierConfigOverrideWriter.applyPersistentOverride(
             context,
             subId,
             baseline.toPersistableBundle(),
-            persistent = false,
+            reason = "restoreSignalBaseline",
         )
+        check(writeBaseline.success) { writeBaseline.message }
         check(verifySignalOwnedConfig(context, subId, baseline)) {
             "Signal baseline readback mismatch for subId=$subId"
         }

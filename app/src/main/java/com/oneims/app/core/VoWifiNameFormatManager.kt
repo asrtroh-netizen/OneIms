@@ -200,7 +200,12 @@ object VoWifiNameFormatManager {
                 putString(CarrierConfigKeys.CARRIER_NAME_STRING, carrier.displayName)
             }
         }
-        SystemApiBroker.overrideConfig(context, subId, overrides, persistent = false)
+        run {
+            val write = CarrierConfigOverrideWriter.applyPersistentOverride(
+                context, subId, overrides, reason = "VoWifiNameFormat",
+            )
+            check(write.success) { write.message }
+        }
 
         check(readCurrentFormat(context, subId) == desiredFormat) {
             "VoWiFi format CarrierConfig readback mismatch for subId=$subId"
@@ -267,7 +272,12 @@ object VoWifiNameFormatManager {
                 )
             }
         }
-        SystemApiBroker.overrideConfig(context, subId, overrides, persistent = false)
+        run {
+            val write = CarrierConfigOverrideWriter.applyPersistentOverride(
+                context, subId, overrides, reason = "VoWifiNameFormat",
+            )
+            check(write.success) { write.message }
+        }
         if (restoreFormat) {
             check(readCurrentFormat(context, subId) == baselineFormat) {
                 "VoWiFi format baseline readback mismatch for subId=$subId"
