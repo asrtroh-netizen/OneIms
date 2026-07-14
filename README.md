@@ -16,7 +16,7 @@
 
 ### ⬇️ 下载 APK（最新）
 
-**[OneIms 2.0.11 · GitHub Releases](https://github.com/asrtroh-netizen/OneIms/releases/tag/v2.0.11)**
+**[OneIms 2.0.12 · GitHub Releases](https://github.com/asrtroh-netizen/OneIms/releases/tag/v2.0.12)**
 
 > 本仓库 **只提供 README + APK 发布**，**不开放源代码**。  
 > 需要交流 / 反馈请走 Telegram，别来仓库里翻源码啦～
@@ -114,7 +114,7 @@ OneIms 更想回答：
 
 * 🔄 控制中心 / 应用内 **切换默认数据卡**（只切数据，不拿通信当玩具）
 * 📌 快捷设置磁贴：IMS 状态、VoLTE 重应用等
-* ❤️ 赞赏页：本地收款码，不接支付中台
+* ❤️ 支持作者：微信赞助码（本地展示，完全自愿）
 * 🌐 中 / 英双语文案，跟随系统语言
 * 🎨 Material 3 + 动态取色，Pixel Settings 既视感
 
@@ -170,8 +170,8 @@ OneIms 的应对：
 * 短生命周期 **Instrumentation** 接收 shell 权限委托
 * **最小权限**委托 + 写入后回读
 * 失败原因尽量讲人话（完整细节进日志）
-* 兼容部分预览 / OEM 上 `stopDelegateShellPermissionIdentity` 反射差异  
-  （你的机子正常、别人的预览包翻车——很常见，不是玄学）
+* 兼容 Android 17 / 部分 OEM 上 `stopDelegateShellPermissionIdentity` 反射差异  
+  （`HiddenApiBypass 6.1` + 清理失败不冒充写入失败；机型预览包翻车很常见，不是玄学）
 
 目标：
 
