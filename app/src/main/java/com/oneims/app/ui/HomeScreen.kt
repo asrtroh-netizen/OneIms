@@ -68,6 +68,7 @@ fun HomeScreen(
                 sims = state.sims,
                 selectedSubId = state.selectedSubId,
                 deviceInfo = state.deviceInfo,
+                detailOverride = state.oneKukuDetailOverride,
             )
         }
 

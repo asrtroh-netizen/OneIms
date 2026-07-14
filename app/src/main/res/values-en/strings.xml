@@ -401,6 +401,12 @@
     <string name="onekuku_snapshot_meta">Snapshot binding</string>
     <string name="onekuku_snapshot_meta_value">SIM %1$d · %2$s · hash=%3$s</string>
     <string name="onekuku_restore_no_matching_sim">No SIM matched the saved snapshot</string>
+
+    <string name="onekuku_detail_no_snapshot">No restore snapshot yet. Apply call settings once first.</string>
+    <string name="onekuku_boot_channel">Call config restore</string>
+    <string name="onekuku_boot_channel_desc">Low-priority alerts for post-reboot call config checks</string>
+    <string name="onekuku_boot_notif_title">OneIMS call settings need restore</string>
+    <string name="onekuku_boot_notif_text">Tap to restore your pre-reboot settings</string>
     <string name="onekuku_value_on">On</string>
     <string name="onekuku_value_off">Off</string>
     <string name="onekuku_value_unset">Not set</string>

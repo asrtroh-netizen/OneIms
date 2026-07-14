@@ -122,7 +122,13 @@
             </intent-filter>
         </service>
 
-        <!-- 开机自启（用户开启守护后生效） -->
+        <!-- OneKuku 开机自动检查/恢复（非前台，短生命周期） -->
+        <service
+            android:name=".core.OneKukuBootRestoreService"
+            android:enabled="true"
+            android:exported="false" />
+
+        <!-- 开机/解锁/SIM 变化 → 调度自动检查 -->
         <receiver
             android:name=".core.BootReceiver"
             android:enabled="true"
@@ -130,6 +136,8 @@
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
+                <action android:name="android.intent.action.USER_UNLOCKED" />
+                <action android:name="android.intent.action.SIM_STATE_CHANGED" />
             </intent-filter>
         </receiver>
 

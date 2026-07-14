@@ -14,6 +14,20 @@ import com.oneims.app.model.WfcMode
  */
 object OneKukuRestoreManager {
     private const val TAG = "OneIMS-Restore"
+    private const val ITEM_MAX_ATTEMPTS = 2
+
+    private fun retryStep(block: () -> ConfigResult): Boolean {
+        var ok = false
+        repeat(ITEM_MAX_ATTEMPTS) { attempt ->
+            val result = runCatching(block).getOrElse {
+                ConfigResult(false, it.message ?: "error")
+            }
+            ok = result.success
+            if (ok) return true
+            Log.w(TAG, "step retry attempt=${attempt + 1} msg=${result.message}")
+        }
+        return ok
+    }
 
     fun restoreAll(context: Context, subId: Int): OneKukuCommandResult {
         OneKukuHiddenRunner.markExecuting()
@@ -43,14 +57,17 @@ object OneKukuRestoreManager {
                 val snapshot = resolved.snapshot
                 val writeSubId = resolved.writeSubId
                 // 明确排除 APN：一键恢复通话不自动恢复 APN。
-                val detail = linkedMapOf<String, Boolean>()
-                detail["identity"] = restoreIdentity(context, writeSubId, snapshot).success
-                detail["ims"] = restoreIms(context, writeSubId, snapshot).success
-                detail["wfc"] = restoreWfc(context, writeSubId, snapshot).success
-                detail["nr5g"] = restoreFiveG(context, writeSubId, snapshot).success
-                detail["signal"] = restoreSignal(context, writeSubId, snapshot).success
-                detail["vowifi_name"] = restoreVoWifiName(context, writeSubId, snapshot).success
-                detail["verify"] = verify(context, writeSubId).success
+        val detail = linkedMapOf<String, Boolean>()
+        detail["identity"] = retryStep { restoreIdentity(context, writeSubId, snapshot) }
+        detail["ims"] = retryStep { restoreIms(context, writeSubId, snapshot) }
+        detail["wfc"] = retryStep { restoreWfc(context, writeSubId, snapshot) }
+        detail["nr5g"] = retryStep { restoreFiveG(context, writeSubId, snapshot) }
+        detail["signal"] = retryStep { restoreSignal(context, writeSubId, snapshot) }
+        detail["vowifi_name"] = retryStep { restoreVoWifiName(context, writeSubId, snapshot) }
+        detail["verify"] = retryStep {
+            val result = verify(context, writeSubId)
+            ConfigResult(result.success, result.message)
+        }
 
                 val successCount = detail.values.count { it }
                 val total = detail.size

@@ -89,11 +89,15 @@ import com.oneims.app.ui.OneImsScaffold
 import com.oneims.app.ui.OneImsPrimaryButton
 import com.oneims.app.core.OneKukuPrivilegeBridgeImpl
 import com.oneims.app.core.OneKukuSnapshotFactory
+import com.oneims.app.onekuku.OneKukuBootRestoreCoordinator
+import com.oneims.app.onekuku.OneKukuBootRestoreStore
+import com.oneims.app.onekuku.OneKukuBootUiHint
 import com.oneims.app.onekuku.OneKukuCommand
 import com.oneims.app.onekuku.OneKukuCommandDispatcher
 import com.oneims.app.onekuku.OneKukuHiddenRunner
 import com.oneims.app.onekuku.OneKukuRunnerState
 import com.oneims.app.onekuku.OneKukuSnapshotStore
+import com.oneims.app.core.OneKukuBootRestoreService
 import com.oneims.app.ui.OneKukuCardPolicy
 import com.oneims.app.ui.OneKukuHomeTools
 import com.oneims.app.ui.SettingsActions
@@ -282,13 +286,66 @@ private fun AppRoot(
 
     val selectedSim = sims.firstOrNull { it.subscriptionId == selectedSubId }
     val actionsAvailable = busyLabel == null
+    var bootUiHint by remember {
+        mutableStateOf(OneKukuBootRestoreStore.readHint(context))
+    }
+    val bootForceInactive = bootUiHint == OneKukuBootUiHint.NEEDS_ACTIVATION
     val oneKukuState = OneKukuCardPolicy.resolve(
-        serviceReady = shizukuRunning && shizukuGranted,
+        serviceReady = shizukuRunning && shizukuGranted && !bootForceInactive,
         isExecuting = oneKukuRestoring ||
+            bootUiHint == OneKukuBootUiHint.RESTORING ||
             OneKukuHiddenRunner.currentState() == OneKukuRunnerState.EXECUTING ||
             OneKukuHiddenRunner.currentState() == OneKukuRunnerState.STARTING,
-        taskComplete = oneKukuTaskComplete,
+        taskComplete = oneKukuTaskComplete || bootUiHint == OneKukuBootUiHint.RESTORE_COMPLETE,
     )
+    val oneKukuDetailOverride = when {
+        bootUiHint == OneKukuBootUiHint.NO_SNAPSHOT_SLEEPING ||
+            OneKukuBootRestoreStore.shouldShowNoSnapshotNote(context) ->
+            context.getString(R.string.onekuku_detail_no_snapshot)
+        else -> null
+    }
+
+    LaunchedEffect(Unit) {
+        if (ConfigStore.isOneKukuBootAutoCheck(context)) {
+            OneKukuBootRestoreService.enqueue(context, debounceMs = 2_000L)
+        }
+        val activity = context as? ComponentActivity
+        if (activity?.intent?.getBooleanExtra(
+                OneKukuBootRestoreCoordinator.EXTRA_OPEN_RESTORE,
+                false,
+            ) == true
+        ) {
+            OneKukuBootRestoreStore.writeHint(context, OneKukuBootUiHint.NEEDS_ACTIVATION)
+            bootUiHint = OneKukuBootUiHint.NEEDS_ACTIVATION
+        }
+        while (true) {
+            kotlinx.coroutines.delay(2_000L)
+            val latest = OneKukuBootRestoreStore.readHint(context)
+            if (latest != bootUiHint) {
+                bootUiHint = latest
+            }
+        }
+    }
+
+    LaunchedEffect(bootUiHint) {
+        when (bootUiHint) {
+            OneKukuBootUiHint.RESTORING -> {
+                oneKukuRestoring = true
+                oneKukuTaskComplete = false
+            }
+            OneKukuBootUiHint.RESTORE_COMPLETE -> {
+                oneKukuRestoring = false
+                oneKukuTaskComplete = true
+            }
+            OneKukuBootUiHint.NEEDS_ACTIVATION -> {
+                oneKukuRestoring = false
+                oneKukuTaskComplete = false
+            }
+            OneKukuBootUiHint.READY_SLEEPING,
+            OneKukuBootUiHint.NO_SNAPSHOT_SLEEPING,
+            -> oneKukuRestoring = false
+        }
+    }
 
     LaunchedEffect(shizukuRunning, shizukuGranted) {
         if (!shizukuRunning || !shizukuGranted) {
@@ -680,6 +737,7 @@ private fun AppRoot(
                         reapplyStatus = reapplyStatus,
                         bootAutoCheck = oneKukuBootAutoCheck,
                         autoSleep = oneKukuAutoSleep,
+                        oneKukuDetailOverride = oneKukuDetailOverride,
                     ),
                     actions = HomeActions(
                         onSelectSim = { selectSim(it) },
@@ -767,7 +825,14 @@ private fun AppRoot(
                                             when (restoreOutcome[0]) {
                                                 OneKukuHomeTools.RestoreOutcome.SUCCESS,
                                                 OneKukuHomeTools.RestoreOutcome.PARTIAL,
-                                                -> oneKukuTaskComplete = true
+                                                -> {
+                                                    oneKukuTaskComplete = true
+                                                    OneKukuBootRestoreStore.writeHint(
+                                                        context,
+                                                        OneKukuBootUiHint.RESTORE_COMPLETE,
+                                                    )
+                                                    bootUiHint = OneKukuBootUiHint.RESTORE_COMPLETE
+                                                }
                                                 OneKukuHomeTools.RestoreOutcome.FAILURE ->
                                                     oneKukuTaskComplete = false
                                             }

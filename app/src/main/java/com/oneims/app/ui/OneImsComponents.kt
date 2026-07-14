@@ -688,6 +688,7 @@ fun StatusHero(
     sims: List<SimInfo> = emptyList(),
     selectedSubId: Int = -1,
     deviceInfo: String = "",
+    detailOverride: String? = null,
 ) {
     val ready = oneKukuState != OneKukuCardState.INACTIVE
     val containerColor = if (ready) {
@@ -717,7 +718,7 @@ fun StatusHero(
             OneKukuCardState.COMPLETE -> R.string.onekuku_subtitle_complete
         },
     )
-    val detail = stringResource(
+    val detail = detailOverride ?: stringResource(
         when (oneKukuState) {
             OneKukuCardState.INACTIVE -> R.string.onekuku_detail_inactive
             OneKukuCardState.SLEEPING -> R.string.onekuku_detail_sleeping
