@@ -9,6 +9,7 @@
 .cxx
 /app/build/
 *.apk
+!app/src/main/assets/onekuku-core.apk
 .cursor/
 .kotlin/
 .recovery_extract/
