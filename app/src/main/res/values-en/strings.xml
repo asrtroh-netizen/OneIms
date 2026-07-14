@@ -679,8 +679,8 @@
     <string name="five_g_cool_plus">5G+ Turbo</string>
     <string name="five_g_cool_a">5G-A Full</string>
     <string name="five_g_apply">Apply 5G display enhancement</string>
-    <string name="five_g_system_applied">System 5G display configuration written. The final icon depends on SystemUI support and may require airplane mode or a reboot.</string>
-    <string name="five_g_system_restored">Local display strategy saved and the system 5G icon configuration restored to its pre-OneIms baseline. Airplane mode or a reboot may be required.</string>
+    <string name="five_g_system_applied">System 5G display written, and NR Advanced threshold relaxed to help status-bar 5G-A. Whether you see 5G-A still depends on the ROM; airplane mode or a reboot may be required.</string>
+    <string name="five_g_system_restored">Local display strategy saved and pre-OneIms system 5G-related settings restored. Airplane mode or a reboot may be required.</string>
     <string name="five_g_local_saved_no_system_override">Local display strategy saved. There is no OneIms system 5G icon override to restore.</string>
     <string name="five_g_system_apply_failed">The local display strategy was saved, but the system 5G configuration write or readback failed: %1$s</string>
 

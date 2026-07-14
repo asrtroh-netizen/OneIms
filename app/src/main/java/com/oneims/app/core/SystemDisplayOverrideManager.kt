@@ -194,6 +194,11 @@ object SystemDisplayOverrideManager {
     private const val KEY_5G_PENDING = "five_g_pending"
     private const val KEY_5G_LAST_APPLIED = "five_g_last_applied"
     private const val KEY_5G_BOOT_EPOCH = "five_g_boot_epoch"
+    private const val KEY_5G_NR_ADV_HAS = "five_g_nr_adv_has"
+    private const val KEY_5G_NR_ADV_VALUE = "five_g_nr_adv_value"
+    private const val KEY_5G_NR_ADV_INCLUDE_LTE = "five_g_nr_adv_include_lte"
+    /** 尽量放宽 Advanced 判定；具体是否画出 5G-A 仍看 ROM SystemUI。 */
+    private const val NR_ADVANCED_TARGET_KHZ = 1
     private const val KEY_SIGNAL_HAS = "signal_has"
     private const val KEY_SIGNAL_INFLATE = "signal_inflate"
     private const val KEY_SIGNAL_NR_RSRP = "signal_nr_rsrp"
@@ -223,12 +228,18 @@ object SystemDisplayOverrideManager {
         recordFiveGIntent(context, subId, validated)
         val overrides = PersistableBundle().apply {
             putString(CarrierConfigKeys.FIVE_G_ICON_CONFIGURATION_STRING, validated)
+            // 与图标串一并写入：降低 NR Advanced 带宽门槛，便于国行 ROM 切到 5G-A。
+            putInt(CarrierConfigKeys.NR_ADVANCED_THRESHOLD_BANDWIDTH_KHZ, NR_ADVANCED_TARGET_KHZ)
+            putBoolean(CarrierConfigKeys.INCLUDE_LTE_FOR_NR_ADVANCED_THRESHOLD, true)
         }
         val write5g = CarrierConfigOverrideWriter.applyPersistentOverride(
             context, subId, overrides, reason = "apply5GIconConfig",
         )
         check(write5g.success && verify5GIconConfig(context, subId, validated)) {
             write5g.message.ifBlank { "5G icon CarrierConfig readback mismatch for subId=$subId" }
+        }
+        check(verifyNrAdvancedAssist(context, subId)) {
+            "NR Advanced assist CarrierConfig readback mismatch for subId=$subId"
         }
         confirmFiveGApplied(context, subId, validated)
         return validated
@@ -237,6 +248,23 @@ object SystemDisplayOverrideManager {
     fun verify5GIconConfig(context: Context, subId: Int, expectedConfig: String): Boolean {
         requireValidSubId(subId)
         return read5GIconConfig(context, subId) == expectedConfig
+    }
+
+    private fun verifyNrAdvancedAssist(context: Context, subId: Int): Boolean {
+        val bundle = SystemApiBroker.getCarrierConfig(context, subId) ?: return false
+        if (!bundle.containsKey(CarrierConfigKeys.NR_ADVANCED_THRESHOLD_BANDWIDTH_KHZ)) {
+            // 部分旧系统无此键：不阻断图标写入成功，但无法辅助 5G-A。
+            return true
+        }
+        val threshold = bundle.getInt(CarrierConfigKeys.NR_ADVANCED_THRESHOLD_BANDWIDTH_KHZ)
+        val includeLte = if (
+            bundle.containsKey(CarrierConfigKeys.INCLUDE_LTE_FOR_NR_ADVANCED_THRESHOLD)
+        ) {
+            bundle.getBoolean(CarrierConfigKeys.INCLUDE_LTE_FOR_NR_ADVANCED_THRESHOLD)
+        } else {
+            true
+        }
+        return threshold == NR_ADVANCED_TARGET_KHZ && includeLte
     }
 
     @Synchronized
@@ -253,6 +281,7 @@ object SystemDisplayOverrideManager {
         }
         val overrides = PersistableBundle().apply {
             putString(CarrierConfigKeys.FIVE_G_ICON_CONFIGURATION_STRING, baseline)
+            restoreNrAdvancedBaselineInto(this, context, subId)
         }
         val writeClear = CarrierConfigOverrideWriter.applyPersistentOverride(
             context, subId, overrides, reason = "clear5GIconConfig",
@@ -515,13 +544,49 @@ object SystemDisplayOverrideManager {
         val current = checkNotNull(read5GIconConfig(context, subId)) {
             "System has no readable 5G icon configuration for subId=$subId"
         }
-        prefs.edit()
+        val editor = prefs.edit()
             .putString(subKey(KEY_5G_VALUE, subId), current)
             .putString(subKey(KEY_5G_BOOT_EPOCH, subId), epoch)
             .putBoolean(subKey(KEY_5G_HAS, subId), true)
-            // 系统写入前必须确认基线已落盘；异步 apply 可能在进程退出时丢失回滚依据。
-            .commit()
-            .also { saved -> check(saved) { "Failed to persist 5G display baseline" } }
+        val bundle = SystemApiBroker.getCarrierConfig(context, subId)
+        if (bundle != null &&
+            bundle.containsKey(CarrierConfigKeys.NR_ADVANCED_THRESHOLD_BANDWIDTH_KHZ)
+        ) {
+            editor.putBoolean(subKey(KEY_5G_NR_ADV_HAS, subId), true)
+                .putInt(
+                    subKey(KEY_5G_NR_ADV_VALUE, subId),
+                    bundle.getInt(CarrierConfigKeys.NR_ADVANCED_THRESHOLD_BANDWIDTH_KHZ),
+                )
+            val includeLte = if (
+                bundle.containsKey(CarrierConfigKeys.INCLUDE_LTE_FOR_NR_ADVANCED_THRESHOLD)
+            ) {
+                bundle.getBoolean(CarrierConfigKeys.INCLUDE_LTE_FOR_NR_ADVANCED_THRESHOLD)
+            } else {
+                false
+            }
+            editor.putBoolean(subKey(KEY_5G_NR_ADV_INCLUDE_LTE, subId), includeLte)
+        } else {
+            editor.putBoolean(subKey(KEY_5G_NR_ADV_HAS, subId), false)
+        }
+        // 系统写入前必须确认基线已落盘；异步 apply 可能在进程退出时丢失回滚依据。
+        editor.commit().also { saved -> check(saved) { "Failed to persist 5G display baseline" } }
+    }
+
+    private fun restoreNrAdvancedBaselineInto(
+        dest: PersistableBundle,
+        context: Context,
+        subId: Int,
+    ) {
+        val prefs = baselinePrefs(context)
+        if (!prefs.getBoolean(subKey(KEY_5G_NR_ADV_HAS, subId), false)) return
+        dest.putInt(
+            CarrierConfigKeys.NR_ADVANCED_THRESHOLD_BANDWIDTH_KHZ,
+            prefs.getInt(subKey(KEY_5G_NR_ADV_VALUE, subId), NR_ADVANCED_TARGET_KHZ),
+        )
+        dest.putBoolean(
+            CarrierConfigKeys.INCLUDE_LTE_FOR_NR_ADVANCED_THRESHOLD,
+            prefs.getBoolean(subKey(KEY_5G_NR_ADV_INCLUDE_LTE, subId), false),
+        )
     }
 
     private fun readFiveGBaseline(context: Context, subId: Int): String? {
@@ -789,6 +854,9 @@ object SystemDisplayOverrideManager {
             .remove(subKey(KEY_5G_PENDING, subId))
             .remove(subKey(KEY_5G_LAST_APPLIED, subId))
             .remove(subKey(KEY_5G_BOOT_EPOCH, subId))
+            .remove(subKey(KEY_5G_NR_ADV_HAS, subId))
+            .remove(subKey(KEY_5G_NR_ADV_VALUE, subId))
+            .remove(subKey(KEY_5G_NR_ADV_INCLUDE_LTE, subId))
             .commit()
         check(saved) { "Failed to clear 5G display ownership" }
     }

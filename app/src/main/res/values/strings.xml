@@ -688,8 +688,8 @@
     <string name="five_g_cool_plus">5G+ 极速</string>
     <string name="five_g_cool_a">5G-A 满血</string>
     <string name="five_g_apply">应用 5G 显示增强</string>
-    <string name="five_g_system_applied">已写入系统 5G 显示配置，最终显示取决于系统 SystemUI 是否支持；可能需要切换飞行模式或重启后生效。</string>
-    <string name="five_g_system_restored">已保存本地显示策略，并恢复首次写入前的系统 5G 图标配置；可能需要切换飞行模式或重启后生效。</string>
+    <string name="five_g_system_applied">已写入系统 5G 显示，并尝试放宽 Advanced 判定以利于状态栏 5G-A；是否变成 5G-A 取决于 ROM，可能需开关飞行模式或重启。</string>
+    <string name="five_g_system_restored">已保存本地显示策略，并恢复首次写入前的系统 5G 相关配置；可能需要切换飞行模式或重启后生效。</string>
     <string name="five_g_local_saved_no_system_override">已保存本地显示策略；当前没有 OneIms 写入的系统 5G 图标覆盖需要恢复。</string>
     <string name="five_g_system_apply_failed">本地显示策略已保存，但系统 5G 配置写入或回读失败：%1$s</string>
 

@@ -42,6 +42,11 @@ object CarrierConfigKeys {
     // 5G NR 可用性（[1,2] = NSA + SA）与信号阈值
     const val NR_AVAILABILITIES_INT_ARRAY = "carrier_nr_availabilities_int_array"
     const val FIVE_G_ICON_CONFIGURATION_STRING = "5g_icon_configuration_string"
+    /** 聚合带宽达到该阈值(kHz)时，Telephony 上报 NR Advanced；国行 ROM 常据此切 5G-A 图标。 */
+    const val NR_ADVANCED_THRESHOLD_BANDWIDTH_KHZ =
+        "nr_advanced_threshold_bandwidth_khz_int"
+    const val INCLUDE_LTE_FOR_NR_ADVANCED_THRESHOLD =
+        "include_lte_for_nr_advanced_threshold_bandwidth_bool"
     const val INFLATE_SIGNAL_STRENGTH_BOOL = "inflate_signal_strength_bool"
     const val NR_SSRSRP_THRESHOLDS_INT_ARRAY = "5g_nr_ssrsrp_thresholds_int_array"
     const val NR_SSRSRQ_THRESHOLDS_INT_ARRAY = "5g_nr_ssrsrq_thresholds_int_array"
@@ -55,6 +60,8 @@ object CarrierConfigKeys {
     /** 这些键只能经对应专用管理器写入，避免专家编辑器绕开 baseline 与回读契约。 */
     val specializedManagerKeys = setOf(
         FIVE_G_ICON_CONFIGURATION_STRING,
+        NR_ADVANCED_THRESHOLD_BANDWIDTH_KHZ,
+        INCLUDE_LTE_FOR_NR_ADVANCED_THRESHOLD,
         // 信号强度现仅由 SystemDisplayOverrideManager 写 SSRSRP；其余旧信号键仍禁专家直写。
         INFLATE_SIGNAL_STRENGTH_BOOL,
         NR_SSRSRP_THRESHOLDS_INT_ARRAY,
