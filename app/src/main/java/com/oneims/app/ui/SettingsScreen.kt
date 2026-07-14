@@ -5,10 +5,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -66,27 +64,6 @@ fun SettingsScreen(
 
         item {
             SectionBlock(
-                title = stringResource(R.string.settings_tools_title),
-                description = stringResource(R.string.settings_tools_subtitle),
-            ) {
-                SettingsActionRow(
-                    icon = Icons.Filled.Settings,
-                    title = stringResource(R.string.qs_tile_feature_title),
-                    subtitle = stringResource(R.string.qs_tile_feature_desc),
-                    onClick = actions.onOpenTileSettings,
-                )
-                GroupDivider()
-                SettingsActionRow(
-                    icon = Icons.Filled.Favorite,
-                    title = stringResource(R.string.settings_sponsor_title),
-                    subtitle = stringResource(R.string.settings_sponsor_subtitle),
-                    onClick = actions.onOpenSupportAuthor,
-                )
-            }
-        }
-
-        item {
-            SectionBlock(
                 title = stringResource(R.string.update_title),
                 description = stringResource(
                     R.string.current_version,
@@ -136,7 +113,6 @@ fun SettingsScreen(
         }
 
         item {
-            // 「关于」保留事实条目，并提供跳转到支持作者页的入口。
             SectionBlock(title = stringResource(R.string.about_title)) {
                 SettingsActionRow(
                     icon = Icons.Filled.Info,
@@ -154,13 +130,6 @@ fun SettingsScreen(
                     title = stringResource(R.string.about_author),
                     subtitle = stringResource(R.string.about_author_name),
                     onClick = null,
-                )
-                GroupDivider()
-                SettingsActionRow(
-                    icon = Icons.Filled.Favorite,
-                    title = stringResource(R.string.about_support_oneims),
-                    subtitle = stringResource(R.string.about_support_oneims_sub),
-                    onClick = actions.onOpenSupportAuthor,
                 )
             }
         }

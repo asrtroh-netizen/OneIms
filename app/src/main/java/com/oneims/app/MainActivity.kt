@@ -1683,14 +1683,6 @@ private fun AppRoot(
                                 ),
                             )
                         },
-                        onOpenTileSettings = {
-                            if (!QuickSettingsTileHelper.openTileEditor(context)) {
-                                publish(context.getString(R.string.qs_tile_manual_guide))
-                            }
-                        },
-                        onOpenSupportAuthor = {
-                            destination = AppDestination.SPONSOR
-                        },
                     ),
                 )
             }

@@ -226,6 +226,4 @@ data class SettingsActions(
     val onDynamicColorChange: (Boolean) -> Unit,
     val onCheckUpdate: () -> Unit,
     val onDownloadUpdate: (UpdateInfo) -> Unit,
-    val onOpenTileSettings: () -> Unit,
-    val onOpenSupportAuthor: () -> Unit,
 )
