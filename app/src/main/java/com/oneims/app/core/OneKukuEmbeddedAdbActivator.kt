@@ -111,7 +111,7 @@ object OneKukuEmbeddedAdbActivator {
             Log.i(TAG, "tcpip5555 persisted=$persisted")
 
             val startPkg = OneKukuCoreComponent.resolveCorePackage(app)
-                ?: OneKukuCoreComponent.BRANDED_CORE_PACKAGE
+                ?: OneKukuCoreComponent.BRIDGE_PACKAGE
             val startCmd =
                 "sh /storage/emulated/0/Android/data/$startPkg/start.sh\n"
             val shellOk = runCatching {

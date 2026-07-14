@@ -7,17 +7,18 @@ import org.junit.Test
 class OneKukuCoreComponentTest {
 
     @Test
-    fun adbStartCommand_defaultsToBrandedPackage() {
+    fun adbStartCommand_defaultsToBridgePackage() {
         val cmd = OneKukuCoreComponent.adbStartCommand(context = null)
-        assertTrue(cmd.contains(OneKukuCoreComponent.BRANDED_CORE_PACKAGE))
+        assertTrue(cmd.contains(OneKukuCoreComponent.BRIDGE_PACKAGE))
         assertTrue(cmd.contains("start.sh"))
         assertTrue(cmd.startsWith("adb shell sh "))
     }
 
     @Test
-    fun candidatePackages_preferBrandedThenLegacy() {
+    fun candidatePackages_preferBridgeThenBrandedThenLegacy() {
         assertEquals(
             listOf(
+                OneKukuCoreComponent.BRIDGE_PACKAGE,
                 OneKukuCoreComponent.BRANDED_CORE_PACKAGE,
                 OneKukuCoreComponent.LEGACY_CORE_PACKAGE,
             ),

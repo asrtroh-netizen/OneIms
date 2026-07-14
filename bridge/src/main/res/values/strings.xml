@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">OneKuku 通道</string>
+    <string name="status_hint">本组件为 OneIMS 户外急救特权通道（最小集）。\n请用 OneIMS 内嵌 ADB 或：\nadb shell sh /storage/emulated/0/Android/data/com.oneims.bridge/start.sh</string>
+</resources>

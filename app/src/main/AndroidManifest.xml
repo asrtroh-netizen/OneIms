@@ -46,7 +46,15 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.OneIms">
 
-        <!-- Shizuku Provider：Shizuku 客户端接入点 -->
+        <!-- OneBridge：接收 shell 进程投递的 binder -->
+        <provider
+            android:name=".core.privilege.BridgeBinderProvider"
+            android:authorities="${applicationId}.onebridge"
+            android:exported="true"
+            android:multiprocess="false"
+            tools:ignore="ExportedContentProvider" />
+
+        <!-- Shizuku Provider：过渡回落客户端接入点 -->
         <provider
             android:name="rikka.shizuku.ShizukuProvider"
             android:authorities="${applicationId}.shizuku"

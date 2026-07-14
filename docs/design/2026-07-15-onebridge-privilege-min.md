@@ -153,14 +153,15 @@ interface PrivilegeBridge {
 | `docs/design/2026-07-15-onebridge-privilege-min.md` | 本文 |
 | `core/privilege/PrivilegeBridge` + `ShizukuPrivilegeBridge` + `PrivilegeBridges` | ✅ 已落地；`OneKukuManager` / `SystemApiBroker` / `ShizukuManager` 已改走门面 |
 
-### Phase 1 · MVP 服务端（邻仓或 `bridge/` 模块）
+### Phase 1 · MVP 服务端（`:bridge` 模块）
 
 | 项 | 内容 |
 |---|---|
-| 新建工程/模块 | starter + 极简 server（Java/Kotlin） |
-| 产物 | `oneims-bridge.apk` + `start.sh` |
-| 验收 | adb 启动后 `ping` 通；仅 OneIMS 可 `wrapSystemService("carrier_config")` |
-| 仍要 | 无线调试配对（内嵌 ADB 可复用） |
+| 模块 | OneIMS 仓内 `:bridge`（`applicationId=com.oneims.bridge`） |
+| 产物 | `bridge-debug.apk` + 运行时写出的 `start.sh` |
+| 状态 | **脚手架已落地**（2026-07-15）；真机 binder 联调待验 |
+| 客户端 | `PrivilegeBridges` 优先 OneBridge，回落 Shizuku |
+| start 指向 | `CANDIDATE_PACKAGES` 首项已是 `com.oneims.bridge` |
 
 ### Phase 2 · OneIMS 切换
 

@@ -20,23 +20,31 @@ import java.net.URL
  * OneKuku「核心组件」安装与就绪探测（方案 A）。
  *
  * 产品面只说 OneKuku。包名优先级：
- * 1. [BRANDED_CORE_PACKAGE] 换皮核心（系统列表显示 OneKuku，需自行构建放入 assets）
- * 2. [LEGACY_CORE_PACKAGE] 上游兼容包（过渡期回落）
+ * 1. [BRIDGE_PACKAGE] 自研 OneBridge（户外急救主路径）
+ * 2. [BRANDED_CORE_PACKAGE] 换皮核心（过渡回落）
+ * 3. [LEGACY_CORE_PACKAGE] 上游兼容包（过渡回落）
  *
  * 用户路径：**不再跳应用商店**；内置 APK / 下载 + ADB 拉起。
  */
 object OneKukuCoreComponent {
 
-    /** 换皮目标包名（系统应用列表应显示 OneKuku 核心）。 */
+    /** OneBridge 自研通道（优先；户外急救主路径）。 */
+    const val BRIDGE_PACKAGE: String = "com.oneims.bridge"
+
+    /** 换皮目标包名（过渡回落）。 */
     const val BRANDED_CORE_PACKAGE: String = "com.oneims.onekuku.core"
 
     /** 上游兼容包名（过渡回落；不对用户展示）。 */
     const val LEGACY_CORE_PACKAGE: String = "moe.shizuku.privileged.api"
 
-    /** @deprecated 使用 [resolveCorePackage]；保留常量指向换皮目标以便文档引用。 */
-    const val CORE_PACKAGE: String = BRANDED_CORE_PACKAGE
+    /** @deprecated 使用 [resolveCorePackage]；保留常量指向桥包以便文档引用。 */
+    const val CORE_PACKAGE: String = BRIDGE_PACKAGE
 
-    val CANDIDATE_PACKAGES: List<String> = listOf(BRANDED_CORE_PACKAGE, LEGACY_CORE_PACKAGE)
+    val CANDIDATE_PACKAGES: List<String> = listOf(
+        BRIDGE_PACKAGE,
+        BRANDED_CORE_PACKAGE,
+        LEGACY_CORE_PACKAGE,
+    )
 
     const val BUNDLED_ASSET_NAME: String = "onekuku-core.apk"
 
@@ -111,7 +119,7 @@ object OneKukuCoreComponent {
 
     fun adbStartCommand(context: Context? = null): String {
         val pkg = context?.let { resolveCorePackage(it) }
-            ?: BRANDED_CORE_PACKAGE
+            ?: BRIDGE_PACKAGE
         return "adb shell sh /storage/emulated/0/Android/data/$pkg/start.sh"
     }
 
