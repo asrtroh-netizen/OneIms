@@ -44,6 +44,13 @@
     <string name="onekuku_msg_downloading_core">正在解析并下载 OneKuku 核心组件…</string>
     <string name="onekuku_msg_core_download_started">已开始下载 OneKuku 核心组件，完成后请安装</string>
     <string name="onekuku_msg_core_download_failed">核心组件下载失败，请检查网络后重试，或将 onekuku-core.apk 放入 assets 后重打包</string>
+    <string name="onekuku_msg_embedded_adb_starting">正在用内嵌 ADB 拉起 OneKuku 核心…</string>
+    <string name="onekuku_msg_embedded_adb_ok">内嵌 ADB 已发出启动指令，请确认核心就绪后授权</string>
+    <string name="onekuku_msg_embedded_adb_fallback">内嵌 ADB 未成功（%1$s），已回落为无线调试 + 命令指引</string>
+    <string name="onekuku_msg_need_pairing_code">请打开无线调试里的配对码，输入 6 位数字完成配对</string>
+    <string name="onekuku_adb_pair_title">输入无线调试配对码</string>
+    <string name="onekuku_adb_pair_hint">6 位配对码</string>
+    <string name="onekuku_adb_pair_confirm">配对并启动</string>
 
     <!-- 能力页 -->
     <string name="cap_group_radio_title">运营商能力与 5G</string>

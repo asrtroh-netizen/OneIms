@@ -21,6 +21,8 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- 应用内检查更新：下载并安装新版 APK -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
 
     <!-- Pixel Tablet 等无蜂窝设备仍可安装并查看兼容性说明，电话功能会在 UI 中降级。 -->
     <uses-feature

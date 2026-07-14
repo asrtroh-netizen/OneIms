@@ -70,6 +70,11 @@ dependencies {
     // 协程（IO 线程执行阻塞的 provisioning / 网络自检）
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
 
+    // 原生内嵌 ADB（libadb-android：无线配对 + shell；Java 库，兼容 Kotlin 2.0.21）
+    implementation("com.github.MuntashirAkon:libadb-android:3.1.1")
+    implementation("org.conscrypt:conscrypt-android:2.5.3")
+    implementation("com.github.MuntashirAkon:sun-security-android:1.1")
+
     testImplementation("junit:junit:4.13.2")
 }
 

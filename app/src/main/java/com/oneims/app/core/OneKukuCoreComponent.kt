@@ -104,7 +104,7 @@ object OneKukuCoreComponent {
             }
             return PrepareResult.NEEDS_DOWNLOAD
         }
-        val bridge: OneKukuAdbActivationBridge = ClipboardGuidedAdbBridge
+        val bridge: OneKukuAdbActivationBridge = EmbeddedKadbActivationBridge
         val opened = bridge.openWirelessDebugging(app)
         ShizukuSetupHelper.copyToClipboard(
             app,

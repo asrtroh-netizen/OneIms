@@ -20,6 +20,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -61,6 +62,7 @@ import com.oneims.app.core.QuickSettingsTileHelper
 import com.oneims.app.core.SimCardInfo
 import com.oneims.app.core.ShizukuSetupHelper
 import com.oneims.app.core.OneKukuCoreComponent
+import com.oneims.app.core.OneKukuEmbeddedAdbActivator
 import com.oneims.app.core.SimpleFiveGDisplayConfig
 import com.oneims.app.core.SystemDisplayOverrideManager
 import com.oneims.app.core.SignalBarSystemStyleManager
@@ -244,6 +246,9 @@ private fun AppRoot(
     var busyLabel by remember { mutableStateOf<String?>(null) }
     var confirmation by remember { mutableStateOf<ConfirmationRequest?>(null) }
     var apnCatalogVisible by remember { mutableStateOf(false) }
+    var adbPairDialogVisible by remember { mutableStateOf(false) }
+    var adbPairCode by remember { mutableStateOf("") }
+    var adbPairBusy by remember { mutableStateOf(false) }
 
     var volte by remember { mutableStateOf(true) }
     var vowifi by remember { mutableStateOf(true) }
@@ -401,39 +406,102 @@ private fun AppRoot(
         }
     }
 
-    /** 方案 A+B：内置/下载核心组件，或无线调试 + ADB 引导；不跳应用市场。 */
+    /** 方案 A+B：内置/下载核心；已装则优先原生内嵌 ADB 拉起，失败再回落剪贴板引导。 */
     fun prepareOneKukuCore() {
-        when (val result = OneKukuCoreComponent.prepare(context)) {
-            OneKukuCoreComponent.PrepareResult.OPENED_ADB_GUIDE ->
-                publish(context.getString(R.string.onekuku_msg_adb_guide_ready))
-            OneKukuCoreComponent.PrepareResult.INSTALLING_BUNDLED ->
-                publish(context.getString(R.string.onekuku_msg_installing_bundled_core))
-            OneKukuCoreComponent.PrepareResult.NEEDS_DOWNLOAD -> {
-                publish(context.getString(R.string.onekuku_msg_downloading_core))
-                scope.launch {
-                    val url = withContext(Dispatchers.IO) {
-                        OneKukuCoreComponent.resolveLatestCoreApkUrl()
+        if (!OneKukuCoreComponent.isInstalled(context)) {
+            when (val result = OneKukuCoreComponent.prepare(context)) {
+                OneKukuCoreComponent.PrepareResult.INSTALLING_BUNDLED ->
+                    publish(context.getString(R.string.onekuku_msg_installing_bundled_core))
+                OneKukuCoreComponent.PrepareResult.NEEDS_DOWNLOAD -> {
+                    publish(context.getString(R.string.onekuku_msg_downloading_core))
+                    scope.launch {
+                        val url = withContext(Dispatchers.IO) {
+                            OneKukuCoreComponent.resolveLatestCoreApkUrl()
+                        }
+                        if (url.isNullOrBlank()) {
+                            publish(context.getString(R.string.onekuku_msg_core_download_failed))
+                            return@launch
+                        }
+                        val ok = OneKukuCoreComponent.downloadOfficialCore(context, url)
+                        publish(
+                            context.getString(
+                                if (ok) {
+                                    R.string.onekuku_msg_core_download_started
+                                } else {
+                                    R.string.onekuku_msg_core_download_failed
+                                },
+                            ),
+                        )
                     }
-                    if (url.isNullOrBlank()) {
-                        publish(context.getString(R.string.onekuku_msg_core_download_failed))
-                        return@launch
+                }
+                else -> publish(context.getString(R.string.log_open_failed))
+            }
+            return
+        }
+        scope.launch {
+            publish(context.getString(R.string.onekuku_msg_embedded_adb_starting))
+            when (
+                val outcome = OneKukuEmbeddedAdbActivator.activate(context, pairingCode = null)
+            ) {
+                is OneKukuEmbeddedAdbActivator.Outcome.NeedPairingCode -> {
+                    ShizukuSetupHelper.openWirelessDebugging(context)
+                    adbPairCode = ""
+                    adbPairDialogVisible = true
+                    publish(context.getString(R.string.onekuku_msg_need_pairing_code))
+                }
+                is OneKukuEmbeddedAdbActivator.Outcome.Success -> {
+                    shizukuRunning = OneKukuManager.isRunning()
+                    if (OneKukuManager.isRunning() && !OneKukuManager.isGranted()) {
+                        OneKukuManager.requestActivation()
+                        publish(context.getString(R.string.onekuku_msg_permission_requested))
+                    } else {
+                        publish(context.getString(R.string.onekuku_msg_embedded_adb_ok))
                     }
-                    val ok = OneKukuCoreComponent.downloadOfficialCore(context, url)
+                }
+                is OneKukuEmbeddedAdbActivator.Outcome.Failed -> {
+                    // 回落：打开无线调试 + 复制指引
+                    OneKukuCoreComponent.prepare(context)
                     publish(
                         context.getString(
-                            if (ok) {
-                                R.string.onekuku_msg_core_download_started
-                            } else {
-                                R.string.onekuku_msg_core_download_failed
-                            },
+                            R.string.onekuku_msg_embedded_adb_fallback,
+                            outcome.reason,
                         ),
                     )
                 }
             }
-            OneKukuCoreComponent.PrepareResult.DOWNLOADING_CORE ->
-                publish(context.getString(R.string.onekuku_msg_core_download_started))
-            OneKukuCoreComponent.PrepareResult.FAILED ->
-                publish(context.getString(R.string.log_open_failed))
+        }
+    }
+
+    fun runEmbeddedAdbWithCode(code: String) {
+        scope.launch {
+            adbPairBusy = true
+            try {
+                when (
+                    val outcome = OneKukuEmbeddedAdbActivator.activate(context, pairingCode = code)
+                ) {
+                    is OneKukuEmbeddedAdbActivator.Outcome.NeedPairingCode ->
+                        publish(context.getString(R.string.onekuku_msg_need_pairing_code))
+                    is OneKukuEmbeddedAdbActivator.Outcome.Success -> {
+                        adbPairDialogVisible = false
+                        shizukuRunning = OneKukuManager.isRunning()
+                        if (OneKukuManager.isRunning() && !OneKukuManager.isGranted()) {
+                            OneKukuManager.requestActivation()
+                            publish(context.getString(R.string.onekuku_msg_permission_requested))
+                        } else {
+                            publish(context.getString(R.string.onekuku_msg_embedded_adb_ok))
+                        }
+                    }
+                    is OneKukuEmbeddedAdbActivator.Outcome.Failed ->
+                        publish(
+                            context.getString(
+                                R.string.onekuku_msg_embedded_adb_fallback,
+                                outcome.reason,
+                            ),
+                        )
+                }
+            } finally {
+                adbPairBusy = false
+            }
         }
     }
 
@@ -1794,6 +1862,39 @@ private fun AppRoot(
             },
             dismissButton = {
                 TextButton(onClick = { confirmation = null }) {
+                    Text(context.getString(R.string.action_cancel))
+                }
+            },
+        )
+    }
+
+    if (adbPairDialogVisible) {
+        AlertDialog(
+            onDismissRequest = {
+                if (!adbPairBusy) adbPairDialogVisible = false
+            },
+            title = { Text(context.getString(R.string.onekuku_adb_pair_title)) },
+            text = {
+                OutlinedTextField(
+                    value = adbPairCode,
+                    onValueChange = { adbPairCode = it.filter { ch -> ch.isDigit() }.take(6) },
+                    label = { Text(context.getString(R.string.onekuku_adb_pair_hint)) },
+                    singleLine = true,
+                    enabled = !adbPairBusy,
+                )
+            },
+            confirmButton = {
+                OneImsPrimaryButton(
+                    text = context.getString(R.string.onekuku_adb_pair_confirm),
+                    onClick = { runEmbeddedAdbWithCode(adbPairCode) },
+                    enabled = !adbPairBusy && adbPairCode.length >= 6,
+                )
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { adbPairDialogVisible = false },
+                    enabled = !adbPairBusy,
+                ) {
                     Text(context.getString(R.string.action_cancel))
                 }
             },

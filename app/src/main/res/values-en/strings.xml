@@ -43,6 +43,13 @@
     <string name="onekuku_msg_downloading_core">Resolving and downloading OneKuku core…</string>
     <string name="onekuku_msg_core_download_started">Started downloading OneKuku core; install when finished</string>
     <string name="onekuku_msg_core_download_failed">Core download failed. Check network, or place onekuku-core.apk in assets and rebuild</string>
+    <string name="onekuku_msg_embedded_adb_starting">Starting OneKuku core via embedded ADB…</string>
+    <string name="onekuku_msg_embedded_adb_ok">Embedded ADB issued start; confirm core is ready then authorize</string>
+    <string name="onekuku_msg_embedded_adb_fallback">Embedded ADB failed (%1$s); fell back to wireless-debug + command guide</string>
+    <string name="onekuku_msg_need_pairing_code">Open the wireless-debug pairing code and enter the 6 digits</string>
+    <string name="onekuku_adb_pair_title">Enter wireless-debug pairing code</string>
+    <string name="onekuku_adb_pair_hint">6-digit code</string>
+    <string name="onekuku_adb_pair_confirm">Pair and start</string>
 
     <!-- Features -->
     <string name="cap_group_radio_title">Carrier features &amp; 5G</string>
