@@ -4,6 +4,10 @@ import android.content.Context
 import com.oneims.app.R
 import com.oneims.app.core.ConfigStore
 import com.oneims.app.core.VoWifiNameFormatManager
+import com.oneims.app.model.WfcMode
+import com.oneims.app.onekuku.OneKukuSnapshot
+import com.oneims.app.onekuku.OneKukuSnapshotStore
+import com.oneims.app.onekuku.SnapshotMatchResult
 import java.text.DateFormat
 import java.util.Date
 
@@ -16,15 +20,29 @@ object OneKukuHomeTools {
 
     fun hasConfigSnapshot(context: Context, subId: Int): Boolean {
         if (subId < 0) return false
-        if (com.oneims.app.onekuku.OneKukuSnapshotStore.load(context, subId) != null) {
+        val sim = com.oneims.app.core.ImsController.listSims(context)
+            .firstOrNull { it.subscriptionId == subId }
+        if (sim != null && OneKukuSnapshotStore.findForSim(context, sim) != null) {
             return true
         }
+        if (OneKukuSnapshotStore.load(context, subId) != null) return true
         return ConfigStore.capabilityUiState(context, subId) != null ||
             ConfigStore.lastApplied(context)?.subId == subId
     }
 
     fun buildSnapshotLines(context: Context, subId: Int): List<SnapshotLine>? {
         if (subId < 0) return null
+        val sims = com.oneims.app.core.ImsController.listSims(context)
+        val fromStore = when (
+            val resolved = OneKukuSnapshotStore.resolveForSelectedSim(context, subId, sims)
+        ) {
+            is SnapshotMatchResult.Matched -> resolved.snapshot
+            else -> OneKukuSnapshotStore.load(context, subId)
+        }
+        if (fromStore != null) {
+            return linesFromSnapshot(context, fromStore)
+        }
+
         val caps = ConfigStore.capabilityUiState(context, subId)
             ?: ConfigStore.lastApplied(context)?.takeIf { it.subId == subId }?.let {
                 ConfigStore.CapabilityUiState(
@@ -102,6 +120,110 @@ object OneKukuHomeTools {
         )
     }
 
+    private fun linesFromSnapshot(context: Context, snap: OneKukuSnapshot): List<SnapshotLine> {
+        val on = context.getString(R.string.onekuku_value_on)
+        val off = context.getString(R.string.onekuku_value_off)
+        fun bool(group: String, key: String, default: Boolean = false): Boolean =
+            snap.entries.firstOrNull { it.configGroup == group && it.configKey == key }
+                ?.configValue
+                ?.toBooleanStrictOrNull()
+                ?: default
+
+        val imsCore = buildString {
+            append(context.getString(R.string.cap_volte))
+            append(if (bool("ims", "volte", true)) on else off)
+            append(" · ")
+            append(context.getString(R.string.cap_vowifi))
+            append(if (bool("ims", "vowifi", true)) on else off)
+            append(" · ")
+            append(context.getString(R.string.cap_vonr))
+            append(if (bool("ims", "vonr", false)) on else off)
+        }
+        val wfcValue = snap.entries.firstOrNull {
+            (it.configGroup == "wfc" && it.configKey == "mode") ||
+                (it.configGroup == "ims" && it.configKey == "wfcMode")
+        }?.configValue?.toIntOrNull()
+        val wfcMode = WfcMode.of(wfcValue ?: 1)
+        val formatIndex = snap.entries.firstOrNull {
+            it.configGroup == "vowifi_name" && it.configKey == "formatIndex"
+        }?.configValue?.toIntOrNull()
+        val customCarrier = snap.entries.firstOrNull {
+            it.configGroup == "vowifi_name" && it.configKey == "customCarrier"
+        }?.configValue.orEmpty()
+        val vowifiFormat = when (formatIndex) {
+            null -> context.getString(R.string.onekuku_value_unset)
+            else -> VoWifiNameFormatManager.preview(
+                formatIndex = formatIndex,
+                systemCarrierName = "",
+                customCarrierName = customCarrier,
+            ).ifBlank { context.getString(R.string.onekuku_value_unset) }
+        }
+        val hasIdentity = snap.entries.any { it.configGroup == "identity" }
+        val fiveGDisplay = bool("five_g_display", "enabled", false)
+
+        return buildList {
+            add(
+                SnapshotLine(
+                    label = context.getString(R.string.onekuku_snapshot_ims_core),
+                    value = imsCore,
+                ),
+            )
+            add(
+                SnapshotLine(
+                    label = context.getString(R.string.onekuku_snapshot_wfc),
+                    value = context.getString(wfcMode.labelRes),
+                ),
+            )
+            add(
+                SnapshotLine(
+                    label = context.getString(R.string.onekuku_snapshot_nr5g),
+                    value = if (bool("nr5g", "enabled", false)) on else off,
+                ),
+            )
+            add(
+                SnapshotLine(
+                    label = context.getString(R.string.onekuku_snapshot_signal),
+                    value = if (bool("signal", "adjustment", false)) on else off,
+                ),
+            )
+            add(
+                SnapshotLine(
+                    label = context.getString(R.string.onekuku_snapshot_vowifi_name),
+                    value = vowifiFormat,
+                ),
+            )
+            add(
+                SnapshotLine(
+                    label = context.getString(R.string.onekuku_snapshot_identity),
+                    value = if (hasIdentity) {
+                        context.getString(R.string.onekuku_value_configured)
+                    } else {
+                        context.getString(R.string.onekuku_value_unset)
+                    },
+                ),
+            )
+            if (fiveGDisplay) {
+                add(
+                    SnapshotLine(
+                        label = context.getString(R.string.onekuku_snapshot_five_g_display),
+                        value = on,
+                    ),
+                )
+            }
+            add(
+                SnapshotLine(
+                    label = context.getString(R.string.onekuku_snapshot_meta),
+                    value = context.getString(
+                        R.string.onekuku_snapshot_meta_value,
+                        snap.slotIndex + 1,
+                        snap.carrierName.ifBlank { "—" },
+                        OneKukuSnapshotStore.maskHash(snap.iccidHash),
+                    ),
+                ),
+            )
+        }
+    }
+
     fun sanitizeUserText(raw: String): String =
         raw
             .replace(Regex("(?i)shizuku"), "OneKuku")
@@ -145,6 +267,8 @@ object OneKukuHomeTools {
         val hasFailureInDetail = detail.values.any { !it }
         val hasSuccessInDetail = detail.values.any { it }
         return when {
+            message.contains(OneKukuSnapshotStore.MSG_NO_MATCHING_SIM) ->
+                RestoreOutcome.FAILURE
             success && (message.contains("部分") || (hasFailureInDetail && hasSuccessInDetail)) ->
                 RestoreOutcome.PARTIAL
             success -> RestoreOutcome.SUCCESS

@@ -397,6 +397,10 @@
     <string name="onekuku_snapshot_signal">5G signal strength adjustment</string>
     <string name="onekuku_snapshot_vowifi_name">VoWiFi network name format</string>
     <string name="onekuku_snapshot_identity">App identity override</string>
+    <string name="onekuku_snapshot_five_g_display">5G display boost</string>
+    <string name="onekuku_snapshot_meta">Snapshot binding</string>
+    <string name="onekuku_snapshot_meta_value">SIM %1$d · %2$s · hash=%3$s</string>
+    <string name="onekuku_restore_no_matching_sim">No SIM matched the saved snapshot</string>
     <string name="onekuku_value_on">On</string>
     <string name="onekuku_value_off">Off</string>
     <string name="onekuku_value_unset">Not set</string>

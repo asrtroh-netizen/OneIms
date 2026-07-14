@@ -807,7 +807,13 @@ private fun AppRoot(
                                         restoreOutcome[0] = outcome
                                         val reason = OneKukuHomeTools.sanitizeUserText(
                                             result.message,
-                                        )
+                                        ).let { raw ->
+                                            if (raw.contains(OneKukuSnapshotStore.MSG_NO_MATCHING_SIM)) {
+                                                context.getString(R.string.onekuku_restore_no_matching_sim)
+                                            } else {
+                                                raw
+                                            }
+                                        }
                                         when (outcome) {
                                             OneKukuHomeTools.RestoreOutcome.SUCCESS ->
                                                 context.getString(

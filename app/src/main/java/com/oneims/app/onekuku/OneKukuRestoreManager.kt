@@ -22,47 +22,62 @@ object OneKukuRestoreManager {
             OneKukuHiddenRunner.markFailed(wake.message)
             return wake
         }
-        val snapshot = OneKukuSnapshotStore.load(context, subId)
-        if (snapshot == null || snapshot.subId != subId) {
-            val msg = "no snapshot for subId=$subId"
-            Log.w(TAG, msg)
-            OneKukuSleepController.sleep()
-            return OneKukuCommandResult(false, OneKukuRunnerState.SLEEPING, msg)
-        }
+        val sims = ImsController.listSims(context)
+        when (val resolved = OneKukuSnapshotStore.resolveForSelectedSim(context, subId, sims)) {
+            is SnapshotMatchResult.NoSnapshot -> {
+                val msg = "no snapshot"
+                Log.w(TAG, msg)
+                OneKukuSleepController.sleep()
+                return OneKukuCommandResult(false, OneKukuRunnerState.SLEEPING, msg)
+            }
+            is SnapshotMatchResult.NoMatchingSim -> {
+                Log.w(TAG, OneKukuSnapshotStore.MSG_NO_MATCHING_SIM)
+                OneKukuSleepController.sleep()
+                return OneKukuCommandResult(
+                    false,
+                    OneKukuRunnerState.SLEEPING,
+                    OneKukuSnapshotStore.MSG_NO_MATCHING_SIM,
+                )
+            }
+            is SnapshotMatchResult.Matched -> {
+                val snapshot = resolved.snapshot
+                val writeSubId = resolved.writeSubId
+                // 明确排除 APN：一键恢复通话不自动恢复 APN。
+                val detail = linkedMapOf<String, Boolean>()
+                detail["identity"] = restoreIdentity(context, writeSubId, snapshot).success
+                detail["ims"] = restoreIms(context, writeSubId, snapshot).success
+                detail["wfc"] = restoreWfc(context, writeSubId, snapshot).success
+                detail["nr5g"] = restoreFiveG(context, writeSubId, snapshot).success
+                detail["signal"] = restoreSignal(context, writeSubId, snapshot).success
+                detail["vowifi_name"] = restoreVoWifiName(context, writeSubId, snapshot).success
+                detail["verify"] = verify(context, writeSubId).success
 
-        val detail = linkedMapOf<String, Boolean>()
-        detail["identity"] = restoreIdentity(context, subId, snapshot).success
-        detail["ims"] = restoreIms(context, subId, snapshot).success
-        detail["wfc"] = restoreWfc(context, subId, snapshot).success
-        detail["nr5g"] = restoreFiveG(context, subId, snapshot).success
-        detail["signal"] = restoreSignal(context, subId, snapshot).success
-        detail["vowifi_name"] = restoreVoWifiName(context, subId, snapshot).success
-        detail["verify"] = verify(context, subId).success
-
-        val successCount = detail.values.count { it }
-        val total = detail.size
-        val allOk = successCount == total
-        val partial = successCount > 0 && !allOk
-        val status = when {
-            allOk -> "success"
-            partial -> "partial"
-            else -> "failed"
+                val successCount = detail.values.count { it }
+                val total = detail.size
+                val allOk = successCount == total
+                val partial = successCount > 0 && !allOk
+                val status = when {
+                    allOk -> "success"
+                    partial -> "partial"
+                    else -> "failed"
+                }
+                OneKukuSnapshotStore.updateRestoreStatus(
+                    context = context,
+                    subId = writeSubId,
+                    status = status,
+                    verifiedAt = System.currentTimeMillis(),
+                )
+                OneKukuSleepController.sleep()
+                val message = "restore $status ($successCount/$total)"
+                Log.i(TAG, message)
+                return OneKukuCommandResult(
+                    success = allOk || partial,
+                    state = OneKukuRunnerState.SLEEPING,
+                    message = message,
+                    detail = detail,
+                )
+            }
         }
-        OneKukuSnapshotStore.updateRestoreStatus(
-            context = context,
-            subId = subId,
-            status = status,
-            verifiedAt = System.currentTimeMillis(),
-        )
-        OneKukuSleepController.sleep()
-        val message = "restore $status ($successCount/$total)"
-        Log.i(TAG, message)
-        return OneKukuCommandResult(
-            success = allOk || partial,
-            state = OneKukuRunnerState.SLEEPING,
-            message = message,
-            detail = detail,
-        )
     }
 
     fun restoreIms(context: Context, subId: Int): OneKukuCommandResult =
@@ -114,9 +129,14 @@ object OneKukuRestoreManager {
     }
 
     private fun requireSnapshot(context: Context, subId: Int): OneKukuSnapshot {
-        val snapshot = OneKukuSnapshotStore.load(context, subId)
-        check(snapshot != null && snapshot.subId == subId) { "snapshot mismatch" }
-        return snapshot
+        val sims = ImsController.listSims(context)
+        return when (val resolved = OneKukuSnapshotStore.resolveForSelectedSim(context, subId, sims)) {
+            is SnapshotMatchResult.Matched -> resolved.snapshot
+            is SnapshotMatchResult.NoMatchingSim ->
+                error(OneKukuSnapshotStore.MSG_NO_MATCHING_SIM)
+            is SnapshotMatchResult.NoSnapshot ->
+                error("snapshot missing")
+        }
     }
 
     private fun restoreIdentity(
@@ -124,11 +144,12 @@ object OneKukuRestoreManager {
         subId: Int,
         snapshot: OneKukuSnapshot,
     ): ConfigResult {
-        if (snapshot.subId != subId) return ConfigResult(false, "sim mismatch")
         val carrier = snapshot.entry("identity", "carrierName") ?: return ConfigResult(true, "skip")
         val ua = snapshot.entry("identity", "imsUserAgent").orEmpty()
         if (carrier.isBlank() && ua.isBlank()) return ConfigResult(true, "skip")
-        return ImsController.applyIdentityOverride(context, subId, carrier, ua)
+        // UA 可能已打码；打码值跳过以免写坏
+        val safeUa = if (ua.contains('…') || ua == "***") "" else ua
+        return ImsController.applyIdentityOverride(context, subId, carrier, safeUa)
     }
 
     private fun restoreIms(
@@ -136,11 +157,14 @@ object OneKukuRestoreManager {
         subId: Int,
         snapshot: OneKukuSnapshot,
     ): ConfigResult {
-        if (snapshot.subId != subId) return ConfigResult(false, "sim mismatch")
         val volte = snapshot.bool("ims", "volte", true)
         val vowifi = snapshot.bool("ims", "vowifi", true)
         val vonr = snapshot.bool("ims", "vonr", false)
-        val wfc = WfcMode.of(snapshot.entry("ims", "wfcMode")?.toIntOrNull() ?: 1)
+        val wfc = WfcMode.of(
+            snapshot.entry("wfc", "mode")?.toIntOrNull()
+                ?: snapshot.entry("ims", "wfcMode")?.toIntOrNull()
+                ?: 1,
+        )
         return ImsController.applyAll(context, subId, volte, vowifi, vonr, wfc)
     }
 
@@ -149,8 +173,11 @@ object OneKukuRestoreManager {
         subId: Int,
         snapshot: OneKukuSnapshot,
     ): ConfigResult {
-        if (snapshot.subId != subId) return ConfigResult(false, "sim mismatch")
-        val wfc = WfcMode.of(snapshot.entry("ims", "wfcMode")?.toIntOrNull() ?: 1)
+        val wfc = WfcMode.of(
+            snapshot.entry("wfc", "mode")?.toIntOrNull()
+                ?: snapshot.entry("ims", "wfcMode")?.toIntOrNull()
+                ?: 1,
+        )
         return ImsController.setWfcMode(context, subId, wfc)
     }
 
@@ -159,7 +186,6 @@ object OneKukuRestoreManager {
         subId: Int,
         snapshot: OneKukuSnapshot,
     ): ConfigResult {
-        if (snapshot.subId != subId) return ConfigResult(false, "sim mismatch")
         val enabled = snapshot.bool("nr5g", "enabled", false)
         if (!enabled) return ConfigResult(true, "skip")
         return ImsController.apply5g(context, subId, true)
@@ -170,7 +196,6 @@ object OneKukuRestoreManager {
         subId: Int,
         snapshot: OneKukuSnapshot,
     ): ConfigResult {
-        if (snapshot.subId != subId) return ConfigResult(false, "sim mismatch")
         val enabled = snapshot.bool("signal", "adjustment", false)
         return runCatching {
             val message = SystemDisplayOverrideManager.applySignalStrengthAdjustment(
@@ -188,7 +213,6 @@ object OneKukuRestoreManager {
         subId: Int,
         snapshot: OneKukuSnapshot,
     ): ConfigResult {
-        if (snapshot.subId != subId) return ConfigResult(false, "sim mismatch")
         val index = snapshot.entry("vowifi_name", "formatIndex")?.toIntOrNull()
             ?: return ConfigResult(true, "skip")
         val custom = snapshot.entry("vowifi_name", "customCarrier").orEmpty()
@@ -204,7 +228,7 @@ object OneKukuRestoreManager {
     }
 
     private fun OneKukuSnapshot.entry(type: String, key: String): String? =
-        entries.firstOrNull { it.configType == type && it.key == key }?.value
+        entries.firstOrNull { it.configGroup == type && it.configKey == key }?.configValue
 
     private fun OneKukuSnapshot.bool(type: String, key: String, default: Boolean): Boolean =
         entry(type, key)?.toBooleanStrictOrNull() ?: default

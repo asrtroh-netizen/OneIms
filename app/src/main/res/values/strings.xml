@@ -401,6 +401,10 @@
     <string name="onekuku_snapshot_signal">5G 信号强度调整</string>
     <string name="onekuku_snapshot_vowifi_name">VoWiFi 网络名称格式</string>
     <string name="onekuku_snapshot_identity">应用身份覆盖</string>
+    <string name="onekuku_snapshot_five_g_display">5G 显示增强</string>
+    <string name="onekuku_snapshot_meta">快照绑定</string>
+    <string name="onekuku_snapshot_meta_value">卡%1$d · %2$s · hash=%3$s</string>
+    <string name="onekuku_restore_no_matching_sim">未找到与快照匹配的 SIM</string>
     <string name="onekuku_value_on">开</string>
     <string name="onekuku_value_off">关</string>
     <string name="onekuku_value_unset">未设置</string>
