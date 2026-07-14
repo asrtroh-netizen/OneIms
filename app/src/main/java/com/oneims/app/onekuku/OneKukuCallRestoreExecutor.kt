@@ -4,7 +4,6 @@ import android.content.Context
 import android.util.Log
 import com.oneims.app.R
 import com.oneims.app.core.ConfigStore
-import com.oneims.app.core.ImsController
 import com.oneims.app.core.OneKukuManager
 import com.oneims.app.core.OneKukuPrivilegeBridgeImpl
 import com.oneims.app.core.ReapplyTrigger
@@ -28,23 +27,53 @@ object OneKukuCallRestoreExecutor {
         selectedSubId: Int,
         sims: List<SimInfo>,
     ): Report {
+        val startedAt = System.currentTimeMillis()
+        val restoreId = OneKukuRestoreHistoryStore.newRestoreId()
+        val statusBefore = OneKukuRestoreHistoryStore.statusLabel(
+            OneKukuHiddenRunner.currentState(),
+        )
         OneKukuHiddenRunner.installBridge(OneKukuPrivilegeBridgeImpl)
         OneKukuHiddenRunner.markExecuting()
 
-        if (selectedSubId < 0 || sims.none { it.subscriptionId == selectedSubId }) {
+        val sim = sims.firstOrNull { it.subscriptionId == selectedSubId }
+        if (sim == null || selectedSubId < 0) {
             OneKukuSleepController.sleep()
-            return fail(context.getString(R.string.onekuku_restore_need_sim))
+            val msg = context.getString(R.string.onekuku_restore_need_sim)
+            persistHistory(
+                context = context,
+                restoreId = restoreId,
+                startedAt = startedAt,
+                sim = null,
+                selectedSubId = selectedSubId,
+                statusBefore = statusBefore,
+                outcome = OneKukuHomeTools.RestoreOutcome.FAILURE,
+                detail = emptyMap(),
+                snapshot = null,
+                userMessage = msg,
+            )
+            return Report(OneKukuHomeTools.RestoreOutcome.FAILURE, msg)
         }
 
         val resolved = OneKukuSnapshotStore.resolveForSelectedSim(context, selectedSubId, sims)
+        val snapshot = (resolved as? SnapshotMatchResult.Matched)?.snapshot
         when (resolved) {
             is SnapshotMatchResult.NoSnapshot -> {
                 OneKukuSleepController.sleep()
-                return fail(context.getString(R.string.onekuku_restore_no_snapshot))
+                val msg = context.getString(R.string.onekuku_restore_no_snapshot)
+                persistHistory(
+                    context, restoreId, startedAt, sim, selectedSubId, statusBefore,
+                    OneKukuHomeTools.RestoreOutcome.FAILURE, emptyMap(), null, msg,
+                )
+                return Report(OneKukuHomeTools.RestoreOutcome.FAILURE, msg)
             }
             is SnapshotMatchResult.NoMatchingSim -> {
                 OneKukuSleepController.sleep()
-                return fail(context.getString(R.string.onekuku_restore_sim_mismatch))
+                val msg = context.getString(R.string.onekuku_restore_sim_mismatch)
+                persistHistory(
+                    context, restoreId, startedAt, sim, selectedSubId, statusBefore,
+                    OneKukuHomeTools.RestoreOutcome.FAILURE, emptyMap(), null, msg,
+                )
+                return Report(OneKukuHomeTools.RestoreOutcome.FAILURE, msg)
             }
             is SnapshotMatchResult.Matched -> Unit
         }
@@ -53,7 +82,12 @@ object OneKukuCallRestoreExecutor {
             OneKukuHiddenRunner.markFailed("OneKuku inactive")
             OneKukuBootRestoreStore.writeHint(context, OneKukuBootUiHint.NEEDS_ACTIVATION)
             OneKukuSleepController.sleep()
-            return fail(context.getString(R.string.onekuku_restore_onekuku_inactive))
+            val msg = context.getString(R.string.onekuku_restore_onekuku_inactive)
+            persistHistory(
+                context, restoreId, startedAt, sim, selectedSubId, statusBefore,
+                OneKukuHomeTools.RestoreOutcome.FAILURE, emptyMap(), snapshot, msg,
+            )
+            return Report(OneKukuHomeTools.RestoreOutcome.FAILURE, msg)
         }
 
         val result = OneKukuCommandDispatcher.dispatch(
@@ -61,7 +95,6 @@ object OneKukuCallRestoreExecutor {
             command = OneKukuCommand.RESTORE_ALL_CALL_CONFIGS,
             subId = selectedSubId,
         )
-        // Dispatcher/RestoreManager 已 sleep；这里再确保一次
         OneKukuSleepController.sleep()
 
         val detailOk = result.detail.values.count { it }
@@ -99,17 +132,78 @@ object OneKukuCallRestoreExecutor {
             }
         }
 
+        persistHistory(
+            context = context,
+            restoreId = restoreId,
+            startedAt = startedAt,
+            sim = sim,
+            selectedSubId = selectedSubId,
+            statusBefore = statusBefore,
+            outcome = outcome,
+            detail = result.detail,
+            snapshot = snapshot,
+            userMessage = userMessage,
+        )
+        Log.i(TAG, "manual restore outcome=$outcome detail=$detailOk/$detailTotal")
+        return Report(outcome, userMessage, result.detail)
+    }
+
+    private fun persistHistory(
+        context: Context,
+        restoreId: String,
+        startedAt: Long,
+        sim: SimInfo?,
+        selectedSubId: Int,
+        statusBefore: String,
+        outcome: OneKukuHomeTools.RestoreOutcome,
+        detail: Map<String, Boolean>,
+        snapshot: OneKukuSnapshot?,
+        userMessage: String,
+    ) {
+        val finishedAt = System.currentTimeMillis()
+        val statusAfter = OneKukuRestoreHistoryStore.statusLabel(
+            OneKukuHiddenRunner.currentState(),
+        )
+        val historyResult = when (outcome) {
+            OneKukuHomeTools.RestoreOutcome.SUCCESS -> RestoreHistoryResult.SUCCESS
+            OneKukuHomeTools.RestoreOutcome.PARTIAL -> RestoreHistoryResult.PARTIAL_SUCCESS
+            OneKukuHomeTools.RestoreOutcome.FAILURE -> RestoreHistoryResult.FAILED
+        }
+        val iccidHash = snapshot?.iccidHash
+            ?: OneKukuSnapshotStore.hashIccid(
+                OneKukuSnapshotStore.readIccidRaw(context, selectedSubId),
+            )
+        OneKukuRestoreHistoryStore.save(
+            context,
+            OneKukuRestoreHistoryRecord(
+                restoreId = restoreId,
+                startedAt = startedAt,
+                finishedAt = finishedAt,
+                targetSubId = selectedSubId,
+                targetSlotIndex = sim?.slotIndex ?: snapshot?.slotIndex ?: -1,
+                carrierName = sim?.carrierName?.ifBlank { null }
+                    ?: snapshot?.carrierName.orEmpty(),
+                mccmnc = sim?.let { "${it.mcc}${it.mnc}" } ?: snapshot?.mccmnc.orEmpty(),
+                iccidHashMasked = iccidHash?.let { OneKukuSnapshotStore.maskHash(it) },
+                result = historyResult,
+                oneKukuStatusBefore = statusBefore,
+                oneKukuStatusAfter = statusAfter,
+                itemResults = OneKukuRestoreHistoryStore.mapItemResults(detail, snapshot),
+                failureReason = userMessage.takeIf {
+                    outcome == OneKukuHomeTools.RestoreOutcome.FAILURE
+                },
+                logSummary = "restoreId=$restoreId result=$historyResult",
+            ),
+        )
         ConfigStore.saveReapplyStatus(
             context,
             ConfigStore.ReapplyStatus(
-                timestampMillis = System.currentTimeMillis(),
+                timestampMillis = finishedAt,
                 success = outcome != OneKukuHomeTools.RestoreOutcome.FAILURE,
                 trigger = ReapplyTrigger.MANUAL,
                 message = userMessage,
             ),
         )
-        Log.i(TAG, "manual restore outcome=$outcome detail=$detailOk/$detailTotal")
-        return Report(outcome, userMessage, result.detail)
     }
 
     private fun ensureOneKukuReady(context: Context): Boolean {
@@ -118,12 +212,8 @@ object OneKukuCallRestoreExecutor {
         if (wake.success && OneKukuManager.isReady()) return true
         if (OneKukuManager.isRunning() && !OneKukuManager.isGranted()) {
             OneKukuManager.requestActivation()
-            // 授权是异步的，本次手动恢复不能假成功
             return OneKukuManager.isReady()
         }
         return false
     }
-
-    private fun fail(message: String): Report =
-        Report(OneKukuHomeTools.RestoreOutcome.FAILURE, message)
 }

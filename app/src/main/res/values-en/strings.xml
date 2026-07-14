@@ -413,6 +413,31 @@
     <string name="onekuku_value_configured">Configured</string>
 
     <string name="onekuku_history_empty">No restore history yet</string>
+
+    <string name="onekuku_history_recent">Latest restore</string>
+    <string name="onekuku_history_result_label">Result</string>
+    <string name="onekuku_history_onekuku_label">OneKuku</string>
+    <string name="onekuku_history_target_label">Target</string>
+    <string name="onekuku_history_reason_label">Reason</string>
+    <string name="onekuku_history_just_now">Just now</string>
+    <string name="onekuku_history_minutes_ago">%1$d min ago</string>
+    <string name="onekuku_history_hours_ago">%1$d hr ago</string>
+    <string name="onekuku_history_result_success">All succeeded</string>
+    <string name="onekuku_history_result_partial">Partial success</string>
+    <string name="onekuku_history_result_failed">Failed</string>
+    <string name="onekuku_history_kuku_sleeping">Sleeping</string>
+    <string name="onekuku_history_kuku_failed">Execution failed</string>
+    <string name="onekuku_history_kuku_inactive">Inactive</string>
+    <string name="onekuku_history_target_value">SIM %1$d · %2$s</string>
+    <string name="onekuku_history_item_identity">Identity override</string>
+    <string name="onekuku_history_item_ims">IMS core</string>
+    <string name="onekuku_history_item_wfc">WFC mode</string>
+    <string name="onekuku_history_item_nr5g">5G NR</string>
+    <string name="onekuku_history_item_signal">5G signal adjustment</string>
+    <string name="onekuku_history_item_vowifi">VoWiFi name format</string>
+    <string name="onekuku_history_item_ok">Success</string>
+    <string name="onekuku_history_item_fail">Failed</string>
+    <string name="onekuku_history_item_skip">Skipped</string>
     <string name="onekuku_history_time">Restored at: %1$s</string>
     <string name="onekuku_history_result">Result: %1$s</string>
     <string name="onekuku_history_reason">Failure reason: %1$s</string>

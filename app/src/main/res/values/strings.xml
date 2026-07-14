@@ -417,6 +417,31 @@
     <string name="onekuku_value_configured">已配置</string>
 
     <string name="onekuku_history_empty">暂无恢复记录</string>
+
+    <string name="onekuku_history_recent">最近恢复</string>
+    <string name="onekuku_history_result_label">结果</string>
+    <string name="onekuku_history_onekuku_label">OneKuku</string>
+    <string name="onekuku_history_target_label">目标</string>
+    <string name="onekuku_history_reason_label">原因</string>
+    <string name="onekuku_history_just_now">刚刚</string>
+    <string name="onekuku_history_minutes_ago">%1$d 分钟前</string>
+    <string name="onekuku_history_hours_ago">%1$d 小时前</string>
+    <string name="onekuku_history_result_success">全部成功</string>
+    <string name="onekuku_history_result_partial">部分成功</string>
+    <string name="onekuku_history_result_failed">失败</string>
+    <string name="onekuku_history_kuku_sleeping">已休眠</string>
+    <string name="onekuku_history_kuku_failed">执行失败</string>
+    <string name="onekuku_history_kuku_inactive">未激活</string>
+    <string name="onekuku_history_target_value">卡%1$d · %2$s</string>
+    <string name="onekuku_history_item_identity">应用身份覆盖</string>
+    <string name="onekuku_history_item_ims">IMS 核心能力</string>
+    <string name="onekuku_history_item_wfc">WFC 模式</string>
+    <string name="onekuku_history_item_nr5g">5G NR</string>
+    <string name="onekuku_history_item_signal">5G 信号强度调整</string>
+    <string name="onekuku_history_item_vowifi">VoWiFi 网络名称格式</string>
+    <string name="onekuku_history_item_ok">成功</string>
+    <string name="onekuku_history_item_fail">失败</string>
+    <string name="onekuku_history_item_skip">跳过</string>
     <string name="onekuku_history_time">恢复时间：%1$s</string>
     <string name="onekuku_history_result">恢复结果：%1$s</string>
     <string name="onekuku_history_reason">失败原因：%1$s</string>

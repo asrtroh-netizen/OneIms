@@ -7,6 +7,9 @@ import com.oneims.app.core.VoWifiNameFormatManager
 import com.oneims.app.model.WfcMode
 import com.oneims.app.onekuku.OneKukuSnapshot
 import com.oneims.app.onekuku.OneKukuSnapshotStore
+import com.oneims.app.onekuku.OneKukuRestoreHistoryStore
+import com.oneims.app.onekuku.RestoreHistoryResult
+import com.oneims.app.onekuku.RestoreItemStatus
 import com.oneims.app.onekuku.SnapshotMatchResult
 import java.text.DateFormat
 import java.util.Date
@@ -221,6 +224,100 @@ object OneKukuHomeTools {
                     ),
                 ),
             )
+        }
+    }
+
+    fun buildRestoreHistoryLines(context: Context): List<SnapshotLine>? {
+        val record = OneKukuRestoreHistoryStore.loadLatest(context) ?: return null
+        val relative = formatRelativeRestoreTime(context, record.finishedAt)
+        val resultLabel = when (record.result) {
+            RestoreHistoryResult.SUCCESS ->
+                context.getString(R.string.onekuku_history_result_success)
+            RestoreHistoryResult.PARTIAL_SUCCESS ->
+                context.getString(R.string.onekuku_history_result_partial)
+            RestoreHistoryResult.FAILED ->
+                context.getString(R.string.onekuku_history_result_failed)
+        }
+        val oneKukuLabel = when (record.oneKukuStatusAfter) {
+            "sleeping" -> context.getString(R.string.onekuku_history_kuku_sleeping)
+            "failed" -> context.getString(R.string.onekuku_history_kuku_failed)
+            "inactive" -> context.getString(R.string.onekuku_history_kuku_inactive)
+            else -> context.getString(R.string.onekuku_history_kuku_failed)
+        }
+        val slot = (record.targetSlotIndex + 1).coerceAtLeast(1)
+        val carrier = record.carrierName.ifBlank { "—" }
+        val target = context.getString(R.string.onekuku_history_target_value, slot, carrier)
+
+        fun itemLabel(key: String): String = when (key) {
+            "identity" -> context.getString(R.string.onekuku_history_item_identity)
+            "ims" -> context.getString(R.string.onekuku_history_item_ims)
+            "wfc" -> context.getString(R.string.onekuku_history_item_wfc)
+            "nr5g" -> context.getString(R.string.onekuku_history_item_nr5g)
+            "signal" -> context.getString(R.string.onekuku_history_item_signal)
+            "vowifi_name" -> context.getString(R.string.onekuku_history_item_vowifi)
+            else -> key
+        }
+
+        fun itemStatus(status: RestoreItemStatus): String = when (status) {
+            RestoreItemStatus.SUCCESS -> context.getString(R.string.onekuku_history_item_ok)
+            RestoreItemStatus.FAILED -> context.getString(R.string.onekuku_history_item_fail)
+            RestoreItemStatus.SKIPPED -> context.getString(R.string.onekuku_history_item_skip)
+        }
+
+        return buildList {
+            add(
+                SnapshotLine(
+                    context.getString(R.string.onekuku_history_recent),
+                    relative,
+                ),
+            )
+            add(
+                SnapshotLine(
+                    context.getString(R.string.onekuku_history_result_label),
+                    resultLabel,
+                ),
+            )
+            add(
+                SnapshotLine(
+                    context.getString(R.string.onekuku_history_onekuku_label),
+                    oneKukuLabel,
+                ),
+            )
+            add(
+                SnapshotLine(
+                    context.getString(R.string.onekuku_history_target_label),
+                    target,
+                ),
+            )
+            record.itemResults.forEach { (key, status) ->
+                add(SnapshotLine(itemLabel(key), itemStatus(status)))
+            }
+            if (record.result == RestoreHistoryResult.FAILED) {
+                val reason = record.failureReason
+                    ?.let { sanitizeUserText(it) }
+                    ?.ifBlank { null }
+                    ?: context.getString(R.string.onekuku_history_no_reason)
+                add(
+                    SnapshotLine(
+                        context.getString(R.string.onekuku_history_reason_label),
+                        reason,
+                    ),
+                )
+            }
+        }
+    }
+
+    fun formatRelativeRestoreTime(context: Context, timestampMillis: Long): String {
+        val delta = (System.currentTimeMillis() - timestampMillis).coerceAtLeast(0L)
+        val minutes = delta / 60_000L
+        val hours = delta / 3_600_000L
+        return when {
+            minutes < 1L -> context.getString(R.string.onekuku_history_just_now)
+            minutes < 60L ->
+                context.getString(R.string.onekuku_history_minutes_ago, minutes.toInt())
+            hours < 48L ->
+                context.getString(R.string.onekuku_history_hours_ago, hours.toInt())
+            else -> formatRestoreTime(timestampMillis)
         }
     }
 

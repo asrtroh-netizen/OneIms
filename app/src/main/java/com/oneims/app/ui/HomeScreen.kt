@@ -207,42 +207,31 @@ fun HomeScreen(
         }
 
         HomeToolDialog.History -> {
-            val status = state.reapplyStatus
+            val lines = OneKukuHomeTools.buildRestoreHistoryLines(context)
             AlertDialog(
                 onDismissRequest = { openDialog = null },
                 title = { Text(stringResource(R.string.onekuku_tool_history_title)) },
                 text = {
-                    if (status == null) {
+                    if (lines == null) {
                         Text(stringResource(R.string.onekuku_history_empty))
                     } else {
-                        val failure = OneKukuHomeTools.sanitizeUserText(status.message)
-                            .ifBlank { stringResource(R.string.onekuku_history_no_reason) }
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(
-                                stringResource(
-                                    R.string.onekuku_history_time,
-                                    OneKukuHomeTools.formatRestoreTime(status.timestampMillis),
-                                ),
-                            )
-                            Text(
-                                stringResource(
-                                    R.string.onekuku_history_result,
-                                    OneKukuHomeTools.restoreResultLabel(context, status),
-                                ),
-                            )
-                            if (!status.success) {
-                                Text(stringResource(R.string.onekuku_history_reason, failure))
+                        Column(
+                            modifier = Modifier.verticalScroll(rememberScrollState()),
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                        ) {
+                            lines.forEach { line ->
+                                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                    Text(
+                                        line.label,
+                                        style = MaterialTheme.typography.labelLarge,
+                                        color = MaterialTheme.colorScheme.primary,
+                                    )
+                                    Text(
+                                        line.value,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                    )
+                                }
                             }
-                            Text(
-                                stringResource(
-                                    R.string.onekuku_history_status,
-                                    OneKukuHomeTools.settingsStatusLabel(
-                                        context = context,
-                                        state = state.oneKukuState,
-                                        serviceRunning = state.shizukuRunning,
-                                    ),
-                                ),
-                            )
                         }
                     }
                 },
