@@ -40,6 +40,7 @@ object OneKukuEmbeddedAdbActivator {
 
     private const val TAG = "OneIMS-EmbeddedAdb"
     private const val HOST = "127.0.0.1"
+    private const val PERSIST_PORT = 5555
     private const val PREFS = "onekuku_adb_identity"
     private const val KEY_PRIVATE = "private_key_b64"
     private const val KEY_CERT = "cert_b64"
@@ -102,28 +103,14 @@ object OneKukuEmbeddedAdbActivator {
                 }
             }
 
+            // 持久化：无线调试跳板 → tcpip 5555 → 回环自连（出门关 WiFi 也可保活）
+            val persisted = persistTcpip5555(manager)
+            Log.i(TAG, "tcpip5555 persisted=$persisted")
+
             val startCmd =
                 "sh /storage/emulated/0/Android/data/${OneKukuCoreComponent.CORE_PACKAGE}/start.sh\n"
             val shellOk = runCatching {
-                manager.openStream("shell:").use { stream ->
-                    stream.openOutputStream().use { out ->
-                        out.write(startCmd.toByteArray(StandardCharsets.UTF_8))
-                        out.flush()
-                    }
-                    // 短暂读取输出，避免无限阻塞
-                    val buf = ByteArray(4096)
-                    val input = stream.openInputStream()
-                    val read = runCatching {
-                        input.read(buf)
-                    }.getOrDefault(-1)
-                    val text = if (read > 0) {
-                        String(buf, 0, read, StandardCharsets.UTF_8)
-                    } else {
-                        ""
-                    }
-                    Log.i(TAG, "shell out=$text")
-                    true
-                }
+                writeShell(manager, startCmd)
             }.getOrElse {
                 Log.w(TAG, "shell failed", it)
                 false
@@ -132,10 +119,49 @@ object OneKukuEmbeddedAdbActivator {
 
             Thread.sleep(800)
             if (OneKukuManager.isRunning()) {
-                Outcome.Success("core_running")
+                Outcome.Success(if (persisted) "core_running_tcpip" else "core_running")
             } else {
-                Outcome.Success("start_issued")
+                Outcome.Success(if (persisted) "start_issued_tcpip" else "start_issued")
             }
+        }
+
+    /**
+     * 通过 ADB 服务 `tcpip:5555` 把 adbd 切到固定端口，再连回 127.0.0.1:5555。
+     * 失败不阻断后续 start.sh（仍可用当前无线调试连接）。
+     */
+    private fun persistTcpip5555(manager: AbsAdbConnectionManager): Boolean {
+        val switched = runCatching {
+            manager.openStream("tcpip:5555").use { stream ->
+                val buf = ByteArray(64)
+                runCatching { stream.openInputStream().read(buf) }
+            }
+            true
+        }.getOrElse {
+            Log.w(TAG, "tcpip:5555 failed", it)
+            false
+        }
+        if (!switched) return false
+        Thread.sleep(600)
+        return runCatching {
+            manager.connect(HOST, PERSIST_PORT)
+            true
+        }.getOrElse {
+            Log.w(TAG, "reconnect :$PERSIST_PORT failed", it)
+            false
+        }
+    }
+
+    private fun writeShell(manager: AbsAdbConnectionManager, command: String): Boolean =
+        manager.openStream("shell:").use { stream ->
+            stream.openOutputStream().use { out ->
+                out.write(command.toByteArray(StandardCharsets.UTF_8))
+                out.flush()
+            }
+            val buf = ByteArray(4096)
+            val read = runCatching { stream.openInputStream().read(buf) }.getOrDefault(-1)
+            val text = if (read > 0) String(buf, 0, read, StandardCharsets.UTF_8) else ""
+            Log.i(TAG, "shell out=$text")
+            true
         }
 
     /**

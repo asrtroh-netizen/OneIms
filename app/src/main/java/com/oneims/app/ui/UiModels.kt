@@ -76,6 +76,9 @@ data class HomeActions(
     val onBootAutoCheckChange: (Boolean) -> Unit,
     val onAutoRestoreChange: (Boolean) -> Unit,
     val onAutoSleepChange: (Boolean) -> Unit,
+    val onOpenWirelessDebugging: () -> Unit = {},
+    val onOpenHotspot: () -> Unit = {},
+    val onCopyAdbGuide: () -> Unit = {},
 )
 
 /**

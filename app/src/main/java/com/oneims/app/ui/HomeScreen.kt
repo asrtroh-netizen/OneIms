@@ -10,7 +10,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.AccountBox
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
@@ -71,6 +73,52 @@ fun HomeScreen(
                 deviceInfo = state.deviceInfo,
                 detailOverride = state.oneKukuDetailOverride,
             )
+        }
+
+        item {
+            SectionBlock(
+                title = stringResource(R.string.home_adb_prep_title),
+                description = stringResource(R.string.home_adb_prep_sub),
+            ) {
+                Column(
+                    modifier = Modifier.padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.home_adb_prep_steps),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    ActionGrid(
+                        listOf(
+                            ActionSpec(
+                                icon = Icons.Filled.Build,
+                                title = stringResource(R.string.home_adb_open_wireless),
+                                subtitle = stringResource(R.string.home_adb_open_wireless_sub),
+                                onClick = actions.onOpenWirelessDebugging,
+                            ),
+                            ActionSpec(
+                                icon = Icons.Filled.LocationOn,
+                                title = stringResource(R.string.home_adb_open_hotspot),
+                                subtitle = stringResource(R.string.home_adb_open_hotspot_sub),
+                                onClick = actions.onOpenHotspot,
+                            ),
+                            ActionSpec(
+                                icon = Icons.Filled.Refresh,
+                                title = stringResource(R.string.home_adb_start_core),
+                                subtitle = stringResource(R.string.home_adb_start_core_sub),
+                                onClick = actions.onActivateOneKuku,
+                            ),
+                            ActionSpec(
+                                icon = Icons.Filled.Info,
+                                title = stringResource(R.string.home_adb_copy_guide),
+                                subtitle = stringResource(R.string.home_adb_copy_guide_sub),
+                                onClick = actions.onCopyAdbGuide,
+                            ),
+                        ),
+                    )
+                }
+            }
         }
 
         item {

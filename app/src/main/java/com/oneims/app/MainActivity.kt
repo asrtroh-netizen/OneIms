@@ -1078,6 +1078,36 @@ private fun AppRoot(
                                 ),
                             )
                         },
+                        onOpenWirelessDebugging = {
+                            publish(
+                                context.getString(
+                                    if (ShizukuSetupHelper.openWirelessDebugging(context)) {
+                                        R.string.log_jumped_wireless
+                                    } else {
+                                        R.string.log_jump_failed
+                                    },
+                                ),
+                            )
+                        },
+                        onOpenHotspot = {
+                            publish(
+                                context.getString(
+                                    if (ShizukuSetupHelper.openHotspotSettings(context)) {
+                                        R.string.log_hotspot_opened
+                                    } else {
+                                        R.string.log_open_failed
+                                    },
+                                ),
+                            )
+                        },
+                        onCopyAdbGuide = {
+                            ShizukuSetupHelper.copyToClipboard(
+                                context,
+                                context.getString(R.string.app_name),
+                                OneKukuCoreComponent.guidedActivationScript(context),
+                            )
+                            publish(context.getString(R.string.log_cmd_copied))
+                        },
                     ),
                 )
 
