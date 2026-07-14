@@ -54,6 +54,7 @@ enum class ThemeMode(val storedValue: Int) {
 data class HomeUiState(
     val shizukuRunning: Boolean,
     val shizukuGranted: Boolean,
+    val oneKuState: OneKuCardState,
     val deviceInfo: String,
     val sims: List<SimInfo>,
     val selectedSubId: Int,
@@ -65,6 +66,9 @@ data class HomeActions(
     val onRefresh: () -> Unit,
     val onCompatibilityCheck: () -> Unit,
     val onGrantShizuku: () -> Unit,
+    val onActivateOneKu: () -> Unit,
+    val onRestoreCallConfig: () -> Unit,
+    val onCheckOneKuStatus: () -> Unit,
     val onRestoreDefaults: () -> Unit,
     val onSelectSim: (Int) -> Unit,
 )

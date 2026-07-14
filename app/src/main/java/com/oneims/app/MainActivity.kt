@@ -87,6 +87,7 @@ import com.oneims.app.ui.HomeScreen
 import com.oneims.app.ui.HomeUiState
 import com.oneims.app.ui.OneImsScaffold
 import com.oneims.app.ui.OneImsPrimaryButton
+import com.oneims.app.ui.OneKuCardPolicy
 import com.oneims.app.ui.SettingsActions
 import com.oneims.app.ui.SettingsScreen
 import com.oneims.app.ui.SettingsUiState
@@ -206,6 +207,8 @@ private fun AppRoot(
 
     var shizukuRunning by remember { mutableStateOf(ShizukuManager.isRunning()) }
     var shizukuGranted by remember { mutableStateOf(ShizukuManager.isGranted()) }
+    var oneKuTaskComplete by remember { mutableStateOf(false) }
+    var oneKuRestoring by remember { mutableStateOf(false) }
     var sims by remember { mutableStateOf(emptyList<SimInfo>()) }
     var selectedSubId by remember { mutableIntStateOf(ConfigStore.getSelectedSubId(context)) }
     var deviceInfo by remember { mutableStateOf("") }
@@ -261,6 +264,18 @@ private fun AppRoot(
 
     val selectedSim = sims.firstOrNull { it.subscriptionId == selectedSubId }
     val actionsAvailable = busyLabel == null
+    val oneKuState = OneKuCardPolicy.resolve(
+        serviceReady = shizukuRunning && shizukuGranted,
+        isExecuting = oneKuRestoring,
+        taskComplete = oneKuTaskComplete,
+    )
+
+    LaunchedEffect(shizukuRunning, shizukuGranted) {
+        if (!shizukuRunning || !shizukuGranted) {
+            oneKuTaskComplete = false
+            oneKuRestoring = false
+        }
+    }
     val phonePermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission(),
     ) {
@@ -590,9 +605,9 @@ private fun AppRoot(
                 publish(
                     context.getString(
                         if (ShizukuManager.isGranted()) {
-                            R.string.shizuku_permission_granted_message
+                            R.string.oneku_msg_activated
                         } else {
-                            R.string.shizuku_permission_denied_message
+                            R.string.oneku_msg_activation_denied
                         },
                     ),
                 )
@@ -604,6 +619,8 @@ private fun AppRoot(
         val binderDeadListener = Shizuku.OnBinderDeadListener {
             shizukuRunning = false
             shizukuGranted = false
+            oneKuTaskComplete = false
+            oneKuRestoring = false
         }
 
         runCatching { Shizuku.addRequestPermissionResultListener(permissionListener) }
@@ -633,6 +650,7 @@ private fun AppRoot(
                     state = HomeUiState(
                         shizukuRunning = shizukuRunning,
                         shizukuGranted = shizukuGranted,
+                        oneKuState = oneKuState,
                         deviceInfo = deviceInfo,
                         sims = sims,
                         selectedSubId = selectedSubId,
@@ -650,14 +668,72 @@ private fun AppRoot(
                         onGrantShizuku = {
                             when {
                                 !ShizukuManager.isRunning() ->
-                                    publish(context.getString(R.string.shizuku_not_running_message))
+                                    publish(context.getString(R.string.oneku_msg_need_prepare))
                                 ShizukuManager.isGranted() ->
-                                    publish(context.getString(R.string.shizuku_already_granted_message))
+                                    publish(context.getString(R.string.oneku_msg_already_active))
                                 else -> {
                                     ShizukuManager.requestPermission()
-                                    publish(context.getString(R.string.shizuku_permission_requested))
+                                    publish(context.getString(R.string.oneku_msg_permission_requested))
                                 }
                             }
+                        },
+                        onActivateOneKu = {
+                            when {
+                                !ShizukuManager.isRunning() -> {
+                                    ShizukuSetupHelper.openShizukuApp(context)
+                                    publish(context.getString(R.string.oneku_msg_need_prepare))
+                                }
+                                ShizukuManager.isGranted() -> {
+                                    refreshAll()
+                                    publish(context.getString(R.string.oneku_msg_already_active))
+                                }
+                                else -> {
+                                    ShizukuManager.requestPermission()
+                                    publish(context.getString(R.string.oneku_msg_permission_requested))
+                                }
+                            }
+                        },
+                        onRestoreCallConfig = {
+                            shizukuRunning = ShizukuManager.isRunning()
+                            shizukuGranted = ShizukuManager.isGranted()
+                            when {
+                                !shizukuRunning || !shizukuGranted ->
+                                    publish(context.getString(R.string.oneku_msg_need_active))
+                                selectedSubId < 0 ->
+                                    publish(context.getString(R.string.oneku_msg_need_sim))
+                                busyLabel != null ->
+                                    publish(context.getString(R.string.operation_already_running))
+                                else -> {
+                                    val targetSubId = selectedSubId
+                                    val restoreSucceeded = booleanArrayOf(false)
+                                    oneKuTaskComplete = false
+                                    oneKuRestoring = true
+                                    runOperation(
+                                        label = context.getString(R.string.oneku_busy_restore),
+                                        onComplete = {
+                                            oneKuRestoring = false
+                                            if (restoreSucceeded[0]) {
+                                                oneKuTaskComplete = true
+                                                reapplyStatus =
+                                                    ConfigStore.lastReapplyStatus(context)
+                                            }
+                                        },
+                                    ) {
+                                        val result = ReapplyManager.reapply(
+                                            context = context,
+                                            trigger = ReapplyTrigger.MANUAL,
+                                            targetSubId = targetSubId,
+                                        )
+                                        restoreSucceeded[0] = result.success
+                                        result.message
+                                    }
+                                }
+                            }
+                        },
+                        onCheckOneKuStatus = {
+                            oneKuTaskComplete = false
+                            refreshAll()
+                            publish(context.getString(R.string.oneku_msg_status_ok))
                         },
                         onRestoreDefaults = {
                             if (ensurePrivilegedAccess()) {

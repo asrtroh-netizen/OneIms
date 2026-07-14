@@ -677,22 +677,19 @@ private fun ActionTile(
 }
 
 /**
- * 顶部状态卡：原有"图标+标题+副标题"结构保持不变（审美不变），
- * 在其下按需追加两块只读内容——不改变 Hero 本身的配色与形状语言，只是在同一张卡片里延伸：
- * 1. [sims] 非空时，追加胶囊分页（[SimStatusCapsulePager]）展示每张卡的状态，左右滑动切换；
- * 2. [deviceInfo] 非空时，追加可展开/收起的设备详情文本（原「设备详情」区块的内容原样搬入）。
- * 两块均只读展示，不提供选卡等交互，选卡与运营商配置已迁移到「能力」页。
+ * 首页顶部 OneKu 总控卡：保留原 Hero 外壳（extraLarge 圆角、红/白语义底、左图标），
+ * 对内换成 OneKu 四态文案、右上状态胶囊、轻量进度阶段与主操作按钮；
+ * 不展示终端、命令或底层通道名称。SIM 胶囊分页与设备详情仍按需附在卡内。
  */
 @Composable
 fun StatusHero(
-    ready: Boolean,
-    title: String,
-    subtitle: String,
-    supportingText: String,
+    oneKuState: OneKuCardState,
+    onPrimaryAction: () -> Unit,
     sims: List<SimInfo> = emptyList(),
     selectedSubId: Int = -1,
     deviceInfo: String = "",
 ) {
+    val ready = oneKuState != OneKuCardState.INACTIVE
     val containerColor = if (ready) {
         MaterialTheme.colorScheme.primaryContainer
     } else {
@@ -703,6 +700,58 @@ fun StatusHero(
     } else {
         MaterialTheme.colorScheme.onErrorContainer
     }
+
+    val title = stringResource(
+        when (oneKuState) {
+            OneKuCardState.INACTIVE -> R.string.oneku_title_inactive
+            OneKuCardState.SLEEPING,
+            OneKuCardState.COMPLETE -> R.string.oneku_title_ready
+            OneKuCardState.RUNNING -> R.string.oneku_title_running
+        },
+    )
+    val subtitle = stringResource(
+        when (oneKuState) {
+            OneKuCardState.INACTIVE -> R.string.oneku_subtitle_inactive
+            OneKuCardState.SLEEPING -> R.string.oneku_subtitle_sleeping
+            OneKuCardState.RUNNING -> R.string.oneku_subtitle_running
+            OneKuCardState.COMPLETE -> R.string.oneku_subtitle_complete
+        },
+    )
+    val detail = stringResource(
+        when (oneKuState) {
+            OneKuCardState.INACTIVE -> R.string.oneku_detail_inactive
+            OneKuCardState.SLEEPING -> R.string.oneku_detail_sleeping
+            OneKuCardState.RUNNING -> R.string.oneku_detail_running
+            OneKuCardState.COMPLETE -> R.string.oneku_detail_complete
+        },
+    )
+    val showPowerHint = oneKuState == OneKuCardState.INACTIVE ||
+        oneKuState == OneKuCardState.SLEEPING
+    val statusPill = stringResource(
+        when (oneKuState) {
+            OneKuCardState.INACTIVE -> R.string.oneku_pill_inactive
+            OneKuCardState.SLEEPING,
+            OneKuCardState.COMPLETE -> R.string.oneku_pill_sleeping
+            OneKuCardState.RUNNING -> R.string.oneku_pill_running
+        },
+    )
+    val actionLabel = stringResource(
+        when (oneKuState) {
+            OneKuCardState.INACTIVE -> R.string.oneku_action_activate
+            OneKuCardState.SLEEPING -> R.string.oneku_action_restore
+            OneKuCardState.RUNNING -> R.string.oneku_action_running
+            OneKuCardState.COMPLETE -> R.string.oneku_action_check
+        },
+    )
+    val actionSub = when (oneKuState) {
+        OneKuCardState.INACTIVE -> stringResource(R.string.oneku_action_activate_sub)
+        OneKuCardState.SLEEPING -> stringResource(R.string.oneku_action_restore_sub)
+        OneKuCardState.RUNNING,
+        OneKuCardState.COMPLETE -> null
+    }
+    val actionEnabled = oneKuState != OneKuCardState.RUNNING
+    val actionLoading = oneKuState == OneKuCardState.RUNNING
+
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.extraLarge,
@@ -713,7 +762,7 @@ fun StatusHero(
             verticalArrangement = Arrangement.spacedBy(18.dp),
         ) {
             Row(
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.Top,
                 horizontalArrangement = Arrangement.spacedBy(18.dp),
             ) {
                 Icon(
@@ -737,12 +786,36 @@ fun StatusHero(
                         color = contentColor,
                     )
                     Text(
-                        supportingText,
+                        detail,
                         style = MaterialTheme.typography.bodySmall,
                         color = contentColor.copy(alpha = 0.78f),
                     )
+                    if (showPowerHint) {
+                        Text(
+                            stringResource(R.string.oneku_hint_power),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = contentColor.copy(alpha = 0.66f),
+                        )
+                    }
+                }
+                Surface(
+                    shape = RoundedCornerShape(percent = 50),
+                    color = contentColor.copy(alpha = 0.14f),
+                ) {
+                    Text(
+                        text = statusPill,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = contentColor,
+                        maxLines = 1,
+                    )
                 }
             }
+
+            OneKuStageProgress(
+                litCount = OneKuCardPolicy.litStageCount(oneKuState),
+                contentColor = contentColor,
+            )
 
             if (sims.isNotEmpty()) {
                 HorizontalDivider(color = contentColor.copy(alpha = 0.16f))
@@ -789,6 +862,77 @@ fun StatusHero(
                         color = contentColor.copy(alpha = 0.9f),
                     )
                 }
+            }
+
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OneImsPrimaryButton(
+                    text = actionLabel,
+                    onClick = onPrimaryAction,
+                    enabled = actionEnabled,
+                    loading = actionLoading,
+                    loadingText = stringResource(R.string.oneku_action_running),
+                )
+                if (actionSub != null) {
+                    Text(
+                        text = actionSub,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = contentColor.copy(alpha = 0.72f),
+                        modifier = Modifier.padding(horizontal = 4.dp),
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun OneKuStageProgress(
+    litCount: Int,
+    contentColor: Color,
+) {
+    val stages = listOf(
+        R.string.oneku_stage_standby,
+        R.string.oneku_stage_activate,
+        R.string.oneku_stage_execute,
+        R.string.oneku_stage_done,
+    )
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(0.dp),
+    ) {
+        stages.forEachIndexed { index, labelRes ->
+            val lit = index < litCount
+            val stageColor = if (lit) contentColor else contentColor.copy(alpha = 0.32f)
+            if (index > 0) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(2.dp)
+                        .background(
+                            color = if (index < litCount) {
+                                contentColor.copy(alpha = 0.55f)
+                            } else {
+                                contentColor.copy(alpha = 0.18f)
+                            },
+                        ),
+                )
+            }
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(10.dp)
+                        .background(color = stageColor, shape = CircleShape),
+                )
+                Text(
+                    text = stringResource(labelRes),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = stageColor,
+                    maxLines = 1,
+                )
             }
         }
     }

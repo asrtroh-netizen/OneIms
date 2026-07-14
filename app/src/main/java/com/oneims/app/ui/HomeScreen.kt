@@ -26,14 +26,6 @@ fun HomeScreen(
     state: HomeUiState,
     actions: HomeActions,
 ) {
-    val ready = state.shizukuGranted && state.selectedSim != null
-    val statusSubtitle = when {
-        !state.shizukuRunning -> stringResource(R.string.home_status_shizuku_off)
-        !state.shizukuGranted -> stringResource(R.string.home_status_permission)
-        state.selectedSim == null -> stringResource(R.string.home_status_no_sim)
-        else -> stringResource(R.string.home_status_ready)
-    }
-
     OneImsPage(
         title = stringResource(R.string.app_name),
         subtitle = stringResource(R.string.home_subtitle),
@@ -43,15 +35,17 @@ fun HomeScreen(
         simSelectionEnabled = state.actionsEnabled,
     ) {
         item {
-            // 设备详情与移动网络展示都并入同一张 Hero 卡：审美与形状语言保持不变，
-            // 只在内部按需追加胶囊分页（只读展示每张卡状态）与可展开的设备详情文本。
+            // OneKu 总控卡：复用原顶部 Hero 外壳，按服务状态切换文案与主操作。
             StatusHero(
-                ready = ready,
-                title = stringResource(
-                    if (ready) R.string.home_ready_title else R.string.home_setup_needed_title,
-                ),
-                subtitle = statusSubtitle,
-                supportingText = stringResource(R.string.home_safety_note),
+                oneKuState = state.oneKuState,
+                onPrimaryAction = {
+                    when (state.oneKuState) {
+                        OneKuCardState.INACTIVE -> actions.onActivateOneKu()
+                        OneKuCardState.SLEEPING -> actions.onRestoreCallConfig()
+                        OneKuCardState.RUNNING -> Unit
+                        OneKuCardState.COMPLETE -> actions.onCheckOneKuStatus()
+                    }
+                },
                 sims = state.sims,
                 selectedSubId = state.selectedSubId,
                 deviceInfo = state.deviceInfo,
