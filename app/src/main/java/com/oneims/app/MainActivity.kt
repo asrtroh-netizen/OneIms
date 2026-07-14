@@ -88,6 +88,7 @@ import com.oneims.app.ui.HomeUiState
 import com.oneims.app.ui.OneImsScaffold
 import com.oneims.app.ui.OneImsPrimaryButton
 import com.oneims.app.ui.OneKukuCardPolicy
+import com.oneims.app.ui.OneKukuHomeTools
 import com.oneims.app.ui.SettingsActions
 import com.oneims.app.ui.SettingsScreen
 import com.oneims.app.ui.SettingsUiState
@@ -209,6 +210,12 @@ private fun AppRoot(
     var shizukuGranted by remember { mutableStateOf(ShizukuManager.isGranted()) }
     var oneKukuTaskComplete by remember { mutableStateOf(false) }
     var oneKukuRestoring by remember { mutableStateOf(false) }
+    var oneKukuBootAutoCheck by remember {
+        mutableStateOf(ConfigStore.isOneKukuBootAutoCheck(context))
+    }
+    var oneKukuAutoSleep by remember {
+        mutableStateOf(ConfigStore.isOneKukuAutoSleep(context))
+    }
     var sims by remember { mutableStateOf(emptyList<SimInfo>()) }
     var selectedSubId by remember { mutableIntStateOf(ConfigStore.getSelectedSubId(context)) }
     var deviceInfo by remember { mutableStateOf("") }
@@ -656,27 +663,12 @@ private fun AppRoot(
                         selectedSubId = selectedSubId,
                         selectedSim = selectedSim,
                         actionsEnabled = actionsAvailable,
+                        reapplyStatus = reapplyStatus,
+                        bootAutoCheck = oneKukuBootAutoCheck,
+                        autoSleep = oneKukuAutoSleep,
                     ),
                     actions = HomeActions(
                         onSelectSim = { selectSim(it) },
-                        onRefresh = { refreshAll(showFeedback = true) },
-                        onCompatibilityCheck = {
-                            runOperation(context.getString(R.string.action_compat)) {
-                                CompatChecker.run(context).asText()
-                            }
-                        },
-                        onGrantShizuku = {
-                            when {
-                                !ShizukuManager.isRunning() ->
-                                    publish(context.getString(R.string.onekuku_msg_need_prepare))
-                                ShizukuManager.isGranted() ->
-                                    publish(context.getString(R.string.onekuku_msg_already_active))
-                                else -> {
-                                    ShizukuManager.requestPermission()
-                                    publish(context.getString(R.string.onekuku_msg_permission_requested))
-                                }
-                            }
-                        },
                         onActivateOneKuku = {
                             when {
                                 !ShizukuManager.isRunning() -> {
@@ -713,7 +705,7 @@ private fun AppRoot(
                                         onComplete = {
                                             oneKukuRestoring = false
                                             if (restoreSucceeded[0]) {
-                                                oneKukuTaskComplete = true
+                                                oneKukuTaskComplete = oneKukuAutoSleep
                                                 reapplyStatus =
                                                     ConfigStore.lastReapplyStatus(context)
                                             }
@@ -725,7 +717,7 @@ private fun AppRoot(
                                             targetSubId = targetSubId,
                                         )
                                         restoreSucceeded[0] = result.success
-                                        result.message
+                                        OneKukuHomeTools.sanitizeUserText(result.message)
                                     }
                                 }
                             }
@@ -735,35 +727,102 @@ private fun AppRoot(
                             refreshAll()
                             publish(context.getString(R.string.onekuku_msg_status_ok))
                         },
-                        onRestoreDefaults = {
-                            if (ensurePrivilegedAccess()) {
+                        onStatusCheck = {
+                            if (busyLabel != null) {
+                                publish(context.getString(R.string.operation_already_running))
+                            } else {
                                 val targetSubId = selectedSubId
-                                requestConfirmation(
-                                    title = context.getString(R.string.confirm_restore_title),
-                                    message = context.getString(R.string.confirm_restore_message),
-                                    confirmLabel = context.getString(R.string.action_restore),
-                                ) {
-                                    runOperation(
-                                        label = context.getString(R.string.action_restore),
-                                        onComplete = {
-                                            fiveGDisplayConfig =
-                                                ConfigStore.fiveGDisplayConfig(context)
-                                            signalBarDisplayMode =
-                                                ConfigStore.signalBarDisplayMode(
-                                                    context,
-                                                    targetSubId,
+                                busyLabel = context.getString(R.string.onekuku_busy_status_check)
+                                scope.launch {
+                                    val message = try {
+                                        refreshAll()
+                                        withContext(Dispatchers.IO) {
+                                            val running = ShizukuManager.isRunning()
+                                            val granted = ShizukuManager.isGranted()
+                                            val statusLabel = OneKukuHomeTools.settingsStatusLabel(
+                                                context = context,
+                                                state = OneKukuCardPolicy.resolve(
+                                                    serviceReady = running && granted,
+                                                    isExecuting = false,
+                                                    taskComplete = false,
+                                                ),
+                                                serviceRunning = running,
+                                            )
+                                            val simLine = sims.firstOrNull {
+                                                it.subscriptionId == targetSubId
+                                            }?.let {
+                                                context.getString(
+                                                    R.string.onekuku_status_sim,
+                                                    it.slotIndex + 1,
+                                                    it.carrierName,
                                                 )
-                                            signalStrengthAdjustmentEnabled =
-                                                ConfigStore.signalStrengthAdjustmentEnabled(
-                                                    context,
-                                                    targetSubId,
+                                            } ?: context.getString(R.string.onekuku_status_no_sim)
+                                            val fiveG = ConfigStore.fiveGDisplayConfig(context)
+                                            val fiveGLine = context.getString(
+                                                R.string.onekuku_status_5g,
+                                                if (fiveG.enabled) {
+                                                    context.getString(R.string.onekuku_value_on)
+                                                } else {
+                                                    context.getString(R.string.onekuku_value_off)
+                                                },
+                                            )
+                                            val imsLine = if (targetSubId >= 0 && granted) {
+                                                OneKukuHomeTools.sanitizeUserText(
+                                                    ImsController.queryImsStatus(
+                                                        context,
+                                                        targetSubId,
+                                                    ).rawText,
                                                 )
-                                        },
-                                    ) {
-                                        SafetyGuard.restoreDefaults(context, targetSubId).message
+                                            } else {
+                                                context.getString(R.string.onekuku_status_ims_skipped)
+                                            }
+                                            buildString {
+                                                append(
+                                                    context.getString(
+                                                        R.string.onekuku_status_onekuku,
+                                                        statusLabel,
+                                                    ),
+                                                )
+                                                append('\n')
+                                                append(simLine)
+                                                append('\n')
+                                                append(fiveGLine)
+                                                append('\n')
+                                                append(imsLine)
+                                            }
+                                        }
+                                    } finally {
+                                        busyLabel = null
                                     }
+                                    publish(message)
                                 }
                             }
+                        },
+                        onBootAutoCheckChange = { enabled ->
+                            ConfigStore.setOneKukuBootAutoCheck(context, enabled)
+                            oneKukuBootAutoCheck = enabled
+                            publish(
+                                context.getString(
+                                    if (enabled) {
+                                        R.string.onekuku_settings_boot_on
+                                    } else {
+                                        R.string.onekuku_settings_boot_off
+                                    },
+                                ),
+                            )
+                        },
+                        onAutoSleepChange = { enabled ->
+                            ConfigStore.setOneKukuAutoSleep(context, enabled)
+                            oneKukuAutoSleep = enabled
+                            publish(
+                                context.getString(
+                                    if (enabled) {
+                                        R.string.onekuku_settings_sleep_on
+                                    } else {
+                                        R.string.onekuku_settings_sleep_off
+                                    },
+                                ),
+                            )
                         },
                     ),
                 )

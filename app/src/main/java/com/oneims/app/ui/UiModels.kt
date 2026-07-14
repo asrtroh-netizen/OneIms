@@ -60,17 +60,19 @@ data class HomeUiState(
     val selectedSubId: Int,
     val selectedSim: SimInfo?,
     val actionsEnabled: Boolean,
+    val reapplyStatus: ConfigStore.ReapplyStatus? = null,
+    val bootAutoCheck: Boolean = true,
+    val autoSleep: Boolean = true,
 )
 
 data class HomeActions(
-    val onRefresh: () -> Unit,
-    val onCompatibilityCheck: () -> Unit,
-    val onGrantShizuku: () -> Unit,
+    val onSelectSim: (Int) -> Unit,
     val onActivateOneKuku: () -> Unit,
     val onRestoreCallConfig: () -> Unit,
     val onCheckOneKukuStatus: () -> Unit,
-    val onRestoreDefaults: () -> Unit,
-    val onSelectSim: (Int) -> Unit,
+    val onStatusCheck: () -> Unit,
+    val onBootAutoCheckChange: (Boolean) -> Unit,
+    val onAutoSleepChange: (Boolean) -> Unit,
 )
 
 /**

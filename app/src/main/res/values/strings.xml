@@ -382,6 +382,63 @@
     <string name="onekuku_msg_need_sim">请先选择可用 SIM</string>
     <string name="onekuku_msg_status_ok">OneKuku 状态正常，核心服务休眠中</string>
     <string name="onekuku_busy_restore">正在恢复通话配置</string>
+    <string name="onekuku_busy_status_check">正在检查状态</string>
+    <string name="action_close">关闭</string>
+
+    <string name="onekuku_tool_status_title">状态检查</string>
+    <string name="onekuku_tool_status_sub">检查 SIM、IMS、VoWiFi、5G 状态</string>
+    <string name="onekuku_tool_snapshot_title">配置快照</string>
+    <string name="onekuku_tool_snapshot_sub">查看已保存的通话配置</string>
+    <string name="onekuku_tool_history_title">恢复记录</string>
+    <string name="onekuku_tool_history_sub">查看最近一次恢复结果</string>
+    <string name="onekuku_tool_settings_title">OneKuku 设置</string>
+    <string name="onekuku_tool_settings_sub">管理核心服务与休眠策略</string>
+
+    <string name="onekuku_snapshot_empty">暂无配置快照，请先应用一次配置。</string>
+    <string name="onekuku_snapshot_ims_core">IMS 核心能力</string>
+    <string name="onekuku_snapshot_wfc">WFC 模式</string>
+    <string name="onekuku_snapshot_nr5g">5G NR</string>
+    <string name="onekuku_snapshot_signal">5G 信号强度调整</string>
+    <string name="onekuku_snapshot_vowifi_name">VoWiFi 网络名称格式</string>
+    <string name="onekuku_snapshot_identity">应用身份覆盖</string>
+    <string name="onekuku_value_on">开</string>
+    <string name="onekuku_value_off">关</string>
+    <string name="onekuku_value_unset">未设置</string>
+    <string name="onekuku_value_configured">已配置</string>
+
+    <string name="onekuku_history_empty">暂无恢复记录</string>
+    <string name="onekuku_history_time">恢复时间：%1$s</string>
+    <string name="onekuku_history_result">恢复结果：%1$s</string>
+    <string name="onekuku_history_reason">失败原因：%1$s</string>
+    <string name="onekuku_history_status">当前 OneKuku 状态：%1$s</string>
+    <string name="onekuku_history_no_reason">未提供详细原因</string>
+    <string name="onekuku_restore_success">成功</string>
+    <string name="onekuku_restore_partial">部分成功</string>
+    <string name="onekuku_restore_failed">失败</string>
+    <string name="onekuku_pill_invalid">失效</string>
+
+    <string name="onekuku_settings_status">OneKuku 状态：%1$s</string>
+    <string name="onekuku_settings_boot_check">开机自动检查</string>
+    <string name="onekuku_settings_boot_check_sub">开机或服务就绪后自动检查并尝试恢复</string>
+    <string name="onekuku_settings_auto_sleep">用完自动休眠</string>
+    <string name="onekuku_settings_auto_sleep_sub">恢复完成后进入休眠，不常驻</string>
+    <string name="onekuku_settings_reactivate">重新激活 OneKuku</string>
+    <string name="onekuku_settings_reactivate_sub">重新准备核心服务</string>
+    <string name="onekuku_settings_view_status">查看状态</string>
+    <string name="onekuku_settings_view_status_sub">只读检查当前 SIM 与通话能力</string>
+    <string name="onekuku_settings_boot_on">已开启开机自动检查</string>
+    <string name="onekuku_settings_boot_off">已关闭开机自动检查</string>
+    <string name="onekuku_settings_sleep_on">已开启用完自动休眠</string>
+    <string name="onekuku_settings_sleep_off">已关闭用完自动休眠</string>
+
+    <string name="onekuku_status_onekuku">OneKuku：%1$s</string>
+    <string name="onekuku_status_sim">SIM：卡槽 %1$d · %2$s</string>
+    <string name="onekuku_status_no_sim">SIM：未选择</string>
+    <string name="onekuku_status_5g">5G 显示增强：%1$s</string>
+    <string name="onekuku_status_ims_skipped">IMS/VoWiFi：需先激活 OneKuku 后再检查</string>
+
+    <string name="home_emergency_restore_detail">唤醒 OneKuku 并恢复最近保存的通话配置。不会清空配置。</string>
+
     <string name="home_quick_actions">快速开始</string>
     <string name="home_quick_actions_sub">先确认设备状态，再应用运营商建议</string>
     <string name="action_refresh_sub">重新读取权限与 SIM</string>

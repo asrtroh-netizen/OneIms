@@ -55,6 +55,7 @@ object ConfigStore {
     private const val KEY_IDENTITY_UA = "identity_draft_ua"
     private const val KEY_SIM_COUNTRY_HAS = "sim_country_draft_has"
     private const val KEY_SIM_COUNTRY_ISO = "sim_country_draft_iso"
+    private const val KEY_ONEKUKU_AUTO_SLEEP = "onekuku_auto_sleep"
 
     data class Applied(
         val subId: Int,
@@ -435,5 +436,22 @@ object ConfigStore {
             .remove(KEY_HAS)
             .remove(KEY_ADVANCED_HAS)
             .apply()
+    }
+
+    /**
+     * OneKuku「开机自动检查」：与守护开关共用存储，开启后开机/服务就绪时会尝试检查并恢复。
+     */
+    fun isOneKukuBootAutoCheck(context: Context): Boolean = isGuardEnabled(context)
+
+    fun setOneKukuBootAutoCheck(context: Context, enabled: Boolean) {
+        setGuardEnabled(context, enabled)
+    }
+
+    /** OneKuku「用完自动休眠」偏好；默认开启。 */
+    fun isOneKukuAutoSleep(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_ONEKUKU_AUTO_SLEEP, true)
+
+    fun setOneKukuAutoSleep(context: Context, enabled: Boolean) {
+        prefs(context).edit().putBoolean(KEY_ONEKUKU_AUTO_SLEEP, enabled).apply()
     }
 }
