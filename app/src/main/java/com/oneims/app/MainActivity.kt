@@ -87,6 +87,13 @@ import com.oneims.app.ui.HomeScreen
 import com.oneims.app.ui.HomeUiState
 import com.oneims.app.ui.OneImsScaffold
 import com.oneims.app.ui.OneImsPrimaryButton
+import com.oneims.app.core.OneKukuPrivilegeBridgeImpl
+import com.oneims.app.core.OneKukuSnapshotFactory
+import com.oneims.app.onekuku.OneKukuCommand
+import com.oneims.app.onekuku.OneKukuCommandDispatcher
+import com.oneims.app.onekuku.OneKukuHiddenRunner
+import com.oneims.app.onekuku.OneKukuRunnerState
+import com.oneims.app.onekuku.OneKukuSnapshotStore
 import com.oneims.app.ui.OneKukuCardPolicy
 import com.oneims.app.ui.OneKukuHomeTools
 import com.oneims.app.ui.SettingsActions
@@ -193,6 +200,10 @@ private fun AppRoot(
         consumeSupportIntent(activity.intent)
     }
 
+    LaunchedEffect(Unit) {
+        OneKukuHiddenRunner.installBridge(OneKukuPrivilegeBridgeImpl)
+    }
+
     DisposableEffect(Unit) {
         val activity = context as? ComponentActivity
         if (activity == null) {
@@ -273,7 +284,9 @@ private fun AppRoot(
     val actionsAvailable = busyLabel == null
     val oneKukuState = OneKukuCardPolicy.resolve(
         serviceReady = shizukuRunning && shizukuGranted,
-        isExecuting = oneKukuRestoring,
+        isExecuting = oneKukuRestoring ||
+            OneKukuHiddenRunner.currentState() == OneKukuRunnerState.EXECUTING ||
+            OneKukuHiddenRunner.currentState() == OneKukuRunnerState.STARTING,
         taskComplete = oneKukuTaskComplete,
     )
 
@@ -760,27 +773,34 @@ private fun AppRoot(
                                             }
                                         },
                                     ) {
-                                        val result = ReapplyManager.reapply(
-                                            context = context,
-                                            trigger = ReapplyTrigger.MANUAL,
-                                            targetSubId = targetSubId,
-                                        )
-                                        // 只读回读验证；不写 APN、不切卡、不关数据、不碰飞行/radio。
-                                        val verified = if (result.success) {
-                                            runCatching {
-                                                ImsController.queryImsStatus(context, targetSubId)
-                                            }.isSuccess
-                                        } else {
-                                            false
-                                        }
-                                        val outcome = when {
-                                            result.success && verified ->
-                                                OneKukuHomeTools.classifyRestoreOutcome(
-                                                    success = true,
-                                                    message = result.message,
-                                                    detail = result.detail,
+                                        // 旧 ConfigStore 快照迁移到 OneKukuSnapshotStore，避免恢复空跑。
+                                        if (OneKukuSnapshotStore.load(context, targetSubId) == null) {
+                                            sims.firstOrNull {
+                                                it.subscriptionId == targetSubId
+                                            }?.let { sim ->
+                                                OneKukuSnapshotStore.save(
+                                                    context,
+                                                    OneKukuSnapshotFactory.fromCurrent(
+                                                        context,
+                                                        sim,
+                                                    ),
                                                 )
-                                            result.success && !verified ->
+                                            }
+                                        }
+                                        // OneKuku 白名单恢复：按快照重放，不走通用 shell / APN / 切卡。
+                                        val result = OneKukuCommandDispatcher.dispatch(
+                                            context = context,
+                                            command = OneKukuCommand.RESTORE_ALL_CALL_CONFIGS,
+                                            subId = targetSubId,
+                                        )
+                                        val detailOk = result.detail.values.count { it }
+                                        val detailTotal = result.detail.size
+                                        val outcome = when {
+                                            result.success &&
+                                                detailTotal > 0 &&
+                                                detailOk == detailTotal ->
+                                                OneKukuHomeTools.RestoreOutcome.SUCCESS
+                                            result.success ->
                                                 OneKukuHomeTools.RestoreOutcome.PARTIAL
                                             else -> OneKukuHomeTools.RestoreOutcome.FAILURE
                                         }
@@ -960,14 +980,21 @@ private fun AppRoot(
                                 wfcMode = profile.recommendWfcMode
                                 persistCapabilityUi(sim.subscriptionId)
                                 runOperation(context.getString(R.string.apply_recommended)) {
-                                    ImsController.applyAll(
+                                    val result = ImsController.applyAll(
                                         context = context,
                                         subId = sim.subscriptionId,
                                         enableVolte = profile.recommendVolte,
                                         enableVowifi = profile.recommendVowifi,
                                         enableVonr = profile.recommendVonr,
                                         wfcMode = profile.recommendWfcMode,
-                                    ).message
+                                    )
+                                    if (result.success) {
+                                        OneKukuSnapshotStore.save(
+                                            context,
+                                            OneKukuSnapshotFactory.fromCurrent(context, sim),
+                                        )
+                                    }
+                                    result.message
                                 }
                             }
                         },
@@ -1065,7 +1092,15 @@ private fun AppRoot(
                                         preferenceEnabled = targetSignal,
                                     )
                                 }
-                                "${coreResult.message}\n${nrResult.message}\n$signalMessage"
+                                val message =
+                                    "${coreResult.message}\n${nrResult.message}\n$signalMessage"
+                                sims.firstOrNull { it.subscriptionId == targetSubId }?.let { sim ->
+                                    OneKukuSnapshotStore.save(
+                                        context,
+                                        OneKukuSnapshotFactory.fromCurrent(context, sim),
+                                    )
+                                }
+                                message
                             }
                         },
                         onApplyExtras = {

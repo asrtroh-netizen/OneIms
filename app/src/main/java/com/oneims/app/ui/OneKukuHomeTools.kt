@@ -16,6 +16,9 @@ object OneKukuHomeTools {
 
     fun hasConfigSnapshot(context: Context, subId: Int): Boolean {
         if (subId < 0) return false
+        if (com.oneims.app.onekuku.OneKukuSnapshotStore.load(context, subId) != null) {
+            return true
+        }
         return ConfigStore.capabilityUiState(context, subId) != null ||
             ConfigStore.lastApplied(context)?.subId == subId
     }
