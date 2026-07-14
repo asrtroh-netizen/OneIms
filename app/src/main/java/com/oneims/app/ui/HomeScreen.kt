@@ -136,25 +136,29 @@ fun HomeScreen(
                     modifier = Modifier.padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
-                    Text(
-                        stringResource(R.string.home_emergency_restore_detail),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    val restoring = state.oneKukuState == OneKukuCardState.RUNNING
                     OutlinedButton(
                         onClick = actions.onRestoreCallConfig,
-                        enabled = state.selectedSubId >= 0 &&
-                            state.actionsEnabled &&
-                            state.oneKukuState != OneKukuCardState.RUNNING,
+                        enabled = state.actionsEnabled && !restoring,
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         Icon(
                             Icons.Filled.Refresh,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
+                            tint = if (restoring) {
+                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                            } else {
+                                MaterialTheme.colorScheme.primary
+                            },
                         )
                         Text(
-                            stringResource(R.string.onekuku_action_restore),
+                            stringResource(
+                                if (restoring) {
+                                    R.string.onekuku_action_running
+                                } else {
+                                    R.string.onekuku_action_restore
+                                },
+                            ),
                             modifier = Modifier.padding(start = 8.dp),
                         )
                     }

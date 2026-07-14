@@ -19,4 +19,28 @@ class OneKukuHomeToolsTest {
             sanitized,
         )
     }
+
+    @Test
+    fun classifyRestoreOutcome_mapsSuccessPartialFailure() {
+        assertEquals(
+            OneKukuHomeTools.RestoreOutcome.SUCCESS,
+            OneKukuHomeTools.classifyRestoreOutcome(success = true, message = "ok"),
+        )
+        assertEquals(
+            OneKukuHomeTools.RestoreOutcome.PARTIAL,
+            OneKukuHomeTools.classifyRestoreOutcome(success = true, message = "部分完成"),
+        )
+        assertEquals(
+            OneKukuHomeTools.RestoreOutcome.PARTIAL,
+            OneKukuHomeTools.classifyRestoreOutcome(
+                success = true,
+                message = "ok",
+                detail = mapOf("a" to true, "b" to false),
+            ),
+        )
+        assertEquals(
+            OneKukuHomeTools.RestoreOutcome.FAILURE,
+            OneKukuHomeTools.classifyRestoreOutcome(success = false, message = "boom"),
+        )
+    }
 }

@@ -133,4 +133,25 @@ object OneKukuHomeTools {
             context.getString(R.string.onekuku_pill_inactive)
         else -> context.getString(R.string.onekuku_pill_sleeping)
     }
+
+    fun classifyRestoreOutcome(
+        success: Boolean,
+        message: String,
+        detail: Map<String, Boolean> = emptyMap(),
+    ): RestoreOutcome {
+        val hasFailureInDetail = detail.values.any { !it }
+        val hasSuccessInDetail = detail.values.any { it }
+        return when {
+            success && (message.contains("部分") || (hasFailureInDetail && hasSuccessInDetail)) ->
+                RestoreOutcome.PARTIAL
+            success -> RestoreOutcome.SUCCESS
+            else -> RestoreOutcome.FAILURE
+        }
+    }
+
+    enum class RestoreOutcome {
+        SUCCESS,
+        PARTIAL,
+        FAILURE,
+    }
 }

@@ -438,6 +438,14 @@
     <string name="onekuku_status_ims_skipped">IMS/VoWiFi：需先激活 OneKuku 后再检查</string>
 
     <string name="home_emergency_restore_detail">唤醒 OneKuku 并恢复最近保存的通话配置。不会清空配置。</string>
+    <string name="onekuku_restore_need_sim">请先选择可用且就绪的 SIM</string>
+    <string name="onekuku_restore_no_snapshot">暂无可恢复配置，请先应用一次通话配置</string>
+    <string name="onekuku_restore_need_active_title">OneKuku 未激活</string>
+    <string name="onekuku_restore_need_active_body">OneKuku 核心服务未激活，请先激活后恢复</string>
+    <string name="onekuku_restore_toast_success">通话配置已恢复</string>
+    <string name="onekuku_restore_toast_partial">已恢复部分配置，部分项目失败</string>
+    <string name="onekuku_restore_toast_failed">恢复失败：%1$s</string>
+    <string name="onekuku_restore_view_history">查看恢复记录</string>
 
     <string name="home_quick_actions">快速开始</string>
     <string name="home_quick_actions_sub">先确认设备状态，再应用运营商建议</string>
@@ -455,7 +463,7 @@
     <string name="home_device_details_expand">展开</string>
     <string name="home_device_details_collapse">收起</string>
     <string name="home_emergency_title">应急恢复</string>
-    <string name="home_emergency_subtitle">仅在通信异常或需要撤销覆盖时使用</string>
+    <string name="home_emergency_subtitle">重启后如果 VoLTE、VoWiFi 或 5G 配置失效，可使用 OneKuku 恢复重启前保存的通话配置。</string>
     <string name="home_emergency_detail">清空当前 SIM 的 CarrierConfig 覆盖并恢复运营商默认值。</string>
 
     <string name="capabilities_title">IMS 能力</string>

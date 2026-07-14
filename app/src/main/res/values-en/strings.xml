@@ -434,6 +434,14 @@
     <string name="onekuku_status_ims_skipped">IMS/VoWiFi: activate OneKuku first</string>
 
     <string name="home_emergency_restore_detail">Wake OneKuku and restore the latest saved calling configuration. This does not clear settings.</string>
+    <string name="onekuku_restore_need_sim">Select a ready SIM first</string>
+    <string name="onekuku_restore_no_snapshot">Nothing to restore. Apply a calling configuration first.</string>
+    <string name="onekuku_restore_need_active_title">OneKuku inactive</string>
+    <string name="onekuku_restore_need_active_body">OneKuku core service is inactive. Activate it before restoring.</string>
+    <string name="onekuku_restore_toast_success">Calling configuration restored</string>
+    <string name="onekuku_restore_toast_partial">Some settings restored; some items failed</string>
+    <string name="onekuku_restore_toast_failed">Restore failed: %1$s</string>
+    <string name="onekuku_restore_view_history">View restore history</string>
 
     <string name="home_quick_actions">Quick start</string>
     <string name="home_quick_actions_sub">Check device status before applying carrier recommendations</string>
@@ -451,7 +459,7 @@
     <string name="home_device_details_expand">Expand</string>
     <string name="home_device_details_collapse">Collapse</string>
     <string name="home_emergency_title">Emergency restore</string>
-    <string name="home_emergency_subtitle">Use only to undo overrides or recover communications</string>
+    <string name="home_emergency_subtitle">If VoLTE, VoWiFi, or 5G settings are lost after reboot, use OneKuku to restore the calling configuration saved before reboot.</string>
     <string name="home_emergency_detail">Clears CarrierConfig overrides for the selected SIM and restores carrier defaults.</string>
 
     <string name="capabilities_title">IMS features</string>

@@ -688,26 +688,74 @@ private fun AppRoot(
                         onRestoreCallConfig = {
                             shizukuRunning = ShizukuManager.isRunning()
                             shizukuGranted = ShizukuManager.isGranted()
+                            val targetSubId = selectedSubId
+                            val simReady = targetSubId >= 0 &&
+                                sims.any { it.subscriptionId == targetSubId }
                             when {
-                                !shizukuRunning || !shizukuGranted ->
-                                    publish(context.getString(R.string.onekuku_msg_need_active))
-                                selectedSubId < 0 ->
-                                    publish(context.getString(R.string.onekuku_msg_need_sim))
+                                !simReady ->
+                                    publish(context.getString(R.string.onekuku_restore_need_sim))
+                                !OneKukuHomeTools.hasConfigSnapshot(context, targetSubId) ->
+                                    publish(context.getString(R.string.onekuku_restore_no_snapshot))
+                                !shizukuRunning || !shizukuGranted -> {
+                                    oneKukuTaskComplete = false
+                                    requestConfirmation(
+                                        title = context.getString(
+                                            R.string.onekuku_restore_need_active_title,
+                                        ),
+                                        message = context.getString(
+                                            R.string.onekuku_restore_need_active_body,
+                                        ),
+                                        confirmLabel = context.getString(
+                                            R.string.onekuku_action_activate,
+                                        ),
+                                    ) {
+                                        when {
+                                            !ShizukuManager.isRunning() -> {
+                                                ShizukuSetupHelper.openShizukuApp(context)
+                                                publish(
+                                                    context.getString(
+                                                        R.string.onekuku_msg_need_prepare,
+                                                    ),
+                                                )
+                                            }
+                                            ShizukuManager.isGranted() -> {
+                                                refreshAll()
+                                                publish(
+                                                    context.getString(
+                                                        R.string.onekuku_msg_already_active,
+                                                    ),
+                                                )
+                                            }
+                                            else -> {
+                                                ShizukuManager.requestPermission()
+                                                publish(
+                                                    context.getString(
+                                                        R.string.onekuku_msg_permission_requested,
+                                                    ),
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
                                 busyLabel != null ->
                                     publish(context.getString(R.string.operation_already_running))
                                 else -> {
-                                    val targetSubId = selectedSubId
-                                    val restoreSucceeded = booleanArrayOf(false)
+                                    val restoreOutcome =
+                                        arrayOf(OneKukuHomeTools.RestoreOutcome.FAILURE)
                                     oneKukuTaskComplete = false
                                     oneKukuRestoring = true
                                     runOperation(
                                         label = context.getString(R.string.onekuku_busy_restore),
                                         onComplete = {
                                             oneKukuRestoring = false
-                                            if (restoreSucceeded[0]) {
-                                                oneKukuTaskComplete = oneKukuAutoSleep
-                                                reapplyStatus =
-                                                    ConfigStore.lastReapplyStatus(context)
+                                            reapplyStatus =
+                                                ConfigStore.lastReapplyStatus(context)
+                                            when (restoreOutcome[0]) {
+                                                OneKukuHomeTools.RestoreOutcome.SUCCESS,
+                                                OneKukuHomeTools.RestoreOutcome.PARTIAL,
+                                                -> oneKukuTaskComplete = true
+                                                OneKukuHomeTools.RestoreOutcome.FAILURE ->
+                                                    oneKukuTaskComplete = false
                                             }
                                         },
                                     ) {
@@ -716,8 +764,48 @@ private fun AppRoot(
                                             trigger = ReapplyTrigger.MANUAL,
                                             targetSubId = targetSubId,
                                         )
-                                        restoreSucceeded[0] = result.success
-                                        OneKukuHomeTools.sanitizeUserText(result.message)
+                                        // 只读回读验证；不写 APN、不切卡、不关数据、不碰飞行/radio。
+                                        val verified = if (result.success) {
+                                            runCatching {
+                                                ImsController.queryImsStatus(context, targetSubId)
+                                            }.isSuccess
+                                        } else {
+                                            false
+                                        }
+                                        val outcome = when {
+                                            result.success && verified ->
+                                                OneKukuHomeTools.classifyRestoreOutcome(
+                                                    success = true,
+                                                    message = result.message,
+                                                    detail = result.detail,
+                                                )
+                                            result.success && !verified ->
+                                                OneKukuHomeTools.RestoreOutcome.PARTIAL
+                                            else -> OneKukuHomeTools.RestoreOutcome.FAILURE
+                                        }
+                                        restoreOutcome[0] = outcome
+                                        val reason = OneKukuHomeTools.sanitizeUserText(
+                                            result.message,
+                                        )
+                                        when (outcome) {
+                                            OneKukuHomeTools.RestoreOutcome.SUCCESS ->
+                                                context.getString(
+                                                    R.string.onekuku_restore_toast_success,
+                                                )
+                                            OneKukuHomeTools.RestoreOutcome.PARTIAL ->
+                                                context.getString(
+                                                    R.string.onekuku_restore_toast_partial,
+                                                )
+                                            OneKukuHomeTools.RestoreOutcome.FAILURE ->
+                                                context.getString(
+                                                    R.string.onekuku_restore_toast_failed,
+                                                    reason.ifBlank {
+                                                        context.getString(
+                                                            R.string.onekuku_history_no_reason,
+                                                        )
+                                                    },
+                                                )
+                                        }
                                     }
                                 }
                             }
