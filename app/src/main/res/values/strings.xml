@@ -45,6 +45,9 @@
     <string name="onekuku_msg_core_download_started">已开始下载 OneKuku 核心组件，完成后请安装</string>
     <string name="onekuku_msg_core_download_failed">未找到自有 OneKuku 核心包。请使用内置换皮 APK，或等待官方 OneKuku-core Release；不会再下载上游组件充数</string>
     <string name="onekuku_msg_core_missing_hint">还没装 OneKuku 核心组件。请安装内置的 OneKuku 核心（不是上游通道 App）。</string>
+    <string name="onekuku_core_missing_title">还没装 OneKuku 核心</string>
+    <string name="onekuku_core_missing_body">六位码配对窗要等核心装好才会出现。请先完成安装（系统安装器会弹出）；装好后回到这里再点「启动核心」。</string>
+    <string name="onekuku_core_missing_install">继续安装</string>
     <string name="onekuku_msg_embedded_adb_starting">正在用内嵌 ADB 拉起 OneKuku 核心…</string>
     <string name="onekuku_msg_embedded_adb_ok">内嵌 ADB 已发出启动指令，请确认核心就绪后授权</string>
     <string name="onekuku_msg_embedded_adb_fallback">内嵌 ADB 未成功（%1$s），已回落为无线调试 + 命令指引</string>

@@ -252,6 +252,7 @@ private fun AppRoot(
     var adbPairDialogVisible by remember { mutableStateOf(false) }
     var adbPairCode by remember { mutableStateOf("") }
     var adbPairBusy by remember { mutableStateOf(false) }
+    var coreMissingDialogVisible by remember { mutableStateOf(false) }
 
     var volte by remember { mutableStateOf(true) }
     var vowifi by remember { mutableStateOf(true) }
@@ -412,6 +413,8 @@ private fun AppRoot(
     /** 方案 A+B：内置/下载核心；已装则立刻弹六位码窗，再尝试内嵌 ADB 拉起。 */
     fun prepareOneKukuCore() {
         if (!OneKukuCoreComponent.isInstalled(context)) {
+            // 未装核心时以前只 snackbar，体感像「点了没弹窗」——改为显式对话框
+            coreMissingDialogVisible = true
             when (val result = OneKukuCoreComponent.prepare(context)) {
                 OneKukuCoreComponent.PrepareResult.INSTALLING_BUNDLED ->
                     publish(context.getString(R.string.onekuku_msg_installing_bundled_core))
@@ -442,6 +445,7 @@ private fun AppRoot(
             }
             return
         }
+        coreMissingDialogVisible = false
         // 立刻弹窗：热点/mDNS 可能要数秒，不能等失败后才让用户看见输入框
         adbPairCode = ""
         adbPairDialogVisible = true
@@ -479,6 +483,17 @@ private fun AppRoot(
                 }
             }
         }
+    }
+
+    /** 「启动核心」专用：不走总控卡 isRunning 短路，保证能进配对/安装弹窗。 */
+    fun startCoreFromPrepCard() {
+        if (OneKukuManager.isReady()) {
+            publish(context.getString(R.string.onekuku_msg_already_active))
+            return
+        }
+        prepareOneKukuCore()
+        OneKukuBootRestoreStore.writeHint(context, OneKukuBootUiHint.NEEDS_ACTIVATION)
+        bootUiHint = OneKukuBootUiHint.NEEDS_ACTIVATION
     }
 
     fun runEmbeddedAdbWithCode(code: String) {
@@ -892,6 +907,7 @@ private fun AppRoot(
                             shizukuRunning = OneKukuManager.isRunning()
                             shizukuGranted = OneKukuManager.isGranted()
                         },
+                        onStartCore = { startCoreFromPrepCard() },
                         onCheckOneKukuStatus = {
                             oneKukuTaskComplete = false
                             shizukuRunning = OneKukuManager.isRunning()
@@ -1868,6 +1884,33 @@ private fun AppRoot(
             },
             dismissButton = {
                 TextButton(onClick = { confirmation = null }) {
+                    Text(context.getString(R.string.action_cancel))
+                }
+            },
+        )
+    }
+
+    if (coreMissingDialogVisible) {
+        AlertDialog(
+            onDismissRequest = { coreMissingDialogVisible = false },
+            title = { Text(context.getString(R.string.onekuku_core_missing_title)) },
+            text = {
+                Text(
+                    text = context.getString(R.string.onekuku_core_missing_body),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            },
+            confirmButton = {
+                OneImsPrimaryButton(
+                    text = context.getString(R.string.onekuku_core_missing_install),
+                    onClick = {
+                        coreMissingDialogVisible = false
+                        prepareOneKukuCore()
+                    },
+                )
+            },
+            dismissButton = {
+                TextButton(onClick = { coreMissingDialogVisible = false }) {
                     Text(context.getString(R.string.action_cancel))
                 }
             },

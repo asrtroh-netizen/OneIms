@@ -107,7 +107,7 @@ fun HomeScreen(
                                 icon = Icons.Filled.Refresh,
                                 title = stringResource(R.string.home_adb_start_core),
                                 subtitle = stringResource(R.string.home_adb_start_core_sub),
-                                onClick = actions.onActivateOneKuku,
+                                onClick = actions.onStartCore,
                             ),
                             ActionSpec(
                                 icon = Icons.Filled.Info,

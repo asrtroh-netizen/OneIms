@@ -53,7 +53,10 @@
     <string name="onekuku_adb_pair_hint">6-digit code</string>
     <string name="onekuku_adb_pair_confirm">Pair and start</string>
     <string name="onekuku_adb_pair_open_wireless">Open wireless debugging</string>
-    <string name="onekuku_msg_core_missing_hint">OneKuku core is not installed yet. Finish the install prompt, then tap Start core again.</string>
+    <string name="onekuku_msg_core_missing_hint">OneKuku core is not installed yet. Install the bundled OneKuku core (not an upstream channel app).</string>
+    <string name="onekuku_core_missing_title">OneKuku core not installed</string>
+    <string name="onekuku_core_missing_body">The 6-digit pairing dialog appears only after the core is installed. Finish the system installer prompt first, then tap Start core again.</string>
+    <string name="onekuku_core_missing_install">Continue install</string>
 
     <!-- Features -->
     <string name="cap_group_radio_title">Carrier features &amp; 5G</string>
