@@ -148,8 +148,9 @@ fun resolveSimpleFiveGDisplay(
 
         // CUSTOM 使用用户阈值；CN_SPEED 使用默认阈值。共同走同一套状态映射，
         // 避免切回内地速率模式后继续误用隐藏的自定义值。
-        // 说明：系统状态栏 CarrierConfig 通常只有 5G / 5G_PLUS；「5G-A」主要是应用内文案。
-        // NR Advanced 网络本身即按 5G-A 展示，不再强依赖下行是否冲过阈值。
+        // 系统侧：applyFiveGDisplay 会写入全局 CarrierConfig 图标串（AOSP 常见为 5G / 5G_PLUS）。
+        // 国行「5G-A」状态栏字形通常由 ROM 在 NR Advanced 时自绘，不是标准 5G_PLUS 换皮；
+        // 下方 "5G-A" 标题用于应用内速率展示，与系统写入并行、不互相替代。
         SimpleFiveGDisplayConfig.Mode.CUSTOM,
         SimpleFiveGDisplayConfig.Mode.CN_SPEED,
         -> when {
