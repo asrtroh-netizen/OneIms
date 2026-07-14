@@ -19,13 +19,24 @@ import java.net.URL
 /**
  * OneKuku「核心组件」安装与就绪探测（方案 A）。
  *
- * 产品面只说 OneKuku；当前兼容实现仍使用与 rikka 客户端 binder 协议兼容的官方服务包。
- * 用户路径：**不再跳应用商店装独立第三方 App**，改为内置 APK / 官方核心包下载 + ADB 拉起（方案 B）。
+ * 产品面只说 OneKuku。包名优先级：
+ * 1. [BRANDED_CORE_PACKAGE] 换皮核心（系统列表显示 OneKuku，需自行构建放入 assets）
+ * 2. [LEGACY_CORE_PACKAGE] 上游兼容包（过渡期回落）
+ *
+ * 用户路径：**不再跳应用商店**；内置 APK / 下载 + ADB 拉起。
  */
 object OneKukuCoreComponent {
 
-    /** 与 rikka API 通信所需的服务端包名（内部常量，不对用户展示）。 */
-    const val CORE_PACKAGE: String = "moe.shizuku.privileged.api"
+    /** 换皮目标包名（系统应用列表应显示 OneKuku 核心）。 */
+    const val BRANDED_CORE_PACKAGE: String = "com.oneims.onekuku.core"
+
+    /** 上游兼容包名（过渡回落；不对用户展示）。 */
+    const val LEGACY_CORE_PACKAGE: String = "moe.shizuku.privileged.api"
+
+    /** @deprecated 使用 [resolveCorePackage]；保留常量指向换皮目标以便文档引用。 */
+    const val CORE_PACKAGE: String = BRANDED_CORE_PACKAGE
+
+    val CANDIDATE_PACKAGES: List<String> = listOf(BRANDED_CORE_PACKAGE, LEGACY_CORE_PACKAGE)
 
     const val BUNDLED_ASSET_NAME: String = "onekuku-core.apk"
 
@@ -72,25 +83,40 @@ object OneKukuCoreComponent {
         else -> Status.MISSING
     }
 
-    fun isInstalled(context: Context): Boolean =
-        runCatching {
-            context.applicationContext.packageManager.getPackageInfo(CORE_PACKAGE, 0)
-            true
-        }.getOrDefault(false)
+    /** 已安装的核心包（优先换皮包）。 */
+    fun resolveCorePackage(context: Context): String? {
+        val pm = context.applicationContext.packageManager
+        for (pkg in CANDIDATE_PACKAGES) {
+            val ok = runCatching {
+                pm.getPackageInfo(pkg, 0)
+                true
+            }.getOrDefault(false)
+            if (ok) return pkg
+        }
+        return null
+    }
+
+    fun isInstalled(context: Context): Boolean = resolveCorePackage(context) != null
+
+    fun isBrandedCoreInstalled(context: Context): Boolean =
+        resolveCorePackage(context) == BRANDED_CORE_PACKAGE
 
     fun hasBundledApk(context: Context): Boolean =
         runCatching {
             context.assets.open(BUNDLED_ASSET_NAME).use { true }
         }.getOrDefault(false)
 
-    fun adbStartCommand(): String =
-        "adb shell sh /storage/emulated/0/Android/data/$CORE_PACKAGE/start.sh"
+    fun adbStartCommand(context: Context? = null): String {
+        val pkg = context?.let { resolveCorePackage(it) }
+            ?: BRANDED_CORE_PACKAGE
+        return "adb shell sh /storage/emulated/0/Android/data/$pkg/start.sh"
+    }
 
     /**
      * 免电脑引导脚本（方案 B · 剪贴板实现；原生内嵌 ADB 客户端另迭代）。
      */
     fun guidedActivationScript(context: Context): String =
-        context.getString(R.string.onekuku_adb_guide_script, adbStartCommand())
+        context.getString(R.string.onekuku_adb_guide_script, adbStartCommand(context))
 
     /**
      * 一键准备（同步部分）：缺组件优先装内置包，否则返回 [PrepareResult.NEEDS_DOWNLOAD]；
@@ -214,11 +240,13 @@ object OneKukuCoreComponent {
         }
     }
 
-    fun isCorePackageEnabled(context: Context): Boolean =
-        runCatching {
-            val state = context.packageManager.getApplicationEnabledSetting(CORE_PACKAGE)
+    fun isCorePackageEnabled(context: Context): Boolean {
+        val pkg = resolveCorePackage(context) ?: return false
+        return runCatching {
+            val state = context.packageManager.getApplicationEnabledSetting(pkg)
             state != PackageManager.COMPONENT_ENABLED_STATE_DISABLED &&
                 state != PackageManager.COMPONENT_ENABLED_STATE_DISABLED_USER &&
                 state != PackageManager.COMPONENT_ENABLED_STATE_DISABLED_UNTIL_USED
         }.getOrDefault(false)
+    }
 }

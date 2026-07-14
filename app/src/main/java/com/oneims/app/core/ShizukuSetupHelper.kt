@@ -47,13 +47,12 @@ object ShizukuSetupHelper {
         true
     }.getOrDefault(false)
 
-    /** Shizuku 官方包名。 */
-    const val SHIZUKU_PKG = "moe.shizuku.privileged.api"
+    /** @deprecated 使用 [OneKukuCoreComponent.resolveCorePackage] */
+    const val SHIZUKU_PKG = OneKukuCoreComponent.LEGACY_CORE_PACKAGE
 
-    /** 是否已安装 Shizuku。 */
-    fun isShizukuInstalled(context: Context): Boolean = runCatching {
-        context.packageManager.getLaunchIntentForPackage(SHIZUKU_PKG) != null
-    }.getOrDefault(false)
+    /** 是否已安装任一核心包（换皮优先）。 */
+    fun isShizukuInstalled(context: Context): Boolean =
+        OneKukuCoreComponent.isInstalled(context)
 
     /**
      * @deprecated 改走 [OneKukuCoreComponent.prepare]，禁止再跳应用市场装独立通道 App。
@@ -61,7 +60,8 @@ object ShizukuSetupHelper {
      */
     @Deprecated("Use OneKukuCoreComponent.prepare")
     fun openShizukuApp(context: Context): Int {
-        val launch = context.packageManager.getLaunchIntentForPackage(SHIZUKU_PKG)
+        val pkg = OneKukuCoreComponent.resolveCorePackage(context) ?: return 1
+        val launch = context.packageManager.getLaunchIntentForPackage(pkg)
         if (launch != null) {
             return runCatching {
                 context.startActivity(launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); 0
