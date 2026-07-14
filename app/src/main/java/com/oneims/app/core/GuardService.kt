@@ -25,11 +25,10 @@ import rikka.shizuku.Shizuku
  * IMS 掉线守护前台服务。
  *
  * 两条自愈触发：
- *   1) **Shizuku binder 到达**（Shizuku 服务启动/重启的瞬间）→ 立刻重应用上次配置
- *      —— 开机后激活 OneKuku 即可自动恢复；persistent=true 后仍保留自愈兜底；
+ *   1) **Shizuku binder 到达**（服务启动/重启）→ 立刻重应用上次配置
+ *      —— 开机后 OneKuku 就绪即可自动恢复临时覆盖（非 system app 无法 persistent）；
  *   2) **定时巡检**（默认 120s）→ 若检测到 IMS 未注册，则重应用上次配置，治「间歇掉线」。
- *
- * 铁律：重应用复用 [ReapplyManager] → 内部走安全护栏，异常自动回滚，绝不搞挂基本通信。
+ *   另：BootReceiver 在存在 lastApplied 时也会拉起本服务；开机编排里也会主动 BOOT 重应用。
  */
 class GuardService : Service() {
 

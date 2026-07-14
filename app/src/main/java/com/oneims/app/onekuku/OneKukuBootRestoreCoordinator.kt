@@ -20,6 +20,8 @@ import com.oneims.app.core.ConfigStore
 import com.oneims.app.core.ImsController
 import com.oneims.app.core.OneKukuManager
 import com.oneims.app.core.OneKukuPrivilegeBridgeImpl
+import com.oneims.app.core.ReapplyManager
+import com.oneims.app.core.ReapplyTrigger
 import kotlinx.coroutines.delay
 
 /**
@@ -60,6 +62,9 @@ object OneKukuBootRestoreCoordinator {
         // 延迟后再占一次「本开机」名额，避免过早标记导致永远不跑
         if (OneKukuBootRestoreStore.hasAttemptedThisBoot(context)) return
         OneKukuBootRestoreStore.markAttemptedThisBoot(context)
+
+        // 临时 CarrierConfig 覆盖在重启后会丢：先重放上次成功的能力页配置。
+        reapplyLastCapabilityProfile(context)
 
         val snapshots = OneKukuSnapshotStore.loadAll(context)
         if (snapshots.isEmpty()) {
@@ -226,6 +231,29 @@ object OneKukuBootRestoreCoordinator {
                 tm.createForSubscriptionId(info.subscriptionId).simState ==
                     TelephonyManager.SIM_STATE_READY
             }.getOrDefault(false)
+        }
+    }
+
+    private fun reapplyLastCapabilityProfile(context: Context) {
+        if (ConfigStore.lastApplied(context) == null) {
+            Log.i(TAG, "no lastApplied profile, skip capability reapply")
+            return
+        }
+        if (!OneKukuManager.isReady()) {
+            val wake = OneKukuHiddenRunner.wake()
+            if (!wake.success || !OneKukuManager.isReady()) {
+                Log.w(TAG, "OneKuku not ready for capability reapply: ${wake.message}")
+                return
+            }
+        }
+        runCatching {
+            val result = ReapplyManager.reapply(context, ReapplyTrigger.BOOT)
+            Log.i(
+                TAG,
+                "boot capability reapply success=${result.success} msg=${result.message}",
+            )
+        }.onFailure {
+            Log.w(TAG, "boot capability reapply failed: ${it.message}")
         }
     }
 

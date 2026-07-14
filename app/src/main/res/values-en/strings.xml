@@ -754,6 +754,7 @@
     <string name="reapply_trigger_manual">manual action</string>
     <string name="reapply_trigger_quick_tile">Quick Settings tile</string>
     <string name="reapply_trigger_shizuku_ready">OneKuku became ready</string>
+    <string name="reapply_trigger_boot">Boot auto-restore</string>
     <string name="reapply_trigger_ims_not_registered">IMS registration dropped</string>
     <string name="action_reapply">Reapply last profile</string>
     <string name="reapply_status_none">No reapply has run yet</string>

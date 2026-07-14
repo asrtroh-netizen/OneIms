@@ -16,7 +16,10 @@ class BootReceiver : BroadcastReceiver() {
             Intent.ACTION_LOCKED_BOOT_COMPLETED,
             Intent.ACTION_USER_UNLOCKED,
             -> {
-                if (ConfigStore.isGuardEnabled(context)) {
+                // 掉线守护开启，或存在上次成功配置：开机拉起守护，等待 OneKuku 就绪后重应用临时覆盖。
+                if (ConfigStore.isGuardEnabled(context) ||
+                    ConfigStore.lastApplied(context) != null
+                ) {
                     GuardService.start(context)
                 }
                 if (ConfigStore.isOneKukuBootAutoCheck(context)) {

@@ -764,6 +764,7 @@
     <string name="reapply_trigger_manual">手动操作</string>
     <string name="reapply_trigger_quick_tile">快捷设置磁贴</string>
     <string name="reapply_trigger_shizuku_ready">OneKuku 恢复就绪</string>
+    <string name="reapply_trigger_boot">开机自动恢复</string>
     <string name="reapply_trigger_ims_not_registered">IMS 注册掉线</string>
     <string name="action_reapply">重应用最近配置</string>
     <string name="reapply_status_none">尚未执行过重应用</string>

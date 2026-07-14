@@ -13,6 +13,7 @@ enum class ReapplyTrigger(
     QUICK_SETTINGS_TILE("quick_settings_tile", R.string.reapply_trigger_quick_tile),
     SHIZUKU_READY("shizuku_ready", R.string.reapply_trigger_shizuku_ready),
     IMS_NOT_REGISTERED("ims_not_registered", R.string.reapply_trigger_ims_not_registered),
+    BOOT("boot", R.string.reapply_trigger_boot),
     ;
 
     companion object {
