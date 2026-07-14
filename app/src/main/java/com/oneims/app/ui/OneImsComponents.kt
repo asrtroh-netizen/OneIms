@@ -677,8 +677,9 @@ private fun ActionTile(
 }
 
 /**
- * 首页顶部 OneKuku 总控卡：保留原 Hero 外壳（extraLarge 圆角、红/白语义底、左图标），
+ * 首页顶部 OneKuku 总控卡：保留原 Hero 外壳（extraLarge 圆角、未激活红 / 已激活白、左图标），
  * 对内换成 OneKuku 四态文案、右上状态胶囊、轻量进度阶段与主操作按钮；
+ * 「一键恢复通话」仅在首页底部应急区出现，本卡不重复该入口。
  * 不展示终端、命令或底层通道名称。SIM 胶囊分页与设备详情仍按需附在卡内。
  */
 @Composable
@@ -691,13 +692,14 @@ fun StatusHero(
     detailOverride: String? = null,
 ) {
     val ready = oneKukuState != OneKukuCardState.INACTIVE
+    // 就绪态固定纯白底 + 深色字，满足「已激活白」并与 background(#F9F9FF) 拉开层次。
     val containerColor = if (ready) {
-        MaterialTheme.colorScheme.primaryContainer
+        Color.White
     } else {
         MaterialTheme.colorScheme.errorContainer
     }
     val contentColor = if (ready) {
-        MaterialTheme.colorScheme.onPrimaryContainer
+        Color(0xFF1A1B20)
     } else {
         MaterialTheme.colorScheme.onErrorContainer
     }
@@ -739,14 +741,14 @@ fun StatusHero(
     val actionLabel = stringResource(
         when (oneKukuState) {
             OneKukuCardState.INACTIVE -> R.string.onekuku_action_activate
-            OneKukuCardState.SLEEPING -> R.string.onekuku_action_restore
-            OneKukuCardState.RUNNING -> R.string.onekuku_action_running
+            OneKukuCardState.SLEEPING,
             OneKukuCardState.COMPLETE -> R.string.onekuku_action_check
+            OneKukuCardState.RUNNING -> R.string.onekuku_action_running
         },
     )
     val actionSub = when (oneKukuState) {
         OneKukuCardState.INACTIVE -> stringResource(R.string.onekuku_action_activate_sub)
-        OneKukuCardState.SLEEPING -> stringResource(R.string.onekuku_action_restore_sub)
+        OneKukuCardState.SLEEPING -> stringResource(R.string.onekuku_action_check_sub)
         OneKukuCardState.RUNNING,
         OneKukuCardState.COMPLETE -> null
     }
@@ -757,6 +759,8 @@ fun StatusHero(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.extraLarge,
         color = containerColor,
+        tonalElevation = if (ready) 2.dp else 0.dp,
+        shadowElevation = if (ready) 1.dp else 0.dp,
     ) {
         Column(
             modifier = Modifier.padding(24.dp),

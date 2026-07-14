@@ -145,10 +145,17 @@ object OneKukuRestoreManager {
         step("identity", context) { restoreIdentity(context, subId, requireSnapshot(context, subId)) }
 
     fun verify(context: Context, subId: Int): OneKukuCommandResult {
-        val ok = runCatching {
-            ImsController.queryImsStatus(context, subId)
-            true
-        }.getOrDefault(false)
+        val sims = ImsController.listSims(context)
+        val ok = when (val resolved = OneKukuSnapshotStore.resolveForSelectedSim(context, subId, sims)) {
+            is SnapshotMatchResult.Matched ->
+                OneKukuBootRestoreCoordinator.isSnapshotEffective(
+                    context = context,
+                    subId = resolved.writeSubId,
+                    snapshot = resolved.snapshot,
+                )
+            is SnapshotMatchResult.NoMatchingSim,
+            is SnapshotMatchResult.NoSnapshot -> false
+        }
         return OneKukuCommandResult(
             success = ok,
             state = OneKukuHiddenRunner.currentState(),

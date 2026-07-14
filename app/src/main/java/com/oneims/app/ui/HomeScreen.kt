@@ -15,9 +15,10 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -60,9 +61,9 @@ fun HomeScreen(
                 onPrimaryAction = {
                     when (state.oneKukuState) {
                         OneKukuCardState.INACTIVE -> actions.onActivateOneKuku()
-                        OneKukuCardState.SLEEPING -> actions.onRestoreCallConfig()
-                        OneKukuCardState.RUNNING -> Unit
+                        OneKukuCardState.SLEEPING,
                         OneKukuCardState.COMPLETE -> actions.onCheckOneKukuStatus()
+                        OneKukuCardState.RUNNING -> Unit
                     }
                 },
                 sims = state.sims,
@@ -138,19 +139,16 @@ fun HomeScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     val restoring = state.oneKukuState == OneKukuCardState.RUNNING
-                    OutlinedButton(
+                    Button(
                         onClick = actions.onRestoreCallConfig,
                         enabled = state.actionsEnabled && !restoring,
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 56.dp),
                     ) {
                         Icon(
                             Icons.Filled.Refresh,
                             contentDescription = null,
-                            tint = if (restoring) {
-                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                            } else {
-                                MaterialTheme.colorScheme.primary
-                            },
                         )
                         Text(
                             stringResource(

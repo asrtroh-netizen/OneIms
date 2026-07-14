@@ -363,6 +363,7 @@
     <string name="onekuku_subtitle_complete">Call settings restored</string>
     <string name="onekuku_detail_complete">OneKuku finished and went back to sleep</string>
     <string name="onekuku_action_check">Check OneKuku status</string>
+    <string name="onekuku_action_check_sub">Status only — use one-tap restore below to recover</string>
 
     <string name="onekuku_stage_standby">Standby</string>
     <string name="onekuku_stage_activate">Active</string>

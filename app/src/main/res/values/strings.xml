@@ -367,6 +367,7 @@
     <string name="onekuku_subtitle_complete">通话配置已恢复</string>
     <string name="onekuku_detail_complete">OneKuku 已完成任务并进入休眠</string>
     <string name="onekuku_action_check">检查 OneKuku 状态</string>
+    <string name="onekuku_action_check_sub">只检查服务状态；恢复请用下方一键恢复</string>
 
     <string name="onekuku_stage_standby">待命</string>
     <string name="onekuku_stage_activate">激活</string>
