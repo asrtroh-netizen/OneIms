@@ -895,21 +895,24 @@ fun StatusHero(
                 contentColor = contentColor,
             )
 
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OneImsPrimaryButton(
-                    text = actionLabel,
-                    onClick = onPrimaryAction,
-                    enabled = actionEnabled,
-                    loading = actionLoading,
-                    loadingText = actionLabel,
-                )
-                if (actionSub != null) {
-                    Text(
-                        text = actionSub,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = contentColor.copy(alpha = 0.72f),
-                        modifier = Modifier.padding(horizontal = 4.dp),
+            // 就绪态：检查入口已在「快速开始」，主按钮多余。
+            if (oneKukuState != OneKukuCardState.READY) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OneImsPrimaryButton(
+                        text = actionLabel,
+                        onClick = onPrimaryAction,
+                        enabled = actionEnabled,
+                        loading = actionLoading,
+                        loadingText = actionLabel,
                     )
+                    if (actionSub != null) {
+                        Text(
+                            text = actionSub,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = contentColor.copy(alpha = 0.72f),
+                            modifier = Modifier.padding(horizontal = 4.dp),
+                        )
+                    }
                 }
             }
         }
