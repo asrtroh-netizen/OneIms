@@ -51,17 +51,39 @@ object OneKukuEmbeddedAdbActivator {
     private const val PREFS = "onekuku_adb_identity"
     private const val KEY_PRIVATE = "private_key_b64"
     private const val KEY_CERT = "cert_b64"
+    /** 曾经成功配对/拉起过：重启后走「无码直连优先」；从未成功则走正常要码。 */
+    private const val KEY_HAS_PAIRED = "has_paired_once"
     private const val BINDER_WAIT_MS = 12_000L
     private const val BINDER_POLL_MS = 300L
     /** pair() 在部分机型上会无限阻塞；独立线程 + 超时，避免通知栏「配对中」卡死。 */
     private const val PAIR_TIMEOUT_MS = 12_000L
     private const val POST_PAIR_DISCOVER_MS = 3_000L
+    /** 已配对设备：等系统连上已记住的 Wi‑Fi。 */
+    private const val PAIRED_WIFI_WAIT_MS = 20_000L
+    private const val PAIRED_CONNECT_RETRIES = 3
+    private const val PAIRED_RETRY_GAP_MS = 2_000L
     private val activateMutex = Mutex()
 
     sealed class Outcome {
         data object NeedPairingCode : Outcome()
         data class Success(val detail: String) : Outcome()
         data class Failed(val reason: String) : Outcome()
+    }
+
+    fun hasPairedOnce(context: Context): Boolean {
+        val prefs = context.applicationContext
+            .getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        if (prefs.getBoolean(KEY_HAS_PAIRED, false)) return true
+        // 升级兼容：本地已有 ADB 身份密钥 ≈ 曾经配对成功过
+        return !prefs.getString(KEY_PRIVATE, null).isNullOrBlank()
+    }
+
+    fun markPairedOnce(context: Context) {
+        context.applicationContext
+            .getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .edit()
+            .putBoolean(KEY_HAS_PAIRED, true)
+            .apply()
     }
 
     /**
@@ -127,47 +149,60 @@ object OneKukuEmbeddedAdbActivator {
             )
 
             val code = pairingCode?.trim().orEmpty()
-            val effectivePairPort = ports.pairPort ?: pairPortOverride?.takeIf { it in 1..65535 }
+            val pairedBefore = hasPairedOnce(app)
+            var effectivePairPort = ports.pairPort ?: pairPortOverride?.takeIf { it in 1..65535 }
 
-            // Pixel 等机型：只开个人热点、未以 STA 连上 Wi‑Fi 时 tls_port=0，mDNS 扫不到端口。
-            // 这时弹「要配对码」会误导——系统根本出不了可用的无线调试端口。
+            // 已配对：等系统连上「记住的 SSID」再继续；从未配对：立刻要 Wi‑Fi。
             if (effectivePairPort == null && ports.connectPort == null &&
                 !OneKukuAdbMdns.isWifiClientConnected(app)
             ) {
-                return@withContext Outcome.Failed("wifi_sta_required")
+                if (pairedBefore && code.length < 6) {
+                    Log.i(TAG, "paired device waiting for remembered Wi‑Fi")
+                    if (!waitForWifiClient(app, PAIRED_WIFI_WAIT_MS)) {
+                        return@withContext Outcome.Failed("wifi_sta_required")
+                    }
+                    ports = OneKukuAdbMdns.discover(app)
+                    effectivePairPort = ports.pairPort ?: pairPortOverride?.takeIf { it in 1..65535 }
+                } else {
+                    return@withContext Outcome.Failed("wifi_sta_required")
+                }
             }
 
-            // 已填码 → 走 pair；未填码时即使扫到 pairPort 也先试直连
-            // （系统「配对码配对」页开着不等于本机身份失效，避免每次激活都逼填码）。
+            // 已填码 → 走 pair；未填码时即使扫到 pairPort 也先试直连。
             if (effectivePairPort != null && code.length >= 6) {
                 val paired = pairWithTimeout(manager, effectivePairPort, code)
                 if (!paired) return@withContext Outcome.Failed("pair_failed")
-                // pair 成功后 pairing 服务会注销；短超时重扫 connect，避免再干等 6s。
                 ports = OneKukuAdbMdns.discover(app, timeoutMs = POST_PAIR_DISCOVER_MS)
                 Log.i(TAG, "post-pair mdns pair=${ports.pairPort} connect=${ports.connectPort}")
             } else if (code.length >= 6 && effectivePairPort == null) {
-                // 用户填了码，但系统配对页已关掉 / mDNS 没扫到
                 return@withContext Outcome.Failed("pair_port_missing")
             }
 
-            val connected = runCatching {
-                when {
-                    ports.connectPort != null -> manager.connect(HOST, ports.connectPort)
-                    else -> manager.connectTls(app, 8_000L)
+            // 双路径：已配对 → 多轮无码直连；从未配对 → 单次尝试后走正常要码。
+            val connectAttempts = when {
+                code.length >= 6 -> 1
+                pairedBefore -> PAIRED_CONNECT_RETRIES
+                else -> 1
+            }
+            var connected = false
+            repeat(connectAttempts) { attempt ->
+                if (attempt > 0) {
+                    Thread.sleep(PAIRED_RETRY_GAP_MS)
+                    ports = OneKukuAdbMdns.discover(app, timeoutMs = POST_PAIR_DISCOVER_MS)
+                    Log.i(
+                        TAG,
+                        "retry#$attempt mdns pair=${ports.pairPort} connect=${ports.connectPort}",
+                    )
                 }
-                true
-            }.getOrElse {
-                Log.w(TAG, "connect failed", it)
-                false
+                connected = tryConnectOnce(manager, app, ports.connectPort)
+                if (connected) return@repeat
             }
             if (!connected) {
-                // 无码：连不上再要配对码（此时 pairPort 可作为用户去系统页配对的信号）。
-                // 已填码：报连接失败，保留失败通知供重试。
                 return@withContext if (code.length < 6) {
                     Log.i(
                         TAG,
-                        "connect failed without code; need pairing " +
-                            "(pairPort=${ports.pairPort} connectPort=${ports.connectPort})",
+                        "connect failed without code pairedBefore=$pairedBefore " +
+                            "pairPort=${ports.pairPort} connectPort=${ports.connectPort}",
                     )
                     Outcome.NeedPairingCode
                 } else {
@@ -182,7 +217,6 @@ object OneKukuEmbeddedAdbActivator {
             val startPkg = OneKukuCoreComponent.resolveCorePackage(app)
                 ?: OneKukuCoreComponent.HOST_PACKAGE
             val startCmd = OneKukuCoreComponent.bridgeBootShellCommand(startPkg) + "\n"
-            // 保持 shell 流打开直到 binder 到达，降低会话关闭拖死子进程的概率。
             val boot = runCatching {
                 writeShellAndAwaitBinder(manager, startCmd)
             }.getOrElse {
@@ -190,10 +224,55 @@ object OneKukuEmbeddedAdbActivator {
                 "start_failed"
             }
             when (boot) {
-                "ok" -> Outcome.Success(if (persisted) "core_running_tcpip" else "core_running")
+                "ok" -> {
+                    markPairedOnce(app)
+                    Outcome.Success(if (persisted) "core_running_tcpip" else "core_running")
+                }
                 else -> Outcome.Failed(boot)
             }
         }
+
+    /** connect 口 → 5555 → connectTls，任一成功即可。 */
+    private fun tryConnectOnce(
+        manager: AbsAdbConnectionManager,
+        app: Context,
+        connectPort: Int?,
+    ): Boolean {
+        if (connectPort != null) {
+            val ok = runCatching {
+                manager.connect(HOST, connectPort)
+                true
+            }.getOrElse {
+                Log.w(TAG, "connect :$connectPort failed", it)
+                false
+            }
+            if (ok) return true
+        }
+        val on5555 = runCatching {
+            manager.connect(HOST, PERSIST_PORT)
+            true
+        }.getOrElse {
+            Log.w(TAG, "connect :$PERSIST_PORT failed", it)
+            false
+        }
+        if (on5555) return true
+        return runCatching {
+            manager.connectTls(app, 8_000L)
+            true
+        }.getOrElse {
+            Log.w(TAG, "connectTls failed", it)
+            false
+        }
+    }
+
+    private fun waitForWifiClient(context: Context, timeoutMs: Long): Boolean {
+        val deadline = System.currentTimeMillis() + timeoutMs
+        while (System.currentTimeMillis() < deadline) {
+            if (OneKukuAdbMdns.isWifiClientConnected(context)) return true
+            Thread.sleep(1_500L)
+        }
+        return OneKukuAdbMdns.isWifiClientConnected(context)
+    }
 
     /**
      * libadb pair 在 TLS/端口异常时可能长时间不返回；放到独立线程并用超时兜底。
