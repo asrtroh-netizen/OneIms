@@ -824,16 +824,19 @@ fun StatusHero(
                             color = contentColor.copy(alpha = 0.66f),
                         )
                     }
-                    // 设备详情入口：跟未激活/休眠文案同一列，落在提示语下方。
+                    // 设备详情：与右上状态胶囊同款圆角胶囊，点击弹窗。
                     if (onOpenDeviceDetails != null) {
-                        TextButton(
+                        Surface(
                             onClick = onOpenDeviceDetails,
-                            contentPadding = PaddingValues(horizontal = 0.dp, vertical = 0.dp),
+                            shape = RoundedCornerShape(percent = 50),
+                            color = contentColor.copy(alpha = 0.14f),
                         ) {
                             Text(
                                 text = stringResource(R.string.home_device_details),
-                                style = MaterialTheme.typography.labelLarge,
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                style = MaterialTheme.typography.labelMedium,
                                 color = contentColor,
+                                maxLines = 1,
                             )
                         }
                     }

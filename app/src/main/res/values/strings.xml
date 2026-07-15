@@ -588,6 +588,8 @@
     <string name="home_adb_prep_title">激活 OneKuku</string>
     <string name="home_adb_prep_sub">点「立即激活」后下拉通知栏填入六位码即可，无需切回本应用，也无需安装其它通道 App。</string>
     <string name="home_adb_prep_steps">① 连上 Wi‑Fi\n② 打开系统无线调试 → 使用配对码配对设备\n③ 下拉通知栏输入 6 位码</string>
+    <string name="home_adb_wireless_guide_title">激活前请确认</string>
+    <string name="home_adb_wireless_guide_confirm">确定并打开无线调试</string>
     <string name="home_adb_open_wireless">打开无线调试</string>
     <string name="home_adb_open_wireless_sub">① 连上 Wi‑Fi\n② 打开系统无线调试 → 使用配对码配对设备\n③ 下拉通知栏输入 6 位码</string>
     <string name="home_adb_open_hotspot">开个人热点</string>

@@ -10,7 +10,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.AccountBox
-import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Refresh
@@ -45,6 +44,7 @@ private enum class HomeToolDialog {
     History,
     Settings,
     DeviceInfo,
+    WirelessGuide,
 }
 
 @Composable
@@ -70,7 +70,7 @@ fun HomeScreen(
                     when (state.oneKukuState) {
                         OneKukuCardState.INACTIVE,
                         OneKukuCardState.FAILED,
-                        -> actions.onActivateOneKuku()
+                        -> openDialog = HomeToolDialog.WirelessGuide
                         OneKukuCardState.READY -> actions.onCheckOneKukuStatus()
                         OneKukuCardState.ACTIVATING,
                         OneKukuCardState.EXECUTING,
@@ -80,35 +80,6 @@ fun HomeScreen(
                 onOpenDeviceDetails = { openDialog = HomeToolDialog.DeviceInfo },
                 detailOverride = state.oneKukuDetailOverride,
             )
-        }
-
-        item {
-            // 区块级长说明已去掉：步骤说明收进「打开无线调试」磁贴，避免标题下再堆一段废话。
-            SectionBlock(
-                title = stringResource(R.string.home_adb_prep_title),
-            ) {
-                Column(
-                    modifier = Modifier.padding(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    ActionGrid(
-                        listOf(
-                            ActionSpec(
-                                icon = Icons.Filled.Build,
-                                title = stringResource(R.string.home_adb_open_wireless),
-                                subtitle = stringResource(R.string.home_adb_open_wireless_sub),
-                                onClick = actions.onOpenWirelessDebugging,
-                            ),
-                            ActionSpec(
-                                icon = Icons.Filled.Refresh,
-                                title = stringResource(R.string.home_adb_start_core),
-                                subtitle = stringResource(R.string.home_adb_start_core_sub),
-                                onClick = actions.onStartCore,
-                            ),
-                        ),
-                    )
-                }
-            }
         }
 
         item {
@@ -205,6 +176,34 @@ fun HomeScreen(
     }
 
     when (openDialog) {
+        HomeToolDialog.WirelessGuide -> {
+            AlertDialog(
+                onDismissRequest = { openDialog = null },
+                title = { Text(stringResource(R.string.home_adb_wireless_guide_title)) },
+                text = {
+                    Text(
+                        text = stringResource(R.string.home_adb_prep_steps),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            openDialog = null
+                            actions.onActivateOneKuku()
+                        },
+                    ) {
+                        Text(stringResource(R.string.home_adb_wireless_guide_confirm))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { openDialog = null }) {
+                        Text(stringResource(R.string.action_cancel))
+                    }
+                },
+            )
+        }
+
         HomeToolDialog.DeviceInfo -> {
             AlertDialog(
                 onDismissRequest = { openDialog = null },
