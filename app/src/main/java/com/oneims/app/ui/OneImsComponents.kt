@@ -5,7 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.material3.ripple
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -26,7 +25,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
@@ -101,11 +99,11 @@ fun OneImsScaffold(
             snackbarHost = { SnackbarHost(snackbarHostState) },
             bottomBar = {
                 if (!useNavigationRail) {
-                    // 参考图：悬浮胶囊岛 Dock（左右留白、圆角、图标+文字常显、选中胶囊高亮）。
+                    // 悬浮圆角岛 Dock；选中高亮改为圆形，避免六项时胶囊指示器挤成一团。
                     val dockColors = NavigationBarItemDefaults.colors(
                         selectedIconColor = MaterialTheme.colorScheme.primary,
                         selectedTextColor = MaterialTheme.colorScheme.primary,
-                        indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.22f),
+                        indicatorColor = Color.Transparent,
                         unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                         unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -131,14 +129,29 @@ fun OneImsScaffold(
                                 tonalElevation = 0.dp,
                             ) {
                                 AppDestination.entries.forEach { destination ->
+                                    val selected = destination == selectedDestination
                                     NavigationBarItem(
-                                        selected = destination == selectedDestination,
+                                        selected = selected,
                                         onClick = { onDestinationSelected(destination) },
                                         icon = {
-                                            Icon(
-                                                imageVector = destination.icon,
-                                                contentDescription = null,
-                                            )
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(40.dp)
+                                                    .background(
+                                                        color = if (selected) {
+                                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)
+                                                        } else {
+                                                            Color.Transparent
+                                                        },
+                                                        shape = CircleShape,
+                                                    ),
+                                                contentAlignment = Alignment.Center,
+                                            ) {
+                                                Icon(
+                                                    imageVector = destination.icon,
+                                                    contentDescription = null,
+                                                )
+                                            }
                                         },
                                         label = {
                                             Text(
@@ -811,6 +824,19 @@ fun StatusHero(
                             color = contentColor.copy(alpha = 0.66f),
                         )
                     }
+                    // 设备详情入口：跟未激活/休眠文案同一列，落在提示语下方。
+                    if (onOpenDeviceDetails != null) {
+                        TextButton(
+                            onClick = onOpenDeviceDetails,
+                            contentPadding = PaddingValues(horizontal = 0.dp, vertical = 0.dp),
+                        ) {
+                            Text(
+                                text = stringResource(R.string.home_device_details),
+                                style = MaterialTheme.typography.labelLarge,
+                                color = contentColor,
+                            )
+                        }
+                    }
                 }
                 Surface(
                     shape = RoundedCornerShape(percent = 50),
@@ -828,21 +854,8 @@ fun StatusHero(
 
             OneKukuStageProgress(
                 litCount = OneKukuCardPolicy.litStageCount(oneKukuState),
-                current = oneKukuState,
                 contentColor = contentColor,
             )
-
-            if (onOpenDeviceDetails != null) {
-                TextButton(
-                    onClick = onOpenDeviceDetails,
-                    modifier = Modifier.padding(horizontal = 0.dp),
-                ) {
-                    Text(
-                        text = stringResource(R.string.home_device_details),
-                        color = contentColor,
-                    )
-                }
-            }
 
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OneImsPrimaryButton(
@@ -868,48 +881,39 @@ fun StatusHero(
 @Composable
 private fun OneKukuStageProgress(
     litCount: Int,
-    current: OneKukuCardState,
     contentColor: Color,
 ) {
+    // 旧四态疏朗布局：等分铺满 + 连线 weight(1f)，五态同样沿用，避免横向滚动挤成一团。
     val stages = OneKukuCardPolicy.stageLabelRes()
-    val currentIndex = current.ordinal.coerceIn(0, stages.lastIndex)
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .horizontalScroll(rememberScrollState()),
+        modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(0.dp),
     ) {
         stages.forEachIndexed { index, labelRes ->
             val lit = index < litCount
-            val isCurrent = index == currentIndex
-            val stageColor = when {
-                isCurrent -> contentColor
-                lit -> contentColor.copy(alpha = 0.7f)
-                else -> contentColor.copy(alpha = 0.28f)
-            }
+            val stageColor = if (lit) contentColor else contentColor.copy(alpha = 0.32f)
             if (index > 0) {
                 Box(
                     modifier = Modifier
-                        .width(10.dp)
+                        .weight(1f)
                         .height(2.dp)
                         .background(
                             color = if (index < litCount) {
-                                contentColor.copy(alpha = 0.45f)
+                                contentColor.copy(alpha = 0.55f)
                             } else {
-                                contentColor.copy(alpha = 0.14f)
+                                contentColor.copy(alpha = 0.18f)
                             },
                         ),
                 )
             }
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier.widthIn(min = 36.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 Box(
                     modifier = Modifier
-                        .size(if (isCurrent) 12.dp else 8.dp)
+                        .size(10.dp)
                         .background(color = stageColor, shape = CircleShape),
                 )
                 Text(
