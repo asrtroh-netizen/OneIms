@@ -3,8 +3,10 @@ package com.oneims.app.core
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import android.widget.Toast
 import androidx.core.app.RemoteInput
+import com.oneims.app.MainActivity
 import com.oneims.app.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -13,7 +15,7 @@ import kotlinx.coroutines.launch
 
 /**
  * 通知栏 RemoteInput → Mini ADB pair/connect/start。
- * 全程不要求用户切回 OneIMS。
+ * 提交有效六位码后立刻把 OneIMS 拉回前台，方便用户看激活进度。
  */
 class WirelessPairingCodeReceiver : BroadcastReceiver() {
 
@@ -41,6 +43,8 @@ class WirelessPairingCodeReceiver : BroadcastReceiver() {
             try {
                 OneKukuActivationUi.setPhase(OneKukuActivationPhase.PAIRING)
                 OneKukuPairingNotification.showPairingInProgress(app)
+                // 输完码立刻回 App：通知栏提交算用户手势，允许拉起前台。
+                bringAppToForeground(app)
                 when (val outcome = OneKukuMiniAdbClient.pairConnectAndStart(app, raw)) {
                     is OneKukuMiniAdbClient.Outcome.Success -> {
                         OneKukuActivationUi.setPhase(OneKukuActivationPhase.ACTIVE)
@@ -55,10 +59,12 @@ class WirelessPairingCodeReceiver : BroadcastReceiver() {
                                 Intent(ACTION_CONTINUE_RESTORE).setPackage(app.packageName),
                             )
                         }
+                        bringAppToForeground(app)
                     }
                     is OneKukuMiniAdbClient.Outcome.NeedPairingCode -> {
                         OneKukuActivationUi.setPhase(OneKukuActivationPhase.WAITING_PAIR)
                         OneKukuPairingNotification.showWaiting(app)
+                        bringAppToForeground(app)
                     }
                     is OneKukuMiniAdbClient.Outcome.Failed -> {
                         OneKukuActivationUi.setPhase(
@@ -83,6 +89,7 @@ class WirelessPairingCodeReceiver : BroadcastReceiver() {
                             else -> outcome.reason
                         }
                         OneKukuPairingNotification.showFailure(app, msg)
+                        bringAppToForeground(app)
                     }
                 }
             } finally {
@@ -93,6 +100,18 @@ class WirelessPairingCodeReceiver : BroadcastReceiver() {
 
     companion object {
         const val ACTION_CONTINUE_RESTORE = "com.oneims.app.action.CONTINUE_CALL_RESTORE"
+        private const val TAG = "OneIMS-PairReceiver"
         private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+        fun bringAppToForeground(app: Context) {
+            val launch = Intent(app, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                    Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                    Intent.FLAG_ACTIVITY_SINGLE_TOP or
+                    Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+            }
+            runCatching { app.startActivity(launch) }
+                .onFailure { Log.w(TAG, "bringAppToForeground failed", it) }
+        }
     }
 }
