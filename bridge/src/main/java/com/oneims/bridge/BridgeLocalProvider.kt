@@ -1,18 +1,26 @@
 package com.oneims.bridge
 
+import android.app.Application
 import android.content.ContentProvider
 import android.content.ContentValues
 import android.database.Cursor
 import android.net.Uri
 import android.os.Bundle
-import android.os.IBinder
 import android.util.Log
 
 /**
  * 桥 APK 本机 Provider：便于自检；真正客户端投递目标是 OneIMS 的 onebridge authority。
  */
 class BridgeLocalProvider : ContentProvider() {
-    override fun onCreate(): Boolean = true
+    override fun onCreate(): Boolean {
+        // 任意组件拉起进程时尽量写出 start.sh（双保险；OneIMS 现已可内联 boot）
+        val app = context?.applicationContext
+        if (app is Application) {
+            runCatching { BridgeStarter.installStartScript(app) }
+                .onFailure { Log.w(TAG, "install start.sh from provider failed", it) }
+        }
+        return true
+    }
 
     override fun call(method: String, arg: String?, extras: Bundle?): Bundle? {
         if (method == "ping") {

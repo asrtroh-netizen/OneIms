@@ -26,8 +26,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
@@ -680,14 +678,12 @@ private fun ActionTile(
  * 首页顶部 OneKuku 总控卡：保留原 Hero 外壳（extraLarge 圆角、未激活红 / 已激活白、左图标），
  * 对内换成 OneKuku 四态文案、右上状态胶囊、轻量进度阶段与主操作按钮；
  * 「一键恢复通话」仅在首页底部应急区出现，本卡不重复该入口。
- * 不展示终端、命令或底层通道名称。SIM 胶囊分页与设备详情仍按需附在卡内。
+ * 不展示终端、命令或底层通道名称；切卡改由顶栏选卡胶囊负责。
  */
 @Composable
 fun StatusHero(
     oneKukuState: OneKukuCardState,
     onPrimaryAction: () -> Unit,
-    sims: List<SimInfo> = emptyList(),
-    selectedSubId: Int = -1,
     deviceInfo: String = "",
     detailOverride: String? = null,
 ) {
@@ -822,16 +818,6 @@ fun StatusHero(
                 contentColor = contentColor,
             )
 
-            if (sims.isNotEmpty()) {
-                HorizontalDivider(color = contentColor.copy(alpha = 0.16f))
-                SimStatusCapsulePager(
-                    sims = sims,
-                    selectedSubId = selectedSubId,
-                    contentColor = contentColor,
-                    pillContainerColor = contentColor.copy(alpha = 0.12f),
-                )
-            }
-
             if (deviceInfo.isNotBlank()) {
                 var expanded by remember { mutableStateOf(false) }
                 HorizontalDivider(color = contentColor.copy(alpha = 0.16f))
@@ -938,101 +924,6 @@ private fun OneKukuStageProgress(
                     color = stageColor,
                     maxLines = 1,
                 )
-            }
-        }
-    }
-}
-
-/**
- * 胶囊状 SIM 状态分页：一次只显示一张卡的状态，可左右滑动切换到下一张；
- * 仅只读展示（卡槽、运营商名、是否为当前生效卡），不承担选卡交互——选卡已迁移到「能力」页顶部。
- */
-@Composable
-fun SimStatusCapsulePager(
-    sims: List<SimInfo>,
-    selectedSubId: Int,
-    contentColor: Color,
-    pillContainerColor: Color,
-    modifier: Modifier = Modifier,
-) {
-    if (sims.isEmpty()) return
-    val initialPage = sims.indexOfFirst { it.subscriptionId == selectedSubId }
-        .let { if (it >= 0) it else 0 }
-    val pagerState = rememberPagerState(
-        initialPage = initialPage,
-        pageCount = { sims.size },
-    )
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        HorizontalPager(
-            state = pagerState,
-            modifier = Modifier.fillMaxWidth(),
-        ) { page ->
-            val sim = sims[page]
-            val isActive = sim.subscriptionId == selectedSubId
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(percent = 50),
-                color = pillContainerColor,
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 18.dp, vertical = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(8.dp)
-                            .then(
-                                Modifier.background(
-                                    color = if (isActive) contentColor else contentColor.copy(alpha = 0.35f),
-                                    shape = CircleShape,
-                                ),
-                            ),
-                    )
-                    Text(
-                        text = stringResource(
-                            R.string.sim_chip,
-                            sim.slotIndex + 1,
-                            sim.carrierName,
-                        ),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = contentColor,
-                        modifier = Modifier.weight(1f),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    Text(
-                        text = stringResource(
-                            if (isActive) R.string.sim_tag_active else R.string.sim_tag_standby,
-                        ),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = contentColor.copy(alpha = if (isActive) 0.9f else 0.6f),
-                    )
-                }
-            }
-        }
-        if (sims.size > 1) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-            ) {
-                repeat(sims.size) { index ->
-                    val active = pagerState.currentPage == index
-                    Box(
-                        modifier = Modifier
-                            .padding(horizontal = 3.dp)
-                            .size(if (active) 7.dp else 5.dp)
-                            .then(
-                                Modifier.background(
-                                    color = if (active) contentColor else contentColor.copy(alpha = 0.3f),
-                                    shape = CircleShape,
-                                ),
-                            ),
-                    )
-                }
             }
         }
     }

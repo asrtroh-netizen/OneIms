@@ -112,8 +112,7 @@ object OneKukuEmbeddedAdbActivator {
 
             val startPkg = OneKukuCoreComponent.resolveCorePackage(app)
                 ?: OneKukuCoreComponent.BRIDGE_PACKAGE
-            val startCmd =
-                "sh /storage/emulated/0/Android/data/$startPkg/start.sh\n"
+            val startCmd = OneKukuCoreComponent.bridgeBootShellCommand(startPkg) + "\n"
             val shellOk = runCatching {
                 writeShell(manager, startCmd)
             }.getOrElse {

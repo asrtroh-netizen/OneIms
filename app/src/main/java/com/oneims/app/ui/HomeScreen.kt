@@ -68,8 +68,6 @@ fun HomeScreen(
                         OneKukuCardState.RUNNING -> Unit
                     }
                 },
-                sims = state.sims,
-                selectedSubId = state.selectedSubId,
                 deviceInfo = state.deviceInfo,
                 detailOverride = state.oneKukuDetailOverride,
             )

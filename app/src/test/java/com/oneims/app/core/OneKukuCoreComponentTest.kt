@@ -10,8 +10,17 @@ class OneKukuCoreComponentTest {
     fun adbStartCommand_defaultsToBridgePackage() {
         val cmd = OneKukuCoreComponent.adbStartCommand(context = null)
         assertTrue(cmd.contains(OneKukuCoreComponent.BRIDGE_PACKAGE))
-        assertTrue(cmd.contains("start.sh"))
-        assertTrue(cmd.startsWith("adb shell sh "))
+        assertTrue(cmd.contains("app_process"))
+        assertTrue(cmd.contains("BridgeService"))
+        assertTrue(cmd.startsWith("adb shell "))
+    }
+
+    @Test
+    fun bridgeBootShellCommand_doesNotRequireStartShFile() {
+        val cmd = OneKukuCoreComponent.bridgeBootShellCommand()
+        assertTrue(cmd.contains("pm path"))
+        assertTrue(cmd.contains("app_process"))
+        assertTrue(!cmd.contains("Android/data/"))
     }
 
     @Test

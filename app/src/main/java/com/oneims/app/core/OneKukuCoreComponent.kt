@@ -118,8 +118,20 @@ object OneKukuCoreComponent {
     fun adbStartCommand(context: Context? = null): String {
         val pkg = context?.let { resolveCorePackage(it) }
             ?: BRIDGE_PACKAGE
-        return "adb shell sh /storage/emulated/0/Android/data/$pkg/start.sh"
+        return "adb shell ${bridgeBootShellCommand(pkg)}"
     }
+
+    /**
+     * 不依赖 `Android/data/.../start.sh` 是否已写出——装完通道即可拉起。
+     * 与 bridge 模块 `assets/start.sh` 语义等价。
+     */
+    fun bridgeBootShellCommand(packageName: String = BRIDGE_PACKAGE): String =
+        "pkill -f onebridge_server 2>/dev/null || true; " +
+            "APK=\$(pm path $packageName 2>/dev/null | head -n 1 | cut -d: -f2 | tr -d '\\r'); " +
+            "if [ -z \"\$APK\" ]; then echo OneBridge_missing >&2; exit 1; fi; " +
+            "export CLASSPATH=\"\$APK\"; " +
+            "exec /system/bin/app_process /system/bin --nice-name=onebridge_server " +
+            "com.oneims.bridge.server.BridgeService"
 
     fun guidedActivationScript(context: Context): String =
         context.getString(R.string.onekuku_adb_guide_script, adbStartCommand(context))
