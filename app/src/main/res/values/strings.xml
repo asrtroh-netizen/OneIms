@@ -447,8 +447,9 @@
     <string name="onekuku_action_activate">立即激活 OneKuku</string>
     <string name="onekuku_action_activate_sub">下拉通知栏输入六位码，无需回到本页</string>
 
-    <string name="onekuku_title_ready">OneKuku 已就绪 · Active</string>
-    <string name="onekuku_nameplate_ready">已就绪 · Active</string>
+    <string name="onekuku_title_ready">OneKuku 已就绪</string>
+    <string name="onekuku_nameplate_ready">Active</string>
+    <string name="onekuku_badge_active">Active</string>
     <string name="onekuku_subtitle_ready">通道已激活并保持 Active</string>
     <string name="onekuku_detail_ready">可随时检查状态；恢复通话请用下方逻辑状态卡</string>
     <string name="onekuku_subtitle_sleeping">OneKuku 通道已激活，核心按需休眠</string>

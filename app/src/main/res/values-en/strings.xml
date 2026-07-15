@@ -443,8 +443,9 @@
     <string name="onekuku_action_activate">Activate OneKuku</string>
     <string name="onekuku_action_activate_sub">Enter the 6-digit code from the notification</string>
 
-    <string name="onekuku_title_ready">OneKuku ready · Active</string>
-    <string name="onekuku_nameplate_ready">Ready · Active</string>
+    <string name="onekuku_title_ready">OneKuku ready</string>
+    <string name="onekuku_nameplate_ready">Active</string>
+    <string name="onekuku_badge_active">Active</string>
     <string name="onekuku_subtitle_ready">Channel is active and stays Active</string>
     <string name="onekuku_detail_ready">Check status anytime; restore from the logic card below</string>
     <string name="onekuku_subtitle_sleeping">OneKuku channel is on; core sleeps on demand</string>

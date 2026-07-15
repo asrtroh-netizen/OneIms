@@ -813,11 +813,38 @@ fun StatusHero(
                         style = MaterialTheme.typography.labelMedium,
                         color = contentColor.copy(alpha = 0.72f),
                     )
-                    Text(
-                        title,
-                        style = MaterialTheme.typography.titleLarge,
-                        color = contentColor,
-                    )
+                    if (oneKukuState == OneKukuCardState.READY) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            Text(
+                                title,
+                                style = MaterialTheme.typography.titleLarge,
+                                color = contentColor,
+                                modifier = Modifier.weight(1f, fill = false),
+                            )
+                            Surface(
+                                shape = RoundedCornerShape(percent = 50),
+                                color = contentColor.copy(alpha = 0.12f),
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.onekuku_badge_active),
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = contentColor,
+                                    maxLines = 1,
+                                )
+                            }
+                        }
+                    } else {
+                        Text(
+                            title,
+                            style = MaterialTheme.typography.titleLarge,
+                            color = contentColor,
+                        )
+                    }
                     Text(
                         subtitle,
                         style = MaterialTheme.typography.bodyLarge,
