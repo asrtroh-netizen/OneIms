@@ -112,9 +112,9 @@ fun HomeScreen(
                         listOf(
                             ActionSpec(
                                 icon = Icons.Filled.Refresh,
-                                title = stringResource(R.string.onekuku_action_restore),
-                                subtitle = stringResource(R.string.onekuku_action_restore_sub),
-                                onClick = actions.onRestoreCallConfig,
+                                title = stringResource(R.string.onekuku_action_save_config),
+                                subtitle = stringResource(R.string.onekuku_action_save_config_sub),
+                                onClick = actions.onSaveCallConfig,
                                 enabled = state.actionsEnabled &&
                                     state.oneKukuState == OneKukuCardState.READY &&
                                     state.sims.isNotEmpty(),

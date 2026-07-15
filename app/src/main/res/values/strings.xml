@@ -451,7 +451,7 @@
     <string name="onekuku_nameplate_ready">Active</string>
     <string name="onekuku_badge_active">Active</string>
     <string name="onekuku_subtitle_ready">通道已激活并保持 Active</string>
-    <string name="onekuku_detail_ready">可随时检查状态；恢复通话见下方快速开始</string>
+    <string name="onekuku_detail_ready">可随时保存通话配置，见下方快速开始</string>
     <string name="onekuku_subtitle_sleeping">OneKuku 通道已激活，核心按需休眠</string>
     <string name="onekuku_detail_sleeping">用完自动休眠，不常驻不耗电；重启后可尝试自动恢复通话配置</string>
     <string name="onekuku_title_activating">正在激活 OneKuku</string>
@@ -460,6 +460,10 @@
     <string name="onekuku_pill_activating">激活中</string>
     <string name="onekuku_pill_ready">已就绪</string>
     <string name="onekuku_pill_sleeping">休眠中</string>
+    <string name="onekuku_action_save_config">保存通话配置</string>
+    <string name="onekuku_action_save_config_sub">把当前通话相关配置记为快照</string>
+    <string name="onekuku_msg_config_saved">通话配置已保存</string>
+    <string name="onekuku_msg_config_save_need_sim">请先选中 SIM 再保存</string>
     <string name="onekuku_action_restore">一键恢复通话</string>
     <string name="onekuku_action_restore_sub">写回上次成功的通话相关配置</string>
 

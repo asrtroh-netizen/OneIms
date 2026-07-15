@@ -749,7 +749,6 @@ fun StatusHero(
             OneKukuCardState.FAILED -> R.string.onekuku_detail_failed
         },
     )
-    val showResidentHint = oneKukuState == OneKukuCardState.READY
     val statusPill = stringResource(
         when (oneKukuState) {
             OneKukuCardState.INACTIVE -> R.string.onekuku_pill_inactive
@@ -773,7 +772,6 @@ fun StatusHero(
         OneKukuCardState.INACTIVE,
         OneKukuCardState.FAILED,
         -> stringResource(R.string.onekuku_action_activate_sub)
-        OneKukuCardState.READY -> stringResource(R.string.onekuku_action_check_sub)
         else -> null
     }
     val actionEnabled = !busy
@@ -845,23 +843,18 @@ fun StatusHero(
                             color = contentColor,
                         )
                     }
-                    Text(
-                        subtitle,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = contentColor,
-                    )
+                    if (oneKukuState != OneKukuCardState.READY) {
+                        Text(
+                            subtitle,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = contentColor,
+                        )
+                    }
                     Text(
                         detail,
                         style = MaterialTheme.typography.bodySmall,
                         color = contentColor.copy(alpha = 0.78f),
                     )
-                    if (showResidentHint) {
-                        Text(
-                            stringResource(R.string.onekuku_hint_resident),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = contentColor.copy(alpha = 0.66f),
-                        )
-                    }
                     if (onOpenDeviceDetails != null) {
                         Surface(
                             onClick = onOpenDeviceDetails,

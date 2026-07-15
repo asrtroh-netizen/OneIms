@@ -1226,6 +1226,22 @@ private fun AppRoot(
                         onSelectSim = { selectSim(it) },
                         onBeginWirelessPairGuide = { beginWirelessPairGuide() },
                         onApplyRecommended = { applyRecommendedProfile() },
+                        onSaveCallConfig = {
+                            val sim = selectedSim
+                            if (sim == null) {
+                                publish(context.getString(R.string.onekuku_msg_config_save_need_sim))
+                            } else if (!ensurePrivilegedAccess()) {
+                                Unit
+                            } else {
+                                runOperation(context.getString(R.string.onekuku_action_save_config)) {
+                                    OneKukuSnapshotStore.save(
+                                        context,
+                                        OneKukuSnapshotFactory.fromCurrent(context, sim),
+                                    )
+                                    context.getString(R.string.onekuku_msg_config_saved)
+                                }
+                            }
+                        },
                         onActivateOneKuku = {
                             when {
                                 !OneKukuManager.isRunning() -> {
