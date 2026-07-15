@@ -855,33 +855,38 @@ fun StatusHero(
                             color = contentColor.copy(alpha = 0.78f),
                         )
                     }
+                }
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Surface(
+                        shape = RoundedCornerShape(percent = 50),
+                        color = contentColor.copy(alpha = 0.14f),
+                    ) {
+                        Text(
+                            text = statusPill,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = contentColor,
+                            maxLines = 1,
+                        )
+                    }
                     if (onOpenDeviceDetails != null) {
                         Surface(
                             onClick = onOpenDeviceDetails,
                             shape = RoundedCornerShape(percent = 50),
-                            color = contentColor.copy(alpha = 0.14f),
+                            color = contentColor.copy(alpha = 0.10f),
                         ) {
                             Text(
                                 text = stringResource(R.string.home_device_details),
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                style = MaterialTheme.typography.labelMedium,
-                                color = contentColor,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = contentColor.copy(alpha = 0.88f),
                                 maxLines = 1,
                             )
                         }
                     }
-                }
-                Surface(
-                    shape = RoundedCornerShape(percent = 50),
-                    color = contentColor.copy(alpha = 0.14f),
-                ) {
-                    Text(
-                        text = statusPill,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = contentColor,
-                        maxLines = 1,
-                    )
                 }
             }
 
