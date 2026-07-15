@@ -374,6 +374,7 @@ private fun AppRoot(
         } else if (ConfigStore.isOneKukuBootAutoCheck(context) &&
             OneKukuEmbeddedAdbActivator.hasPairedOnce(context)
         ) {
+            // 只踢开机编排；真正「进首页自动连」在 prepareOneKukuCore 定义后的 LaunchedEffect。
             OneKukuBootRestoreService.enqueue(context, debounceMs = 0L)
         } else if (ConfigStore.isOneKukuBootAutoCheck(context)) {
             OneKukuBootRestoreService.enqueue(context, debounceMs = 2_000L)
@@ -650,6 +651,21 @@ private fun AppRoot(
                 }
             }
         }
+    }
+
+    // Shizuku 体感：已配对且通道未就绪时，进首页自动无码直连，不必再点总控卡。
+    LaunchedEffect(Unit) {
+        if (OneKukuManager.isReady()) return@LaunchedEffect
+        if (!OneKukuEmbeddedAdbActivator.hasPairedOnce(context)) return@LaunchedEffect
+        val phase = OneKukuActivationUi.phase
+        if (phase == OneKukuActivationPhase.CONNECTING ||
+            phase == OneKukuActivationPhase.STARTING ||
+            phase == OneKukuActivationPhase.PAIRING ||
+            phase == OneKukuActivationPhase.WAITING_PAIR
+        ) {
+            return@LaunchedEffect
+        }
+        prepareOneKukuCore()
     }
 
     DisposableEffect(Unit) {
