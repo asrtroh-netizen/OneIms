@@ -15,7 +15,7 @@ class OneKukuCardPolicyTest {
             OneKukuCardPolicy.resolve(false, isExecuting = false, taskComplete = false),
         )
         assertEquals(
-            OneKukuCardState.SLEEPING,
+            OneKukuCardState.READY,
             OneKukuCardPolicy.resolve(true, isExecuting = false, taskComplete = false),
         )
         assertEquals(
@@ -23,7 +23,7 @@ class OneKukuCardPolicyTest {
             OneKukuCardPolicy.resolve(true, isExecuting = true, taskComplete = false),
         )
         assertEquals(
-            OneKukuCardState.ACTIVE,
+            OneKukuCardState.READY,
             OneKukuCardPolicy.resolve(true, isExecuting = false, taskComplete = true),
         )
     }
@@ -37,10 +37,22 @@ class OneKukuCardPolicyTest {
     }
 
     @Test
-    fun fromActivationPhase_mapsNineStatePipeline() {
+    fun fromActivationPhase_collapsesPipelineIntoActivating() {
         assertEquals(
-            OneKukuCardState.WAITING_PAIR,
+            OneKukuCardState.ACTIVATING,
             OneKukuCardPolicy.fromActivationPhase(OneKukuActivationPhase.WAITING_PAIR),
+        )
+        assertEquals(
+            OneKukuCardState.ACTIVATING,
+            OneKukuCardPolicy.fromActivationPhase(OneKukuActivationPhase.PAIRING),
+        )
+        assertEquals(
+            OneKukuCardState.ACTIVATING,
+            OneKukuCardPolicy.fromActivationPhase(OneKukuActivationPhase.CONNECTING),
+        )
+        assertEquals(
+            OneKukuCardState.ACTIVATING,
+            OneKukuCardPolicy.fromActivationPhase(OneKukuActivationPhase.STARTING),
         )
         assertEquals(
             OneKukuCardState.FAILED,
@@ -50,23 +62,20 @@ class OneKukuCardPolicyTest {
     }
 
     @Test
-    fun litStageCount_isNineStepRail() {
+    fun litStageCount_isFiveStepRail() {
         assertEquals(1, OneKukuCardPolicy.litStageCount(OneKukuCardState.INACTIVE))
-        assertEquals(2, OneKukuCardPolicy.litStageCount(OneKukuCardState.WAITING_PAIR))
-        assertEquals(3, OneKukuCardPolicy.litStageCount(OneKukuCardState.PAIRING))
-        assertEquals(4, OneKukuCardPolicy.litStageCount(OneKukuCardState.CONNECTING))
-        assertEquals(5, OneKukuCardPolicy.litStageCount(OneKukuCardState.STARTING))
-        assertEquals(6, OneKukuCardPolicy.litStageCount(OneKukuCardState.ACTIVE))
-        assertEquals(7, OneKukuCardPolicy.litStageCount(OneKukuCardState.SLEEPING))
-        assertEquals(8, OneKukuCardPolicy.litStageCount(OneKukuCardState.EXECUTING))
-        assertEquals(1, OneKukuCardPolicy.litStageCount(OneKukuCardState.FAILED))
-        assertEquals(9, OneKukuCardPolicy.stageLabelRes().size)
+        assertEquals(2, OneKukuCardPolicy.litStageCount(OneKukuCardState.ACTIVATING))
+        assertEquals(3, OneKukuCardPolicy.litStageCount(OneKukuCardState.READY))
+        assertEquals(4, OneKukuCardPolicy.litStageCount(OneKukuCardState.EXECUTING))
+        assertEquals(5, OneKukuCardPolicy.litStageCount(OneKukuCardState.FAILED))
+        assertEquals(5, OneKukuCardPolicy.stageLabelRes().size)
     }
 
     @Test
-    fun enum_hasExactlyNineStates() {
-        assertEquals(9, OneKukuCardState.entries.size)
-        assertTrue(OneKukuCardPolicy.isBusy(OneKukuCardState.PAIRING))
-        assertTrue(OneKukuCardPolicy.isAlert(OneKukuCardState.WAITING_PAIR))
+    fun enum_hasExactlyFiveStates() {
+        assertEquals(5, OneKukuCardState.entries.size)
+        assertTrue(OneKukuCardPolicy.isBusy(OneKukuCardState.ACTIVATING))
+        assertTrue(OneKukuCardPolicy.isAlert(OneKukuCardState.INACTIVE))
+        assertTrue(OneKukuCardPolicy.isAlert(OneKukuCardState.FAILED))
     }
 }

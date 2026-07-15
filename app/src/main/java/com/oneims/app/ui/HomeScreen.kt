@@ -33,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import com.oneims.app.R
 import kotlinx.coroutines.Dispatchers
@@ -43,6 +44,7 @@ private enum class HomeToolDialog {
     Snapshot,
     History,
     Settings,
+    DeviceInfo,
 }
 
 @Composable
@@ -67,20 +69,15 @@ fun HomeScreen(
                 onPrimaryAction = {
                     when (state.oneKukuState) {
                         OneKukuCardState.INACTIVE,
-                        OneKukuCardState.WAITING_PAIR,
                         OneKukuCardState.FAILED,
                         -> actions.onActivateOneKuku()
-                        OneKukuCardState.SLEEPING,
-                        OneKukuCardState.ACTIVE,
-                        -> actions.onCheckOneKukuStatus()
-                        OneKukuCardState.PAIRING,
-                        OneKukuCardState.CONNECTING,
-                        OneKukuCardState.STARTING,
+                        OneKukuCardState.READY -> actions.onCheckOneKukuStatus()
+                        OneKukuCardState.ACTIVATING,
                         OneKukuCardState.EXECUTING,
                         -> Unit
                     }
                 },
-                deviceInfo = state.deviceInfo,
+                onOpenDeviceDetails = { openDialog = HomeToolDialog.DeviceInfo },
                 detailOverride = state.oneKukuDetailOverride,
             )
         }
@@ -208,6 +205,27 @@ fun HomeScreen(
     }
 
     when (openDialog) {
+        HomeToolDialog.DeviceInfo -> {
+            AlertDialog(
+                onDismissRequest = { openDialog = null },
+                title = { Text(stringResource(R.string.home_device_details)) },
+                text = {
+                    Text(
+                        text = state.deviceInfo.ifBlank {
+                            stringResource(R.string.onekuku_snapshot_empty)
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        fontFamily = FontFamily.Monospace,
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = { openDialog = null }) {
+                        Text(stringResource(R.string.action_close))
+                    }
+                },
+            )
+        }
+
         HomeToolDialog.Status -> {
             var lines by remember { mutableStateOf<List<OneKukuHomeTools.SnapshotLine>?>(null) }
             LaunchedEffect(

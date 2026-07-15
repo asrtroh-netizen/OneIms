@@ -420,6 +420,11 @@
     <string name="onekuku_action_activate_sub">Prepares the restore environment in the background</string>
 
     <string name="onekuku_title_ready">Device ready</string>
+    <string name="onekuku_title_activating">Activating OneKuku</string>
+    <string name="onekuku_subtitle_activating">Pairing, connecting, and starting the channel</string>
+    <string name="onekuku_detail_activating">Follow the notification prompts, or open system wireless debugging</string>
+    <string name="onekuku_pill_activating">Activating</string>
+    <string name="onekuku_pill_ready">Ready</string>
     <string name="onekuku_subtitle_sleeping">OneKuku channel is active</string>
     <string name="onekuku_detail_sleeping">Call settings can try to auto-restore after reboot</string>
     <string name="onekuku_pill_sleeping">Sleeping</string>
@@ -437,11 +442,13 @@
     <string name="onekuku_action_check">Check OneKuku status</string>
     <string name="onekuku_action_check_sub">Status only — use one-tap restore below to recover</string>
 
-    <string name="onekuku_stage_standby">Standby</string>
-    <string name="onekuku_stage_activate">Active</string>
-    <string name="onekuku_stage_execute">Run</string>
-    <string name="onekuku_stage_done">Done</string>
     <string name="onekuku_stage_inactive">Off</string>
+    <string name="onekuku_stage_activate">Setup</string>
+    <string name="onekuku_stage_ready">Ready</string>
+    <string name="onekuku_stage_execute">Run</string>
+    <string name="onekuku_stage_failed">Fail</string>
+    <string name="onekuku_stage_standby">Standby</string>
+    <string name="onekuku_stage_done">Done</string>
     <string name="onekuku_stage_wait_pair">Wait</string>
     <string name="onekuku_stage_pairing">Pair</string>
     <string name="onekuku_stage_connecting">Link</string>
@@ -449,7 +456,6 @@
     <string name="onekuku_stage_active">On</string>
     <string name="onekuku_stage_sleeping">Sleep</string>
     <string name="onekuku_stage_executing">Run</string>
-    <string name="onekuku_stage_failed">Fail</string>
 
     <string name="onekuku_msg_need_prepare">Finish preparing the OneKuku core service first</string>
     <string name="onekuku_msg_already_active">OneKuku core service is already active</string>

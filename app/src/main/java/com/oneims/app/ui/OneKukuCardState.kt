@@ -3,104 +3,77 @@ package com.oneims.app.ui
 import com.oneims.app.R
 
 /**
- * 首页顶部 OneKuku 总控卡状态（规格 9 态）。
+ * 首页顶部 OneKuku 总控卡状态（规格 5 态）。
  *
- * 1 未激活 → 2 等待配对 → 3 配对中 → 4 连接中 → 5 启动中
- * → 6 已激活 → 7 休眠中 → 8 执行中；失败为独立态。
+ * 1 未激活 → 2 激活中（等配对/配对/连接/启动）→ 3 已就绪 → 4 执行中；5 失败。
+ * 底层激活相位仍可细分，卡片层收敛，避免九段进度挤成一团。
  */
 enum class OneKukuCardState {
     /** 1 · 未激活 */
     INACTIVE,
 
-    /** 2 · 等待配对（通知栏填码） */
-    WAITING_PAIR,
+    /** 2 · 激活中（通知填码 / 配对 / 连接 / 启动） */
+    ACTIVATING,
 
-    /** 3 · 配对中 */
-    PAIRING,
+    /** 3 · 已就绪（通道可用，含休眠） */
+    READY,
 
-    /** 4 · 连接中 */
-    CONNECTING,
-
-    /** 5 · 启动中 */
-    STARTING,
-
-    /** 6 · 已激活（通道就绪 / 本轮恢复完成） */
-    ACTIVE,
-
-    /** 7 · 休眠中 */
-    SLEEPING,
-
-    /** 8 · 执行中（一键恢复等） */
+    /** 4 · 执行中（一键恢复等） */
     EXECUTING,
 
-    /** 9 · 失败 */
+    /** 5 · 失败 */
     FAILED,
 }
 
 /**
- * 将底层运行/授权/执行标志与激活相位收敛为卡片 9 态；
- * 进度条仍为 4 段（待命 / 激活 / 执行 / 完成）。
+ * 将底层运行/授权/执行标志与激活相位收敛为卡片 5 态。
  */
 object OneKukuCardPolicy {
     fun resolve(
         serviceReady: Boolean,
         isExecuting: Boolean,
-        taskComplete: Boolean,
+        @Suppress("UNUSED_PARAMETER") taskComplete: Boolean,
     ): OneKukuCardState = when {
         !serviceReady -> OneKukuCardState.INACTIVE
         isExecuting -> OneKukuCardState.EXECUTING
-        taskComplete -> OneKukuCardState.ACTIVE
-        else -> OneKukuCardState.SLEEPING
+        // taskComplete 与空闲休眠在卡片层同属「已就绪」；细则靠 detailOverride。
+        else -> OneKukuCardState.READY
     }
 
     fun fromActivationPhase(phase: com.oneims.app.core.OneKukuActivationPhase): OneKukuCardState? =
         when (phase) {
-            com.oneims.app.core.OneKukuActivationPhase.WAITING_PAIR ->
-                OneKukuCardState.WAITING_PAIR
-            com.oneims.app.core.OneKukuActivationPhase.PAIRING ->
-                OneKukuCardState.PAIRING
-            com.oneims.app.core.OneKukuActivationPhase.CONNECTING ->
-                OneKukuCardState.CONNECTING
-            com.oneims.app.core.OneKukuActivationPhase.STARTING ->
-                OneKukuCardState.STARTING
+            com.oneims.app.core.OneKukuActivationPhase.WAITING_PAIR,
+            com.oneims.app.core.OneKukuActivationPhase.PAIRING,
+            com.oneims.app.core.OneKukuActivationPhase.CONNECTING,
+            com.oneims.app.core.OneKukuActivationPhase.STARTING,
+            -> OneKukuCardState.ACTIVATING
             com.oneims.app.core.OneKukuActivationPhase.FAILED ->
                 OneKukuCardState.FAILED
-            // ACTIVE/IDLE：交给 resolve（休眠/已激活/执行）
             com.oneims.app.core.OneKukuActivationPhase.ACTIVE,
             com.oneims.app.core.OneKukuActivationPhase.IDLE,
             -> null
         }
 
-    /** 进度阶段点亮数（1–9，与枚举顺序一致）。 */
+    /** 进度阶段点亮数（1–5）。 */
     fun litStageCount(state: OneKukuCardState): Int = when (state) {
         OneKukuCardState.INACTIVE -> 1
-        OneKukuCardState.WAITING_PAIR -> 2
-        OneKukuCardState.PAIRING -> 3
-        OneKukuCardState.CONNECTING -> 4
-        OneKukuCardState.STARTING -> 5
-        OneKukuCardState.ACTIVE -> 6
-        OneKukuCardState.SLEEPING -> 7
-        OneKukuCardState.EXECUTING -> 8
-        OneKukuCardState.FAILED -> 1
+        OneKukuCardState.ACTIVATING -> 2
+        OneKukuCardState.READY -> 3
+        OneKukuCardState.EXECUTING -> 4
+        OneKukuCardState.FAILED -> 5
     }
 
-    /** 九态进度条标签（短文案，适配窄屏）。 */
+    /** 五态进度条标签。 */
     fun stageLabelRes(): List<Int> = listOf(
         R.string.onekuku_stage_inactive,
-        R.string.onekuku_stage_wait_pair,
-        R.string.onekuku_stage_pairing,
-        R.string.onekuku_stage_connecting,
-        R.string.onekuku_stage_starting,
-        R.string.onekuku_stage_active,
-        R.string.onekuku_stage_sleeping,
-        R.string.onekuku_stage_executing,
+        R.string.onekuku_stage_activate,
+        R.string.onekuku_stage_ready,
+        R.string.onekuku_stage_execute,
         R.string.onekuku_stage_failed,
     )
 
     fun isBusy(state: OneKukuCardState): Boolean = when (state) {
-        OneKukuCardState.PAIRING,
-        OneKukuCardState.CONNECTING,
-        OneKukuCardState.STARTING,
+        OneKukuCardState.ACTIVATING,
         OneKukuCardState.EXECUTING,
         -> true
         else -> false
@@ -108,7 +81,6 @@ object OneKukuCardPolicy {
 
     fun isAlert(state: OneKukuCardState): Boolean = when (state) {
         OneKukuCardState.INACTIVE,
-        OneKukuCardState.WAITING_PAIR,
         OneKukuCardState.FAILED,
         -> true
         else -> false

@@ -56,6 +56,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -71,7 +72,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -685,7 +685,7 @@ private fun ActionTile(
 fun StatusHero(
     oneKukuState: OneKukuCardState,
     onPrimaryAction: () -> Unit,
-    deviceInfo: String = "",
+    onOpenDeviceDetails: (() -> Unit)? = null,
     detailOverride: String? = null,
 ) {
     val alert = OneKukuCardPolicy.isAlert(oneKukuState)
@@ -705,12 +705,8 @@ fun StatusHero(
     val title = stringResource(
         when (oneKukuState) {
             OneKukuCardState.INACTIVE -> R.string.onekuku_title_inactive
-            OneKukuCardState.WAITING_PAIR -> R.string.onekuku_title_waiting_pair
-            OneKukuCardState.PAIRING -> R.string.onekuku_title_pairing
-            OneKukuCardState.CONNECTING -> R.string.onekuku_title_connecting
-            OneKukuCardState.STARTING -> R.string.onekuku_title_starting
-            OneKukuCardState.ACTIVE -> R.string.onekuku_title_active
-            OneKukuCardState.SLEEPING -> R.string.onekuku_title_ready
+            OneKukuCardState.ACTIVATING -> R.string.onekuku_title_activating
+            OneKukuCardState.READY -> R.string.onekuku_title_ready
             OneKukuCardState.EXECUTING -> R.string.onekuku_title_running
             OneKukuCardState.FAILED -> R.string.onekuku_title_failed
         },
@@ -718,12 +714,8 @@ fun StatusHero(
     val subtitle = stringResource(
         when (oneKukuState) {
             OneKukuCardState.INACTIVE -> R.string.onekuku_subtitle_inactive
-            OneKukuCardState.WAITING_PAIR -> R.string.onekuku_subtitle_waiting_pair
-            OneKukuCardState.PAIRING -> R.string.onekuku_subtitle_pairing
-            OneKukuCardState.CONNECTING -> R.string.onekuku_subtitle_connecting
-            OneKukuCardState.STARTING -> R.string.onekuku_subtitle_starting
-            OneKukuCardState.ACTIVE -> R.string.onekuku_subtitle_active
-            OneKukuCardState.SLEEPING -> R.string.onekuku_subtitle_sleeping
+            OneKukuCardState.ACTIVATING -> R.string.onekuku_subtitle_activating
+            OneKukuCardState.READY -> R.string.onekuku_subtitle_sleeping
             OneKukuCardState.EXECUTING -> R.string.onekuku_subtitle_running
             OneKukuCardState.FAILED -> R.string.onekuku_subtitle_failed
         },
@@ -731,28 +723,19 @@ fun StatusHero(
     val detail = detailOverride ?: stringResource(
         when (oneKukuState) {
             OneKukuCardState.INACTIVE -> R.string.onekuku_detail_inactive
-            OneKukuCardState.WAITING_PAIR -> R.string.onekuku_detail_waiting_pair
-            OneKukuCardState.PAIRING -> R.string.onekuku_detail_pairing
-            OneKukuCardState.CONNECTING -> R.string.onekuku_detail_connecting
-            OneKukuCardState.STARTING -> R.string.onekuku_detail_starting
-            OneKukuCardState.ACTIVE -> R.string.onekuku_detail_active
-            OneKukuCardState.SLEEPING -> R.string.onekuku_detail_sleeping
+            OneKukuCardState.ACTIVATING -> R.string.onekuku_detail_activating
+            OneKukuCardState.READY -> R.string.onekuku_detail_sleeping
             OneKukuCardState.EXECUTING -> R.string.onekuku_detail_running
             OneKukuCardState.FAILED -> R.string.onekuku_detail_failed
         },
     )
     val showPowerHint = oneKukuState == OneKukuCardState.INACTIVE ||
-        oneKukuState == OneKukuCardState.SLEEPING ||
-        oneKukuState == OneKukuCardState.WAITING_PAIR
+        oneKukuState == OneKukuCardState.READY
     val statusPill = stringResource(
         when (oneKukuState) {
             OneKukuCardState.INACTIVE -> R.string.onekuku_pill_inactive
-            OneKukuCardState.WAITING_PAIR -> R.string.onekuku_pill_waiting_pair
-            OneKukuCardState.PAIRING -> R.string.onekuku_pill_pairing
-            OneKukuCardState.CONNECTING -> R.string.onekuku_pill_connecting
-            OneKukuCardState.STARTING -> R.string.onekuku_pill_starting
-            OneKukuCardState.ACTIVE -> R.string.onekuku_pill_active
-            OneKukuCardState.SLEEPING -> R.string.onekuku_pill_sleeping
+            OneKukuCardState.ACTIVATING -> R.string.onekuku_pill_activating
+            OneKukuCardState.READY -> R.string.onekuku_pill_ready
             OneKukuCardState.EXECUTING -> R.string.onekuku_pill_running
             OneKukuCardState.FAILED -> R.string.onekuku_pill_failed
         },
@@ -760,27 +743,18 @@ fun StatusHero(
     val actionLabel = stringResource(
         when (oneKukuState) {
             OneKukuCardState.INACTIVE,
-            OneKukuCardState.WAITING_PAIR,
             OneKukuCardState.FAILED,
             -> R.string.onekuku_action_activate
-            OneKukuCardState.SLEEPING,
-            OneKukuCardState.ACTIVE,
-            -> R.string.onekuku_action_check
-            OneKukuCardState.PAIRING,
-            OneKukuCardState.CONNECTING,
-            OneKukuCardState.STARTING,
-            -> R.string.onekuku_action_activating
+            OneKukuCardState.READY -> R.string.onekuku_action_check
+            OneKukuCardState.ACTIVATING -> R.string.onekuku_action_activating
             OneKukuCardState.EXECUTING -> R.string.onekuku_action_running
         },
     )
     val actionSub = when (oneKukuState) {
         OneKukuCardState.INACTIVE,
-        OneKukuCardState.WAITING_PAIR,
         OneKukuCardState.FAILED,
         -> stringResource(R.string.onekuku_action_activate_sub)
-        OneKukuCardState.SLEEPING,
-        OneKukuCardState.ACTIVE,
-        -> stringResource(R.string.onekuku_action_check_sub)
+        OneKukuCardState.READY -> stringResource(R.string.onekuku_action_check_sub)
         else -> null
     }
     val actionEnabled = !busy
@@ -858,19 +832,16 @@ fun StatusHero(
                 contentColor = contentColor,
             )
 
-            if (deviceInfo.isNotBlank()) {
-                HorizontalDivider(color = contentColor.copy(alpha = 0.16f))
-                Text(
-                    text = stringResource(R.string.home_device_details),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = contentColor,
-                )
-                Text(
-                    text = deviceInfo,
-                    style = MaterialTheme.typography.bodySmall,
-                    fontFamily = FontFamily.Monospace,
-                    color = contentColor.copy(alpha = 0.9f),
-                )
+            if (onOpenDeviceDetails != null) {
+                TextButton(
+                    onClick = onOpenDeviceDetails,
+                    modifier = Modifier.padding(horizontal = 0.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.home_device_details),
+                        color = contentColor,
+                    )
+                }
             }
 
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -910,7 +881,7 @@ private fun OneKukuStageProgress(
         horizontalArrangement = Arrangement.spacedBy(0.dp),
     ) {
         stages.forEachIndexed { index, labelRes ->
-            val lit = index < litCount || (current == OneKukuCardState.FAILED && index == 0)
+            val lit = index < litCount
             val isCurrent = index == currentIndex
             val stageColor = when {
                 isCurrent -> contentColor

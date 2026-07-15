@@ -424,6 +424,11 @@
     <string name="onekuku_action_activate_sub">下拉通知栏输入六位码，无需回到本页</string>
 
     <string name="onekuku_title_ready">设备已就绪</string>
+    <string name="onekuku_title_activating">正在激活 OneKuku</string>
+    <string name="onekuku_subtitle_activating">配对、连接与通道启动进行中</string>
+    <string name="onekuku_detail_activating">请按通知栏提示操作；也可打开系统无线调试</string>
+    <string name="onekuku_pill_activating">激活中</string>
+    <string name="onekuku_pill_ready">已就绪</string>
     <string name="onekuku_subtitle_sleeping">OneKuku 通道已激活</string>
     <string name="onekuku_detail_sleeping">重启后可尝试自动恢复通话配置</string>
     <string name="onekuku_pill_sleeping">休眠中</string>
@@ -441,11 +446,13 @@
     <string name="onekuku_action_check">检查 OneKuku 状态</string>
     <string name="onekuku_action_check_sub">只检查服务状态；恢复请用下方一键恢复</string>
 
-    <string name="onekuku_stage_standby">待命</string>
-    <string name="onekuku_stage_activate">激活</string>
-    <string name="onekuku_stage_execute">执行</string>
-    <string name="onekuku_stage_done">完成</string>
     <string name="onekuku_stage_inactive">未激活</string>
+    <string name="onekuku_stage_activate">激活</string>
+    <string name="onekuku_stage_ready">就绪</string>
+    <string name="onekuku_stage_execute">执行</string>
+    <string name="onekuku_stage_failed">失败</string>
+    <string name="onekuku_stage_standby">待命</string>
+    <string name="onekuku_stage_done">完成</string>
     <string name="onekuku_stage_wait_pair">等配对</string>
     <string name="onekuku_stage_pairing">配对</string>
     <string name="onekuku_stage_connecting">连接</string>
@@ -453,7 +460,6 @@
     <string name="onekuku_stage_active">已激活</string>
     <string name="onekuku_stage_sleeping">休眠</string>
     <string name="onekuku_stage_executing">执行</string>
-    <string name="onekuku_stage_failed">失败</string>
 
     <string name="onekuku_msg_need_prepare">请先完成 OneKuku 核心服务准备</string>
     <string name="onekuku_msg_already_active">OneKuku 核心服务已激活</string>

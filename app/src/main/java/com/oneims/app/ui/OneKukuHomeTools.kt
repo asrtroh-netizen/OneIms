@@ -409,7 +409,7 @@ object OneKukuHomeTools {
         state == OneKukuCardState.INACTIVE && !serviceRunning ->
             context.getString(R.string.onekuku_settings_state_invalid)
         state == OneKukuCardState.INACTIVE ||
-            state == OneKukuCardState.WAITING_PAIR ->
+            state == OneKukuCardState.ACTIVATING ->
             context.getString(R.string.onekuku_settings_state_inactive)
         else -> context.getString(R.string.onekuku_settings_state_sleeping)
     }
