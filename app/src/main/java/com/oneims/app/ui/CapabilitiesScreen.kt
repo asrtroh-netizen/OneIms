@@ -93,61 +93,6 @@ fun CapabilitiesScreen(
         onSelectSim = actions.onSelectSim,
         simSelectionEnabled = state.actionsEnabled,
     ) {
-        item {
-            // 选卡交互已上移到页面最顶端的胶囊开关；这里只展示当前选中卡的运营商推荐方案。
-            SectionBlock(
-                title = stringResource(R.string.mobile_network_title),
-                description = stringResource(R.string.mobile_network_subtitle),
-            ) {
-                if (state.sims.isEmpty()) {
-                    SettingsActionRow(
-                        icon = Icons.Filled.AccountBox,
-                        title = stringResource(R.string.no_sim_hint),
-                        subtitle = stringResource(R.string.no_sim_detail),
-                        onClick = null,
-                    )
-                } else {
-                    state.selectedSim?.let { sim ->
-                        val profile = CarrierProfiles.match(sim.mcc, sim.mnc)
-                        val context = LocalContext.current
-                        Column(
-                            modifier = Modifier.padding(20.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
-                        ) {
-                            Text(
-                                text = stringResource(
-                                    R.string.system_target_preview,
-                                    sim.slotIndex + 1,
-                                    formatCarrierShortName(sim.carrierName),
-                                    
-                                ),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.primary,
-                            )
-                            Text(
-                                profile.name(context),
-                                style = MaterialTheme.typography.titleLarge,
-                            )
-                            Text(
-                                profile.note(context),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                            OneImsPrimaryButton(
-                                text = stringResource(R.string.apply_recommended),
-                                onClick = actions.onApplyRecommended,
-                                enabled = state.actionsEnabled,
-                                loading = state.activeOperationLabel ==
-                                    stringResource(R.string.apply_recommended),
-                                loadingText = stringResource(R.string.action_applying),
-                                modifier = Modifier.fillMaxWidth(),
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
         if (!state.prerequisitesMet) {
             item {
                 InlineNotice(

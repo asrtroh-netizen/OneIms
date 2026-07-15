@@ -447,7 +447,7 @@
     <string name="onekuku_nameplate_ready">Active</string>
     <string name="onekuku_badge_active">Active</string>
     <string name="onekuku_subtitle_ready">Channel is active and stays Active</string>
-    <string name="onekuku_detail_ready">Check status anytime; restore from the logic card below</string>
+    <string name="onekuku_detail_ready">Check status anytime; restore from Quick start below</string>
     <string name="onekuku_subtitle_sleeping">OneKuku channel is on; core sleeps on demand</string>
     <string name="onekuku_detail_sleeping">Auto-sleep after use to save power; call settings can try to auto-restore after reboot</string>
     <string name="onekuku_title_activating">Activating OneKuku</string>
@@ -468,7 +468,7 @@
     <string name="onekuku_subtitle_complete">Call settings restored</string>
     <string name="onekuku_detail_complete">OneKuku finished; channel stays resident</string>
     <string name="onekuku_action_check">Check OneKuku status</string>
-    <string name="onekuku_action_check_sub">Status only — restore from the logic card below</string>
+    <string name="onekuku_action_check_sub">Status only — restore from Quick start below</string>
 
     <string name="onekuku_stage_inactive">Off</string>
     <string name="onekuku_stage_activate">Setup</string>

@@ -1085,6 +1085,40 @@ private fun AppRoot(
         ConfigStore.setCapabilityUiState(context, subId, currentCapabilityUiState())
     }
 
+    fun applyRecommendedProfile() {
+        val sim = selectedSim
+        if (!ensurePrivilegedAccess()) {
+            return
+        }
+        if (sim == null) {
+            publish(context.getString(R.string.please_select_sim))
+            return
+        }
+        val profile = CarrierProfiles.match(sim.mcc, sim.mnc)
+        volte = profile.recommendVolte
+        vowifi = profile.recommendVowifi
+        vonr = profile.recommendVonr
+        wfcMode = profile.recommendWfcMode
+        persistCapabilityUi(sim.subscriptionId)
+        runOperation(context.getString(R.string.apply_recommended)) {
+            val result = ImsController.applyAll(
+                context = context,
+                subId = sim.subscriptionId,
+                enableVolte = profile.recommendVolte,
+                enableVowifi = profile.recommendVowifi,
+                enableVonr = profile.recommendVonr,
+                wfcMode = profile.recommendWfcMode,
+            )
+            if (result.success) {
+                OneKukuSnapshotStore.save(
+                    context,
+                    OneKukuSnapshotFactory.fromCurrent(context, sim),
+                )
+            }
+            result.message
+        }
+    }
+
     fun persistIdentityDraft(subId: Int = selectedSubId) {
         if (subId < 0) return
         ConfigStore.setIdentityDraft(
@@ -1178,6 +1212,10 @@ private fun AppRoot(
                         selectedSubId = selectedSubId,
                         selectedSim = selectedSim,
                         actionsEnabled = actionsAvailable,
+                        recommendActionsEnabled = selectedSubId >= 0 &&
+                            shizukuGranted &&
+                            actionsAvailable,
+                        activeOperationLabel = busyLabel,
                         reapplyStatus = reapplyStatus,
                         bootAutoCheck = oneKukuBootAutoCheck,
                         autoRestore = oneKukuAutoRestore,
@@ -1187,6 +1225,7 @@ private fun AppRoot(
                     actions = HomeActions(
                         onSelectSim = { selectSim(it) },
                         onBeginWirelessPairGuide = { beginWirelessPairGuide() },
+                        onApplyRecommended = { applyRecommendedProfile() },
                         onActivateOneKuku = {
                             when {
                                 !OneKukuManager.isRunning() -> {
@@ -1498,38 +1537,7 @@ private fun AppRoot(
                     ),
                     actions = CapabilitiesActions(
                         onSelectSim = { selectSim(it) },
-                        onApplyRecommended = {
-                            val sim = selectedSim
-                            if (!ensurePrivilegedAccess()) {
-                                Unit
-                            } else if (sim == null) {
-                                publish(context.getString(R.string.please_select_sim))
-                            } else {
-                                val profile = CarrierProfiles.match(sim.mcc, sim.mnc)
-                                volte = profile.recommendVolte
-                                vowifi = profile.recommendVowifi
-                                vonr = profile.recommendVonr
-                                wfcMode = profile.recommendWfcMode
-                                persistCapabilityUi(sim.subscriptionId)
-                                runOperation(context.getString(R.string.apply_recommended)) {
-                                    val result = ImsController.applyAll(
-                                        context = context,
-                                        subId = sim.subscriptionId,
-                                        enableVolte = profile.recommendVolte,
-                                        enableVowifi = profile.recommendVowifi,
-                                        enableVonr = profile.recommendVonr,
-                                        wfcMode = profile.recommendWfcMode,
-                                    )
-                                    if (result.success) {
-                                        OneKukuSnapshotStore.save(
-                                            context,
-                                            OneKukuSnapshotFactory.fromCurrent(context, sim),
-                                        )
-                                    }
-                                    result.message
-                                }
-                            }
-                        },
+                        onApplyRecommended = { applyRecommendedProfile() },
                         onVolteChange = {
                             volte = it
                             persistCapabilityUi()

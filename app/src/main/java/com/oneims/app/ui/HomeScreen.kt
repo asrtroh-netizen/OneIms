@@ -83,16 +83,19 @@ fun HomeScreen(
                         -> Unit
                     }
                 },
+                onOpenDeviceDetails = { openDialog = HomeToolDialog.DeviceInfo },
                 detailOverride = state.oneKukuDetailOverride,
             )
         }
 
         item {
-            LogicStatusHero(
-                oneKukuState = state.oneKukuState,
-                hasSim = state.sims.isNotEmpty(),
-                onRestore = actions.onRestoreCallConfig,
-                onOpenDeviceDetails = { openDialog = HomeToolDialog.DeviceInfo },
+            CarrierRecommendCard(
+                sims = state.sims,
+                selectedSim = state.selectedSim,
+                actionsEnabled = state.recommendActionsEnabled,
+                applying = state.activeOperationLabel ==
+                    stringResource(R.string.apply_recommended),
+                onApplyRecommended = actions.onApplyRecommended,
             )
         }
 
@@ -107,6 +110,15 @@ fun HomeScreen(
                 ) {
                     ActionGrid(
                         listOf(
+                            ActionSpec(
+                                icon = Icons.Filled.Refresh,
+                                title = stringResource(R.string.onekuku_action_restore),
+                                subtitle = stringResource(R.string.onekuku_action_restore_sub),
+                                onClick = actions.onRestoreCallConfig,
+                                enabled = state.actionsEnabled &&
+                                    state.oneKukuState == OneKukuCardState.READY &&
+                                    state.sims.isNotEmpty(),
+                            ),
                             ActionSpec(
                                 icon = Icons.Filled.Search,
                                 title = stringResource(R.string.onekuku_tool_status_title),

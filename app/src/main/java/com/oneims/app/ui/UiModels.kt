@@ -60,6 +60,9 @@ data class HomeUiState(
     val selectedSubId: Int,
     val selectedSim: SimInfo?,
     val actionsEnabled: Boolean,
+    /** 按推荐一键开启：需通道已授权 + 已选卡。 */
+    val recommendActionsEnabled: Boolean = false,
+    val activeOperationLabel: String? = null,
     val reapplyStatus: ConfigStore.ReapplyStatus? = null,
     val bootAutoCheck: Boolean = true,
     val autoRestore: Boolean = true,
@@ -81,6 +84,7 @@ data class HomeActions(
     val onBeginWirelessPairGuide: () -> Unit = {},
     /** 出门激活卡「启动通道」：始终走配对/安装流程，不与总控卡激活短路共用。 */
     val onStartCore: () -> Unit = {},
+    val onApplyRecommended: () -> Unit = {},
     val onRestoreCallConfig: () -> Unit,
     val onCheckOneKukuStatus: () -> Unit,
     val onStatusCheck: () -> Unit,
@@ -94,8 +98,8 @@ data class HomeActions(
 
 /**
  * 「能力」页现已并入原「高级」的运营商显示/漫游开关（[advancedOptions]）与原「排障」修复工具中的
- * 重启 IMS/网络修复/TikTok 覆盖三项；身份覆盖、离线 APN 库仍在实验功能页。整页重新分组为
- * 移动网络 / 通话能力与 5G / 增强能力与显示选项 / 修复工具，共四组，避免区块过于分散。
+ * 重启 IMS/网络修复/TikTok 覆盖三项；身份覆盖、离线 APN 库仍在实验功能页。
+ * 运营商推荐首卡已迁首页；本页从通话能力与 5G 起排。
  */
 data class CapabilitiesUiState(
     val sims: List<SimInfo>,
