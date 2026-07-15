@@ -137,11 +137,8 @@ object OneKukuEmbeddedAdbActivator {
                 return@withContext Outcome.Failed("wifi_sta_required")
             }
 
-            // 系统已弹出配对页（能扫到 pair 端口）但用户还没填码 → 立刻要码，别先瞎连。
-            if (code.length < 6 && effectivePairPort != null) {
-                return@withContext Outcome.NeedPairingCode
-            }
-
+            // 已填码 → 走 pair；未填码时即使扫到 pairPort 也先试直连
+            // （系统「配对码配对」页开着不等于本机身份失效，避免每次激活都逼填码）。
             if (effectivePairPort != null && code.length >= 6) {
                 val paired = pairWithTimeout(manager, effectivePairPort, code)
                 if (!paired) return@withContext Outcome.Failed("pair_failed")
@@ -164,8 +161,14 @@ object OneKukuEmbeddedAdbActivator {
                 false
             }
             if (!connected) {
-                // 未配对过的本机身份连不上时，回到要码；已填码则报失败。
+                // 无码：连不上再要配对码（此时 pairPort 可作为用户去系统页配对的信号）。
+                // 已填码：报连接失败，保留失败通知供重试。
                 return@withContext if (code.length < 6) {
+                    Log.i(
+                        TAG,
+                        "connect failed without code; need pairing " +
+                            "(pairPort=${ports.pairPort} connectPort=${ports.connectPort})",
+                    )
                     Outcome.NeedPairingCode
                 } else {
                     Outcome.Failed("connect_failed")
