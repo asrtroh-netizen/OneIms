@@ -1,19 +1,7 @@
-# OneKuku / OneBridge 内置 APK
+OneKuku / OneBridge assets（Phase4+）
+====================================
 
-## 唯一路径（Phase3）
+通道 starter 已以 `:bridge` library 打进主包 `com.oneims.app`，
+**不再**需要在此目录放置 `oneims-bridge.apk`。
 
-将 OneBridge APK 命名为 `oneims-bridge.apk`，放到本目录。
-
-硬性要求：
-
-- `applicationId` = `com.oneims.bridge`
-- 构建模块：仓内 `:bridge`
-- 变更说明：`docs/changes/2026-07-15-onebridge-phase3-drop-shizuku.md`
-
-未装桥时，`prepare()` / 「启动通道」会弹出安装此包。
-
-## 已移除
-
-- `onekuku-core.apk` 换皮 Core（不再内置、不再探测）
-- 上游 `moe.shizuku.privileged.api` 安装引导
-- `rikka.shizuku` 客户端依赖
+历史说明：旧版曾用 assets 内嵌独立桥 APK 触发系统安装器；该路径已废弃。
