@@ -33,4 +33,9 @@
 ## 验证
 
 - 静态：调用链回放 PASS  
-- 单元 / 真机：本环境 JAVA_HOME 缺失 → NOT RUN；建议真机：划掉后台重开看 log `fast path :5555` / 无 60s 级等待
+- **真机 PASS**（2026-07-15，Pixel 9 Pro Fold `47111FDKD0009J`，`app-debug` versionName=2.1.5 / versionCode=50）  
+  - 前置：`has_paired_once=true`，`adb_wifi_enabled=1`  
+  - 操作：`am force-stop` → 冷启动 `MainActivity`（模拟划掉后台）×2  
+  - 证据：均出现 `fast path :5555 connected, skip first mDNS` → `OneBridge binder received`  
+  - 耗时：约 **1.1～1.2s**（wake → binder）；Activity `TotalTime≈458ms`  
+  - 对比：优化前失败路径可达数十秒～分钟级空等
