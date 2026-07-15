@@ -500,6 +500,10 @@
     <string name="onekuku_boot_channel_desc">重启后自动检查通话配置的低优先级通知</string>
     <string name="onekuku_boot_notif_title">OneIMS 通话配置需要恢复</string>
     <string name="onekuku_boot_notif_text">点击一键恢复重启前配置</string>
+    <string name="onekuku_boot_fg_channel">OneKuku 开机就绪</string>
+    <string name="onekuku_boot_fg_channel_desc">重启后后台拉起通道与检查通话配置</string>
+    <string name="onekuku_boot_fg_title">OneKuku 正在后台就绪</string>
+    <string name="onekuku_boot_fg_text">连接旧 Wi‑Fi 后自动激活通道，完成后通知会消失</string>
     <string name="onekuku_value_on">开</string>
     <string name="onekuku_value_off">关</string>
     <string name="onekuku_value_unset">未设置</string>

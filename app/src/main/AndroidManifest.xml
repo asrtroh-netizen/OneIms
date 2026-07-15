@@ -141,11 +141,16 @@
             </intent-filter>
         </service>
 
-        <!-- OneKuku 开机自动检查/恢复（非前台，短生命周期） -->
+        <!-- OneKuku 开机自动检查/恢复：前台短生命周期，避免 BootReceiver 后台 start 被拦 -->
         <service
             android:name=".core.OneKukuBootRestoreService"
             android:enabled="true"
-            android:exported="false" />
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Boot silent activate OneKuku channel and restore call configs" />
+        </service>
 
         <!-- 开机/解锁/SIM 变化 → 调度自动检查 -->
         <receiver

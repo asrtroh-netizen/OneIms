@@ -496,6 +496,10 @@
     <string name="onekuku_boot_channel_desc">Low-priority alerts for post-reboot call config checks</string>
     <string name="onekuku_boot_notif_title">OneIMS call settings need restore</string>
     <string name="onekuku_boot_notif_text">Tap to restore your pre-reboot settings</string>
+    <string name="onekuku_boot_fg_channel">OneKuku boot ready</string>
+    <string name="onekuku_boot_fg_channel_desc">Bring up the channel and check call configs after reboot</string>
+    <string name="onekuku_boot_fg_title">OneKuku getting ready in background</string>
+    <string name="onekuku_boot_fg_text">Auto-activates on saved Wi‑Fi; this notice clears when done</string>
     <string name="onekuku_value_on">On</string>
     <string name="onekuku_value_off">Off</string>
     <string name="onekuku_value_unset">Not set</string>

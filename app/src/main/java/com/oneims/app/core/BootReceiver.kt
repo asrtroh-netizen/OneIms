@@ -5,12 +5,15 @@ import android.content.Context
 import android.content.Intent
 import android.net.NetworkInfo
 import android.net.wifi.WifiManager
+import android.util.Log
 import com.oneims.app.onekuku.OneKukuBootRestoreStore
 import com.oneims.app.onekuku.OneKukuBootUiHint
 
 /**
  * 开机 / 解锁 / SIM / Wi‑Fi 状态变化 → 调度 [OneKukuBootRestoreService]。
  * 不在此处直接写配置。
+ *
+ * 使用 [goAsync] 拉长广播生命周期，避免进程在前台服务尚未 startForeground 前被回收。
  */
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {
@@ -20,15 +23,21 @@ class BootReceiver : BroadcastReceiver() {
             Intent.ACTION_LOCKED_BOOT_COMPLETED,
             Intent.ACTION_USER_UNLOCKED,
             -> {
-                // 掉线守护开启，或存在上次成功配置：开机拉起守护，等待 OneKuku 就绪后重应用临时覆盖。
-                if (ConfigStore.isGuardEnabled(context) ||
-                    ConfigStore.lastApplied(context) != null
-                ) {
-                    GuardService.start(context)
-                }
-                if (ConfigStore.isOneKukuBootAutoCheck(context)) {
-                    val debounce = if (action == Intent.ACTION_USER_UNLOCKED) 1_000L else 3_000L
-                    OneKukuBootRestoreService.enqueue(context, debounceMs = debounce)
+                val pending = goAsync()
+                try {
+                    // 掉线守护开启，或存在上次成功配置：开机拉起守护，等待 OneKuku 就绪后重应用临时覆盖。
+                    if (ConfigStore.isGuardEnabled(context) ||
+                        ConfigStore.lastApplied(context) != null
+                    ) {
+                        GuardService.start(context)
+                    }
+                    if (ConfigStore.isOneKukuBootAutoCheck(context)) {
+                        val debounce = if (action == Intent.ACTION_USER_UNLOCKED) 500L else 1_000L
+                        Log.i(TAG, "boot action=$action enqueue restore debounce=$debounce")
+                        OneKukuBootRestoreService.enqueue(context, debounceMs = debounce)
+                    }
+                } finally {
+                    pending.finish()
                 }
             }
             "android.intent.action.SIM_STATE_CHANGED" -> {
@@ -52,8 +61,13 @@ class BootReceiver : BroadcastReceiver() {
                 }
                 if (info?.isConnected != true) return
                 if (!OneKukuAdbMdns.isWifiClientConnected(context)) return
-                OneKukuBootRestoreService.enqueue(context, debounceMs = 2_000L)
+                Log.i(TAG, "wifi connected → enqueue restore")
+                OneKukuBootRestoreService.enqueue(context, debounceMs = 1_000L)
             }
         }
+    }
+
+    companion object {
+        private const val TAG = "OneIMS-OneKuku"
     }
 }

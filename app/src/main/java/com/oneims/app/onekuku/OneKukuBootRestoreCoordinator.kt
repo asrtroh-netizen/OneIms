@@ -69,8 +69,34 @@ object OneKukuBootRestoreCoordinator {
             Log.i(TAG, "user not unlocked yet")
             return
         }
+
+        // Shizuku 体感：通道不依赖 SIM，先静默激活，打开 App 时尽量已就绪。
+        // SIM 稳定 / 配置恢复放后面，避免「等卡」拖住通道。
+        when (val ready = ensureOneKukuReadyForBoot(context)) {
+            BootReady.WAITING_WIFI -> {
+                OneKukuBootRestoreStore.clearAttemptedThisBoot(context)
+                OneKukuBootRestoreStore.writeHint(context, OneKukuBootUiHint.WAITING_WIFI)
+                Log.i(TAG, "boot: waiting Wi‑Fi before SIM/config, will retry when STA connects")
+                return
+            }
+            BootReady.NEED_USER -> {
+                Log.w(TAG, "OneKuku unavailable before capability reapply")
+            }
+            BootReady.READY -> {
+                reapplyLastCapabilityProfileAssumingReady(context)
+                // 先把通道就绪写进 hint，打开 App 不必再等 SIM/配置段。
+                OneKukuBootRestoreStore.writeHint(context, OneKukuBootUiHint.READY_SLEEPING)
+            }
+        }
+
         if (!waitUntilSimsStable(context)) {
-            Log.i(TAG, "SIM not ready/stable")
+            Log.i(TAG, "SIM not ready/stable; channel may already be ready")
+            // 通道已就绪但 SIM 未稳：仍标记休眠，避免首页一直未激活。
+            if (OneKukuManager.isReady()) {
+                OneKukuBootRestoreStore.markAttemptedThisBoot(context)
+                OneKukuBootRestoreStore.writeHint(context, OneKukuBootUiHint.READY_SLEEPING)
+                OneKukuSleepController.sleepIfEnabled(context)
+            }
             return
         }
 
@@ -80,7 +106,7 @@ object OneKukuBootRestoreCoordinator {
         if (OneKukuBootRestoreStore.hasAttemptedThisBoot(context)) return
         OneKukuBootRestoreStore.markAttemptedThisBoot(context)
 
-        // 临时 CarrierConfig 覆盖在重启后会丢：先拉通道再重放上次成功的能力页配置。
+        // 临时 CarrierConfig 覆盖在重启后会丢：通道已尽量就绪，再按快照恢复。
         when (val ready = ensureOneKukuReadyForBoot(context)) {
             BootReady.WAITING_WIFI -> {
                 // Wi‑Fi 未就绪：清占位，连上 STA 后 BootReceiver 再 enqueue。

@@ -355,7 +355,27 @@ private fun AppRoot(
     }
 
     LaunchedEffect(Unit) {
-        if (ConfigStore.isOneKukuBootAutoCheck(context)) {
+        // 进首页立刻对齐：后台已就绪则直接休眠态；已配对未就绪则立刻踢开机编排（0 防抖）。
+        if (OneKukuManager.isReady()) {
+            shizukuRunning = true
+            shizukuGranted = OneKukuManager.isGranted()
+            if (bootUiHint == OneKukuBootUiHint.NEEDS_ACTIVATION ||
+                bootUiHint == OneKukuBootUiHint.WAITING_WIFI
+            ) {
+                val hint = if (OneKukuBootRestoreStore.shouldShowNoSnapshotNote(context)) {
+                    OneKukuBootUiHint.NO_SNAPSHOT_SLEEPING
+                } else {
+                    OneKukuBootUiHint.READY_SLEEPING
+                }
+                OneKukuBootRestoreStore.writeHint(context, hint)
+                bootUiHint = hint
+            }
+            OneKukuActivationUi.setPhase(OneKukuActivationPhase.IDLE)
+        } else if (ConfigStore.isOneKukuBootAutoCheck(context) &&
+            OneKukuEmbeddedAdbActivator.hasPairedOnce(context)
+        ) {
+            OneKukuBootRestoreService.enqueue(context, debounceMs = 0L)
+        } else if (ConfigStore.isOneKukuBootAutoCheck(context)) {
             OneKukuBootRestoreService.enqueue(context, debounceMs = 2_000L)
         }
         val activity = context as? ComponentActivity
@@ -368,10 +388,16 @@ private fun AppRoot(
             bootUiHint = OneKukuBootUiHint.NEEDS_ACTIVATION
         }
         while (true) {
-            kotlinx.coroutines.delay(2_000L)
+            kotlinx.coroutines.delay(1_000L)
             val latest = OneKukuBootRestoreStore.readHint(context)
             if (latest != bootUiHint) {
                 bootUiHint = latest
+            }
+            val running = OneKukuManager.isRunning()
+            val granted = OneKukuManager.isGranted()
+            if (running != shizukuRunning || granted != shizukuGranted) {
+                shizukuRunning = running
+                shizukuGranted = granted
             }
         }
     }
