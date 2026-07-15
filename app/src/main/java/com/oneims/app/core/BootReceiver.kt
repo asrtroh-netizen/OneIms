@@ -10,10 +10,14 @@ import com.oneims.app.onekuku.OneKukuBootRestoreStore
 import com.oneims.app.onekuku.OneKukuBootUiHint
 
 /**
- * 开机 / 解锁 / SIM / Wi‑Fi 状态变化 → 调度 [OneKukuBootRestoreService]。
+ * 开机 / 解锁 / Wi‑Fi 状态变化 → 调度 [OneKukuBootRestoreService]。
  * 不在此处直接写配置。
  *
  * 使用 [goAsync] 拉长广播生命周期，避免进程在前台服务尚未 startForeground 前被回收。
+ *
+ * FGS 纪律（Android 12+ / targetSdk 36）：
+ * - 只有 [Intent.ACTION_BOOT_COMPLETED] 带临时白名单，可 startForegroundService
+ * - LOCKED_BOOT / USER_UNLOCKED / 普通 Wi‑Fi·SIM 广播上抢启会被 Disallowed
  */
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {
@@ -33,37 +37,40 @@ class BootReceiver : BroadcastReceiver() {
                     pending.finish()
                 }
             }
-            Intent.ACTION_BOOT_COMPLETED,
-            Intent.ACTION_USER_UNLOCKED,
-            -> {
+            Intent.ACTION_USER_UNLOCKED -> {
                 val pending = goAsync()
                 try {
-                    // 掉线守护开启，或存在上次成功配置：开机拉起守护，等待 OneKuku 就绪后重应用临时覆盖。
+                    if (ConfigStore.isGuardEnabled(context) ||
+                        ConfigStore.lastApplied(context) != null
+                    ) {
+                        GuardService.start(context)
+                    }
+                    // 无 BOOT_COMPLETED 白名单；现代系统解锁后会投递 BOOT_COMPLETED。
+                    Log.i(TAG, "boot action=$action skip restore enqueue (wait BOOT_COMPLETED allowlist)")
+                } finally {
+                    pending.finish()
+                }
+            }
+            Intent.ACTION_BOOT_COMPLETED -> {
+                val pending = goAsync()
+                try {
                     if (ConfigStore.isGuardEnabled(context) ||
                         ConfigStore.lastApplied(context) != null
                     ) {
                         GuardService.start(context)
                     }
                     if (ConfigStore.isOneKukuBootAutoCheck(context)) {
-                        val debounce = if (action == Intent.ACTION_USER_UNLOCKED) 500L else 1_000L
-                        Log.i(TAG, "boot action=$action enqueue restore debounce=$debounce")
-                        OneKukuBootRestoreService.enqueue(context, debounceMs = debounce)
+                        Log.i(TAG, "boot action=$action enqueue restore debounce=1000")
+                        OneKukuBootRestoreService.enqueue(context, debounceMs = 1_000L)
                     }
                 } finally {
                     pending.finish()
                 }
             }
-            "android.intent.action.SIM_STATE_CHANGED" -> {
-                if (ConfigStore.isOneKukuBootAutoCheck(context)) {
-                    OneKukuBootRestoreService.enqueue(context, debounceMs = 5_000L)
-                }
-            }
             WifiManager.NETWORK_STATE_CHANGED_ACTION -> {
-                // 已配对开机等 Wi‑Fi：系统连上 STA 后再跑静默激活/恢复。
+                // 仅「本开机已停在等 Wi‑Fi」时续跑；禁止在未 attempted 时靠 Wi‑Fi 广播抢启 FGS。
                 if (!ConfigStore.isOneKukuBootAutoCheck(context)) return
-                if (OneKukuBootRestoreStore.readHint(context) != OneKukuBootUiHint.WAITING_WIFI &&
-                    OneKukuBootRestoreStore.hasAttemptedThisBoot(context)
-                ) {
+                if (OneKukuBootRestoreStore.readHint(context) != OneKukuBootUiHint.WAITING_WIFI) {
                     return
                 }
                 @Suppress("DEPRECATION")
@@ -74,9 +81,10 @@ class BootReceiver : BroadcastReceiver() {
                 }
                 if (info?.isConnected != true) return
                 if (!OneKukuAdbMdns.isWifiClientConnected(context)) return
-                Log.i(TAG, "wifi connected → enqueue restore")
+                Log.i(TAG, "wifi connected while WAITING_WIFI → enqueue restore")
                 OneKukuBootRestoreService.enqueue(context, debounceMs = 1_000L)
             }
+            // SIM 稳定等待改由 OneKukuBootRestoreCoordinator 内完成，避免开机期无白名单 FGS。
         }
     }
 

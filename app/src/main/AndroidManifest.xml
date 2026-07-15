@@ -152,7 +152,7 @@
                 android:value="Boot silent activate OneKuku channel and restore call configs" />
         </service>
 
-        <!-- 开机/解锁/SIM 变化 → 调度自动检查 -->
+        <!-- 开机/解锁/Wi‑Fi → 调度自动检查（SIM 等待在 Coordinator 内，避免无白名单 FGS） -->
         <receiver
             android:name=".core.BootReceiver"
             android:enabled="true"
@@ -161,7 +161,6 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
                 <action android:name="android.intent.action.USER_UNLOCKED" />
-                <action android:name="android.intent.action.SIM_STATE_CHANGED" />
                 <action android:name="android.net.wifi.STATE_CHANGE" />
             </intent-filter>
         </receiver>

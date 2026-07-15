@@ -26,10 +26,23 @@
 
 **修复**：`BootReceiver` 在 `LOCKED_BOOT_COMPLETED` 只拉 `GuardService`，**不再** enqueue `OneKukuBootRestoreService`；恢复编排仅 `BOOT_COMPLETED` / `USER_UNLOCKED`。
 
-## 对比
+## 复验（FGS 拒绝归零）
 
-| 场景 | 体感 |
+**结论：PASS**（2026-07-15 17:28，同一 Pixel）
+
+| 检查 | 结果 |
 |---|---|
-| 划掉后台（进程杀） | ≈1.2s（`:5555` 快路径） |
-| 冷开机（本轮） | ≈12s 级静默就绪（无「等半天」） |
-| 优化前 | 超时叠加可达数十秒～分钟 |
+| `Background started FGS: Disallowed`（OneKukuBootRestore） | **0** |
+| `Background started FGS: Allowed` + `code:BOOT_COMPLETED` | **1** |
+| App 日志 | `boot action=android.intent.action.BOOT_COMPLETED enqueue restore debounce=1000` |
+
+### 根因修正（相对首轮「只跳过 LOCKED_BOOT」）
+
+1. `USER_UNLOCKED` 无白名单却会 `startFGS` → 改为只记日志，等 `BOOT_COMPLETED`  
+2. Wi‑Fi `STATE_CHANGE` 在「未 attempted」时也会抢启 → 仅 `WAITING_WIFI` 才续跑  
+3. 移除 `SIM_STATE_CHANGED` 广播调度（SIM 等待改 Coordinator 内完成）
+
+### 注意
+
+- 卸载重装会使应用进入 `stopped`，在首次用户打开前 **不会** 收 `BOOT_COMPLETED`；复验前需先冷启动一次 App。  
+- 本轮因重装丢失 `has_paired_once` 标记/会话，hint 可能落到 `NEEDS_ACTIVATION`（与 FGS 门禁无关）。
