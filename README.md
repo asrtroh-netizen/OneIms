@@ -8,7 +8,7 @@
 
 <div align="center">
 
-**VoLTE · VoWiFi · VoNR · 信号格 · 国家码 · IMS 诊断 · CarrierConfig · Android 16/17**
+**VoLTE · VoWiFi · VoNR · OneKuku · 信号格 · 国家码 · IMS 诊断 · CarrierConfig · Android 16/17**
 
 📱 [Telegram · OneBoardX](https://t.me/OneBoardX)
 
@@ -16,12 +16,40 @@
 
 ### ⬇️ 下载 APK（最新）
 
-**[OneIms 2.0.14 · GitHub Releases](https://github.com/asrtroh-netizen/OneIms/releases/tag/v2.0.14)**
+**[OneIms 2.1.0 · GitHub Releases](https://github.com/asrtroh-netizen/OneIms/releases/tag/v2.1.0)**
 
 > 本仓库 **只提供 README + APK 发布**，**不开放源代码**。  
 > 需要交流 / 反馈请走 Telegram，别来仓库里翻源码啦～
 
 </div>
+
+---
+
+## ✨ What's New · 2.1.0
+
+这一版把「通道怎么活、配置怎么醒、界面怎么懂」收成一条更顺的主线。
+
+### 🧬 OneKuku 通道 · 内嵌激活
+
+* 🔌 **内嵌 OneBridge**：无线调试配对后拉起通道，**不必再装独立通道 App**
+* 🔢 **通知栏六位码**：下拉通知直接填配对码，填完可自动回到 OneIms
+* 🧭 **五态总控卡**：未激活 → 激活中 → 已就绪 → 执行中 → 失败，进度一眼可读
+* 🛡️ **配对更稳**：配对超时兜底、激活串行化，减少「卡在激活中」的假死
+
+### 🔁 开机自动恢复 · 更快更敢动
+
+* ⚡ 开机后等待从冗长空等收短，SIM 稳定后更快开打
+* 🚀 通道未就绪时：**尽量静默重连 / 拉起**，再重放上次成功配置
+* 📌 需填码时挂通知提醒，不强行干等
+* 🆕 新装默认开启「开机自动检查」（仍可在设置里关掉）
+
+### 🎨 首页体验 · 少踩坑
+
+* 说明弹窗一出现就挂配对通知，不用干等探测结束
+* 过程中离开「未激活红脸」，**只有就绪才变白**
+* 设备详情改胶囊入口；无线调试说明归位；底栏选中更清晰
+
+> 想开机自动把重启前的配置打回去？先成功应用一次通话配置存好快照，并保持「开机自动检查 / 自动恢复」开启。
 
 ---
 
@@ -60,6 +88,14 @@ OneIms 想做的事很简单：
 ---
 
 ## 🌟 OneIms 可以做什么？
+
+### 🏠 首页 · OneKuku 总控
+
+* ✅ 五态状态卡 + 轻量进度
+* ✅ 一键激活（图示三步 + 通知栏填码）
+* ✅ 一键恢复通话配置（应急区）
+* ✅ 配置快照 / 恢复历史 / 状态检查
+* ✅ 开机自动检查 · 自动恢复 · 用完休眠
 
 ### 📡 能力页 · IMS 全家桶
 
@@ -110,7 +146,7 @@ OneIms 更想回答：
 
 ---
 
-### 🏠 其它日常好用
+### 🧰 其它日常好用
 
 * 🔄 控制中心 / 应用内 **切换默认数据卡**（只切数据，不拿通信当玩具）
 * 📌 快捷设置磁贴：IMS 状态、VoLTE 重应用等
@@ -164,14 +200,13 @@ adb shell → 直接改 → 成功
 App → 权限墙 → 失败（或假成功）
 ```
 
-OneIms 的应对：
+OneIms 的应对（2.1.0）：
 
-* Shizuku 权限桥接（免 Root 为主；Root 另有直写路径）
+* **OneKuku / OneBridge** 内嵌特权通道（无线调试配对，免再装独立通道 App）
 * 短生命周期 **Instrumentation** 接收 shell 权限委托
 * **最小权限**委托 + 写入后回读
 * 失败原因尽量讲人话（完整细节进日志）
-* 兼容 Android 17 / 部分 OEM 上 `stopDelegateShellPermissionIdentity` 反射差异  
-  （`HiddenApiBypass 6.1` + 清理失败不冒充写入失败；机型预览包翻车很常见，不是玄学）
+* 兼容 Android 17 / 部分 OEM 上委托清理反射差异  
 
 目标：
 
@@ -228,7 +263,7 @@ OneIms 的应对：
 * Pixel 6 / 6 Pro / 6a  
 * Pixel 7 / 7 Pro / 7a  
 * Pixel 8 / 8 Pro / 8a  
-* Pixel 9 系列 / Fold / Tablet  
+* Pixel 9 系列 / Fold / XL  
 * 后续 Tensor 设备  
 
 系统跨度大致：
@@ -265,6 +300,8 @@ Android 12  →  Android 17（含预览；机型 / 构建差异请以真机体�
 * ✅ 诊断 / 注册态 / ePDG / 配置导出  
 * ✅ 离线 APN 库与受控 IMS APN 修复  
 * ✅ 独家：身份覆盖、国家码、信号格样式、5G 显示、守护  
+* ✅ **OneKuku 内嵌通道 + 通知栏配对 + 五态总控（2.1.0）**  
+* ✅ **开机自动检查 / 静默拉起 / 快照恢复（2.1.0）**  
 * ✅ Android 16/17 权限模型适配与委托清理兼容  
 * ✅ 安全回滚 + Pixel 风格 UI + 中英双语  
 
