@@ -49,7 +49,7 @@
     <string name="onekuku_msg_embedded_adb_fallback_keep_dialog">Embedded ADB failed (%1$s). Pairing dialog kept open: in Wireless debugging tap Pair device with pairing code, enter the 6 digits, then confirm. Guide copied to clipboard</string>
     <string name="onekuku_msg_need_pairing_code">In Wireless debugging, tap Pair device with pairing code and enter the 6 digits here</string>
     <string name="onekuku_adb_pair_title">Enter wireless-debug pairing code</string>
-    <string name="onekuku_adb_pair_body">OneIms does not generate the 6-digit code. Open system Wireless debugging → Pair device with pairing code, then type the digits below and tap Pair and start.</string>
+    <string name="onekuku_adb_pair_body">OneIms does not generate the 6-digit code. Open Wireless debugging → tap Pair device with pairing code (ignore the IP line). With a personal hotspot on, the page often says Wi‑Fi disconnected / IP unavailable — that is normal; on-device pairing does not use that IP. Enter the 6 digits, keep the system pairing sheet open, then tap Pair and start.</string>
     <string name="onekuku_adb_pair_hint">6-digit code</string>
     <string name="onekuku_adb_pair_confirm">Pair and start</string>
     <string name="onekuku_adb_pair_open_wireless">Open wireless debugging</string>
@@ -516,8 +516,8 @@
     <string name="home_quick_actions">Quick start</string>
     <string name="home_quick_actions_sub">Check device status before applying carrier recommendations</string>
     <string name="home_adb_prep_title">Activate on the go</string>
-    <string name="home_adb_prep_sub">No PC, and no public Wi‑Fi needed. You do need Wireless debugging; outdoors, a personal hotspot is enough.</string>
-    <string name="home_adb_prep_steps">① Enable Wireless debugging\n② No Wi‑Fi outdoors? Turn on hotspot\n③ Tap Start channel — a dialog appears the first time; then in system Wireless debugging tap Pair device with pairing code and enter the 6 digits</string>
+    <string name="home_adb_prep_sub">No PC, and no public Wi‑Fi needed. Enable Wireless debugging; outdoors a personal hotspot is enough. Hotspot mode often shows IP unavailable — ignore it; what matters is opening Pair device with pairing code.</string>
+    <string name="home_adb_prep_steps">① Enable Wireless debugging\n② No Wi‑Fi outdoors? Turn on personal hotspot (confirm the hotspot icon in the status bar)\n③ Tap Start channel → in Wireless debugging tap Pair device with pairing code → enter the 6 digits (ignore IP unavailable)</string>
     <string name="home_adb_open_wireless">Open wireless debugging</string>
     <string name="home_adb_open_wireless_sub">Jump to system settings</string>
     <string name="home_adb_open_hotspot">Personal hotspot</string>

@@ -54,7 +54,7 @@
     <string name="onekuku_msg_embedded_adb_fallback_keep_dialog">内嵌 ADB 未成功（%1$s）。配对窗已保留：请到系统无线调试点「使用配对码配对设备」，填入 6 位数字后点配对；指引已复制到剪贴板</string>
     <string name="onekuku_msg_need_pairing_code">请在系统无线调试里点「使用配对码配对设备」，把 6 位数字填进弹窗</string>
     <string name="onekuku_adb_pair_title">输入无线调试配对码</string>
-    <string name="onekuku_adb_pair_body">六位码不在 OneIms 里生成。请打开系统「无线调试」→「使用配对码配对设备」，把屏幕上的 6 位数字填到下面，再点配对并启动。</string>
+    <string name="onekuku_adb_pair_body">六位码不在 OneIms 里生成。打开系统「无线调试」→点「使用配对码配对设备」（不要只看上面的 IP 行）。开个人热点时页面常写「Wi-Fi 已断开 / IP 不可用」——这正常，本机配对不靠那行 IP。把弹出的 6 位数字填到下面，配对页保持打开，再点配对并启动。</string>
     <string name="onekuku_adb_pair_hint">6 位配对码</string>
     <string name="onekuku_adb_pair_confirm">配对并启动</string>
     <string name="onekuku_adb_pair_open_wireless">打开系统无线调试</string>
@@ -521,8 +521,8 @@
     <string name="home_quick_actions">快速开始</string>
     <string name="home_quick_actions_sub">先确认设备状态，再应用运营商建议</string>
     <string name="home_adb_prep_title">出门也能激活</string>
-    <string name="home_adb_prep_sub">不用电脑，也不用连外面的 WiFi。需要打开系统「无线调试」；外面没网时，开个个人热点就行。</string>
-    <string name="home_adb_prep_steps">① 打开无线调试\n② 外面没 WiFi 就开热点\n③ 点「启动通道」——第一次会弹出输入框；再到系统无线调试里点「使用配对码配对设备」，把 6 位数字填回来</string>
+    <string name="home_adb_prep_sub">不用电脑，也不用连外面的 WiFi。需要打开系统「无线调试」；外面没网时开个人热点即可。热点下系统页常显示「IP 不可用」——可忽略，关键是能点开「使用配对码配对设备」。</string>
+    <string name="home_adb_prep_steps">① 打开无线调试\n② 外面没 WiFi 就开个人热点（确认状态栏有热点图标）\n③ 点「启动通道」弹出输入框 → 系统无线调试点「使用配对码配对设备」→ 填 6 位数字（忽略「IP 不可用」提示）</string>
     <string name="home_adb_open_wireless">打开无线调试</string>
     <string name="home_adb_open_wireless_sub">去系统设置里开一下</string>
     <string name="home_adb_open_hotspot">开个人热点</string>
