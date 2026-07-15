@@ -43,7 +43,10 @@ object OneKukuAdbMdns {
             ssid != "\"\""
     }
 
-    suspend fun discover(context: Context): Ports {
+    suspend fun discover(
+        context: Context,
+        timeoutMs: Long = DISCOVER_TIMEOUT_MS,
+    ): Ports {
         val app = context.applicationContext
         val nsd = app.getSystemService(Context.NSD_SERVICE) as? NsdManager
             ?: return Ports(null, null)
@@ -55,10 +58,10 @@ object OneKukuAdbMdns {
         return try {
             coroutineScope {
                 val pairDeferred = async {
-                    withTimeoutOrNull(DISCOVER_TIMEOUT_MS) { discoverOne(nsd, TYPE_PAIRING) }
+                    withTimeoutOrNull(timeoutMs) { discoverOne(nsd, TYPE_PAIRING) }
                 }
                 val connectDeferred = async {
-                    withTimeoutOrNull(DISCOVER_TIMEOUT_MS) { discoverOne(nsd, TYPE_CONNECT) }
+                    withTimeoutOrNull(timeoutMs) { discoverOne(nsd, TYPE_CONNECT) }
                 }
                 Ports(pairPort = pairDeferred.await(), connectPort = connectDeferred.await())
             }

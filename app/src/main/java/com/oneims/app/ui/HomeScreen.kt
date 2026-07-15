@@ -191,8 +191,7 @@ fun HomeScreen(
                     TextButton(
                         onClick = {
                             openDialog = null
-                            // 先跳无线调试，再走激活（挂通知 / 配对）。
-                            actions.onOpenWirelessDebugging()
+                            // prepareOneKukuCore 内部已打开无线调试；勿再并发跳一次，避免抢 ADB 会话。
                             actions.onActivateOneKuku()
                         },
                     ) {

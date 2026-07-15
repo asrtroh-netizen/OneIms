@@ -22,7 +22,12 @@ import android.util.Log
 import io.github.muntashirakon.adb.AbsAdbConnectionManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.nio.charset.StandardCharsets
+import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.concurrent.thread
 import java.security.KeyFactory
 import java.security.KeyPairGenerator
 import java.security.PrivateKey
@@ -32,6 +37,7 @@ import java.security.cert.CertificateFactory
 import java.security.spec.PKCS8EncodedKeySpec
 import java.util.Date
 import java.util.Random
+import kotlin.coroutines.resume
 
 /**
  * 方案 B · 原生内嵌 ADB（libadb-android）：本机无线调试配对后拉起 OneBridge。
@@ -47,6 +53,10 @@ object OneKukuEmbeddedAdbActivator {
     private const val KEY_CERT = "cert_b64"
     private const val BINDER_WAIT_MS = 12_000L
     private const val BINDER_POLL_MS = 300L
+    /** pair() 在部分机型上会无限阻塞；独立线程 + 超时，避免通知栏「配对中」卡死。 */
+    private const val PAIR_TIMEOUT_MS = 12_000L
+    private const val POST_PAIR_DISCOVER_MS = 3_000L
+    private val activateMutex = Mutex()
 
     sealed class Outcome {
         data object NeedPairingCode : Outcome()
@@ -88,6 +98,16 @@ object OneKukuEmbeddedAdbActivator {
         pairingCode: String?,
         pairPortOverride: Int? = null,
     ): Outcome =
+        // 串行化：避免「激活」与「通知栏填码」同时抢同一 AdbConnectionManager 导致假死。
+        activateMutex.withLock {
+            activateLocked(context, pairingCode, pairPortOverride)
+        }
+
+    private suspend fun activateLocked(
+        context: Context,
+        pairingCode: String?,
+        pairPortOverride: Int?,
+    ): Outcome =
         withContext(Dispatchers.IO) {
             if (!OneKukuCoreComponent.isInstalled(context)) {
                 return@withContext Outcome.Failed("core_missing")
@@ -123,16 +143,10 @@ object OneKukuEmbeddedAdbActivator {
             }
 
             if (effectivePairPort != null && code.length >= 6) {
-                val paired = runCatching {
-                    manager.pair(HOST, effectivePairPort, code)
-                    true
-                }.getOrElse {
-                    Log.w(TAG, "pair failed port=$effectivePairPort", it)
-                    false
-                }
+                val paired = pairWithTimeout(manager, effectivePairPort, code)
                 if (!paired) return@withContext Outcome.Failed("pair_failed")
-                // pair 成功后 pairing 服务会注销；必须重扫 connect 端口，不能用旧快照。
-                ports = OneKukuAdbMdns.discover(app)
+                // pair 成功后 pairing 服务会注销；短超时重扫 connect，避免再干等 6s。
+                ports = OneKukuAdbMdns.discover(app, timeoutMs = POST_PAIR_DISCOVER_MS)
                 Log.i(TAG, "post-pair mdns pair=${ports.pairPort} connect=${ports.connectPort}")
             } else if (code.length >= 6 && effectivePairPort == null) {
                 // 用户填了码，但系统配对页已关掉 / mDNS 没扫到
@@ -177,6 +191,39 @@ object OneKukuEmbeddedAdbActivator {
                 else -> Outcome.Failed(boot)
             }
         }
+
+    /**
+     * libadb pair 在 TLS/端口异常时可能长时间不返回；放到独立线程并用超时兜底。
+     */
+    private suspend fun pairWithTimeout(
+        manager: AbsAdbConnectionManager,
+        pairPort: Int,
+        code: String,
+    ): Boolean {
+        val done = AtomicBoolean(false)
+        val result = withTimeoutOrNull(PAIR_TIMEOUT_MS) {
+            kotlinx.coroutines.suspendCancellableCoroutine { cont ->
+                thread(name = "onekuku-adb-pair", isDaemon = true) {
+                    val ok = runCatching {
+                        manager.pair(HOST, pairPort, code)
+                        true
+                    }.getOrElse {
+                        Log.w(TAG, "pair failed port=$pairPort", it)
+                        false
+                    }
+                    if (done.compareAndSet(false, true) && cont.isActive) {
+                        cont.resume(ok)
+                    }
+                }
+            }
+        }
+        if (result == null) {
+            Log.w(TAG, "pair timed out after ${PAIR_TIMEOUT_MS}ms port=$pairPort")
+            done.set(true)
+            return false
+        }
+        return result
+    }
 
     private fun awaitBinderRunning(): Boolean {
         val deadline = System.currentTimeMillis() + BINDER_WAIT_MS
