@@ -43,6 +43,20 @@ object OneKukuAdbMdns {
             ssid != "\"\""
     }
 
+    /**
+     * 前置等待 STA 关联（系统连上已记住的 Wi‑Fi）。
+     * 供开机静默激活与 [OneKukuEmbeddedAdbActivator] 共用，避免 mDNS 空扫后再才发现没网。
+     */
+    fun waitForWifiClient(context: Context, timeoutMs: Long): Boolean {
+        val app = context.applicationContext
+        val deadline = System.currentTimeMillis() + timeoutMs
+        while (System.currentTimeMillis() < deadline) {
+            if (isWifiClientConnected(app)) return true
+            Thread.sleep(1_500L)
+        }
+        return isWifiClientConnected(app)
+    }
+
     suspend fun discover(
         context: Context,
         timeoutMs: Long = DISCOVER_TIMEOUT_MS,

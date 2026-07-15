@@ -18,6 +18,7 @@ import com.oneims.app.core.CarrierConfigKeys
 import com.oneims.app.core.CarrierConfigOverrideWriter
 import com.oneims.app.core.ConfigStore
 import com.oneims.app.core.ImsController
+import com.oneims.app.core.OneKukuAdbMdns
 import com.oneims.app.core.OneKukuEmbeddedAdbActivator
 import com.oneims.app.core.OneKukuManager
 import com.oneims.app.core.OneKukuMiniAdbClient
@@ -26,7 +27,9 @@ import com.oneims.app.core.OneKukuPrivilegeBridgeImpl
 import com.oneims.app.core.ReapplyManager
 import com.oneims.app.core.ReapplyTrigger
 import com.oneims.app.core.ShizukuSetupHelper
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 
 /**
  * 重启后自动检查/恢复编排（不关数据、不切卡、不飞行、不碰 radio、不恢复 APN）。
@@ -38,8 +41,17 @@ object OneKukuBootRestoreCoordinator {
     private const val POST_READY_DELAY_MS = 5_000L
     private const val SIM_POLL_MS = 1_500L
     private const val SIM_WAIT_MAX_MS = 90_000L
+    /** 开机已配对：先等系统连上记住的 Wi‑Fi，再静默开无线调试。 */
+    private const val BOOT_WIFI_WAIT_MS = 60_000L
     private const val CHANNEL = "oneims_boot_restore"
     private const val NOTIF_ID = 1002
+
+    /** [ensureOneKukuReadyForBoot] 结果：区分 Wi‑Fi 晚到（可再试）与真需手点。 */
+    private enum class BootReady {
+        READY,
+        WAITING_WIFI,
+        NEED_USER,
+    }
 
     suspend fun run(context: Context) {
         if (!ConfigStore.isOneKukuBootAutoCheck(context)) {
@@ -68,8 +80,22 @@ object OneKukuBootRestoreCoordinator {
         if (OneKukuBootRestoreStore.hasAttemptedThisBoot(context)) return
         OneKukuBootRestoreStore.markAttemptedThisBoot(context)
 
-        // 临时 CarrierConfig 覆盖在重启后会丢：先重放上次成功的能力页配置。
-        reapplyLastCapabilityProfile(context)
+        // 临时 CarrierConfig 覆盖在重启后会丢：先拉通道再重放上次成功的能力页配置。
+        when (val ready = ensureOneKukuReadyForBoot(context)) {
+            BootReady.WAITING_WIFI -> {
+                // Wi‑Fi 未就绪：清占位，连上 STA 后 BootReceiver 再 enqueue。
+                OneKukuBootRestoreStore.clearAttemptedThisBoot(context)
+                OneKukuBootRestoreStore.writeHint(context, OneKukuBootUiHint.WAITING_WIFI)
+                Log.i(TAG, "boot: waiting Wi‑Fi, will retry when STA connects")
+                return
+            }
+            BootReady.NEED_USER -> {
+                Log.w(TAG, "OneKuku unavailable before capability reapply")
+            }
+            BootReady.READY -> {
+                reapplyLastCapabilityProfileAssumingReady(context)
+            }
+        }
 
         val snapshots = OneKukuSnapshotStore.loadAll(context)
         if (snapshots.isEmpty()) {
@@ -110,11 +136,20 @@ object OneKukuBootRestoreCoordinator {
             return
         }
 
-        if (!ensureOneKukuReadyForBoot(context)) {
-            Log.w(TAG, "OneKuku unavailable for auto restore after silent activate")
-            OneKukuBootRestoreStore.writeHint(context, OneKukuBootUiHint.NEEDS_ACTIVATION)
-            notifyNeedsRestore(context)
-            return
+        when (val ready = ensureOneKukuReadyForBoot(context)) {
+            BootReady.WAITING_WIFI -> {
+                OneKukuBootRestoreStore.clearAttemptedThisBoot(context)
+                OneKukuBootRestoreStore.writeHint(context, OneKukuBootUiHint.WAITING_WIFI)
+                Log.i(TAG, "boot: need restore but waiting Wi‑Fi")
+                return
+            }
+            BootReady.NEED_USER -> {
+                Log.w(TAG, "OneKuku unavailable for auto restore after silent activate")
+                OneKukuBootRestoreStore.writeHint(context, OneKukuBootUiHint.NEEDS_ACTIVATION)
+                notifyNeedsRestore(context)
+                return
+            }
+            BootReady.READY -> Unit
         }
 
         OneKukuBootRestoreStore.writeHint(context, OneKukuBootUiHint.RESTORING)
@@ -236,13 +271,10 @@ object OneKukuBootRestoreCoordinator {
         }
     }
 
-    private suspend fun reapplyLastCapabilityProfile(context: Context) {
+    /** 通道已就绪时重放能力页配置（不再二次 ensure，避免重复激活）。 */
+    private suspend fun reapplyLastCapabilityProfileAssumingReady(context: Context) {
         if (ConfigStore.lastApplied(context) == null) {
             Log.i(TAG, "no lastApplied profile, skip capability reapply")
-            return
-        }
-        if (!ensureOneKukuReadyForBoot(context)) {
-            Log.w(TAG, "OneKuku not ready for capability reapply")
             return
         }
         runCatching {
@@ -257,27 +289,35 @@ object OneKukuBootRestoreCoordinator {
     }
 
     /**
-     * 开机恢复前尽量把通道拉起来：先 wake；仍未就绪则无配对码静默 activate
-     *（已有 transport / 本机身份可直连时）。需要填码时挂通知，不阻塞死等。
+     * 开机恢复前尽量把通道拉起来：已配对时 **Wi‑Fi 前置** → 静默开无线调试 → 无码直连。
+     * 仅从未配对 / 真需填码时返回 [BootReady.NEED_USER]。
      */
-    private suspend fun ensureOneKukuReadyForBoot(context: Context): Boolean {
+    private suspend fun ensureOneKukuReadyForBoot(context: Context): BootReady {
         OneKukuHiddenRunner.installBridge(OneKukuPrivilegeBridgeImpl)
-        if (OneKukuManager.isReady()) return true
+        if (OneKukuManager.isReady()) return BootReady.READY
 
         val wake = OneKukuHiddenRunner.wake()
-        if (wake.success && OneKukuManager.isReady()) return true
+        if (wake.success && OneKukuManager.isReady()) return BootReady.READY
         if (OneKukuManager.isRunning() && !OneKukuManager.isGranted()) {
             OneKukuManager.requestActivation()
-            if (OneKukuManager.isReady()) return true
+            if (OneKukuManager.isReady()) return BootReady.READY
         }
 
-        Log.i(TAG, "boot: silent MiniAdb activateExistingOrNeedPair")
-        // 已配对：先尝试静默打开无线调试（需上次激活留下的 WRITE_SECURE_SETTINGS）。
-        if (OneKukuEmbeddedAdbActivator.hasPairedOnce(context)) {
+        val pairedBefore = OneKukuEmbeddedAdbActivator.hasPairedOnce(context)
+        if (pairedBefore) {
+            OneKukuBootRestoreStore.writeHint(context, OneKukuBootUiHint.WAITING_WIFI)
+            val wifiOk = withContext(Dispatchers.IO) {
+                OneKukuAdbMdns.waitForWifiClient(context, BOOT_WIFI_WAIT_MS)
+            }
+            Log.i(TAG, "boot: pre-wait Wi‑Fi ok=$wifiOk")
+            if (!wifiOk) return BootReady.WAITING_WIFI
+
             val enabled = ShizukuSetupHelper.tryEnableAdbWifi(context)
             Log.i(TAG, "boot: tryEnableAdbWifi=$enabled")
             if (enabled) delay(3_000L)
         }
+
+        Log.i(TAG, "boot: silent MiniAdb activateExistingOrNeedPair")
         return when (val outcome = OneKukuMiniAdbClient.activateExistingOrNeedPair(context)) {
             is OneKukuMiniAdbClient.Outcome.Success -> {
                 if (OneKukuManager.isRunning() && !OneKukuManager.isGranted()) {
@@ -285,12 +325,12 @@ object OneKukuBootRestoreCoordinator {
                 }
                 val ready = OneKukuManager.isReady()
                 Log.i(TAG, "boot: silent activate success ready=$ready detail=${outcome.detail}")
-                ready
+                if (ready) BootReady.READY else BootReady.NEED_USER
             }
             is OneKukuMiniAdbClient.Outcome.NeedPairingCode -> {
                 Log.w(TAG, "boot: need pairing code for activate")
-                // 无权限写开关时：打开无线调试页，并短暂再试无码直连。
-                if (OneKukuEmbeddedAdbActivator.hasPairedOnce(context)) {
+                // 已配对但直连失败：再开无线调试短试；仍失败才要用户（新网/身份失效）。
+                if (pairedBefore) {
                     if (!ShizukuSetupHelper.hasWriteSecureSettings(context)) {
                         ShizukuSetupHelper.openWirelessDebugging(context)
                     } else {
@@ -306,24 +346,30 @@ object OneKukuBootRestoreCoordinator {
                             }
                             val ready = OneKukuManager.isReady()
                             Log.i(TAG, "boot: retry after wireless enable ready=$ready")
-                            if (ready) return true
+                            if (ready) return BootReady.READY
+                        }
+                        is OneKukuMiniAdbClient.Outcome.Failed -> {
+                            if (retry.reason == "wifi_sta_required") {
+                                return BootReady.WAITING_WIFI
+                            }
                         }
                         else -> Log.w(TAG, "boot: retry still need user action")
                     }
                 }
                 OneKukuPairingNotification.showWaiting(context)
-                false
+                BootReady.NEED_USER
             }
             is OneKukuMiniAdbClient.Outcome.Failed -> {
                 Log.w(TAG, "boot: silent activate failed reason=${outcome.reason}")
-                if (OneKukuEmbeddedAdbActivator.hasPairedOnce(context) &&
-                    outcome.reason != "wifi_sta_required"
-                ) {
+                if (outcome.reason == "wifi_sta_required") {
+                    return BootReady.WAITING_WIFI
+                }
+                if (pairedBefore) {
                     if (!ShizukuSetupHelper.tryEnableAdbWifi(context)) {
                         ShizukuSetupHelper.openWirelessDebugging(context)
                     }
                 }
-                false
+                BootReady.NEED_USER
             }
         }
     }

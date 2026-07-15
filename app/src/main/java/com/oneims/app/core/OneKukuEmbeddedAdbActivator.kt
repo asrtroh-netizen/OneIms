@@ -141,31 +141,32 @@ object OneKukuEmbeddedAdbActivator {
                     return@withContext Outcome.Failed("manager_init")
                 }
 
+            val code = pairingCode?.trim().orEmpty()
+            val pairedBefore = hasPairedOnce(app)
+
+            // Wi‑Fi 前置：已配对无码时先等 STA，再扫 mDNS，避免空扫 6s 才发现没网。
+            if (pairedBefore && code.length < 6 &&
+                !OneKukuAdbMdns.isWifiClientConnected(app)
+            ) {
+                Log.i(TAG, "paired device: wait Wi‑Fi before mDNS")
+                if (!OneKukuAdbMdns.waitForWifiClient(app, PAIRED_WIFI_WAIT_MS)) {
+                    return@withContext Outcome.Failed("wifi_sta_required")
+                }
+            }
+
             var ports = OneKukuAdbMdns.discover(app)
             Log.i(
                 TAG,
                 "mdns pair=${ports.pairPort} connect=${ports.connectPort} " +
                     "override=$pairPortOverride",
             )
-
-            val code = pairingCode?.trim().orEmpty()
-            val pairedBefore = hasPairedOnce(app)
             var effectivePairPort = ports.pairPort ?: pairPortOverride?.takeIf { it in 1..65535 }
 
-            // 已配对：等系统连上「记住的 SSID」再继续；从未配对：立刻要 Wi‑Fi。
+            // 从未配对且无端口：立刻要 Wi‑Fi（不空等）。
             if (effectivePairPort == null && ports.connectPort == null &&
                 !OneKukuAdbMdns.isWifiClientConnected(app)
             ) {
-                if (pairedBefore && code.length < 6) {
-                    Log.i(TAG, "paired device waiting for remembered Wi‑Fi")
-                    if (!waitForWifiClient(app, PAIRED_WIFI_WAIT_MS)) {
-                        return@withContext Outcome.Failed("wifi_sta_required")
-                    }
-                    ports = OneKukuAdbMdns.discover(app)
-                    effectivePairPort = ports.pairPort ?: pairPortOverride?.takeIf { it in 1..65535 }
-                } else {
-                    return@withContext Outcome.Failed("wifi_sta_required")
-                }
+                return@withContext Outcome.Failed("wifi_sta_required")
             }
 
             // 已填码 → 走 pair；未填码时即使扫到 pairPort 也先试直连。
@@ -296,15 +297,6 @@ object OneKukuEmbeddedAdbActivator {
             Log.w(TAG, "connectTls failed", it)
             false
         }
-    }
-
-    private fun waitForWifiClient(context: Context, timeoutMs: Long): Boolean {
-        val deadline = System.currentTimeMillis() + timeoutMs
-        while (System.currentTimeMillis() < deadline) {
-            if (OneKukuAdbMdns.isWifiClientConnected(context)) return true
-            Thread.sleep(1_500L)
-        }
-        return OneKukuAdbMdns.isWifiClientConnected(context)
     }
 
     /**

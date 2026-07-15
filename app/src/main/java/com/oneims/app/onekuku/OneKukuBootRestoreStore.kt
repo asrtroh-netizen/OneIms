@@ -16,6 +16,9 @@ enum class OneKukuBootUiHint {
     /** 暂无快照：休眠，但可提示无快照。 */
     NO_SNAPSHOT_SLEEPING,
 
+    /** 已配对，后台等待系统连上记住的 Wi‑Fi（不钉红卡）。 */
+    WAITING_WIFI,
+
     /** 正在自动恢复。 */
     RESTORING,
 
@@ -51,7 +54,7 @@ object OneKukuBootRestoreStore {
         prefs(context).edit().putBoolean(KEY_NO_SNAPSHOT_NOTE, show).apply()
     }
 
-    /** 同一次开机最多自动恢复 1 次。 */
+    /** 同一次开机最多自动恢复 1 次（Wi‑Fi 未就绪可 [clearAttemptedThisBoot] 后重试）。 */
     fun hasAttemptedThisBoot(context: Context): Boolean {
         val bootId = currentBootId(context)
         return prefs(context).getString(KEY_ATTEMPTED_BOOT, null) == bootId
@@ -59,6 +62,12 @@ object OneKukuBootRestoreStore {
 
     fun markAttemptedThisBoot(context: Context) {
         prefs(context).edit().putString(KEY_ATTEMPTED_BOOT, currentBootId(context)).apply()
+    }
+
+    /** Wi‑Fi 晚到：清掉本开机占位，允许连上 STA 后再跑一轮静默恢复。 */
+    fun clearAttemptedThisBoot(context: Context) {
+        prefs(context).edit().remove(KEY_ATTEMPTED_BOOT).apply()
+        Log.i(TAG, "cleared boot attempted mark for Wi‑Fi retry")
     }
 
     @SuppressLint("HardwareIds")

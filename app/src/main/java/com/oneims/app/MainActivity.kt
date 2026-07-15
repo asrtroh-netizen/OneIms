@@ -328,6 +328,7 @@ private fun AppRoot(
             serviceReady = shizukuRunning && shizukuGranted && !bootForceInactive,
             isExecuting = oneKukuRestoring ||
                 bootUiHint == OneKukuBootUiHint.RESTORING ||
+                bootUiHint == OneKukuBootUiHint.WAITING_WIFI ||
                 OneKukuHiddenRunner.currentState() == OneKukuRunnerState.EXECUTING ||
                 OneKukuHiddenRunner.currentState() == OneKukuRunnerState.STARTING,
             taskComplete = oneKukuTaskComplete || bootUiHint == OneKukuBootUiHint.RESTORE_COMPLETE,
@@ -345,6 +346,8 @@ private fun AppRoot(
             OneKukuActivationUi.lastFailureReason?.let {
                 context.getString(R.string.onekuku_pair_text_fail, it)
             }
+        bootUiHint == OneKukuBootUiHint.WAITING_WIFI ->
+            context.getString(R.string.onekuku_detail_waiting_wifi)
         bootUiHint == OneKukuBootUiHint.NO_SNAPSHOT_SLEEPING ||
             OneKukuBootRestoreStore.shouldShowNoSnapshotNote(context) ->
             context.getString(R.string.onekuku_detail_no_snapshot)
@@ -402,7 +405,9 @@ private fun AppRoot(
 
     LaunchedEffect(bootUiHint) {
         when (bootUiHint) {
-            OneKukuBootUiHint.RESTORING -> {
+            OneKukuBootUiHint.RESTORING,
+            OneKukuBootUiHint.WAITING_WIFI,
+            -> {
                 oneKukuRestoring = true
                 oneKukuTaskComplete = false
             }

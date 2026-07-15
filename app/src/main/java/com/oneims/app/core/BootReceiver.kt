@@ -3,9 +3,13 @@ package com.oneims.app.core
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.net.NetworkInfo
+import android.net.wifi.WifiManager
+import com.oneims.app.onekuku.OneKukuBootRestoreStore
+import com.oneims.app.onekuku.OneKukuBootUiHint
 
 /**
- * 开机 / 解锁 / SIM 状态变化 → 调度 [OneKukuBootRestoreService]。
+ * 开机 / 解锁 / SIM / Wi‑Fi 状态变化 → 调度 [OneKukuBootRestoreService]。
  * 不在此处直接写配置。
  */
 class BootReceiver : BroadcastReceiver() {
@@ -31,6 +35,24 @@ class BootReceiver : BroadcastReceiver() {
                 if (ConfigStore.isOneKukuBootAutoCheck(context)) {
                     OneKukuBootRestoreService.enqueue(context, debounceMs = 5_000L)
                 }
+            }
+            WifiManager.NETWORK_STATE_CHANGED_ACTION -> {
+                // 已配对开机等 Wi‑Fi：系统连上 STA 后再跑静默激活/恢复。
+                if (!ConfigStore.isOneKukuBootAutoCheck(context)) return
+                if (OneKukuBootRestoreStore.readHint(context) != OneKukuBootUiHint.WAITING_WIFI &&
+                    OneKukuBootRestoreStore.hasAttemptedThisBoot(context)
+                ) {
+                    return
+                }
+                @Suppress("DEPRECATION")
+                val info = if (android.os.Build.VERSION.SDK_INT >= 33) {
+                    intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO, NetworkInfo::class.java)
+                } else {
+                    intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO)
+                }
+                if (info?.isConnected != true) return
+                if (!OneKukuAdbMdns.isWifiClientConnected(context)) return
+                OneKukuBootRestoreService.enqueue(context, debounceMs = 2_000L)
             }
         }
     }
