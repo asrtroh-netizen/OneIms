@@ -60,6 +60,32 @@ class OneBridgePrivilegeBridge : PrivilegeBridge {
         check(isGranted()) { "OneBridge is not granted" }
         return RemoteSystemServiceBinder(remote, name)
     }
+
+    override fun addBinderReceivedListener(listener: () -> Unit, sticky: Boolean) {
+        BridgeBinderHolder.addReceivedListener(listener, sticky)
+    }
+
+    override fun removeBinderReceivedListener(listener: () -> Unit) {
+        BridgeBinderHolder.removeReceivedListener(listener)
+    }
+
+    override fun addBinderDeadListener(listener: () -> Unit) {
+        BridgeBinderHolder.addDeadListener(listener)
+    }
+
+    override fun removeBinderDeadListener(listener: () -> Unit) {
+        BridgeBinderHolder.removeDeadListener(listener)
+    }
+
+    override fun addRequestPermissionResultListener(
+        listener: PrivilegeBridge.PermissionResultListener,
+    ) {
+        // OneBridge MVP：按包名/uid 静默放行，无授权弹窗回调。
+    }
+
+    override fun removeRequestPermissionResultListener(
+        listener: PrivilegeBridge.PermissionResultListener,
+    ) = Unit
 }
 
 /**

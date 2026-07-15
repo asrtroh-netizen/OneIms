@@ -5,12 +5,23 @@ import android.os.IBinder
 import rikka.shizuku.Shizuku
 import rikka.shizuku.ShizukuBinderWrapper
 import rikka.shizuku.SystemServiceHelper
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * 过渡实现：用官方 Shizuku 满足 [PrivilegeBridge]。
  * Phase 1 自研桥验收后可替换为 OneBridge 实现，调用方无需改动。
  */
 class ShizukuPrivilegeBridge : PrivilegeBridge {
+    private val receivedAdapters =
+        ConcurrentHashMap<() -> Unit, Shizuku.OnBinderReceivedListener>()
+    private val deadAdapters =
+        ConcurrentHashMap<() -> Unit, Shizuku.OnBinderDeadListener>()
+    private val permissionAdapters =
+        ConcurrentHashMap<
+            PrivilegeBridge.PermissionResultListener,
+            Shizuku.OnRequestPermissionResultListener,
+            >()
+
     override fun isRunning(): Boolean = try {
         Shizuku.pingBinder()
     } catch (_: Throwable) {
@@ -43,5 +54,48 @@ class ShizukuPrivilegeBridge : PrivilegeBridge {
             "PrivilegeBridge MVP does not expose system service: $name"
         }
         return ShizukuBinderWrapper(SystemServiceHelper.getSystemService(name))
+    }
+
+    override fun addBinderReceivedListener(listener: () -> Unit, sticky: Boolean) {
+        val adapter = Shizuku.OnBinderReceivedListener { listener() }
+        receivedAdapters[listener] = adapter
+        if (sticky) {
+            runCatching { Shizuku.addBinderReceivedListenerSticky(adapter) }
+        } else {
+            runCatching { Shizuku.addBinderReceivedListener(adapter) }
+        }
+    }
+
+    override fun removeBinderReceivedListener(listener: () -> Unit) {
+        val adapter = receivedAdapters.remove(listener) ?: return
+        runCatching { Shizuku.removeBinderReceivedListener(adapter) }
+    }
+
+    override fun addBinderDeadListener(listener: () -> Unit) {
+        val adapter = Shizuku.OnBinderDeadListener { listener() }
+        deadAdapters[listener] = adapter
+        runCatching { Shizuku.addBinderDeadListener(adapter) }
+    }
+
+    override fun removeBinderDeadListener(listener: () -> Unit) {
+        val adapter = deadAdapters.remove(listener) ?: return
+        runCatching { Shizuku.removeBinderDeadListener(adapter) }
+    }
+
+    override fun addRequestPermissionResultListener(
+        listener: PrivilegeBridge.PermissionResultListener,
+    ) {
+        val adapter = Shizuku.OnRequestPermissionResultListener { requestCode, grantResult ->
+            listener.onRequestPermissionResult(requestCode, grantResult)
+        }
+        permissionAdapters[listener] = adapter
+        runCatching { Shizuku.addRequestPermissionResultListener(adapter) }
+    }
+
+    override fun removeRequestPermissionResultListener(
+        listener: PrivilegeBridge.PermissionResultListener,
+    ) {
+        val adapter = permissionAdapters.remove(listener) ?: return
+        runCatching { Shizuku.removeRequestPermissionResultListener(adapter) }
     }
 }

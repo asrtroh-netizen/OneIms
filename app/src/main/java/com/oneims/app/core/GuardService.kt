@@ -11,6 +11,7 @@ import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
 import android.telephony.TelephonyManager
+import com.oneims.app.core.privilege.PrivilegeBridges
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -19,14 +20,13 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import rikka.shizuku.Shizuku
 
 /**
  * IMS 掉线守护前台服务。
  *
  * 两条自愈触发：
- *   1) **Shizuku binder 到达**（服务启动/重启）→ 立刻重应用上次配置
- *      —— 开机后 OneKuku 就绪即可自动恢复临时覆盖（非 system app 无法 persistent）；
+ *   1) **特权桥 binder 到达**（OneBridge 或 Shizuku 回落）→ 立刻重应用上次配置
+ *      —— 开机后通道就绪即可自动恢复临时覆盖（非 system app 无法 persistent）；
  *   2) **定时巡检**（默认 120s）→ 若检测到 IMS 未注册，则重应用上次配置，治「间歇掉线」。
  *   另：BootReceiver 在存在 lastApplied 时也会拉起本服务；开机编排里也会主动 BOOT 重应用。
  */
@@ -35,13 +35,12 @@ class GuardService : Service() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var loopJob: Job? = null
 
-    private val binderListener = Shizuku.OnBinderReceivedListener {
-        // Shizuku 就绪的瞬间，重应用上次配置
+    private val binderReceivedListener: () -> Unit = {
         scope.launch {
             runCatching {
                 ReapplyManager.reapply(
                     applicationContext,
-                    ReapplyTrigger.SHIZUKU_READY,
+                    ReapplyTrigger.BRIDGE_READY,
                 )
             }
         }
@@ -52,7 +51,12 @@ class GuardService : Service() {
     override fun onCreate() {
         super.onCreate()
         startAsForeground()
-        runCatching { Shizuku.addBinderReceivedListenerSticky(binderListener) }
+        runCatching {
+            PrivilegeBridges.current.addBinderReceivedListener(
+                binderReceivedListener,
+                sticky = true,
+            )
+        }
         startGuardLoop()
     }
 
@@ -62,7 +66,9 @@ class GuardService : Service() {
     }
 
     override fun onDestroy() {
-        runCatching { Shizuku.removeBinderReceivedListener(binderListener) }
+        runCatching {
+            PrivilegeBridges.current.removeBinderReceivedListener(binderReceivedListener)
+        }
         loopJob?.cancel()
         scope.cancel()
         super.onDestroy()

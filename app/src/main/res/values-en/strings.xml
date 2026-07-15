@@ -23,7 +23,7 @@
     <string name="sim_tag_standby">Standby</string>
     <string name="apply_recommended">Apply recommended</string>
     <string name="shizuku_setup_title">Can\'t start OneKuku? Works without WiFi</string>
-    <string name="setup_open_shizuku">Prepare OneKuku core</string>
+    <string name="setup_open_shizuku">Prepare OneKuku channel</string>
     <string name="setup_wireless_debug">Wireless debug</string>
     <string name="setup_hotspot">Hotspot</string>
     <string name="setup_copy_cmd">Copy cmd</string>
@@ -36,15 +36,15 @@
     <string name="log_cmd_copied">PC-free command copied</string>
     <string name="termux_hint">PC-free setup (install Termux + pkg install android-tools):\n1) On the wireless-debug page tap \"Pair device with pairing code\", note IP:pair-port and the code;\n2) In Termux run: adb pair localhost:pair-port code\n3) Then run: adb connect localhost:connect-port\n4) Start OneKuku core per the prep guide</string>
     <string name="onekuku_adb_guide_script">OneKuku core activation (wireless debugging + ADB; Termux works without a PC):\n1) Enable Wireless debugging in Developer options\n2) Tap \"Pair device with pairing code\" and note the pair-port and code\n3) In Termux (pkg install android-tools) run:\n   adb pair localhost:pair-port code\n4) Then: adb connect localhost:connect-port\n5) Start core:\n   %1$s\n6) Return to OneIMS and tap Activate OneKuku to grant access\n\nNote: You do not need the Play Store third-party channel app; the core is bundled or downloaded from the official source by OneIMS.</string>
-    <string name="onekuku_core_download_title">OneKuku core component</string>
-    <string name="onekuku_core_download_desc">Downloading OneKuku core component</string>
+    <string name="onekuku_core_download_title">OneKuku channel package</string>
+    <string name="onekuku_core_download_desc">Downloading OneKuku channel package</string>
     <string name="onekuku_msg_adb_guide_ready">Opened wireless debugging and copied the ADB start guide; start the core then return to authorize</string>
     <string name="onekuku_msg_installing_bundled_core">Installing bundled OneKuku channel; please confirm</string>
     <string name="onekuku_msg_downloading_core">Resolving and downloading OneKuku core…</string>
     <string name="onekuku_msg_core_download_started">Started downloading OneKuku core; install when finished</string>
     <string name="onekuku_msg_core_download_failed">Built-in OneKuku channel (oneims-bridge.apk) missing. Rebuild with assets, or install transitional core; upstream packages are not downloaded</string>
-    <string name="onekuku_msg_embedded_adb_starting">Starting OneKuku core via embedded ADB…</string>
-    <string name="onekuku_msg_embedded_adb_ok">Embedded ADB issued start; confirm core is ready then authorize</string>
+    <string name="onekuku_msg_embedded_adb_starting">Starting OneKuku channel via embedded ADB…</string>
+    <string name="onekuku_msg_embedded_adb_ok">Embedded ADB issued start; confirm the channel is ready then authorize</string>
     <string name="onekuku_msg_embedded_adb_fallback">Embedded ADB failed (%1$s); fell back to wireless-debug + command guide</string>
     <string name="onekuku_msg_embedded_adb_fallback_keep_dialog">Embedded ADB failed (%1$s). Pairing dialog kept open: in Wireless debugging tap Pair device with pairing code, enter the 6 digits, then confirm. Guide copied to clipboard</string>
     <string name="onekuku_msg_need_pairing_code">In Wireless debugging, tap Pair device with pairing code and enter the 6 digits here</string>
@@ -55,7 +55,7 @@
     <string name="onekuku_adb_pair_open_wireless">Open wireless debugging</string>
     <string name="onekuku_msg_core_missing_hint">OneKuku channel is not installed yet. Install the bundled OneKuku channel (oneims-bridge, not an upstream full privilege app).</string>
     <string name="onekuku_core_missing_title">OneKuku channel not installed</string>
-    <string name="onekuku_core_missing_body">The 6-digit pairing dialog appears only after the channel is installed. Finish the system installer prompt first, then tap Start core again.</string>
+    <string name="onekuku_core_missing_body">The 6-digit pairing dialog appears only after the channel is installed. Finish the system installer prompt first, then tap Start channel again.</string>
     <string name="onekuku_core_missing_install">Continue install</string>
 
     <!-- Features -->
@@ -362,7 +362,7 @@
 
     <!-- OneKuku home control card (hides underlying privilege channel names) -->
     <string name="onekuku_title_inactive">One more step</string>
-    <string name="onekuku_subtitle_inactive">OneKuku core service is inactive</string>
+    <string name="onekuku_subtitle_inactive">OneKuku channel is inactive</string>
     <string name="onekuku_detail_inactive">Call settings may not auto-restore after reboot</string>
     <string name="onekuku_hint_power">Activate on demand, sleep when idle — no always-on drain</string>
     <string name="onekuku_pill_inactive">Inactive</string>
@@ -370,14 +370,14 @@
     <string name="onekuku_action_activate_sub">Prepares the restore environment in the background</string>
 
     <string name="onekuku_title_ready">Device ready</string>
-    <string name="onekuku_subtitle_sleeping">OneKuku core service is active</string>
+    <string name="onekuku_subtitle_sleeping">OneKuku channel is active</string>
     <string name="onekuku_detail_sleeping">Call settings can try to auto-restore after reboot</string>
     <string name="onekuku_pill_sleeping">Sleeping</string>
     <string name="onekuku_action_restore">Restore calling</string>
     <string name="onekuku_action_restore_sub">Wake OneKuku and restore configuration</string>
 
     <string name="onekuku_title_running">Restoring call settings</string>
-    <string name="onekuku_subtitle_running">OneKuku core service is working</string>
+    <string name="onekuku_subtitle_running">OneKuku channel is working</string>
     <string name="onekuku_detail_running">Restoring IMS, VoWiFi, 5G and related settings</string>
     <string name="onekuku_pill_running">Working</string>
     <string name="onekuku_action_running">Restoring…</string>
@@ -517,13 +517,13 @@
     <string name="home_quick_actions_sub">Check device status before applying carrier recommendations</string>
     <string name="home_adb_prep_title">Activate on the go</string>
     <string name="home_adb_prep_sub">No PC, and no public Wi‑Fi needed. You do need Wireless debugging; outdoors, a personal hotspot is enough.</string>
-    <string name="home_adb_prep_steps">① Enable Wireless debugging\n② No Wi‑Fi outdoors? Turn on hotspot\n③ Tap Start core — a dialog appears the first time; then in system Wireless debugging tap Pair device with pairing code and enter the 6 digits</string>
+    <string name="home_adb_prep_steps">① Enable Wireless debugging\n② No Wi‑Fi outdoors? Turn on hotspot\n③ Tap Start channel — a dialog appears the first time; then in system Wireless debugging tap Pair device with pairing code and enter the 6 digits</string>
     <string name="home_adb_open_wireless">Open wireless debugging</string>
     <string name="home_adb_open_wireless_sub">Jump to system settings</string>
     <string name="home_adb_open_hotspot">Personal hotspot</string>
     <string name="home_adb_open_hotspot_sub">Use this when there\'s no Wi‑Fi</string>
-    <string name="home_adb_start_core">Start core</string>
-    <string name="home_adb_start_core_sub">Pair and launch OneKuku</string>
+    <string name="home_adb_start_core">Start channel</string>
+    <string name="home_adb_start_core_sub">Pair and launch the OneKuku channel</string>
     <string name="home_adb_copy_guide">Copy backup steps</string>
     <string name="home_adb_copy_guide_sub">Handy if you get stuck</string>
     <string name="action_refresh_sub">Reload permission and SIM status</string>
@@ -532,7 +532,7 @@
     <string name="action_restore_sub">Clear overrides and restore defaults</string>
     <string name="no_sim_detail">Check phone permission and SIM status, then retry</string>
     <string name="shizuku_setup_subtitle">Pairing, wireless debugging, and PC-free startup</string>
-    <string name="setup_open_shizuku_sub">Install/download core, or start via wireless debugging + ADB</string>
+    <string name="setup_open_shizuku_sub">Install the built-in channel, or start via wireless debugging + ADB</string>
     <string name="setup_wireless_debug_sub">Open Android developer options</string>
     <string name="setup_hotspot_sub">Create a local network without a router</string>
     <string name="setup_copy_cmd_sub">Copy the Termux startup steps</string>
@@ -786,7 +786,8 @@
 
     <string name="reapply_trigger_manual">manual action</string>
     <string name="reapply_trigger_quick_tile">Quick Settings tile</string>
-    <string name="reapply_trigger_shizuku_ready">OneKuku became ready</string>
+    <string name="reapply_trigger_bridge_ready">OneKuku channel ready</string>
+    <string name="reapply_trigger_shizuku_ready">OneKuku channel ready</string>
     <string name="reapply_trigger_boot">Boot auto-restore</string>
     <string name="reapply_trigger_ims_not_registered">IMS registration dropped</string>
     <string name="action_reapply">Reapply last profile</string>

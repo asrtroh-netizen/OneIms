@@ -166,13 +166,13 @@ interface PrivilegeBridge {
 
 ### Phase 2 · OneIMS 切换
 
-| 文件 | 动作 |
-|---|---|
-| `OneKukuManager` / `ShizukuManager` | 改为委托 `PrivilegeBridge` |
-| `SystemApiBroker` | `ShizukuBinderWrapper` → `bridge.wrapSystemService` |
-| `GuardService` / Tile / Diagnostics | 改听 bridge 生命周期 |
-| 首页激活卡 | 文案改为「启动通道」；去掉换皮 Core 叙事 |
-| 回落 | `BuildConfig.USE_SHIZUKU_FALLBACK` 或运行时探测 |
+| 文件 | 动作 | 状态 |
+|---|---|---|
+| `OneKukuManager` / `ShizukuManager` | 改为委托 `PrivilegeBridge` | ✅ Phase0 |
+| `SystemApiBroker` | `wrapSystemService` 经门面 | ✅ Phase0 |
+| `GuardService` / `MainActivity` | 改听 `PrivilegeBridges` 生命周期（Tile/Diagnostics 本就走 Manager 轮询） | ✅ 2026-07-15 |
+| 首页激活卡 | 文案「启动通道」；去掉用户可见「换皮 Core」叙事 | ✅ 2026-07-15 |
+| 回落 | 运行时 `FallbackPrivilegeBridge`（本轮不做 BuildConfig 开关） | ✅ |
 
 ### Phase 3 · 卸载上游依赖
 

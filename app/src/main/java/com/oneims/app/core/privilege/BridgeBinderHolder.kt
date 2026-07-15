@@ -17,10 +17,11 @@ object BridgeBinderHolder {
     private val death = DeathRecipient {
         Log.w(TAG, "OneBridge binder died")
         binder = null
-        listeners.forEach { it() }
+        deadListeners.forEach { it() }
     }
 
-    private val listeners = CopyOnWriteArrayList<() -> Unit>()
+    private val receivedListeners = CopyOnWriteArrayList<() -> Unit>()
+    private val deadListeners = CopyOnWriteArrayList<() -> Unit>()
 
     fun onReceived(received: IBinder?) {
         val previous = binder
@@ -31,8 +32,11 @@ object BridgeBinderHolder {
         if (received != null) {
             runCatching { received.linkToDeath(death, 0) }
             Log.i(TAG, "OneBridge binder received")
+            receivedListeners.forEach { it() }
+        } else {
+            Log.w(TAG, "OneBridge binder cleared")
+            deadListeners.forEach { it() }
         }
-        listeners.forEach { it() }
     }
 
     fun get(): IBinder? {
@@ -40,7 +44,22 @@ object BridgeBinderHolder {
         return if (b != null && b.pingBinder()) b else null
     }
 
+    fun addReceivedListener(listener: () -> Unit, sticky: Boolean = true) {
+        receivedListeners.add(listener)
+        if (sticky && get() != null) {
+            listener()
+        }
+    }
+
+    fun removeReceivedListener(listener: () -> Unit) {
+        receivedListeners.remove(listener)
+    }
+
     fun addDeadListener(listener: () -> Unit) {
-        listeners.add(listener)
+        deadListeners.add(listener)
+    }
+
+    fun removeDeadListener(listener: () -> Unit) {
+        deadListeners.remove(listener)
     }
 }

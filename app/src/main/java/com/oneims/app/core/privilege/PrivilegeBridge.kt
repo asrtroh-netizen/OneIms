@@ -28,6 +28,30 @@ interface PrivilegeBridge {
      */
     fun wrapSystemService(name: String): IBinder
 
+    /**
+     * binder 已送达（服务在跑）。[sticky]=true 时若当前已 running 则立即回调一次。
+     */
+    fun addBinderReceivedListener(listener: () -> Unit, sticky: Boolean = true)
+
+    fun removeBinderReceivedListener(listener: () -> Unit)
+
+    /** binder 已死亡或被清空。 */
+    fun addBinderDeadListener(listener: () -> Unit)
+
+    fun removeBinderDeadListener(listener: () -> Unit)
+
+    /**
+     * 授权结果回调（Shizuku 弹窗路径需要；OneBridge MVP 可能永不触发）。
+     * [grantResult] 对齐 [android.content.pm.PackageManager] 常量。
+     */
+    fun addRequestPermissionResultListener(listener: PermissionResultListener)
+
+    fun removeRequestPermissionResultListener(listener: PermissionResultListener)
+
+    fun interface PermissionResultListener {
+        fun onRequestPermissionResult(requestCode: Int, grantResult: Int)
+    }
+
     companion object {
         const val DEFAULT_REQUEST_CODE: Int = 4370
 

@@ -117,7 +117,8 @@ import com.oneims.app.ui.theme.OneImsTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import rikka.shizuku.Shizuku
+import com.oneims.app.core.privilege.PrivilegeBridge
+import com.oneims.app.core.privilege.PrivilegeBridges
 
 private const val MAX_DIAGNOSTIC_LOG_CHARS = 256 * 1024
 private const val MAX_DIAGNOSTIC_ENTRY_CHARS = 192 * 1024
@@ -485,7 +486,7 @@ private fun AppRoot(
         }
     }
 
-    /** 「启动核心」专用：不走总控卡 isRunning 短路，保证能进配对/安装弹窗。 */
+    /** 「启动通道」专用：不走总控卡 isRunning 短路，保证能进配对/安装弹窗。 */
     fun startCoreFromPrepCard() {
         if (OneKukuManager.isReady()) {
             publish(context.getString(R.string.onekuku_msg_already_active))
@@ -811,7 +812,8 @@ private fun AppRoot(
     }
 
     DisposableEffect(Unit) {
-        val permissionListener = Shizuku.OnRequestPermissionResultListener { requestCode, _ ->
+        val bridge = PrivilegeBridges.current
+        val permissionListener = PrivilegeBridge.PermissionResultListener { requestCode, _ ->
             if (requestCode == OneKukuManager.REQUEST_CODE) {
                 refreshAll()
                 publish(
@@ -825,24 +827,24 @@ private fun AppRoot(
                 )
             }
         }
-        val binderReceivedListener = Shizuku.OnBinderReceivedListener {
+        val binderReceivedListener: () -> Unit = {
             refreshAll()
         }
-        val binderDeadListener = Shizuku.OnBinderDeadListener {
+        val binderDeadListener: () -> Unit = {
             shizukuRunning = false
             shizukuGranted = false
             oneKukuTaskComplete = false
             oneKukuRestoring = false
         }
 
-        runCatching { Shizuku.addRequestPermissionResultListener(permissionListener) }
-        runCatching { Shizuku.addBinderReceivedListenerSticky(binderReceivedListener) }
-        runCatching { Shizuku.addBinderDeadListener(binderDeadListener) }
+        runCatching { bridge.addRequestPermissionResultListener(permissionListener) }
+        runCatching { bridge.addBinderReceivedListener(binderReceivedListener, sticky = true) }
+        runCatching { bridge.addBinderDeadListener(binderDeadListener) }
 
         onDispose {
-            runCatching { Shizuku.removeRequestPermissionResultListener(permissionListener) }
-            runCatching { Shizuku.removeBinderReceivedListener(binderReceivedListener) }
-            runCatching { Shizuku.removeBinderDeadListener(binderDeadListener) }
+            runCatching { bridge.removeRequestPermissionResultListener(permissionListener) }
+            runCatching { bridge.removeBinderReceivedListener(binderReceivedListener) }
+            runCatching { bridge.removeBinderDeadListener(binderDeadListener) }
         }
     }
 

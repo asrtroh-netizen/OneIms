@@ -11,14 +11,20 @@ enum class ReapplyTrigger(
 ) {
     MANUAL("manual", R.string.reapply_trigger_manual),
     QUICK_SETTINGS_TILE("quick_settings_tile", R.string.reapply_trigger_quick_tile),
-    SHIZUKU_READY("shizuku_ready", R.string.reapply_trigger_shizuku_ready),
+    /** 特权桥（OneBridge 或 Shizuku 回落）binder 就绪。 */
+    BRIDGE_READY("bridge_ready", R.string.reapply_trigger_bridge_ready),
+    /** @deprecated 历史存储值；[fromStored] 会映射到 [BRIDGE_READY]。 */
+    @Deprecated("Use BRIDGE_READY")
+    SHIZUKU_READY("shizuku_ready", R.string.reapply_trigger_bridge_ready),
     IMS_NOT_REGISTERED("ims_not_registered", R.string.reapply_trigger_ims_not_registered),
     BOOT("boot", R.string.reapply_trigger_boot),
     ;
 
     companion object {
-        fun fromStored(value: String?): ReapplyTrigger =
-            entries.firstOrNull { trigger -> trigger.storedValue == value } ?: MANUAL
+        fun fromStored(value: String?): ReapplyTrigger = when (value) {
+            "shizuku_ready", "bridge_ready" -> BRIDGE_READY
+            else -> entries.firstOrNull { trigger -> trigger.storedValue == value } ?: MANUAL
+        }
     }
 }
 
