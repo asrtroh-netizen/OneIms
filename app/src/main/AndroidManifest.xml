@@ -95,6 +95,17 @@
             </intent-filter>
         </activity>
 
+        <!-- OneKuku 通道常驻保活（激活成功后顶在后台，Wi‑Fi 下静默重连） -->
+        <service
+            android:name=".core.OneKukuResidentService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Keep OneKuku privilege channel resident and silently reconnect on Wi-Fi" />
+        </service>
+
         <!-- IMS 掉线守护前台服务 -->
         <service
             android:name=".core.GuardService"

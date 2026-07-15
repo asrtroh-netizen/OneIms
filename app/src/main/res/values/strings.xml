@@ -588,6 +588,10 @@
     <string name="onekuku_settings_auto_sleep">用完自动休眠</string>
     <string name="onekuku_settings_auto_sleep_sub">已停用：OneKuku 改为常驻，不再自动休眠</string>
     <string name="onekuku_settings_resident_note">OneKuku 通道常驻保持就绪，不再提供「用完自动休眠」。</string>
+    <string name="onekuku_resident_channel">OneKuku 常驻</string>
+    <string name="onekuku_resident_channel_desc">保持 OneKuku 通道在后台就绪</string>
+    <string name="onekuku_resident_notif_title">OneKuku 常驻中</string>
+    <string name="onekuku_resident_notif_text">已连过 Wi‑Fi 后通道会尽量顶在后台，掉线时静默重连</string>
     <string name="onekuku_settings_reactivate">重新激活 OneKuku</string>
     <string name="onekuku_settings_reactivate_sub">尝试激活 OneKuku 核心服务</string>
     <string name="onekuku_settings_view_status">查看状态</string>

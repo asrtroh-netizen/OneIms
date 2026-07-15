@@ -583,6 +583,10 @@
     <string name="onekuku_settings_auto_sleep">Auto-sleep when idle</string>
     <string name="onekuku_settings_auto_sleep_sub">Disabled: OneKuku stays resident and no longer auto-sleeps</string>
     <string name="onekuku_settings_resident_note">OneKuku stays resident; auto-sleep is no longer offered.</string>
+    <string name="onekuku_resident_channel">OneKuku resident</string>
+    <string name="onekuku_resident_channel_desc">Keep the OneKuku channel ready in the background</string>
+    <string name="onekuku_resident_notif_title">OneKuku resident</string>
+    <string name="onekuku_resident_notif_text">After Wi‑Fi once, the channel stays up and silently reconnects if dropped</string>
     <string name="onekuku_settings_reactivate">Reactivate OneKuku</string>
     <string name="onekuku_settings_reactivate_sub">Try to activate the OneKuku core service</string>
     <string name="onekuku_settings_view_status">View status</string>

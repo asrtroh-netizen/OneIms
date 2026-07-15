@@ -114,6 +114,7 @@ import com.oneims.app.onekuku.OneKukuRunnerState
 import com.oneims.app.onekuku.OneKukuSnapshotStore
 import com.oneims.app.onekuku.OneKukuSleepController
 import com.oneims.app.core.OneKukuBootRestoreService
+import com.oneims.app.core.OneKukuResidentService
 import com.oneims.app.ui.OneKukuCardPolicy
 import com.oneims.app.ui.OneKukuCardState
 import com.oneims.app.ui.OneKukuHomeTools
@@ -371,6 +372,7 @@ private fun AppRoot(
                 bootUiHint = hint
             }
             OneKukuActivationUi.setPhase(OneKukuActivationPhase.IDLE)
+            OneKukuResidentService.start(context)
         } else if (ConfigStore.isOneKukuBootAutoCheck(context) &&
             OneKukuEmbeddedAdbActivator.hasPairedOnce(context)
         ) {
@@ -552,17 +554,9 @@ private fun AppRoot(
             )
         }
         val pairedBefore = OneKukuEmbeddedAdbActivator.hasPairedOnce(context)
-        if (pairedBefore) {
-            // 已配对：卡片进「连接中」，不挂六位码通知，避免重启后假「又要配对」。
-            if (OneKukuActivationUi.phase != OneKukuActivationPhase.CONNECTING &&
-                OneKukuActivationUi.phase != OneKukuActivationPhase.STARTING &&
-                OneKukuActivationUi.phase != OneKukuActivationPhase.PAIRING
-            ) {
-                OneKukuActivationUi.setPhase(OneKukuActivationPhase.CONNECTING)
-                activationEpoch++
-            }
-        } else {
-            // 从未配对：先挂 UI（通知 + 激活中色），再跑可能长达数秒的 mDNS/连接探测。
+        // 从未配对：先挂通知/WAITING_PAIR 让用户感知。
+        // 已配对：先静默 wake，成功则不闪「激活中」；只有直连路径才进 CONNECTING。
+        if (!pairedBefore) {
             if (OneKukuActivationUi.phase != OneKukuActivationPhase.WAITING_PAIR &&
                 OneKukuActivationUi.phase != OneKukuActivationPhase.PAIRING &&
                 OneKukuActivationUi.phase != OneKukuActivationPhase.CONNECTING
@@ -579,9 +573,10 @@ private fun AppRoot(
             val wake = OneKukuHiddenRunner.wake()
             if (wake.success && OneKukuManager.isReady()) {
                 pairingUiPrimed = false
-                OneKukuActivationUi.setPhase(OneKukuActivationPhase.ACTIVE)
+                OneKukuActivationUi.setPhase(OneKukuActivationPhase.IDLE)
                 activationEpoch++
                 OneKukuPairingNotification.cancel(context)
+                OneKukuResidentService.start(context)
                 shizukuRunning = OneKukuManager.isRunning()
                 shizukuGranted = OneKukuManager.isGranted()
                 if (bootUiHint == OneKukuBootUiHint.NEEDS_ACTIVATION ||
@@ -599,6 +594,14 @@ private fun AppRoot(
                 return@launch
             }
             if (pairedBefore) {
+                // 静默 wake 失败后才进入「连接中」，避免一点首页就钉死「激活中」。
+                if (OneKukuActivationUi.phase != OneKukuActivationPhase.CONNECTING &&
+                    OneKukuActivationUi.phase != OneKukuActivationPhase.STARTING &&
+                    OneKukuActivationUi.phase != OneKukuActivationPhase.PAIRING
+                ) {
+                    OneKukuActivationUi.setPhase(OneKukuActivationPhase.CONNECTING)
+                    activationEpoch++
+                }
                 // 仅「刚从关→开」才短等 TLS 起来；本来就开着则零等待直连。
                 when (ShizukuSetupHelper.ensureAdbWifiEnabled(context)) {
                     ShizukuSetupHelper.AdbWifiEnsureResult.ENABLED_NOW ->
@@ -632,9 +635,10 @@ private fun AppRoot(
                 }
                 is OneKukuMiniAdbClient.Outcome.Success -> {
                     pairingUiPrimed = false
-                    OneKukuActivationUi.setPhase(OneKukuActivationPhase.ACTIVE)
+                    OneKukuActivationUi.setPhase(OneKukuActivationPhase.IDLE)
                     activationEpoch++
                     OneKukuPairingNotification.cancel(context)
+                    OneKukuResidentService.start(context)
                     shizukuRunning = OneKukuManager.isRunning()
                     if (OneKukuManager.isRunning() && !OneKukuManager.isGranted()) {
                         OneKukuManager.requestActivation()
@@ -683,7 +687,11 @@ private fun AppRoot(
 
     // Shizuku 体感：已配对且通道未就绪时，进首页自动无码直连，不必再点总控卡。
     LaunchedEffect(Unit) {
-        if (OneKukuManager.isReady()) return@LaunchedEffect
+        if (OneKukuManager.isReady()) {
+            OneKukuActivationUi.setPhase(OneKukuActivationPhase.IDLE)
+            OneKukuResidentService.start(context)
+            return@LaunchedEffect
+        }
         if (!OneKukuEmbeddedAdbActivator.hasPairedOnce(context)) return@LaunchedEffect
         val phase = OneKukuActivationUi.phase
         if (phase == OneKukuActivationPhase.CONNECTING ||
@@ -694,6 +702,33 @@ private fun AppRoot(
             return@LaunchedEffect
         }
         prepareOneKukuCore()
+    }
+
+    // 激活中相位超时兜底：避免直连挂死时永远钉在「激活中」。
+    LaunchedEffect(activationPhase) {
+        if (activationPhase != OneKukuActivationPhase.CONNECTING &&
+            activationPhase != OneKukuActivationPhase.STARTING &&
+            activationPhase != OneKukuActivationPhase.WAITING_PAIR &&
+            activationPhase != OneKukuActivationPhase.PAIRING
+        ) {
+            return@LaunchedEffect
+        }
+        delay(45_000L)
+        if (OneKukuManager.isReady()) {
+            OneKukuActivationUi.setPhase(OneKukuActivationPhase.IDLE)
+            OneKukuResidentService.start(context)
+            return@LaunchedEffect
+        }
+        val stillBusy = OneKukuActivationUi.phase == OneKukuActivationPhase.CONNECTING ||
+            OneKukuActivationUi.phase == OneKukuActivationPhase.STARTING ||
+            OneKukuActivationUi.phase == OneKukuActivationPhase.WAITING_PAIR ||
+            OneKukuActivationUi.phase == OneKukuActivationPhase.PAIRING
+        if (stillBusy) {
+            OneKukuActivationUi.setPhase(
+                OneKukuActivationPhase.FAILED,
+                failure = "activation_timeout",
+            )
+        }
     }
 
     DisposableEffect(Unit) {
@@ -735,7 +770,8 @@ private fun AppRoot(
                     is OneKukuEmbeddedAdbActivator.Outcome.Success -> {
                         adbPairDialogVisible = false
                         OneKukuPairingNotification.cancel(context)
-                        OneKukuActivationUi.setPhase(OneKukuActivationPhase.ACTIVE)
+                        OneKukuActivationUi.setPhase(OneKukuActivationPhase.IDLE)
+                        OneKukuResidentService.start(context)
                         shizukuRunning = OneKukuManager.isRunning()
                         if (OneKukuManager.isRunning() && !OneKukuManager.isGranted()) {
                             OneKukuManager.requestActivation()
