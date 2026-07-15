@@ -129,7 +129,7 @@ object OneKukuEmbeddedAdbActivator {
             Log.i(TAG, "tcpip5555 persisted=$persisted")
 
             val startPkg = OneKukuCoreComponent.resolveCorePackage(app)
-                ?: OneKukuCoreComponent.BRIDGE_PACKAGE
+                ?: OneKukuCoreComponent.HOST_PACKAGE
             val startCmd = OneKukuCoreComponent.bridgeBootShellCommand(startPkg) + "\n"
             val shellOk = runCatching {
                 writeShell(manager, startCmd)

@@ -4,7 +4,7 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
-val oneImsVersionName = "2.0.18"
+val oneImsVersionName = "2.0.19"
 
 android {
     namespace = "com.oneims.app"
@@ -15,7 +15,7 @@ android {
         applicationId = "com.oneims.app"
         minSdk = 31          // Tensor Pixel（Pixel 6 起）最低 Android 12
         targetSdk = 36
-        versionCode = 27
+        versionCode = 28
         versionName = oneImsVersionName
     }
 
@@ -50,6 +50,9 @@ android {
 }
 
 dependencies {
+    // Phase4：OneBridge starter 以 library 打进主包，不再要求安装 com.oneims.bridge
+    implementation(project(":bridge"))
+
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.4")
     implementation("androidx.activity:activity-compose:1.9.1")

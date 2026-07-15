@@ -43,21 +43,32 @@
     <string name="onekuku_msg_downloading_core">Resolving and downloading OneKuku core…</string>
     <string name="onekuku_msg_core_download_started">Started downloading OneKuku core; install when finished</string>
     <string name="onekuku_msg_core_download_failed">Built-in OneKuku channel (oneims-bridge.apk) missing. Rebuild with assets, or install transitional core; upstream packages are not downloaded</string>
-    <string name="onekuku_msg_embedded_adb_starting">Starting OneKuku channel via embedded ADB…</string>
-    <string name="onekuku_msg_embedded_adb_ok">Embedded ADB issued start; confirm the channel is ready then authorize</string>
-    <string name="onekuku_msg_embedded_adb_fallback">Embedded ADB failed (%1$s); fell back to wireless-debug + command guide</string>
-    <string name="onekuku_msg_embedded_adb_fallback_keep_dialog">Embedded ADB failed (%1$s). Pairing dialog kept open: in Wireless debugging tap Pair device with pairing code, enter the 6 digits, then confirm. Guide copied to clipboard</string>
-    <string name="onekuku_msg_need_pairing_code">In Wireless debugging, tap Pair device with pairing code and enter the 6 digits here</string>
+    <string name="onekuku_msg_embedded_adb_starting">Starting channel via wireless debugging…</string>
+    <string name="onekuku_msg_embedded_adb_ok">Channel started; please confirm authorization</string>
+    <string name="onekuku_msg_embedded_adb_fallback">Wireless start failed (%1$s). Pull down the notification to re-enter the 6-digit code, or reopen Wireless debugging</string>
+    <string name="onekuku_msg_embedded_adb_fallback_keep_dialog">Wireless start failed (%1$s). Pull down the notification to enter the code, or retry in the dialog</string>
+    <string name="onekuku_msg_need_pairing_code">Pull down the status bar and enter the 6-digit code in the OneIms notification (dialog also works)</string>
     <string name="onekuku_adb_pair_title">Enter wireless-debug pairing code</string>
-    <string name="onekuku_adb_pair_body">OneIms does not generate the 6-digit code. First join any Wi‑Fi as a client (PC or another phone hotspot is fine; turning on your own hotspot alone is often not enough on Pixel). Then open Wireless debugging → Pair device with pairing code, enter the 6 digits, keep that sheet open, and tap Pair and start.</string>
+    <string name="onekuku_adb_pair_body">The channel is built into OneIms—no second app to install. Join Wi‑Fi, open Wireless debugging → Pair device with pairing code, then enter the 6 digits below (preferred: reply in the notification). Keep the pairing sheet open.</string>
     <string name="onekuku_msg_wifi_sta_required">Wireless debugging is not ready yet: connect the phone to any Wi‑Fi as a client (e.g. your PC hotspot). Do not rely on your own hotspot alone, then tap Start channel again</string>
     <string name="onekuku_adb_pair_hint">6-digit code</string>
     <string name="onekuku_adb_pair_confirm">Pair and start</string>
     <string name="onekuku_adb_pair_open_wireless">Open wireless debugging</string>
-    <string name="onekuku_msg_core_missing_hint">OneKuku channel is not installed yet. Install the bundled OneKuku channel (oneims-bridge, not an upstream full privilege app).</string>
-    <string name="onekuku_core_missing_title">OneKuku channel not installed</string>
-    <string name="onekuku_core_missing_body">The 6-digit pairing dialog appears only after the channel is installed. Finish the system installer prompt first, then tap Start channel again.</string>
-    <string name="onekuku_core_missing_install">Continue install</string>
+    <string name="wireless_pairing_channel_name">Wireless pairing</string>
+    <string name="wireless_pairing_channel_desc">Enter the 6-digit pairing code from the notification shade</string>
+    <string name="wireless_pairing_title">Enter wireless-debug pairing code</string>
+    <string name="wireless_pairing_text">Tap Reply to enter 6 digits, or tap this notification to open Wireless debugging</string>
+    <string name="wireless_pairing_big_text">1. Join Wi‑Fi\n2. Open Wireless debugging → Pair device with pairing code\n3. Pull down this notification and tap Enter code</string>
+    <string name="wireless_pairing_input_label">6-digit pairing code</string>
+    <string name="wireless_pairing_reply_action">Enter code</string>
+    <string name="wireless_pairing_need_six_digits">Please enter the full 6-digit code</string>
+    <string name="wireless_pairing_result_ok_title">Channel started</string>
+    <string name="wireless_pairing_result_fail_title">Pairing failed</string>
+    <string name="onekuku_msg_pairing_notification_shown">Pairing notification posted—pull down the shade to enter the code</string>
+    <string name="onekuku_msg_core_missing_hint">Channel is built into OneIms; no separate install needed. If you still see this, restart the app.</string>
+    <string name="onekuku_core_missing_title">Channel ready</string>
+    <string name="onekuku_core_missing_body">No second app to install. Tap continue to open wireless pairing.</string>
+    <string name="onekuku_core_missing_install">Continue</string>
 
     <!-- Features -->
     <string name="cap_group_radio_title">Carrier features &amp; 5G</string>
@@ -516,9 +527,9 @@
 
     <string name="home_quick_actions">Quick start</string>
     <string name="home_quick_actions_sub">Check device status before applying carrier recommendations</string>
-    <string name="home_adb_prep_title">Activate on the go</string>
-    <string name="home_adb_prep_sub">No PC needed. Enable Wireless debugging and join any Wi‑Fi as a client (PC/another phone hotspot is fine). On Pixel, turning on your own hotspot alone usually does not allocate a wireless-debug port.</string>
-    <string name="home_adb_prep_steps">① Join any Wi‑Fi as a client (e.g. PC hotspot)\n② Enable Wireless debugging\n③ Tap Start channel → Pair device with pairing code → enter the 6 digits</string>
+    <string name="home_adb_prep_title">Start channel via wireless debugging</string>
+    <string name="home_adb_prep_sub">Channel is built in—no second app. Join Wi‑Fi, enable Wireless debugging, then pull down the notification to enter the 6-digit code (Shizuku-style).</string>
+    <string name="home_adb_prep_steps">① Join Wi‑Fi\n② Enable Wireless debugging\n③ Tap Start channel → pull down the notification and enter the 6-digit code</string>
     <string name="home_adb_open_wireless">Open wireless debugging</string>
     <string name="home_adb_open_wireless_sub">Jump to system settings</string>
     <string name="home_adb_open_hotspot">Personal hotspot</string>

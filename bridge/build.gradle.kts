@@ -1,5 +1,5 @@
 plugins {
-    id("com.android.application")
+    id("com.android.library")
     id("org.jetbrains.kotlin.android")
 }
 
@@ -8,11 +8,8 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.oneims.bridge"
         minSdk = 31
-        targetSdk = 36
-        versionCode = 1
-        versionName = "0.1.0-mvp"
+        // library 无独立 applicationId；类打进 com.oneims.app
     }
 
     buildTypes {
@@ -27,11 +24,6 @@ android {
     }
     kotlinOptions {
         jvmTarget = "17"
-    }
-
-    dependenciesInfo {
-        includeInApk = false
-        includeInBundle = false
     }
 }
 

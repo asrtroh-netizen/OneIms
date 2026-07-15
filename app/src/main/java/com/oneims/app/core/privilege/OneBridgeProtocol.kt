@@ -6,7 +6,8 @@ import android.os.IBinder
 object OneBridgeProtocol {
     const val DESCRIPTOR: String = "com.oneims.bridge.IOneBridge"
     const val PROVIDER_AUTHORITY: String = "com.oneims.app.onebridge"
-    const val BRIDGE_PACKAGE: String = "com.oneims.bridge"
+    /** Phase4：通道内嵌主包；旧独立桥包名仅作文档对照。 */
+    const val BRIDGE_PACKAGE: String = "com.oneims.app"
 
     const val TRANSACTION_PING: Int = IBinder.FIRST_CALL_TRANSACTION
     const val TRANSACTION_GET_UID: Int = IBinder.FIRST_CALL_TRANSACTION + 1

@@ -48,17 +48,28 @@
     <string name="onekuku_core_missing_title">还没装 OneKuku 通道</string>
     <string name="onekuku_core_missing_body">六位码配对窗要等通道装好才会出现。请先完成安装（系统安装器会弹出）；装好后请回到 OneIMS——若仍停在本页，点「继续安装」或再次点「启动通道」。</string>
     <string name="onekuku_core_missing_install">继续安装</string>
-    <string name="onekuku_msg_embedded_adb_starting">正在用内嵌 ADB 拉起 OneKuku 通道…</string>
-    <string name="onekuku_msg_embedded_adb_ok">内嵌 ADB 已发出启动指令，请确认通道就绪后授权</string>
-    <string name="onekuku_msg_embedded_adb_fallback">内嵌 ADB 未成功（%1$s），已回落为无线调试 + 命令指引</string>
-    <string name="onekuku_msg_embedded_adb_fallback_keep_dialog">内嵌 ADB 未成功（%1$s）。配对窗已保留：请到系统无线调试点「使用配对码配对设备」，填入 6 位数字后点配对；指引已复制到剪贴板</string>
-    <string name="onekuku_msg_need_pairing_code">请在系统无线调试里点「使用配对码配对设备」，把 6 位数字填进弹窗</string>
+    <string name="onekuku_msg_embedded_adb_starting">正在通过无线调试拉起通道…</string>
+    <string name="onekuku_msg_embedded_adb_ok">通道已拉起，请确认授权</string>
+    <string name="onekuku_msg_embedded_adb_fallback">无线调试拉起未成功（%1$s）。请下拉通知栏重新填入六位码，或打开系统无线调试重试</string>
+    <string name="onekuku_msg_embedded_adb_fallback_keep_dialog">无线调试拉起未成功（%1$s）。请下拉通知栏填入六位码；也可在下方弹窗重试</string>
+    <string name="onekuku_msg_need_pairing_code">请下拉状态栏，在 OneIms 通知里填入无线调试六位码；也可在弹窗里填写</string>
     <string name="onekuku_adb_pair_title">输入无线调试配对码</string>
-    <string name="onekuku_adb_pair_body">六位码不在 OneIms 里生成。请先让手机作为客户端连上任意 Wi‑Fi（可连电脑/别人手机的热点；只开自己的个人热点在 Pixel 上往往不够）。再打开系统「无线调试」→「使用配对码配对设备」，把 6 位数字填到下面；配对页保持打开，再点配对并启动。</string>
+    <string name="onekuku_adb_pair_body">通道已内置，无需再装第二 App。请先连上 Wi‑Fi，打开系统「无线调试」→「使用配对码配对设备」，把 6 位数字填到下面（推荐：下拉通知栏直接填）。配对页请保持打开。</string>
     <string name="onekuku_msg_wifi_sta_required">无线调试还没真正就绪：请先让手机连上任意 Wi‑Fi（可连电脑热点），不要只开自己的个人热点，然后再点启动通道</string>
     <string name="onekuku_adb_pair_hint">6 位配对码</string>
     <string name="onekuku_adb_pair_confirm">配对并启动</string>
     <string name="onekuku_adb_pair_open_wireless">打开系统无线调试</string>
+    <string name="wireless_pairing_channel_name">无线调试配对</string>
+    <string name="wireless_pairing_channel_desc">下拉状态栏输入六位配对码以启动通道</string>
+    <string name="wireless_pairing_title">输入无线调试配对码</string>
+    <string name="wireless_pairing_text">点「回复」填入 6 位数字，或点本通知打开无线调试</string>
+    <string name="wireless_pairing_big_text">1. 连上 Wi‑Fi\n2. 打开系统无线调试 → 使用配对码配对设备\n3. 下拉本通知，点「填入配对码」输入 6 位数字</string>
+    <string name="wireless_pairing_input_label">6 位配对码</string>
+    <string name="wireless_pairing_reply_action">填入配对码</string>
+    <string name="wireless_pairing_need_six_digits">请输入完整的 6 位配对码</string>
+    <string name="wireless_pairing_result_ok_title">通道已启动</string>
+    <string name="wireless_pairing_result_fail_title">配对未成功</string>
+    <string name="onekuku_msg_pairing_notification_shown">已发出配对通知：请下拉状态栏填入六位码</string>
 
     <!-- 能力页 -->
     <string name="cap_group_radio_title">运营商能力与 5G</string>
@@ -521,9 +532,9 @@
 
     <string name="home_quick_actions">快速开始</string>
     <string name="home_quick_actions_sub">先确认设备状态，再应用运营商建议</string>
-    <string name="home_adb_prep_title">出门也能激活</string>
-    <string name="home_adb_prep_sub">不用电脑。需要打开「无线调试」，并且手机要作为客户端连上任意 Wi‑Fi（可连电脑/别人的热点）。只开自己的个人热点在 Pixel 上通常不够，系统不会分配无线调试端口。</string>
-    <string name="home_adb_prep_steps">① 手机连上任意 Wi‑Fi（可连电脑热点）\n② 打开系统无线调试\n③ 点「启动通道」→ 系统里点「使用配对码配对设备」→ 把 6 位数字填回弹窗</string>
+    <string name="home_adb_prep_title">无线调试启动通道</string>
+    <string name="home_adb_prep_sub">通道已内置，无需再装第二 App。连上 Wi‑Fi，打开无线调试，点启动后下拉通知栏填入六位码（像 Shizuku 那样）。</string>
+    <string name="home_adb_prep_steps">① 连上 Wi‑Fi\n② 打开系统无线调试\n③ 点「启动通道」→ 下拉通知栏填入 6 位配对码</string>
     <string name="home_adb_open_wireless">打开无线调试</string>
     <string name="home_adb_open_wireless_sub">去系统设置里开一下</string>
     <string name="home_adb_open_hotspot">开个人热点</string>

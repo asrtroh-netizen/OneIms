@@ -7,9 +7,9 @@ import org.junit.Test
 class OneKukuCoreComponentTest {
 
     @Test
-    fun adbStartCommand_defaultsToBridgePackage() {
+    fun adbStartCommand_defaultsToHostPackage() {
         val cmd = OneKukuCoreComponent.adbStartCommand(context = null)
-        assertTrue(cmd.contains(OneKukuCoreComponent.BRIDGE_PACKAGE))
+        assertTrue(cmd.contains(OneKukuCoreComponent.HOST_PACKAGE))
         assertTrue(cmd.contains("app_process"))
         assertTrue(cmd.contains("BridgeService"))
         assertTrue(cmd.startsWith("adb shell "))
@@ -19,6 +19,7 @@ class OneKukuCoreComponentTest {
     fun bridgeBootShellCommand_doesNotRequireStartShFile() {
         val cmd = OneKukuCoreComponent.bridgeBootShellCommand()
         assertTrue(cmd.contains("pm path"))
+        assertTrue(cmd.contains(OneKukuCoreComponent.HOST_PACKAGE))
         assertTrue(cmd.contains("app_process"))
         assertTrue(cmd.contains("OneBridge_started"))
         assertTrue(!cmd.contains(" exec "))
@@ -26,11 +27,12 @@ class OneKukuCoreComponentTest {
     }
 
     @Test
-    fun candidatePackages_onlyBridgeAfterPhase3() {
+    fun candidatePackages_hostFirstAfterPhase4() {
         assertEquals(
-            listOf(OneKukuCoreComponent.BRIDGE_PACKAGE),
-            OneKukuCoreComponent.CANDIDATE_PACKAGES,
+            OneKukuCoreComponent.HOST_PACKAGE,
+            OneKukuCoreComponent.CANDIDATE_PACKAGES.first(),
         )
+        assertTrue(OneKukuCoreComponent.CANDIDATE_PACKAGES.contains("com.oneims.bridge"))
     }
 
     @Test

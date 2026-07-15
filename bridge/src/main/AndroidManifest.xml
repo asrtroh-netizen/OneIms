@@ -1,34 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
-
-    <queries>
-        <package android:name="com.oneims.app" />
-    </queries>
-
-    <application
-        android:name=".BridgeApp"
-        android:allowBackup="false"
-        android:icon="@android:drawable/ic_lock_lock"
-        android:label="@string/app_name"
-        android:supportsRtl="true"
-        android:theme="@android:style/Theme.DeviceDefault.Light.DarkActionBar"
-        tools:ignore="GoogleAppIndexingWarning">
-
-        <activity
-            android:name=".BridgeStatusActivity"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-
-        <!-- 供 shell 进程回传 binder（仅 shell/root 写入） -->
-        <provider
-            android:name=".BridgeLocalProvider"
-            android:authorities="com.oneims.bridge.local"
-            android:exported="true"
-            tools:ignore="ExportedContentProvider" />
-    </application>
-</manifest>
+<!--
+  Phase4：OneBridge 以 library 打进主 App。
+  shell 入口仍是 com.oneims.bridge.server.BridgeService（CLASSPATH=主 APK）。
+  不再作为独立 application 安装。
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" />

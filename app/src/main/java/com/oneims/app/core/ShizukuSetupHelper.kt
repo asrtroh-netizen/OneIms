@@ -42,8 +42,8 @@ object ShizukuSetupHelper {
         true
     }.getOrDefault(false)
 
-    /** @deprecated 使用 [OneKukuCoreComponent.BRIDGE_PACKAGE] */
-    const val SHIZUKU_PKG = OneKukuCoreComponent.BRIDGE_PACKAGE
+    /** @deprecated 使用 [OneKukuCoreComponent.HOST_PACKAGE] */
+    const val SHIZUKU_PKG = OneKukuCoreComponent.HOST_PACKAGE
 
     /** 是否已安装 OneBridge 通道。 */
     fun isShizukuInstalled(context: Context): Boolean =

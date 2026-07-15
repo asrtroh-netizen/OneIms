@@ -17,15 +17,22 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 /**
- * OneKuku「通道」安装与就绪探测。
+ * OneKuku「通道」就绪探测与拉起命令。
  *
- * Phase3：只认 [BRIDGE_PACKAGE]（OneBridge）。不再安装/探测换皮 Core 或上游 Shizuku。
- * 用户路径：**不跳应用商店**；内置 `oneims-bridge.apk` + 无线调试 / 内嵌 ADB 拉起。
+ * Phase4：OneBridge starter 以 library 打进主 App（[HOST_PACKAGE]），
+ * **不再要求安装**独立 `com.oneims.bridge` APK。有 Wi‑Fi 时用无线调试配对拉起。
  */
 object OneKukuCoreComponent {
 
-    /** OneBridge 自研通道（唯一产品路径）。 */
-    const val BRIDGE_PACKAGE: String = "com.oneims.bridge"
+    /** 宿主包：通道类已内嵌于此（Phase4）。 */
+    const val HOST_PACKAGE: String = "com.oneims.app"
+
+    /**
+     * 历史独立桥包名。Phase4 起不再作为安装目标；
+     * [bridgeBootShellCommand] / 解析优先用宿主包。
+     */
+    @Deprecated("Phase4 embedded into host app", ReplaceWith("HOST_PACKAGE"))
+    const val BRIDGE_PACKAGE: String = HOST_PACKAGE
 
     /** @deprecated Phase3 已卸；保留常量避免旧引用编译炸掉。 */
     @Deprecated("Phase3 removed branded core path")
@@ -35,10 +42,11 @@ object OneKukuCoreComponent {
     @Deprecated("Phase3 removed upstream Shizuku package path")
     const val LEGACY_CORE_PACKAGE: String = "moe.shizuku.privileged.api"
 
-    /** @deprecated 使用 [resolveCorePackage]；指向桥包。 */
-    const val CORE_PACKAGE: String = BRIDGE_PACKAGE
+    /** @deprecated 使用 [resolveCorePackage]；指向宿主包。 */
+    const val CORE_PACKAGE: String = HOST_PACKAGE
 
-    val CANDIDATE_PACKAGES: List<String> = listOf(BRIDGE_PACKAGE)
+    /** 拉起时优先宿主包；旧独立桥包仅作兼容探测。 */
+    val CANDIDATE_PACKAGES: List<String> = listOf(HOST_PACKAGE, "com.oneims.bridge")
 
     /** 内置 OneBridge APK。 */
     const val BUNDLED_BRIDGE_ASSET_NAME: String = "oneims-bridge.apk"
@@ -83,20 +91,30 @@ object OneKukuCoreComponent {
         else -> Status.MISSING
     }
 
-    /** 已安装的通道包（仅 OneBridge）。 */
+    /**
+     * 拉起 shell 时应使用的包名（含 BridgeService 的 APK）。
+     * Phase4：始终为主 App；若用户仍残留旧 `com.oneims.bridge` 也可作次选。
+     */
     fun resolveCorePackage(context: Context): String? {
-        val pm = context.applicationContext.packageManager
+        val app = context.applicationContext
+        val host = app.packageName.ifBlank { HOST_PACKAGE }
+        val pm = app.packageManager
+        if (runCatching { pm.getPackageInfo(host, 0); true }.getOrDefault(false)) {
+            return host
+        }
         for (pkg in CANDIDATE_PACKAGES) {
+            if (pkg == host) continue
             val ok = runCatching {
                 pm.getPackageInfo(pkg, 0)
                 true
             }.getOrDefault(false)
             if (ok) return pkg
         }
-        return null
+        return host
     }
 
-    fun isInstalled(context: Context): Boolean = resolveCorePackage(context) != null
+    /** Phase4：通道已内嵌主包，视为始终「已安装」。 */
+    fun isInstalled(context: Context): Boolean = true
 
     @Deprecated("Phase3: branded core path removed")
     fun isBrandedCoreInstalled(context: Context): Boolean = false
@@ -116,17 +134,15 @@ object OneKukuCoreComponent {
     }
 
     fun adbStartCommand(context: Context? = null): String {
-        val pkg = context?.let { resolveCorePackage(it) }
-            ?: BRIDGE_PACKAGE
+        val pkg = context?.let { resolveCorePackage(it) } ?: HOST_PACKAGE
         return "adb shell ${bridgeBootShellCommand(pkg)}"
     }
 
     /**
-     * 不依赖 `Android/data/.../start.sh` 是否已写出——装完通道即可拉起。
-     * 与 bridge 模块 `assets/start.sh` 语义对齐；**不用 exec**，后台拉起后 echo 标记，
-     * 避免内嵌 ADB shell 流被 app_process 占死导致假绿/挂死。
+     * 从指定包 APK 用 app_process 拉起 [com.oneims.bridge.server.BridgeService]。
+     * Phase4：默认宿主包（类已打进主 APK）；**不用 exec**，后台拉起后 echo 标记。
      */
-    fun bridgeBootShellCommand(packageName: String = BRIDGE_PACKAGE): String =
+    fun bridgeBootShellCommand(packageName: String = HOST_PACKAGE): String =
         "pkill -f onebridge_server 2>/dev/null || true; " +
             "APK=\$(pm path $packageName 2>/dev/null | head -n 1 | cut -d: -f2 | tr -d '\\r'); " +
             "if [ -z \"\$APK\" ]; then echo OneBridge_missing; exit 1; fi; " +
@@ -139,24 +155,12 @@ object OneKukuCoreComponent {
         context.getString(R.string.onekuku_adb_guide_script, adbStartCommand(context))
 
     /**
-     * 一键准备：缺组件优先装内置桥包；无内置则 [NEEDS_DOWNLOAD]。
-     * 已装则开无线调试并复制 ADB 启动命令。**绝不**跳转应用市场。
+     * 一键准备（Phase4）：通道已内嵌，只打开无线调试设置，供通知栏填六位码。
+     * **不再**触发安装独立桥包 / 下载 APK。
      */
     fun prepare(context: Context): PrepareResult {
         val app = context.applicationContext
-        if (!isInstalled(app)) {
-            if (hasBundledApk(app) && installBundledApk(app)) {
-                return PrepareResult.INSTALLING_BUNDLED
-            }
-            return PrepareResult.NEEDS_DOWNLOAD
-        }
-        val bridge: OneKukuAdbActivationBridge = EmbeddedKadbActivationBridge
-        val opened = bridge.openWirelessDebugging(app)
-        ShizukuSetupHelper.copyToClipboard(
-            app,
-            app.getString(R.string.app_name),
-            bridge.buildGuideScript(app),
-        )
+        val opened = EmbeddedKadbActivationBridge.openWirelessDebugging(app)
         return if (opened) PrepareResult.OPENED_ADB_GUIDE else PrepareResult.FAILED
     }
 

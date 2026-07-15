@@ -29,10 +29,7 @@
         android:name="android.hardware.telephony"
         android:required="false" />
 
-    <!--
-      Android 11+ 包可见性：不声明则 getPackageInfo(com.oneims.bridge) 恒失败，
-      表现为「已装通道仍弹还没装」死循环。
-    -->
+    <!-- Phase4：通道内嵌主包；仍声明旧桥包以便提示卸载残留。 -->
     <queries>
         <package android:name="com.oneims.bridge" />
         <intent>
@@ -160,6 +157,15 @@
                 <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
                 <action android:name="android.intent.action.USER_UNLOCKED" />
                 <action android:name="android.intent.action.SIM_STATE_CHANGED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Shizuku 式：通知栏 RemoteInput 提交无线调试六位码 -->
+        <receiver
+            android:name=".core.WirelessPairingCodeReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.oneims.app.action.SUBMIT_WIRELESS_PAIRING_CODE" />
             </intent-filter>
         </receiver>
 
