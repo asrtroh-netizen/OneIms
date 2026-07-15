@@ -78,6 +78,14 @@ object OneKukuEmbeddedAdbActivator {
 
             val code = pairingCode?.trim().orEmpty()
 
+            // Pixel 等机型：只开个人热点、未以 STA 连上 Wi‑Fi 时 tls_port=0，mDNS 扫不到端口。
+            // 这时弹「要配对码」会误导——系统根本出不了可用的无线调试端口。
+            if (ports.pairPort == null && ports.connectPort == null &&
+                !OneKukuAdbMdns.isWifiClientConnected(app)
+            ) {
+                return@withContext Outcome.Failed("wifi_sta_required")
+            }
+
             // 系统已弹出配对页（能扫到 pair 端口）但用户还没填码 → 立刻要码，别先瞎连。
             if (code.length < 6 && ports.pairPort != null) {
                 return@withContext Outcome.NeedPairingCode

@@ -475,18 +475,22 @@ private fun AppRoot(
                     }
                 }
                 is OneKukuEmbeddedAdbActivator.Outcome.Failed -> {
-                    // 保留弹窗；只复制指引，禁止自动跳设置把输入框盖掉
-                    ShizukuSetupHelper.copyToClipboard(
-                        context,
-                        context.getString(R.string.app_name),
-                        OneKukuCoreComponent.guidedActivationScript(context),
-                    )
-                    publish(
-                        context.getString(
-                            R.string.onekuku_msg_embedded_adb_fallback_keep_dialog,
-                            outcome.reason,
-                        ),
-                    )
+                    if (outcome.reason == "wifi_sta_required") {
+                        publish(context.getString(R.string.onekuku_msg_wifi_sta_required))
+                    } else {
+                        // 保留弹窗；只复制指引，禁止自动跳设置把输入框盖掉
+                        ShizukuSetupHelper.copyToClipboard(
+                            context,
+                            context.getString(R.string.app_name),
+                            OneKukuCoreComponent.guidedActivationScript(context),
+                        )
+                        publish(
+                            context.getString(
+                                R.string.onekuku_msg_embedded_adb_fallback_keep_dialog,
+                                outcome.reason,
+                            ),
+                        )
+                    }
                 }
             }
         }
@@ -540,10 +544,14 @@ private fun AppRoot(
                     }
                     is OneKukuEmbeddedAdbActivator.Outcome.Failed ->
                         publish(
-                            context.getString(
-                                R.string.onekuku_msg_embedded_adb_fallback,
-                                outcome.reason,
-                            ),
+                            if (outcome.reason == "wifi_sta_required") {
+                                context.getString(R.string.onekuku_msg_wifi_sta_required)
+                            } else {
+                                context.getString(
+                                    R.string.onekuku_msg_embedded_adb_fallback,
+                                    outcome.reason,
+                                )
+                            },
                         )
                 }
             } finally {

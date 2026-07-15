@@ -29,6 +29,20 @@ object OneKukuAdbMdns {
     private const val TYPE_CONNECT = "_adb-tls-connect._tcp"
     private const val DISCOVER_TIMEOUT_MS = 6_000L
 
+    /** 手机是否作为 Wi‑Fi 客户端已关联 AP（不含仅开 SoftAP/个人热点）。 */
+    @Suppress("DEPRECATION")
+    fun isWifiClientConnected(context: Context): Boolean {
+        val wifi = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as? WifiManager
+            ?: return false
+        if (!wifi.isWifiEnabled) return false
+        val info = wifi.connectionInfo ?: return false
+        if (info.networkId < 0) return false
+        val ssid = info.ssid?.trim().orEmpty()
+        return ssid.isNotEmpty() &&
+            !ssid.equals("<unknown ssid>", ignoreCase = true) &&
+            ssid != "\"\""
+    }
+
     suspend fun discover(context: Context): Ports {
         val app = context.applicationContext
         val nsd = app.getSystemService(Context.NSD_SERVICE) as? NsdManager
