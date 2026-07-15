@@ -31,6 +31,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -315,9 +316,10 @@ private fun AppRoot(
     var bootUiHint by remember {
         mutableStateOf(OneKukuBootRestoreStore.readHint(context))
     }
+    // 通知栏填码在 Receiver 里改相位；必须用 StateFlow 收集，不能只靠 activationEpoch。
+    val activationPhase by OneKukuActivationUi.phaseState.collectAsState()
     var activationEpoch by remember { mutableIntStateOf(0) }
     val bootForceInactive = bootUiHint == OneKukuBootUiHint.NEEDS_ACTIVATION
-    val activationPhase = remember(activationEpoch) { OneKukuActivationUi.phase }
     val oneKukuState = OneKukuCardPolicy.fromActivationPhase(activationPhase)
         ?: OneKukuCardPolicy.resolve(
             serviceReady = shizukuRunning && shizukuGranted && !bootForceInactive,
@@ -365,6 +367,32 @@ private fun AppRoot(
             if (latest != bootUiHint) {
                 bootUiHint = latest
             }
+        }
+    }
+
+    // 通知栏配对成功后：同步 binder 状态，清掉「需要激活」提示，避免卡在激活中。
+    LaunchedEffect(activationPhase) {
+        when (activationPhase) {
+            OneKukuActivationPhase.ACTIVE,
+            OneKukuActivationPhase.IDLE,
+            -> {
+                shizukuRunning = OneKukuManager.isRunning()
+                shizukuGranted = OneKukuManager.isGranted()
+                if (shizukuRunning && shizukuGranted &&
+                    bootUiHint == OneKukuBootUiHint.NEEDS_ACTIVATION
+                ) {
+                    OneKukuBootRestoreStore.writeHint(
+                        context,
+                        OneKukuBootUiHint.READY_SLEEPING,
+                    )
+                    bootUiHint = OneKukuBootUiHint.READY_SLEEPING
+                }
+            }
+            OneKukuActivationPhase.FAILED -> {
+                shizukuRunning = OneKukuManager.isRunning()
+                shizukuGranted = OneKukuManager.isGranted()
+            }
+            else -> Unit
         }
     }
 

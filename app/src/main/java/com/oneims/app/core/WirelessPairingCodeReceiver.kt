@@ -59,6 +59,8 @@ class WirelessPairingCodeReceiver : BroadcastReceiver() {
                                 Intent(ACTION_CONTINUE_RESTORE).setPackage(app.packageName),
                             )
                         }
+                        // 管道相位清回 IDLE，首页改走 resolve（就绪/休眠），避免一直显示激活中。
+                        OneKukuActivationUi.setPhase(OneKukuActivationPhase.IDLE)
                         bringAppToForeground(app)
                     }
                     is OneKukuMiniAdbClient.Outcome.NeedPairingCode -> {
