@@ -8,7 +8,7 @@
 ## 实现
 
 - `has_paired_once`（兼容：已有 ADB 身份密钥即视作配过）
-- 已配对：等 Wi‑Fi ≤20s + 最多 3 轮 discover/connect/5555/connectTls
+- 已配对：等 Wi‑Fi（前台约 12s / 开机编排约 20s）+ 优先 `:5555` 快连 + 最多 2 轮短 mDNS/connect
 - 未配对：单次直连失败即 `NeedPairingCode`
 - 成功拉起后 `markPairedOnce`
 

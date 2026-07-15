@@ -58,10 +58,13 @@ object OneKukuEmbeddedAdbActivator {
     /** pair() 在部分机型上会无限阻塞；独立线程 + 超时，避免通知栏「配对中」卡死。 */
     private const val PAIR_TIMEOUT_MS = 12_000L
     private const val POST_PAIR_DISCOVER_MS = 3_000L
-    /** 已配对设备：等系统连上已记住的 Wi‑Fi。 */
-    private const val PAIRED_WIFI_WAIT_MS = 20_000L
-    private const val PAIRED_CONNECT_RETRIES = 3
-    private const val PAIRED_RETRY_GAP_MS = 2_000L
+    /** 已配对设备：等系统连上已记住的 Wi‑Fi（前台重开通常已在线，很少走到上限）。 */
+    private const val PAIRED_WIFI_WAIT_MS = 12_000L
+    private const val PAIRED_CONNECT_RETRIES = 2
+    private const val PAIRED_RETRY_GAP_MS = 1_000L
+    /** 已配对首轮 mDNS：不必空等满 6s；端口晚到靠第 2 轮补扫。 */
+    private const val PAIRED_DISCOVER_MS = 3_000L
+    private const val CONNECT_TLS_TIMEOUT_MS = 4_000L
     private val activateMutex = Mutex()
 
     sealed class Outcome {
@@ -144,7 +147,7 @@ object OneKukuEmbeddedAdbActivator {
             val code = pairingCode?.trim().orEmpty()
             val pairedBefore = hasPairedOnce(app)
 
-            // Wi‑Fi 前置：已配对无码时先等 STA，再扫 mDNS，避免空扫 6s 才发现没网。
+            // Wi‑Fi 前置：已配对无码时先等 STA，再扫 mDNS，避免空扫才发现没网。
             if (pairedBefore && code.length < 6 &&
                 !OneKukuAdbMdns.isWifiClientConnected(app)
             ) {
@@ -154,7 +157,51 @@ object OneKukuEmbeddedAdbActivator {
                 }
             }
 
-            var ports = OneKukuAdbMdns.discover(app)
+            // 已配对快路径：上次 tcpip:5555 若仍在，跳过首轮 mDNS（杀进程重开常见）。
+            if (pairedBefore && code.length < 6 &&
+                OneKukuAdbMdns.isWifiClientConnected(app)
+            ) {
+                val fast5555 = runCatching {
+                    manager.connect(HOST, PERSIST_PORT)
+                    true
+                }.getOrElse {
+                    Log.i(TAG, "fast :$PERSIST_PORT miss: ${it.message}")
+                    false
+                }
+                if (fast5555) {
+                    Log.i(TAG, "fast path :$PERSIST_PORT connected, skip first mDNS")
+                    val persisted = persistTcpip5555(manager)
+                    Log.i(TAG, "tcpip5555 persisted=$persisted")
+                    val startPkg = OneKukuCoreComponent.resolveCorePackage(app)
+                        ?: OneKukuCoreComponent.HOST_PACKAGE
+                    val startCmd = OneKukuCoreComponent.bridgeBootShellCommand(startPkg) + "\n"
+                    val boot = runCatching {
+                        writeShellAndAwaitBinder(manager, startCmd)
+                    }.getOrElse {
+                        Log.w(TAG, "shell/binder failed", it)
+                        "start_failed"
+                    }
+                    if (boot == "ok") {
+                        markPairedOnce(app)
+                        val granted = grantWriteSecureSettings(manager, app.packageName)
+                        val wifiOn = ShizukuSetupHelper.tryEnableAdbWifi(app)
+                        Log.i(TAG, "post-boot grantSecure=$granted adbWifi=$wifiOn")
+                        return@withContext Outcome.Success(
+                            if (persisted) "core_running_tcpip" else "core_running",
+                        )
+                    }
+                    Log.w(TAG, "fast :$PERSIST_PORT shell failed ($boot), fall through mDNS")
+                }
+            }
+
+            var ports = OneKukuAdbMdns.discover(
+                app,
+                timeoutMs = if (pairedBefore && code.length < 6) {
+                    PAIRED_DISCOVER_MS
+                } else {
+                    6_000L
+                },
+            )
             Log.i(
                 TAG,
                 "mdns pair=${ports.pairPort} connect=${ports.connectPort} " +
@@ -272,6 +319,15 @@ object OneKukuEmbeddedAdbActivator {
         app: Context,
         connectPort: Int?,
     ): Boolean {
+        // 已配对场景优先固定口，减少「先等 mDNS 口失败再试 5555」的体感。
+        val on5555First = runCatching {
+            manager.connect(HOST, PERSIST_PORT)
+            true
+        }.getOrElse {
+            Log.w(TAG, "connect :$PERSIST_PORT failed", it)
+            false
+        }
+        if (on5555First) return true
         if (connectPort != null) {
             val ok = runCatching {
                 manager.connect(HOST, connectPort)
@@ -282,16 +338,8 @@ object OneKukuEmbeddedAdbActivator {
             }
             if (ok) return true
         }
-        val on5555 = runCatching {
-            manager.connect(HOST, PERSIST_PORT)
-            true
-        }.getOrElse {
-            Log.w(TAG, "connect :$PERSIST_PORT failed", it)
-            false
-        }
-        if (on5555) return true
         return runCatching {
-            manager.connectTls(app, 8_000L)
+            manager.connectTls(app, CONNECT_TLS_TIMEOUT_MS)
             true
         }.getOrElse {
             Log.w(TAG, "connectTls failed", it)

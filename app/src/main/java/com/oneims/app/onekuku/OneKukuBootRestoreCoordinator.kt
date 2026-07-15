@@ -37,12 +37,17 @@ import kotlinx.coroutines.withContext
 object OneKukuBootRestoreCoordinator {
     private const val TAG = "OneIMS-OneKuku"
     private const val STABLE_WAIT_MS = 2_000L
-    /** SIM 已稳定后再短等，给 telephony/IMS 收口；原 20s 体感过慢。 */
-    private const val POST_READY_DELAY_MS = 5_000L
+    /** SIM 已稳定后再短等，给 telephony/IMS 收口；5s 仍偏慢，压到 2.5s。 */
+    private const val POST_READY_DELAY_MS = 2_500L
     private const val SIM_POLL_MS = 1_500L
     private const val SIM_WAIT_MAX_MS = 90_000L
-    /** 开机已配对：先等系统连上记住的 Wi‑Fi，再静默开无线调试。 */
-    private const val BOOT_WIFI_WAIT_MS = 60_000L
+    /**
+     * 开机已配对：等系统连上记住的 Wi‑Fi。
+     * 60s 会把「激活中」钉很久；超时改回 WAITING_WIFI 由前台/下次编排再试。
+     */
+    private const val BOOT_WIFI_WAIT_MS = 20_000L
+    /** 直连失败后刚打开无线调试，短等端口起来即可，不必空等 8s。 */
+    private const val POST_WIRELESS_ENABLE_MS = 2_500L
     private const val CHANNEL = "oneims_boot_restore"
     private const val NOTIF_ID = 1002
 
@@ -372,7 +377,7 @@ object OneKukuBootRestoreCoordinator {
                     } else {
                         ShizukuSetupHelper.tryEnableAdbWifi(context)
                     }
-                    delay(8_000L)
+                    delay(POST_WIRELESS_ENABLE_MS)
                     when (
                         val retry = OneKukuMiniAdbClient.activateExistingOrNeedPair(context)
                     ) {
