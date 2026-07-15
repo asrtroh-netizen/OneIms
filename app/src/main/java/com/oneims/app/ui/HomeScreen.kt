@@ -68,6 +68,7 @@ fun HomeScreen(
                 oneKukuState = state.oneKukuState,
                 onPrimaryAction = {
                     when (state.oneKukuState) {
+                        // 未激活/失败：先弹出图四三步说明，确定后再激活并打开无线调试。
                         OneKukuCardState.INACTIVE,
                         OneKukuCardState.FAILED,
                         -> openDialog = HomeToolDialog.WirelessGuide
@@ -179,17 +180,19 @@ fun HomeScreen(
         HomeToolDialog.WirelessGuide -> {
             AlertDialog(
                 onDismissRequest = { openDialog = null },
-                title = { Text(stringResource(R.string.home_adb_wireless_guide_title)) },
+                title = { Text(stringResource(R.string.home_adb_prep_title)) },
                 text = {
                     Text(
                         text = stringResource(R.string.home_adb_prep_steps),
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodyLarge,
                     )
                 },
                 confirmButton = {
                     TextButton(
                         onClick = {
                             openDialog = null
+                            // 先跳无线调试，再走激活（挂通知 / 配对）。
+                            actions.onOpenWirelessDebugging()
                             actions.onActivateOneKuku()
                         },
                     ) {
