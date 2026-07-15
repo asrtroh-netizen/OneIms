@@ -349,7 +349,8 @@ object OneKukuBootRestoreCoordinator {
             when (val wifi = ShizukuSetupHelper.ensureAdbWifiEnabled(context)) {
                 ShizukuSetupHelper.AdbWifiEnsureResult.ENABLED_NOW -> {
                     Log.i(TAG, "boot: adb_wifi enabled now, short wait")
-                    delay(1_200L)
+                    // 无线调试 TLS 口起来比 Secure Settings 落盘慢；略加长降低误判 NeedPairingCode。
+                    delay(2_400L)
                 }
                 ShizukuSetupHelper.AdbWifiEnsureResult.ALREADY_ON ->
                     Log.i(TAG, "boot: adb_wifi already on, skip wait")

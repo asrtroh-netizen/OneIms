@@ -19,7 +19,7 @@ import com.oneims.app.core.formatCarrierShortName
 import com.oneims.app.model.SimInfo
 
 /**
- * 运营商推荐方案卡：原功能页「移动网络」首卡，现供首页复用。
+ * 运营商推荐方案卡：无区块标题，直接展示方案内容。
  */
 @Composable
 fun CarrierRecommendCard(
@@ -29,10 +29,7 @@ fun CarrierRecommendCard(
     applying: Boolean,
     onApplyRecommended: () -> Unit,
 ) {
-    SectionBlock(
-        title = stringResource(R.string.mobile_network_title),
-        description = stringResource(R.string.mobile_network_subtitle),
-    ) {
+    SettingsGroup {
         if (sims.isEmpty()) {
             SettingsActionRow(
                 icon = Icons.Filled.AccountBox,
