@@ -39,10 +39,10 @@
     <string name="onekuku_core_download_title">OneKuku core component</string>
     <string name="onekuku_core_download_desc">Downloading OneKuku core component</string>
     <string name="onekuku_msg_adb_guide_ready">Opened wireless debugging and copied the ADB start guide; start the core then return to authorize</string>
-    <string name="onekuku_msg_installing_bundled_core">Installing bundled OneKuku core; please confirm</string>
+    <string name="onekuku_msg_installing_bundled_core">Installing bundled OneKuku channel; please confirm</string>
     <string name="onekuku_msg_downloading_core">Resolving and downloading OneKuku core…</string>
     <string name="onekuku_msg_core_download_started">Started downloading OneKuku core; install when finished</string>
-    <string name="onekuku_msg_core_download_failed">Core download failed. Check network, or place onekuku-core.apk in assets and rebuild</string>
+    <string name="onekuku_msg_core_download_failed">Built-in OneKuku channel (oneims-bridge.apk) missing. Rebuild with assets, or install transitional core; upstream packages are not downloaded</string>
     <string name="onekuku_msg_embedded_adb_starting">Starting OneKuku core via embedded ADB…</string>
     <string name="onekuku_msg_embedded_adb_ok">Embedded ADB issued start; confirm core is ready then authorize</string>
     <string name="onekuku_msg_embedded_adb_fallback">Embedded ADB failed (%1$s); fell back to wireless-debug + command guide</string>
@@ -53,9 +53,9 @@
     <string name="onekuku_adb_pair_hint">6-digit code</string>
     <string name="onekuku_adb_pair_confirm">Pair and start</string>
     <string name="onekuku_adb_pair_open_wireless">Open wireless debugging</string>
-    <string name="onekuku_msg_core_missing_hint">OneKuku core is not installed yet. Install the bundled OneKuku core (not an upstream channel app).</string>
-    <string name="onekuku_core_missing_title">OneKuku core not installed</string>
-    <string name="onekuku_core_missing_body">The 6-digit pairing dialog appears only after the core is installed. Finish the system installer prompt first, then tap Start core again.</string>
+    <string name="onekuku_msg_core_missing_hint">OneKuku channel is not installed yet. Install the bundled OneKuku channel (oneims-bridge, not an upstream full privilege app).</string>
+    <string name="onekuku_core_missing_title">OneKuku channel not installed</string>
+    <string name="onekuku_core_missing_body">The 6-digit pairing dialog appears only after the channel is installed. Finish the system installer prompt first, then tap Start core again.</string>
     <string name="onekuku_core_missing_install">Continue install</string>
 
     <!-- Features -->

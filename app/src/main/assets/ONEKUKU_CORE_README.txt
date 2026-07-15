@@ -1,14 +1,22 @@
-# OneKuku 核心组件（内置）
+# OneKuku / OneBridge 内置 APK
 
-将**换皮后的**核心服务 APK 命名为 `onekuku-core.apk`，放到本目录。
+## 主路径（优先）
+
+将 OneBridge Debug/Release APK 命名为 `oneims-bridge.apk`，放到本目录。
 
 硬性要求：
 
+- `applicationId` = `com.oneims.bridge`
+- 构建模块：仓内 `:bridge`
+- 变更说明：`docs/changes/2026-07-15-bundle-oneims-bridge-apk.md`
+
+未装桥时，`prepare()` / 「启动核心」会优先弹出安装此包。
+
+## 过渡回落（可选）
+
+换皮核心仍可放 `onekuku-core.apk`：
+
 - `applicationId` = `com.oneims.onekuku.core`
-- 应用显示名 = OneKuku 核心（不得出现上游商店品牌名）
-- 构建说明：`docs/changes/2026-07-14-onekuku-branded-core-package.md`
+- 仅当 `oneims-bridge.apk` 缺失时才会被内置安装逻辑使用
 
 禁止：把上游 `moe.shizuku.privileged.api` 原包改名冒充换皮核心。
-
-若未放置该文件：仅当设备已安装换皮包（或过渡期兼容包）时可激活；
-**不会**再自动从上游公开仓库下载充数。

@@ -159,9 +159,10 @@ interface PrivilegeBridge {
 |---|---|
 | 模块 | OneIMS 仓内 `:bridge`（`applicationId=com.oneims.bridge`） |
 | 产物 | `bridge-debug.apk` + 运行时写出的 `start.sh` |
-| 状态 | **脚手架已落地**（2026-07-15）；真机 binder 联调待验 |
+| 状态 | **脚手架 + assets 内置已落地**（2026-07-15）；真机 binder 联调待验 |
 | 客户端 | `PrivilegeBridges` 优先 OneBridge，回落 Shizuku |
 | start 指向 | `CANDIDATE_PACKAGES` 首项已是 `com.oneims.bridge` |
+| 内置 APK | `app/src/main/assets/oneims-bridge.apk`（安装优先；`onekuku-core.apk` 过渡回落） |
 
 ### Phase 2 · OneIMS 切换
 

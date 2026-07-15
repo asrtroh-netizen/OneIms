@@ -46,7 +46,23 @@ object OneKukuCoreComponent {
         LEGACY_CORE_PACKAGE,
     )
 
-    const val BUNDLED_ASSET_NAME: String = "onekuku-core.apk"
+    /** 内置 OneBridge APK（主路径；未装桥时优先安装）。 */
+    const val BUNDLED_BRIDGE_ASSET_NAME: String = "oneims-bridge.apk"
+
+    /**
+     * 内置换皮 Core APK（过渡回落）。
+     * 仅当 [BUNDLED_BRIDGE_ASSET_NAME] 缺失时才会被 [installBundledApk] 使用。
+     */
+    const val BUNDLED_CORE_ASSET_NAME: String = "onekuku-core.apk"
+
+    /** @deprecated 使用 [BUNDLED_BRIDGE_ASSET_NAME]；保留以免旧引用断裂。 */
+    const val BUNDLED_ASSET_NAME: String = BUNDLED_BRIDGE_ASSET_NAME
+
+    /** 安装探测顺序：桥优先，换皮 Core 回落。 */
+    val BUNDLED_ASSET_CANDIDATES: List<String> = listOf(
+        BUNDLED_BRIDGE_ASSET_NAME,
+        BUNDLED_CORE_ASSET_NAME,
+    )
 
     private const val CORE_REPO_OWNER = "asrtroh-netizen"
     private const val CORE_REPO_NAME = "OneIms"
@@ -113,9 +129,19 @@ object OneKukuCoreComponent {
         resolveCorePackage(context) == BRANDED_CORE_PACKAGE
 
     fun hasBundledApk(context: Context): Boolean =
-        runCatching {
-            context.assets.open(BUNDLED_ASSET_NAME).use { true }
-        }.getOrDefault(false)
+        resolveBundledAssetName(context) != null
+
+    /** 返回 assets 中可用的内置 APK 文件名（桥优先）。 */
+    fun resolveBundledAssetName(context: Context): String? {
+        val assets = context.applicationContext.assets
+        for (name in BUNDLED_ASSET_CANDIDATES) {
+            val ok = runCatching {
+                assets.open(name).use { true }
+            }.getOrDefault(false)
+            if (ok) return name
+        }
+        return null
+    }
 
     fun adbStartCommand(context: Context? = null): String {
         val pkg = context?.let { resolveCorePackage(it) }
@@ -153,10 +179,11 @@ object OneKukuCoreComponent {
 
     fun installBundledApk(context: Context): Boolean {
         val app = context.applicationContext
+        val assetName = resolveBundledAssetName(app) ?: return false
         return runCatching {
             val dir = File(app.cacheDir, "apk").apply { mkdirs() }
-            val out = File(dir, BUNDLED_ASSET_NAME)
-            app.assets.open(BUNDLED_ASSET_NAME).use { input ->
+            val out = File(dir, assetName)
+            app.assets.open(assetName).use { input ->
                 out.outputStream().use { output -> input.copyTo(output) }
             }
             val uri = FileProvider.getUriForFile(

@@ -11,6 +11,7 @@
 /bridge/build/
 *.apk
 !app/src/main/assets/onekuku-core.apk
+!app/src/main/assets/oneims-bridge.apk
 .cursor/
 .kotlin/
 .recovery_extract/

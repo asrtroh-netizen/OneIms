@@ -27,7 +27,19 @@ class OneKukuCoreComponentTest {
     }
 
     @Test
-    fun bundledAssetName_isStableContract() {
-        assertEquals("onekuku-core.apk", OneKukuCoreComponent.BUNDLED_ASSET_NAME)
+    fun bundledAssetCandidates_preferBridgeThenCore() {
+        assertEquals(
+            listOf(
+                OneKukuCoreComponent.BUNDLED_BRIDGE_ASSET_NAME,
+                OneKukuCoreComponent.BUNDLED_CORE_ASSET_NAME,
+            ),
+            OneKukuCoreComponent.BUNDLED_ASSET_CANDIDATES,
+        )
+        assertEquals("oneims-bridge.apk", OneKukuCoreComponent.BUNDLED_BRIDGE_ASSET_NAME)
+        assertEquals("onekuku-core.apk", OneKukuCoreComponent.BUNDLED_CORE_ASSET_NAME)
+        assertEquals(
+            OneKukuCoreComponent.BUNDLED_BRIDGE_ASSET_NAME,
+            OneKukuCoreComponent.BUNDLED_ASSET_NAME,
+        )
     }
 }
