@@ -16,7 +16,7 @@
 
 ### ⬇️ 下载 APK（最新）
 
-**[OneIms 2.1.4 · GitHub Releases](https://github.com/asrtroh-netizen/OneIms/releases/tag/v2.1.4)**
+**[OneIms 2.1.5 · GitHub Releases](https://github.com/asrtroh-netizen/OneIms/releases/tag/v2.1.5)**
 
 > 本仓库 **只提供 README + APK 发布**，**不开放源代码**。  
 > 需要交流 / 反馈请走 Telegram，别来仓库里翻源码啦～
@@ -24,6 +24,12 @@
 </div>
 
 ---
+
+## ✨ What's New · 2.1.5
+
+* ⚡ **划掉后台 / 冷开机重连更快**：已配对优先 `:5555` 快连，压缩空等；杀进程重开约秒级恢复通道
+* 🛡️ **开机 FGS 不再被拒**：恢复服务只在 `BOOT_COMPLETED` 白名单下启动，避免 Background FGS Disallowed
+* 🧹 激活中按钮不再误显示「正在恢复…」
 
 ## ✨ What's New · 2.1.4
 
