@@ -526,7 +526,7 @@
     <string name="onekuku_snapshot_meta_value">卡%1$d · %2$s · hash=%3$s</string>
     <string name="onekuku_restore_no_matching_sim">未找到与快照匹配的 SIM，请确认当前插入的是之前配置过的 SIM</string>
 
-    <string name="onekuku_detail_no_snapshot">暂无恢复快照，请先成功应用一次通话配置</string>
+    <string name="onekuku_detail_no_snapshot">暂无通话配置快照，请先点「保存通话配置」</string>
     <string name="onekuku_detail_waiting_wifi">正在等待连上已保存的 Wi‑Fi，随后自动激活并恢复配置</string>
     <string name="onekuku_boot_channel">通话配置恢复</string>
     <string name="onekuku_boot_channel_desc">重启后自动检查通话配置的低优先级通知</string>

@@ -522,7 +522,7 @@
     <string name="onekuku_snapshot_meta_value">SIM %1$d · %2$s · hash=%3$s</string>
     <string name="onekuku_restore_no_matching_sim">No SIM matched the snapshot. Confirm the previously configured SIM is inserted.</string>
 
-    <string name="onekuku_detail_no_snapshot">No restore snapshot yet. Apply call settings once first.</string>
+    <string name="onekuku_detail_no_snapshot">No call-settings snapshot yet. Tap Save call settings first.</string>
     <string name="onekuku_detail_waiting_wifi">Waiting for a saved Wi‑Fi, then auto-activate and restore</string>
     <string name="onekuku_boot_channel">Call config restore</string>
     <string name="onekuku_boot_channel_desc">Low-priority alerts for post-reboot call config checks</string>

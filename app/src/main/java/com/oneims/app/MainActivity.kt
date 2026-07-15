@@ -350,9 +350,31 @@ private fun AppRoot(
         bootUiHint == OneKukuBootUiHint.WAITING_WIFI ->
             context.getString(R.string.onekuku_detail_waiting_wifi)
         bootUiHint == OneKukuBootUiHint.NO_SNAPSHOT_SLEEPING ||
-            OneKukuBootRestoreStore.shouldShowNoSnapshotNote(context) ->
-            context.getString(R.string.onekuku_detail_no_snapshot)
+            OneKukuBootRestoreStore.shouldShowNoSnapshotNote(context) -> {
+            // 快照已在则不再覆盖显示「暂无」（陈旧 no_snapshot 标记会被保存成功路径清掉）。
+            val hasSnapshot = selectedSubId >= 0 &&
+                OneKukuSnapshotStore.load(context, selectedSubId) != null
+            if (hasSnapshot) {
+                null
+            } else {
+                context.getString(R.string.onekuku_detail_no_snapshot)
+            }
+        }
         else -> null
+    }
+
+    // 已有快照却仍挂着「暂无」提示：异步清掉，避免下轮又被读回。
+    LaunchedEffect(selectedSubId, bootUiHint) {
+        if (selectedSubId < 0) return@LaunchedEffect
+        val hasSnapshot = OneKukuSnapshotStore.load(context, selectedSubId) != null
+        if (!hasSnapshot) return@LaunchedEffect
+        if (OneKukuBootRestoreStore.shouldShowNoSnapshotNote(context)) {
+            OneKukuBootRestoreStore.setNoSnapshotNote(context, false)
+        }
+        if (bootUiHint == OneKukuBootUiHint.NO_SNAPSHOT_SLEEPING) {
+            OneKukuBootRestoreStore.writeHint(context, OneKukuBootUiHint.READY_SLEEPING)
+            bootUiHint = OneKukuBootUiHint.READY_SLEEPING
+        }
     }
 
     LaunchedEffect(Unit) {
@@ -1230,10 +1252,19 @@ private fun AppRoot(
                             val sim = selectedSim
                             if (sim == null) {
                                 publish(context.getString(R.string.onekuku_msg_config_save_need_sim))
-                            } else if (!ensurePrivilegedAccess()) {
-                                Unit
                             } else {
-                                runOperation(context.getString(R.string.onekuku_action_save_config)) {
+                                // 保存快照只写本地 prefs，不要求通道特权。
+                                runOperation(
+                                    label = context.getString(R.string.onekuku_action_save_config),
+                                    onComplete = {
+                                        OneKukuBootRestoreStore.setNoSnapshotNote(context, false)
+                                        OneKukuBootRestoreStore.writeHint(
+                                            context,
+                                            OneKukuBootUiHint.READY_SLEEPING,
+                                        )
+                                        bootUiHint = OneKukuBootUiHint.READY_SLEEPING
+                                    },
+                                ) {
                                     OneKukuSnapshotStore.save(
                                         context,
                                         OneKukuSnapshotFactory.fromCurrent(context, sim),
