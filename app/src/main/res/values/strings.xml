@@ -448,8 +448,9 @@
     <string name="onekuku_action_activate_sub">下拉通知栏输入六位码，无需回到本页</string>
 
     <string name="onekuku_title_ready">OneKuku 已就绪 · 常驻</string>
-    <string name="onekuku_subtitle_ready">通道已激活并保持常驻</string>
-    <string name="onekuku_detail_ready">可随时检查状态；恢复通话请用上方逻辑状态卡</string>
+    <string name="onekuku_nameplate_ready">已就绪 · 常驻</string>
+    <string name="onekuku_subtitle_ready">通道保持常驻，可随时检查状态</string>
+    <string name="onekuku_detail_ready">恢复通话请用下方逻辑状态卡</string>
     <string name="onekuku_subtitle_sleeping">OneKuku 通道已激活，核心按需休眠</string>
     <string name="onekuku_detail_sleeping">用完自动休眠，不常驻不耗电；重启后可尝试自动恢复通话配置</string>
     <string name="onekuku_title_activating">正在激活 OneKuku</string>
@@ -470,7 +471,7 @@
     <string name="onekuku_subtitle_complete">通话配置已恢复</string>
     <string name="onekuku_detail_complete">OneKuku 已完成任务，通道保持常驻</string>
     <string name="onekuku_action_check">检查 OneKuku 状态</string>
-    <string name="onekuku_action_check_sub">只检查通道状态；恢复请用上方逻辑状态卡</string>
+    <string name="onekuku_action_check_sub">只检查通道；恢复请用下方逻辑卡</string>
 
     <string name="onekuku_stage_inactive">未激活</string>
     <string name="onekuku_stage_activate">激活</string>
