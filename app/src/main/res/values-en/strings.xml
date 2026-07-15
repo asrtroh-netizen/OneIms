@@ -578,7 +578,7 @@
     <string name="home_adb_prep_sub">Tap Activate, then enter the 6-digit code in the notification shade—no need to return to the app or install another channel app.</string>
     <string name="home_adb_prep_steps">① Join Wi‑Fi\n② Open Wireless debugging → Pair device with pairing code\n③ Pull down the notification and enter the 6-digit code</string>
     <string name="home_adb_open_wireless">Open wireless debugging</string>
-    <string name="home_adb_open_wireless_sub">Jump to the system pairing page</string>
+    <string name="home_adb_open_wireless_sub">① Join Wi‑Fi\n② Open Wireless debugging → Pair device with pairing code\n③ Pull down the notification and enter the 6-digit code</string>
     <string name="home_adb_open_hotspot">Personal hotspot</string>
     <string name="home_adb_open_hotspot_sub">Only if you need a local network—not the default path</string>
     <string name="home_adb_start_core">Activate OneKuku now</string>

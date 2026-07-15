@@ -160,9 +160,9 @@ fun CapabilitiesScreen(
         item {
             // 五项主能力连排：VoLTE / VoWiFi / VoNR / 5G NR / 5G信号强度调整。
             // 「信号格显示样式」在独家页，与本开关偏好/写入彼此独立。
+            // 去掉区块副说明：标题自明，细则落在各开关 subtitle。
             SectionBlock(
                 title = stringResource(R.string.cap_group_radio_title),
-                description = stringResource(R.string.cap_group_radio_sub),
             ) {
                 SettingsSwitchRow(
                     title = stringResource(R.string.cap_volte),

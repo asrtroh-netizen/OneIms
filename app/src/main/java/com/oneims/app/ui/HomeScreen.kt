@@ -86,19 +86,14 @@ fun HomeScreen(
         }
 
         item {
+            // 区块级长说明已去掉：步骤说明收进「打开无线调试」磁贴，避免标题下再堆一段废话。
             SectionBlock(
                 title = stringResource(R.string.home_adb_prep_title),
-                description = stringResource(R.string.home_adb_prep_sub),
             ) {
                 Column(
                     modifier = Modifier.padding(12.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    Text(
-                        text = stringResource(R.string.home_adb_prep_steps),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
                     ActionGrid(
                         listOf(
                             ActionSpec(
