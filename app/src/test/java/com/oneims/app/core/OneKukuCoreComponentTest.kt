@@ -21,8 +21,9 @@ class OneKukuCoreComponentTest {
         assertTrue(cmd.contains("pm path"))
         assertTrue(cmd.contains(OneKukuCoreComponent.HOST_PACKAGE))
         assertTrue(cmd.contains("app_process"))
-        assertTrue(cmd.contains("OneBridge_started"))
-        assertTrue(cmd.contains("nohup"))
+        assertTrue(cmd.contains(OneKukuCoreComponent.SHELL_BOOT_OK))
+        assertTrue(cmd.contains("printf"))
+        assertTrue(!cmd.contains("nohup"))
         assertTrue(!cmd.contains(" exec "))
         assertTrue(!cmd.contains("Android/data/"))
     }

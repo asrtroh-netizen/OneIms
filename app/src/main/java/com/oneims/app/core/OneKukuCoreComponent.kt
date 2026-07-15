@@ -141,17 +141,24 @@ object OneKukuCoreComponent {
     /**
      * 从指定包 APK 用 app_process 拉起 [com.oneims.bridge.server.BridgeService]。
      * Phase4：默认宿主包（类已打进主 APK）；**不用 exec**，后台拉起后 echo 标记。
+     *
+     * 状态标记必须是「整行输出」专用串，且不能用会嵌在脚本正文里被 PTY 回显误判的旧名。
      */
     fun bridgeBootShellCommand(packageName: String = HOST_PACKAGE): String =
-        // nohup + 子 shell：避免 adb shell: 流关闭时 SIGHUP 干掉 onebridge_server，
-        // 否则 binder 刚投递就被 DeathRecipient 清掉，UI 表现为「仍在等待配对」。
+        // 子 shell 后台拉起；不用 nohup（部分机型无此命令）。标记见 [SHELL_BOOT_OK]/[SHELL_BOOT_MISS]。
         "pkill -f onebridge_server 2>/dev/null || true; " +
             "APK=\$(pm path $packageName 2>/dev/null | head -n 1 | cut -d: -f2 | tr -d '\\r'); " +
-            "if [ -z \"\$APK\" ]; then echo OneBridge_missing; exit 1; fi; " +
+            "if [ -z \"\$APK\" ]; then printf '%s\\n' $SHELL_BOOT_MISS; exit 1; fi; " +
             "export CLASSPATH=\"\$APK\"; " +
-            "(nohup /system/bin/app_process /system/bin --nice-name=onebridge_server " +
+            "(/system/bin/app_process /system/bin --nice-name=onebridge_server " +
             "com.oneims.bridge.server.BridgeService >/dev/null 2>&1 &); " +
-            "echo OneBridge_started"
+            "printf '%s\\n' $SHELL_BOOT_OK"
+
+    /** shell 成功标记（整行）；勿改成会出现在命令正文其它位置的子串。 */
+    const val SHELL_BOOT_OK: String = "__OB_BOOT_OK__"
+
+    /** shell 失败：找不到 APK。 */
+    const val SHELL_BOOT_MISS: String = "__OB_BOOT_MISS__"
 
     fun guidedActivationScript(context: Context): String =
         context.getString(R.string.onekuku_adb_guide_script, adbStartCommand(context))

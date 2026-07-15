@@ -54,11 +54,33 @@ object OneKukuEmbeddedAdbActivator {
         data class Failed(val reason: String) : Outcome()
     }
 
-    /** 解析 shell 启动输出：必须见到 started 标记，且不得含 missing。 */
-    internal fun isShellBootOutputOk(output: String): Boolean {
-        val text = output.trim()
-        if (text.contains("OneBridge_missing", ignoreCase = false)) return false
-        return text.contains("OneBridge_started")
+    /**
+     * 解析 shell 启动输出。
+     * 只认「整行等于」状态标记——adb `shell:` 会回显整段命令，旧逻辑用 contains("OneBridge_missing")
+     * 会把脚本正文误判成失败并提前打断。
+     */
+    internal fun isShellBootOutputOk(output: String): Boolean =
+        shellBootStatus(output) == ShellBootStatus.OK
+
+    internal enum class ShellBootStatus { OK, MISS, UNKNOWN }
+
+    internal fun shellBootStatus(output: String): ShellBootStatus {
+        val lines = output.replace("\r\n", "\n").replace('\r', '\n')
+            .lines()
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+        // 取最后一次完整状态行（真实 printf 输出），忽略命令回显长行
+        val last = lines.lastOrNull {
+            it == OneKukuCoreComponent.SHELL_BOOT_OK ||
+                it == OneKukuCoreComponent.SHELL_BOOT_MISS ||
+                // 兼容旧包日志/测试残留
+                it == "OneBridge_started" ||
+                it == "OneBridge_missing"
+        } ?: return ShellBootStatus.UNKNOWN
+        return when (last) {
+            OneKukuCoreComponent.SHELL_BOOT_OK, "OneBridge_started" -> ShellBootStatus.OK
+            else -> ShellBootStatus.MISS
+        }
     }
 
     suspend fun activate(
@@ -207,7 +229,7 @@ object OneKukuEmbeddedAdbActivator {
             val input = stream.openInputStream()
             val buf = ByteArray(4096)
             val collected = StringBuilder()
-            val readDeadline = System.currentTimeMillis() + 6_000L
+            val readDeadline = System.currentTimeMillis() + 8_000L
             while (System.currentTimeMillis() < readDeadline) {
                 val available = runCatching { input.available() }.getOrDefault(0)
                 if (available > 0) {
@@ -216,22 +238,23 @@ object OneKukuEmbeddedAdbActivator {
                 } else {
                     Thread.sleep(40)
                 }
-                if (isShellBootOutputOk(collected.toString()) ||
-                    collected.contains("OneBridge_missing")
-                ) {
-                    break
+                when (shellBootStatus(collected.toString())) {
+                    ShellBootStatus.OK, ShellBootStatus.MISS -> break
+                    ShellBootStatus.UNKNOWN -> Unit
                 }
             }
             // 尾读一次，兼容部分机型 available() 始终为 0
-            if (!isShellBootOutputOk(collected.toString()) &&
-                !collected.contains("OneBridge_missing")
-            ) {
+            if (shellBootStatus(collected.toString()) == ShellBootStatus.UNKNOWN) {
                 val n = runCatching { input.read(buf) }.getOrDefault(-1)
                 if (n > 0) collected.append(String(buf, 0, n, StandardCharsets.UTF_8))
             }
             val text = collected.toString()
             Log.i(TAG, "shell out=$text")
-            if (!isShellBootOutputOk(text)) return@use "start_failed"
+            when (shellBootStatus(text)) {
+                ShellBootStatus.OK -> Unit
+                ShellBootStatus.MISS -> return@use "start_failed"
+                ShellBootStatus.UNKNOWN -> return@use "start_failed"
+            }
             if (!awaitBinderRunning()) return@use "binder_not_received"
             "ok"
         }
