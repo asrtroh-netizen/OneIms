@@ -748,7 +748,7 @@ fun StatusHero(
         when (oneKukuState) {
             OneKukuCardState.INACTIVE -> R.string.onekuku_pill_inactive
             OneKukuCardState.ACTIVATING -> R.string.onekuku_pill_activating
-            OneKukuCardState.READY -> R.string.onekuku_pill_ready
+            OneKukuCardState.READY -> R.string.onekuku_pill_sleeping
             OneKukuCardState.EXECUTING -> R.string.onekuku_pill_running
             OneKukuCardState.FAILED -> R.string.onekuku_pill_failed
         },

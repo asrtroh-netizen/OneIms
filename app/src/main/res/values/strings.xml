@@ -423,14 +423,14 @@
     <string name="onekuku_action_activate">立即激活 OneKuku</string>
     <string name="onekuku_action_activate_sub">下拉通知栏输入六位码，无需回到本页</string>
 
-    <string name="onekuku_title_ready">设备已就绪</string>
+    <string name="onekuku_title_ready">设备已就绪 · 休眠中</string>
+    <string name="onekuku_subtitle_sleeping">OneKuku 通道已激活，核心按需休眠</string>
+    <string name="onekuku_detail_sleeping">用完自动休眠，不常驻不耗电；重启后可尝试自动恢复通话配置</string>
     <string name="onekuku_title_activating">正在激活 OneKuku</string>
     <string name="onekuku_subtitle_activating">配对、连接与通道启动进行中</string>
     <string name="onekuku_detail_activating">请按通知栏提示操作；也可打开系统无线调试</string>
     <string name="onekuku_pill_activating">激活中</string>
     <string name="onekuku_pill_ready">已就绪</string>
-    <string name="onekuku_subtitle_sleeping">OneKuku 通道已激活</string>
-    <string name="onekuku_detail_sleeping">重启后可尝试自动恢复通话配置</string>
     <string name="onekuku_pill_sleeping">休眠中</string>
     <string name="onekuku_action_restore">一键恢复通话</string>
     <string name="onekuku_action_restore_sub">后台唤醒 OneKuku 并恢复配置</string>

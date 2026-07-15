@@ -419,14 +419,14 @@
     <string name="onekuku_action_activate">Activate OneKuku</string>
     <string name="onekuku_action_activate_sub">Prepares the restore environment in the background</string>
 
-    <string name="onekuku_title_ready">Device ready</string>
+    <string name="onekuku_title_ready">Ready · Sleeping</string>
+    <string name="onekuku_subtitle_sleeping">OneKuku channel is on; core sleeps on demand</string>
+    <string name="onekuku_detail_sleeping">Auto-sleep after use to save power; call settings can try to auto-restore after reboot</string>
     <string name="onekuku_title_activating">Activating OneKuku</string>
     <string name="onekuku_subtitle_activating">Pairing, connecting, and starting the channel</string>
     <string name="onekuku_detail_activating">Follow the notification prompts, or open system wireless debugging</string>
     <string name="onekuku_pill_activating">Activating</string>
     <string name="onekuku_pill_ready">Ready</string>
-    <string name="onekuku_subtitle_sleeping">OneKuku channel is active</string>
-    <string name="onekuku_detail_sleeping">Call settings can try to auto-restore after reboot</string>
     <string name="onekuku_pill_sleeping">Sleeping</string>
     <string name="onekuku_action_restore">Restore calling</string>
     <string name="onekuku_action_restore_sub">Wake OneKuku and restore configuration</string>

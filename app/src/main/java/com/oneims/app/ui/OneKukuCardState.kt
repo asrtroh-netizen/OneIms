@@ -63,11 +63,11 @@ object OneKukuCardPolicy {
         OneKukuCardState.FAILED -> 5
     }
 
-    /** 五态进度条标签。 */
+    /** 五态进度条标签（第 3 段用「休眠」：就绪即按需休眠，不另开一态）。 */
     fun stageLabelRes(): List<Int> = listOf(
         R.string.onekuku_stage_inactive,
         R.string.onekuku_stage_activate,
-        R.string.onekuku_stage_ready,
+        R.string.onekuku_stage_sleeping,
         R.string.onekuku_stage_execute,
         R.string.onekuku_stage_failed,
     )
