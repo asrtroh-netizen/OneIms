@@ -70,6 +70,11 @@ data class HomeUiState(
 data class HomeActions(
     val onSelectSim: (Int) -> Unit,
     val onActivateOneKuku: () -> Unit,
+    /**
+     * 图四说明弹窗一出现就调用：立刻挂配对通知 + 切入「激活中」相位，
+     * 不必等 mDNS / 连接探测结束。
+     */
+    val onBeginWirelessPairGuide: () -> Unit = {},
     /** 出门激活卡「启动通道」：始终走配对/安装流程，不与总控卡激活短路共用。 */
     val onStartCore: () -> Unit = {},
     val onRestoreCallConfig: () -> Unit,

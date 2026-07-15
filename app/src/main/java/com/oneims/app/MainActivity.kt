@@ -319,6 +319,8 @@ private fun AppRoot(
     // 通知栏填码在 Receiver 里改相位；必须用 StateFlow 收集，不能只靠 activationEpoch。
     val activationPhase by OneKukuActivationUi.phaseState.collectAsState()
     var activationEpoch by remember { mutableIntStateOf(0) }
+    /** 本轮引导是否已打开过无线调试，避免弹窗确认与激活重复抢会话。 */
+    var pairingUiPrimed by remember { mutableStateOf(false) }
     val bootForceInactive = bootUiHint == OneKukuBootUiHint.NEEDS_ACTIVATION
     val oneKukuState = OneKukuCardPolicy.fromActivationPhase(activationPhase)
         ?: OneKukuCardPolicy.resolve(
@@ -376,6 +378,7 @@ private fun AppRoot(
             OneKukuActivationPhase.ACTIVE,
             OneKukuActivationPhase.IDLE,
             -> {
+                pairingUiPrimed = false
                 shizukuRunning = OneKukuManager.isRunning()
                 shizukuGranted = OneKukuManager.isGranted()
                 if (shizukuRunning && shizukuGranted &&
@@ -465,8 +468,41 @@ private fun AppRoot(
     }
 
     /**
+     * 图四说明弹窗出现时立刻执行：挂配对通知 + WAITING_PAIR（卡片离开红色）。
+     * 不在这里跑 mDNS/connect，避免「说明出来了、通知还要等半天」。
+     * 打开无线调试仅一次，确认后再 [prepareOneKukuCore] 继续激活。
+     */
+    fun beginWirelessPairGuide() {
+        awaitingCoreInstall = false
+        coreMissingDialogVisible = false
+        adbPairDialogVisible = false
+        if (Build.VERSION.SDK_INT >= 33 &&
+            context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            (context as? ComponentActivity)?.requestPermissions(
+                arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                0x7101,
+            )
+        }
+        val alreadyWaiting =
+            OneKukuActivationUi.phase == OneKukuActivationPhase.WAITING_PAIR ||
+                OneKukuActivationUi.phase == OneKukuActivationPhase.PAIRING
+        OneKukuActivationUi.setPhase(OneKukuActivationPhase.WAITING_PAIR)
+        activationEpoch++
+        OneKukuPairingNotification.showWaiting(context)
+        OneKukuBootRestoreStore.writeHint(context, OneKukuBootUiHint.NEEDS_ACTIVATION)
+        bootUiHint = OneKukuBootUiHint.NEEDS_ACTIVATION
+        // 弹窗阶段只挂通知 + 切「激活中」色，不跳设置页，保证说明能看完。
+        // 无线调试在确认后的 prepareOneKukuCore 里打开（pairingUiPrimed 防重复）。
+        if (!alreadyWaiting) {
+            publish(context.getString(R.string.onekuku_msg_pairing_notification_shown))
+        }
+    }
+
+    /**
      * OneKuku 激活默认流程：通知栏填六位码（不弹 App 内输入框）。
-     * Mini ADB：已有 transport 则直接启动；否则挂通知并打开无线调试。
+     * Mini ADB：已有 transport 则直接启动；否则保持等待配对（通知已在引导阶段挂出）。
      */
     fun prepareOneKukuCore() {
         awaitingCoreInstall = false
@@ -481,19 +517,30 @@ private fun AppRoot(
                 0x7101,
             )
         }
-        OneKukuCoreComponent.prepare(context)
-        scope.launch {
-            OneKukuActivationUi.setPhase(OneKukuActivationPhase.CONNECTING)
+        // 先挂 UI（通知 + 激活中色），再跑可能长达数秒的 mDNS/连接探测。
+        if (OneKukuActivationUi.phase != OneKukuActivationPhase.WAITING_PAIR &&
+            OneKukuActivationUi.phase != OneKukuActivationPhase.PAIRING &&
+            OneKukuActivationUi.phase != OneKukuActivationPhase.CONNECTING
+        ) {
+            OneKukuActivationUi.setPhase(OneKukuActivationPhase.WAITING_PAIR)
             activationEpoch++
+            OneKukuPairingNotification.showWaiting(context)
+            publish(context.getString(R.string.onekuku_msg_pairing_notification_shown))
+        }
+        if (!pairingUiPrimed) {
+            OneKukuCoreComponent.prepare(context)
+            pairingUiPrimed = true
+        }
+        scope.launch {
             publish(context.getString(R.string.onekuku_msg_activating))
             when (val outcome = OneKukuMiniAdbClient.activateExistingOrNeedPair(context)) {
                 is OneKukuMiniAdbClient.Outcome.NeedPairingCode -> {
                     OneKukuActivationUi.setPhase(OneKukuActivationPhase.WAITING_PAIR)
                     activationEpoch++
                     OneKukuPairingNotification.showWaiting(context)
-                    publish(context.getString(R.string.onekuku_msg_pairing_notification_shown))
                 }
                 is OneKukuMiniAdbClient.Outcome.Success -> {
+                    pairingUiPrimed = false
                     OneKukuActivationUi.setPhase(OneKukuActivationPhase.ACTIVE)
                     activationEpoch++
                     OneKukuPairingNotification.cancel(context)
@@ -511,6 +558,7 @@ private fun AppRoot(
                 }
                 is OneKukuMiniAdbClient.Outcome.Failed -> {
                     if (outcome.reason == "wifi_sta_required") {
+                        pairingUiPrimed = false
                         OneKukuActivationUi.setPhase(
                             OneKukuActivationPhase.FAILED,
                             failure = outcome.reason,
@@ -521,7 +569,6 @@ private fun AppRoot(
                         OneKukuActivationUi.setPhase(OneKukuActivationPhase.WAITING_PAIR)
                         activationEpoch++
                         OneKukuPairingNotification.showWaiting(context)
-                        publish(context.getString(R.string.onekuku_msg_pairing_notification_shown))
                     }
                 }
             }
@@ -944,6 +991,7 @@ private fun AppRoot(
                     ),
                     actions = HomeActions(
                         onSelectSim = { selectSim(it) },
+                        onBeginWirelessPairGuide = { beginWirelessPairGuide() },
                         onActivateOneKuku = {
                             when {
                                 !OneKukuManager.isRunning() -> {

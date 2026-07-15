@@ -178,6 +178,10 @@ fun HomeScreen(
 
     when (openDialog) {
         HomeToolDialog.WirelessGuide -> {
+            // 弹窗一出现就挂通知栏填码入口并切出「未激活」红态，别等确定后再干等 mDNS。
+            LaunchedEffect(Unit) {
+                actions.onBeginWirelessPairGuide()
+            }
             AlertDialog(
                 onDismissRequest = { openDialog = null },
                 title = { Text(stringResource(R.string.home_adb_prep_title)) },
@@ -191,7 +195,7 @@ fun HomeScreen(
                     TextButton(
                         onClick = {
                             openDialog = null
-                            // prepareOneKukuCore 内部已打开无线调试；勿再并发跳一次，避免抢 ADB 会话。
+                            // 通知已在弹窗出现时挂出；此处只继续激活，内部勿再并发抢开无线调试。
                             actions.onActivateOneKuku()
                         },
                     ) {
