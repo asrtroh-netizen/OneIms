@@ -71,6 +71,10 @@ data class HomeActions(
     val onSelectSim: (Int) -> Unit,
     val onActivateOneKuku: () -> Unit,
     /**
+     * 设置「重新激活」：强制 pkill 后重建 onebridge_server（与划掉保活默认路径相对）。
+     */
+    val onForceReactivateOneKuku: () -> Unit = {},
+    /**
      * 从未配对时：图四说明弹窗一出现就调用——立刻挂配对通知 + 切入「激活中」相位。
      * 已配对路径不会调用本回调（首页直接 [onActivateOneKuku]）。
      */

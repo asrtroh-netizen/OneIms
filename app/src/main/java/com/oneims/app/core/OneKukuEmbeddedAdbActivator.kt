@@ -122,16 +122,18 @@ object OneKukuEmbeddedAdbActivator {
         context: Context,
         pairingCode: String?,
         pairPortOverride: Int? = null,
+        forceRestart: Boolean = false,
     ): Outcome =
         // 串行化：避免「激活」与「通知栏填码」同时抢同一 AdbConnectionManager 导致假死。
         activateMutex.withLock {
-            activateLocked(context, pairingCode, pairPortOverride)
+            activateLocked(context, pairingCode, pairPortOverride, forceRestart)
         }
 
     private suspend fun activateLocked(
         context: Context,
         pairingCode: String?,
         pairPortOverride: Int?,
+        forceRestart: Boolean = false,
     ): Outcome =
         withContext(Dispatchers.IO) {
             if (!OneKukuCoreComponent.isInstalled(context)) {
@@ -174,7 +176,8 @@ object OneKukuEmbeddedAdbActivator {
                     Log.i(TAG, "tcpip5555 persisted=$persisted")
                     val startPkg = OneKukuCoreComponent.resolveCorePackage(app)
                         ?: OneKukuCoreComponent.HOST_PACKAGE
-                    val startCmd = OneKukuCoreComponent.bridgeBootShellCommand(startPkg) + "\n"
+                    val startCmd =
+                        OneKukuCoreComponent.bridgeBootShellCommand(startPkg, forceRestart) + "\n"
                     val boot = runCatching {
                         writeShellAndAwaitBinder(manager, startCmd)
                     }.getOrElse {
@@ -264,7 +267,8 @@ object OneKukuEmbeddedAdbActivator {
 
             val startPkg = OneKukuCoreComponent.resolveCorePackage(app)
                 ?: OneKukuCoreComponent.HOST_PACKAGE
-            val startCmd = OneKukuCoreComponent.bridgeBootShellCommand(startPkg) + "\n"
+            val startCmd =
+                OneKukuCoreComponent.bridgeBootShellCommand(startPkg, forceRestart) + "\n"
             val boot = runCatching {
                 writeShellAndAwaitBinder(manager, startCmd)
             }.getOrElse {

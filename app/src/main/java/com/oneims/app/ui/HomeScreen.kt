@@ -381,7 +381,7 @@ fun HomeScreen(
                             subtitle = stringResource(R.string.onekuku_settings_reactivate_sub),
                             onClick = {
                                 openDialog = null
-                                actions.onActivateOneKuku()
+                                actions.onForceReactivateOneKuku()
                             },
                         )
                         SettingsActionRow(

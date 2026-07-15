@@ -540,7 +540,7 @@ private fun AppRoot(
      * - 从未配对：先挂通知栏等六位码，再探测；无 transport 则保持等待。
      * - 已配对过：不预先弹六位码 UI，优先静默打开无线调试并直连；仅 NeedPairingCode 再挂通知。
      */
-    fun prepareOneKukuCore() {
+    fun prepareOneKukuCore(forceRestart: Boolean = false) {
         awaitingCoreInstall = false
         coreMissingDialogVisible = false
         adbPairDialogVisible = false
@@ -568,33 +568,66 @@ private fun AppRoot(
             }
         }
         scope.launch {
-            // 快路径：桥已在/可唤醒则立刻就绪，避免再跑无线调试等待 + mDNS。
             OneKukuHiddenRunner.installBridge(OneKukuPrivilegeBridgeImpl)
-            val wake = OneKukuHiddenRunner.wake()
-            if (wake.success && OneKukuManager.isReady()) {
-                pairingUiPrimed = false
-                OneKukuActivationUi.setPhase(OneKukuActivationPhase.IDLE)
-                activationEpoch++
-                OneKukuPairingNotification.cancel(context)
-                OneKukuResidentService.start(context)
-                shizukuRunning = OneKukuManager.isRunning()
-                shizukuGranted = OneKukuManager.isGranted()
-                if (bootUiHint == OneKukuBootUiHint.NEEDS_ACTIVATION ||
-                    bootUiHint == OneKukuBootUiHint.WAITING_WIFI
-                ) {
-                    val hint = if (OneKukuBootRestoreStore.shouldShowNoSnapshotNote(context)) {
-                        OneKukuBootUiHint.NO_SNAPSHOT_SLEEPING
-                    } else {
-                        OneKukuBootUiHint.READY_SLEEPING
+            // 非强制重建：等已存活的 onebridge_server 周期重投 binder（划掉 App 后再开无需 ADB）。
+            if (!forceRestart) {
+                val wake = OneKukuHiddenRunner.wake()
+                if (wake.success && OneKukuManager.isReady()) {
+                    pairingUiPrimed = false
+                    OneKukuActivationUi.setPhase(OneKukuActivationPhase.IDLE)
+                    activationEpoch++
+                    OneKukuPairingNotification.cancel(context)
+                    OneKukuResidentService.start(context)
+                    shizukuRunning = OneKukuManager.isRunning()
+                    shizukuGranted = OneKukuManager.isGranted()
+                    if (bootUiHint == OneKukuBootUiHint.NEEDS_ACTIVATION ||
+                        bootUiHint == OneKukuBootUiHint.WAITING_WIFI
+                    ) {
+                        val hint = if (OneKukuBootRestoreStore.shouldShowNoSnapshotNote(context)) {
+                            OneKukuBootUiHint.NO_SNAPSHOT_SLEEPING
+                        } else {
+                            OneKukuBootUiHint.READY_SLEEPING
+                        }
+                        OneKukuBootRestoreStore.writeHint(context, hint)
+                        bootUiHint = hint
                     }
-                    OneKukuBootRestoreStore.writeHint(context, hint)
-                    bootUiHint = hint
+                    publish(context.getString(R.string.onekuku_msg_embedded_adb_ok))
+                    return@launch
                 }
-                publish(context.getString(R.string.onekuku_msg_embedded_adb_ok))
-                return@launch
+                val binderDeadline = System.currentTimeMillis() + 9_000L
+                while (System.currentTimeMillis() < binderDeadline &&
+                    !OneKukuManager.isRunning()
+                ) {
+                    delay(300)
+                }
+                if (OneKukuManager.isRunning() && !OneKukuManager.isGranted()) {
+                    OneKukuManager.requestActivation()
+                }
+                if (OneKukuManager.isReady()) {
+                    pairingUiPrimed = false
+                    OneKukuActivationUi.setPhase(OneKukuActivationPhase.IDLE)
+                    activationEpoch++
+                    OneKukuPairingNotification.cancel(context)
+                    OneKukuResidentService.start(context)
+                    shizukuRunning = OneKukuManager.isRunning()
+                    shizukuGranted = OneKukuManager.isGranted()
+                    if (bootUiHint == OneKukuBootUiHint.NEEDS_ACTIVATION ||
+                        bootUiHint == OneKukuBootUiHint.WAITING_WIFI
+                    ) {
+                        val hint = if (OneKukuBootRestoreStore.shouldShowNoSnapshotNote(context)) {
+                            OneKukuBootUiHint.NO_SNAPSHOT_SLEEPING
+                        } else {
+                            OneKukuBootUiHint.READY_SLEEPING
+                        }
+                        OneKukuBootRestoreStore.writeHint(context, hint)
+                        bootUiHint = hint
+                    }
+                    publish(context.getString(R.string.onekuku_msg_embedded_adb_ok))
+                    return@launch
+                }
             }
             if (pairedBefore) {
-                // 静默 wake 失败后才进入「连接中」，避免一点首页就钉死「激活中」。
+                // 静默 wake / binder 等待失败后才进入「连接中」，避免一点首页就钉死「激活中」。
                 if (OneKukuActivationUi.phase != OneKukuActivationPhase.CONNECTING &&
                     OneKukuActivationUi.phase != OneKukuActivationPhase.STARTING &&
                     OneKukuActivationUi.phase != OneKukuActivationPhase.PAIRING
@@ -619,7 +652,12 @@ private fun AppRoot(
                 pairingUiPrimed = true
             }
             publish(context.getString(R.string.onekuku_msg_activating))
-            when (val outcome = OneKukuMiniAdbClient.activateExistingOrNeedPair(context)) {
+            when (
+                val outcome = OneKukuMiniAdbClient.activateExistingOrNeedPair(
+                    context,
+                    forceRestart = forceRestart,
+                )
+            ) {
                 is OneKukuMiniAdbClient.Outcome.NeedPairingCode -> {
                     OneKukuActivationUi.setPhase(OneKukuActivationPhase.WAITING_PAIR)
                     activationEpoch++
@@ -1177,6 +1215,16 @@ private fun AppRoot(
                                     publish(context.getString(R.string.onekuku_msg_permission_requested))
                                 }
                             }
+                            shizukuRunning = OneKukuManager.isRunning()
+                            shizukuGranted = OneKukuManager.isGranted()
+                        },
+                        onForceReactivateOneKuku = {
+                            prepareOneKukuCore(forceRestart = true)
+                            OneKukuBootRestoreStore.writeHint(
+                                context,
+                                OneKukuBootUiHint.NEEDS_ACTIVATION,
+                            )
+                            bootUiHint = OneKukuBootUiHint.NEEDS_ACTIVATION
                             shizukuRunning = OneKukuManager.isRunning()
                             shizukuGranted = OneKukuManager.isGranted()
                         },

@@ -54,6 +54,8 @@ class OneKukuEmbeddedAdbActivatorTest {
         assertTrue(cmd.contains(OneKukuCoreComponent.SHELL_BOOT_OK))
         assertTrue(cmd.contains(OneKukuCoreComponent.SHELL_BOOT_MISS))
         assertTrue(cmd.contains("printf"))
+        assertTrue(cmd.contains("pidof onebridge_server"))
+        assertFalse(cmd.contains("pkill"))
         assertFalse(cmd.contains("nohup"))
     }
 }

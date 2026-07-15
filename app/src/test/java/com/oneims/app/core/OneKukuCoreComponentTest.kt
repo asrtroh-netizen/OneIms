@@ -23,9 +23,18 @@ class OneKukuCoreComponentTest {
         assertTrue(cmd.contains("app_process"))
         assertTrue(cmd.contains(OneKukuCoreComponent.SHELL_BOOT_OK))
         assertTrue(cmd.contains("printf"))
+        assertTrue(cmd.contains("pidof onebridge_server"))
+        assertTrue(!cmd.contains("pkill"))
         assertTrue(!cmd.contains("nohup"))
         assertTrue(!cmd.contains(" exec "))
         assertTrue(!cmd.contains("Android/data/"))
+    }
+
+    @Test
+    fun bridgeBootShellCommand_forceRestartStillUsesPkill() {
+        val cmd = OneKukuCoreComponent.bridgeBootShellCommand(forceRestart = true)
+        assertTrue(cmd.contains("pkill"))
+        assertTrue(cmd.contains("app_process"))
     }
 
     @Test

@@ -142,17 +142,30 @@ object OneKukuCoreComponent {
      * 从指定包 APK 用 app_process 拉起 [com.oneims.bridge.server.BridgeService]。
      * Phase4：默认宿主包（类已打进主 APK）；**不用 exec**，后台拉起后 echo 标记。
      *
+     * **对齐 Shizuku**：默认不 `pkill` 已在跑的 `onebridge_server`——划掉 App 后 shell 进程应继续活着，
+     * 重进只等 binder 再投递。显式 [forceRestart]=true 才杀掉重建（设置里「重新激活」用）。
+     *
      * 状态标记必须是「整行输出」专用串，且不能用会嵌在脚本正文里被 PTY 回显误判的旧名。
      */
-    fun bridgeBootShellCommand(packageName: String = HOST_PACKAGE): String =
-        // 子 shell 后台拉起；不用 nohup（部分机型无此命令）。标记见 [SHELL_BOOT_OK]/[SHELL_BOOT_MISS]。
-        "pkill -f onebridge_server 2>/dev/null || true; " +
+    fun bridgeBootShellCommand(
+        packageName: String = HOST_PACKAGE,
+        forceRestart: Boolean = false,
+    ): String {
+        val start =
             "APK=\$(pm path $packageName 2>/dev/null | head -n 1 | cut -d: -f2 | tr -d '\\r'); " +
-            "if [ -z \"\$APK\" ]; then printf '%s\\n' $SHELL_BOOT_MISS; exit 1; fi; " +
-            "export CLASSPATH=\"\$APK\"; " +
-            "(/system/bin/app_process /system/bin --nice-name=onebridge_server " +
-            "com.oneims.bridge.server.BridgeService >/dev/null 2>&1 &); " +
-            "printf '%s\\n' $SHELL_BOOT_OK"
+                "if [ -z \"\$APK\" ]; then printf '%s\\n' $SHELL_BOOT_MISS; exit 1; fi; " +
+                "export CLASSPATH=\"\$APK\"; " +
+                "(/system/bin/app_process /system/bin --nice-name=onebridge_server " +
+                "com.oneims.bridge.server.BridgeService >/dev/null 2>&1 &); " +
+                "printf '%s\\n' $SHELL_BOOT_OK"
+        return if (forceRestart) {
+            "pkill -f onebridge_server 2>/dev/null || true; $start"
+        } else {
+            // 已在跑：直接 OK，由 BridgeService 周期重投 binder 给新 App 进程。
+            "if pidof onebridge_server >/dev/null 2>&1; then printf '%s\\n' $SHELL_BOOT_OK; " +
+                "else $start; fi"
+        }
+    }
 
     /** shell 成功标记（整行）；勿改成会出现在命令正文其它位置的子串。 */
     const val SHELL_BOOT_OK: String = "__OB_BOOT_OK__"

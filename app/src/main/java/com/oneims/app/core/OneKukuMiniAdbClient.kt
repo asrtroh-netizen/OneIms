@@ -69,10 +69,17 @@ object OneKukuMiniAdbClient {
      * 已有 transport：直接 connect + 白名单启动命令。
      * 无 transport：返回 [Outcome.NeedPairingCode]。
      */
-    suspend fun activateExistingOrNeedPair(context: Context): Outcome =
+    suspend fun activateExistingOrNeedPair(
+        context: Context,
+        forceRestart: Boolean = false,
+    ): Outcome =
         withContext(Dispatchers.IO) {
             when (
-                val o = OneKukuEmbeddedAdbActivator.activate(context, pairingCode = null)
+                val o = OneKukuEmbeddedAdbActivator.activate(
+                    context,
+                    pairingCode = null,
+                    forceRestart = forceRestart,
+                )
             ) {
                 is OneKukuEmbeddedAdbActivator.Outcome.NeedPairingCode -> Outcome.NeedPairingCode
                 is OneKukuEmbeddedAdbActivator.Outcome.Success -> Outcome.Success(o.detail)

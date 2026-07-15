@@ -13,6 +13,7 @@ import android.util.Log
  */
 object BridgeService {
     private const val TAG = "OneBridge"
+    private const val RESEND_INTERVAL_MS = 3_000L
 
     @JvmStatic
     fun main(args: Array<String>) {
@@ -26,15 +27,33 @@ object BridgeService {
         }.onFailure { Log.w(TAG, "ActivityThread.systemMain failed", it) }
         val binder = BridgeBinder()
         BridgeBinder.logReady()
-        val sent = runCatching {
-            BinderDistributor.sendToClient(binder)
-            true
-        }.getOrElse {
-            Log.e(TAG, "send binder failed", it)
-            false
-        }
-        if (!sent) {
+        fun trySend(): Boolean =
+            runCatching {
+                BinderDistributor.sendToClient(binder)
+                true
+            }.getOrElse {
+                Log.w(TAG, "send binder failed: ${it.message}")
+                false
+            }
+        if (!trySend()) {
             Log.e(TAG, "binder NOT delivered to ${BridgeProtocol.CLIENT_PROVIDER_AUTHORITY}")
+        }
+        // 对齐 Shizuku：App 被划掉后进程仍在；新 App 起来后靠周期重投拿回 binder。
+        Thread(
+            {
+                while (true) {
+                    try {
+                        Thread.sleep(RESEND_INTERVAL_MS)
+                    } catch (_: InterruptedException) {
+                        break
+                    }
+                    trySend()
+                }
+            },
+            "onebridge-resend",
+        ).apply {
+            isDaemon = true
+            start()
         }
         Looper.loop()
     }
