@@ -96,22 +96,10 @@ fun HomeScreen(
                                 onClick = actions.onOpenWirelessDebugging,
                             ),
                             ActionSpec(
-                                icon = Icons.Filled.LocationOn,
-                                title = stringResource(R.string.home_adb_open_hotspot),
-                                subtitle = stringResource(R.string.home_adb_open_hotspot_sub),
-                                onClick = actions.onOpenHotspot,
-                            ),
-                            ActionSpec(
                                 icon = Icons.Filled.Refresh,
                                 title = stringResource(R.string.home_adb_start_core),
                                 subtitle = stringResource(R.string.home_adb_start_core_sub),
                                 onClick = actions.onStartCore,
-                            ),
-                            ActionSpec(
-                                icon = Icons.Filled.Info,
-                                title = stringResource(R.string.home_adb_copy_guide),
-                                subtitle = stringResource(R.string.home_adb_copy_guide_sub),
-                                onClick = actions.onCopyAdbGuide,
                             ),
                         ),
                     )

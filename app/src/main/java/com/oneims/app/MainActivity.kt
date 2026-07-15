@@ -68,8 +68,12 @@ import com.oneims.app.core.SimCardInfo
 import com.oneims.app.core.ShizukuSetupHelper
 import com.oneims.app.core.OneKukuCoreComponent
 import com.oneims.app.core.OneKukuEmbeddedAdbActivator
-import com.oneims.app.core.WirelessPairingNotifier
+import com.oneims.app.core.OneKukuMiniAdbClient
+import com.oneims.app.core.OneKukuPairingNotification
+import com.oneims.app.core.OneKukuActivationUi
+import com.oneims.app.core.OneKukuActivationPhase
 import com.oneims.app.core.OneKukuManager
+import com.oneims.app.core.WirelessPairingCodeReceiver
 import com.oneims.app.core.SimpleFiveGDisplayConfig
 import com.oneims.app.core.SystemDisplayOverrideManager
 import com.oneims.app.core.SignalBarSystemStyleManager
@@ -110,6 +114,7 @@ import com.oneims.app.onekuku.OneKukuSnapshotStore
 import com.oneims.app.onekuku.OneKukuSleepController
 import com.oneims.app.core.OneKukuBootRestoreService
 import com.oneims.app.ui.OneKukuCardPolicy
+import com.oneims.app.ui.OneKukuCardState
 import com.oneims.app.ui.OneKukuHomeTools
 import com.oneims.app.ui.SettingsActions
 import com.oneims.app.ui.SettingsScreen
@@ -310,16 +315,35 @@ private fun AppRoot(
     var bootUiHint by remember {
         mutableStateOf(OneKukuBootRestoreStore.readHint(context))
     }
+    var activationEpoch by remember { mutableIntStateOf(0) }
     val bootForceInactive = bootUiHint == OneKukuBootUiHint.NEEDS_ACTIVATION
-    val oneKukuState = OneKukuCardPolicy.resolve(
-        serviceReady = shizukuRunning && shizukuGranted && !bootForceInactive,
-        isExecuting = oneKukuRestoring ||
-            bootUiHint == OneKukuBootUiHint.RESTORING ||
-            OneKukuHiddenRunner.currentState() == OneKukuRunnerState.EXECUTING ||
-            OneKukuHiddenRunner.currentState() == OneKukuRunnerState.STARTING,
-        taskComplete = oneKukuTaskComplete || bootUiHint == OneKukuBootUiHint.RESTORE_COMPLETE,
-    )
+    val activationPhase = remember(activationEpoch) { OneKukuActivationUi.phase }
+    val oneKukuState = when (activationPhase) {
+        OneKukuActivationPhase.WAITING_PAIR,
+        OneKukuActivationPhase.FAILED -> OneKukuCardState.INACTIVE
+        OneKukuActivationPhase.PAIRING,
+        OneKukuActivationPhase.CONNECTING,
+        OneKukuActivationPhase.STARTING -> OneKukuCardState.RUNNING
+        else -> OneKukuCardPolicy.resolve(
+            serviceReady = shizukuRunning && shizukuGranted && !bootForceInactive,
+            isExecuting = oneKukuRestoring ||
+                bootUiHint == OneKukuBootUiHint.RESTORING ||
+                OneKukuHiddenRunner.currentState() == OneKukuRunnerState.EXECUTING ||
+                OneKukuHiddenRunner.currentState() == OneKukuRunnerState.STARTING,
+            taskComplete = oneKukuTaskComplete || bootUiHint == OneKukuBootUiHint.RESTORE_COMPLETE,
+        )
+    }
     val oneKukuDetailOverride = when {
+        activationPhase == OneKukuActivationPhase.WAITING_PAIR ->
+            context.getString(R.string.onekuku_msg_waiting_pair_detail)
+        activationPhase == OneKukuActivationPhase.PAIRING ||
+            activationPhase == OneKukuActivationPhase.CONNECTING ||
+            activationPhase == OneKukuActivationPhase.STARTING ->
+            context.getString(R.string.onekuku_msg_activating)
+        activationPhase == OneKukuActivationPhase.FAILED ->
+            OneKukuActivationUi.lastFailureReason?.let {
+                context.getString(R.string.onekuku_pair_text_fail, it)
+            }
         bootUiHint == OneKukuBootUiHint.NO_SNAPSHOT_SLEEPING ||
             OneKukuBootRestoreStore.shouldShowNoSnapshotNote(context) ->
             context.getString(R.string.onekuku_detail_no_snapshot)
@@ -417,12 +441,13 @@ private fun AppRoot(
     }
 
     /**
-     * Phase4：通道已内嵌主包。打开无线调试 + 下拉通知栏填六位码（Shizuku 式），
-     * App 内弹窗仅作兜底。
+     * OneKuku 激活默认流程：通知栏填六位码（不弹 App 内输入框）。
+     * Mini ADB：已有 transport 则直接启动；否则挂通知并打开无线调试。
      */
     fun prepareOneKukuCore() {
         awaitingCoreInstall = false
         coreMissingDialogVisible = false
+        adbPairDialogVisible = false
         if (Build.VERSION.SDK_INT >= 33 &&
             context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
             != PackageManager.PERMISSION_GRANTED
@@ -433,22 +458,21 @@ private fun AppRoot(
             )
         }
         OneKukuCoreComponent.prepare(context)
-        WirelessPairingNotifier.showPairingPrompt(context)
-        adbPairCode = ""
-        adbPairDialogVisible = true
-        publish(context.getString(R.string.onekuku_msg_pairing_notification_shown))
         scope.launch {
-            publish(context.getString(R.string.onekuku_msg_embedded_adb_starting))
-            when (
-                val outcome = OneKukuEmbeddedAdbActivator.activate(context, pairingCode = null)
-            ) {
-                is OneKukuEmbeddedAdbActivator.Outcome.NeedPairingCode -> {
-                    WirelessPairingNotifier.showPairingPrompt(context)
-                    publish(context.getString(R.string.onekuku_msg_need_pairing_code))
+            OneKukuActivationUi.setPhase(OneKukuActivationPhase.CONNECTING)
+            activationEpoch++
+            publish(context.getString(R.string.onekuku_msg_activating))
+            when (val outcome = OneKukuMiniAdbClient.activateExistingOrNeedPair(context)) {
+                is OneKukuMiniAdbClient.Outcome.NeedPairingCode -> {
+                    OneKukuActivationUi.setPhase(OneKukuActivationPhase.WAITING_PAIR)
+                    activationEpoch++
+                    OneKukuPairingNotification.showWaiting(context)
+                    publish(context.getString(R.string.onekuku_msg_pairing_notification_shown))
                 }
-                is OneKukuEmbeddedAdbActivator.Outcome.Success -> {
-                    adbPairDialogVisible = false
-                    WirelessPairingNotifier.cancel(context)
+                is OneKukuMiniAdbClient.Outcome.Success -> {
+                    OneKukuActivationUi.setPhase(OneKukuActivationPhase.ACTIVE)
+                    activationEpoch++
+                    OneKukuPairingNotification.cancel(context)
                     shizukuRunning = OneKukuManager.isRunning()
                     if (OneKukuManager.isRunning() && !OneKukuManager.isGranted()) {
                         OneKukuManager.requestActivation()
@@ -456,18 +480,24 @@ private fun AppRoot(
                     } else {
                         publish(context.getString(R.string.onekuku_msg_embedded_adb_ok))
                     }
+                    if (OneKukuActivationUi.pendingRestoreAfterPair) {
+                        OneKukuActivationUi.pendingRestoreAfterPair = false
+                        publish(context.getString(R.string.onekuku_msg_embedded_adb_ok))
+                    }
                 }
-                is OneKukuEmbeddedAdbActivator.Outcome.Failed -> {
-                    WirelessPairingNotifier.showPairingPrompt(context)
+                is OneKukuMiniAdbClient.Outcome.Failed -> {
                     if (outcome.reason == "wifi_sta_required") {
+                        OneKukuActivationUi.setPhase(
+                            OneKukuActivationPhase.FAILED,
+                            failure = outcome.reason,
+                        )
+                        activationEpoch++
                         publish(context.getString(R.string.onekuku_msg_wifi_sta_required))
                     } else {
-                        publish(
-                            context.getString(
-                                R.string.onekuku_msg_embedded_adb_fallback_keep_dialog,
-                                outcome.reason,
-                            ),
-                        )
+                        OneKukuActivationUi.setPhase(OneKukuActivationPhase.WAITING_PAIR)
+                        activationEpoch++
+                        OneKukuPairingNotification.showWaiting(context)
+                        publish(context.getString(R.string.onekuku_msg_pairing_notification_shown))
                     }
                 }
             }
@@ -512,7 +542,8 @@ private fun AppRoot(
                         publish(context.getString(R.string.onekuku_msg_need_pairing_code))
                     is OneKukuEmbeddedAdbActivator.Outcome.Success -> {
                         adbPairDialogVisible = false
-                        WirelessPairingNotifier.cancel(context)
+                        OneKukuPairingNotification.cancel(context)
+                        OneKukuActivationUi.setPhase(OneKukuActivationPhase.ACTIVE)
                         shizukuRunning = OneKukuManager.isRunning()
                         if (OneKukuManager.isRunning() && !OneKukuManager.isGranted()) {
                             OneKukuManager.requestActivation()
@@ -522,7 +553,7 @@ private fun AppRoot(
                         }
                     }
                     is OneKukuEmbeddedAdbActivator.Outcome.Failed -> {
-                        WirelessPairingNotifier.showPairingPrompt(context)
+                        OneKukuPairingNotification.showWaiting(context)
                         publish(
                             if (outcome.reason == "wifi_sta_required") {
                                 context.getString(R.string.onekuku_msg_wifi_sta_required)
@@ -951,6 +982,12 @@ private fun AppRoot(
                             when {
                                 busyLabel != null ->
                                     publish(context.getString(R.string.operation_already_running))
+                                !OneKukuManager.isRunning() -> {
+                                    // 无 transport：先走通知栏配对，成功后再恢复
+                                    OneKukuActivationUi.pendingRestoreAfterPair = true
+                                    prepareOneKukuCore()
+                                    publish(context.getString(R.string.onekuku_msg_pairing_notification_shown))
+                                }
                                 else -> {
                                     val restoreOutcome =
                                         arrayOf(OneKukuHomeTools.RestoreOutcome.FAILURE)
@@ -980,6 +1017,7 @@ private fun AppRoot(
                                                     )
                                                     bootUiHint =
                                                         OneKukuBootUiHint.RESTORE_COMPLETE
+                                                    OneKukuSleepController.sleepIfEnabled(context)
                                                 }
                                                 OneKukuHomeTools.RestoreOutcome.FAILURE -> {
                                                     oneKukuTaskComplete = false
@@ -1139,12 +1177,16 @@ private fun AppRoot(
                             )
                         },
                         onCopyAdbGuide = {
-                            ShizukuSetupHelper.copyToClipboard(
-                                context,
-                                context.getString(R.string.app_name),
-                                OneKukuCoreComponent.guidedActivationScript(context),
+                            // 规格禁止默认复制 adb 命令：改为打开无线调试
+                            publish(
+                                context.getString(
+                                    if (ShizukuSetupHelper.openWirelessDebugging(context)) {
+                                        R.string.log_jumped_wireless
+                                    } else {
+                                        R.string.log_jump_failed
+                                    },
+                                ),
                             )
-                            publish(context.getString(R.string.log_cmd_copied))
                         },
                     ),
                 )
@@ -1817,7 +1859,6 @@ private fun AppRoot(
                 )
             }
         }
-    }
 
     if (apnCatalogVisible) {
         ApnCatalogDialog(
@@ -1930,52 +1971,8 @@ private fun AppRoot(
         )
     }
 
-    if (adbPairDialogVisible) {
-        AlertDialog(
-            onDismissRequest = {
-                if (!adbPairBusy) adbPairDialogVisible = false
-            },
-            title = { Text(context.getString(R.string.onekuku_adb_pair_title)) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(
-                        text = context.getString(R.string.onekuku_adb_pair_body),
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                    OutlinedTextField(
-                        value = adbPairCode,
-                        onValueChange = { adbPairCode = it.filter { ch -> ch.isDigit() }.take(6) },
-                        label = { Text(context.getString(R.string.onekuku_adb_pair_hint)) },
-                        singleLine = true,
-                        enabled = !adbPairBusy,
-                    )
-                    TextButton(
-                        onClick = {
-                            ShizukuSetupHelper.openWirelessDebugging(context)
-                        },
-                        enabled = !adbPairBusy,
-                    ) {
-                        Text(context.getString(R.string.onekuku_adb_pair_open_wireless))
-                    }
-                }
-            },
-            confirmButton = {
-                OneImsPrimaryButton(
-                    text = context.getString(R.string.onekuku_adb_pair_confirm),
-                    onClick = { runEmbeddedAdbWithCode(adbPairCode) },
-                    enabled = !adbPairBusy && adbPairCode.length >= 6,
-                )
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { adbPairDialogVisible = false },
-                    enabled = !adbPairBusy,
-                ) {
-                    Text(context.getString(R.string.action_cancel))
-                }
-            },
-        )
-    }
+    // 默认流程禁止 App 内六位码弹窗；配对只走通知栏 RemoteInput。
+}
 }
 
 private fun describeEpdg(

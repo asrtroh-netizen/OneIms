@@ -5,31 +5,33 @@ import android.content.Context
 import android.content.Intent
 import android.widget.Toast
 import androidx.core.app.RemoteInput
+import com.oneims.app.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
 /**
- * 接收通知栏 RemoteInput 的六位配对码，走内嵌无线调试拉起通道。
+ * 通知栏 RemoteInput → Mini ADB pair/connect/start。
+ * 全程不要求用户切回 OneIMS。
  */
 class WirelessPairingCodeReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent?) {
-        if (intent?.action != WirelessPairingNotifier.ACTION_SUBMIT_CODE) return
+        if (intent?.action != OneKukuPairingNotification.ACTION_SUBMIT_CODE) return
         val remote = RemoteInput.getResultsFromIntent(intent)
-        val code = (
-            remote?.getCharSequence(WirelessPairingNotifier.KEY_REMOTE_INPUT)?.toString()
-                ?: intent.getStringExtra(WirelessPairingNotifier.EXTRA_PAIRING_CODE)
+        val raw = (
+            remote?.getCharSequence(OneKukuPairingNotification.KEY_REMOTE_INPUT)?.toString()
+                ?: intent.getStringExtra(OneKukuPairingNotification.EXTRA_PAIRING_CODE)
                 ?: ""
-            ).filter { it.isDigit() }.take(6)
-        if (code.length < 6) {
+            ).trim()
+        if (OneKukuMiniAdbClient.parsePairingInput(raw) == null) {
             Toast.makeText(
                 context,
-                context.getString(com.oneims.app.R.string.wireless_pairing_need_six_digits),
+                context.getString(R.string.onekuku_pair_need_six_digits),
                 Toast.LENGTH_SHORT,
             ).show()
-            WirelessPairingNotifier.showPairingPrompt(context)
+            OneKukuPairingNotification.showWaiting(context)
             return
         }
 
@@ -37,44 +39,40 @@ class WirelessPairingCodeReceiver : BroadcastReceiver() {
         val app = context.applicationContext
         scope.launch {
             try {
-                Toast.makeText(
-                    app,
-                    app.getString(com.oneims.app.R.string.onekuku_msg_embedded_adb_starting),
-                    Toast.LENGTH_SHORT,
-                ).show()
-                when (
-                    val outcome = OneKukuEmbeddedAdbActivator.activate(app, pairingCode = code)
-                ) {
-                    is OneKukuEmbeddedAdbActivator.Outcome.Success -> {
-                        WirelessPairingNotifier.showResult(
-                            app,
-                            ok = true,
-                            detail = app.getString(com.oneims.app.R.string.onekuku_msg_embedded_adb_ok),
-                        )
+                OneKukuActivationUi.setPhase(OneKukuActivationPhase.PAIRING)
+                OneKukuPairingNotification.showPairingInProgress(app)
+                when (val outcome = OneKukuMiniAdbClient.pairConnectAndStart(app, raw)) {
+                    is OneKukuMiniAdbClient.Outcome.Success -> {
+                        OneKukuActivationUi.setPhase(OneKukuActivationPhase.ACTIVE)
+                        OneKukuPairingNotification.showSuccess(app)
+                        OneKukuPairingNotification.cancel(app)
                         if (OneKukuManager.isRunning() && !OneKukuManager.isGranted()) {
                             OneKukuManager.requestActivation()
                         }
+                        // 挂起的一键恢复：发广播让前台续跑（若 Activity 存活）
+                        if (OneKukuActivationUi.pendingRestoreAfterPair) {
+                            app.sendBroadcast(
+                                Intent(ACTION_CONTINUE_RESTORE).setPackage(app.packageName),
+                            )
+                        }
                     }
-                    is OneKukuEmbeddedAdbActivator.Outcome.NeedPairingCode -> {
-                        WirelessPairingNotifier.showPairingPrompt(app)
-                        Toast.makeText(
-                            app,
-                            app.getString(com.oneims.app.R.string.onekuku_msg_need_pairing_code),
-                            Toast.LENGTH_LONG,
-                        ).show()
+                    is OneKukuMiniAdbClient.Outcome.NeedPairingCode -> {
+                        OneKukuActivationUi.setPhase(OneKukuActivationPhase.WAITING_PAIR)
+                        OneKukuPairingNotification.showWaiting(app)
                     }
-                    is OneKukuEmbeddedAdbActivator.Outcome.Failed -> {
+                    is OneKukuMiniAdbClient.Outcome.Failed -> {
+                        OneKukuActivationUi.setPhase(
+                            OneKukuActivationPhase.FAILED,
+                            failure = outcome.reason,
+                        )
                         val msg = when (outcome.reason) {
                             "wifi_sta_required" ->
-                                app.getString(com.oneims.app.R.string.onekuku_msg_wifi_sta_required)
-                            else ->
-                                app.getString(
-                                    com.oneims.app.R.string.onekuku_msg_embedded_adb_fallback,
-                                    outcome.reason,
-                                )
+                                app.getString(R.string.onekuku_msg_wifi_sta_required)
+                            "invalid_pairing_input" ->
+                                app.getString(R.string.onekuku_pair_need_six_digits)
+                            else -> outcome.reason
                         }
-                        WirelessPairingNotifier.showResult(app, ok = false, detail = msg)
-                        WirelessPairingNotifier.showPairingPrompt(app)
+                        OneKukuPairingNotification.showFailure(app, msg)
                     }
                 }
             } finally {
@@ -84,6 +82,7 @@ class WirelessPairingCodeReceiver : BroadcastReceiver() {
     }
 
     companion object {
+        const val ACTION_CONTINUE_RESTORE = "com.oneims.app.action.CONTINUE_CALL_RESTORE"
         private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     }
 }
