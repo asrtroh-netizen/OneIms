@@ -63,7 +63,7 @@ data class HomeUiState(
     val reapplyStatus: ConfigStore.ReapplyStatus? = null,
     val bootAutoCheck: Boolean = true,
     val autoRestore: Boolean = true,
-    val autoSleep: Boolean = true,
+    val autoSleep: Boolean = false,
     val oneKukuDetailOverride: String? = null,
 )
 

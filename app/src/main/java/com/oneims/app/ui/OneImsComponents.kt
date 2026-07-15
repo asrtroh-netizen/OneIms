@@ -728,7 +728,7 @@ fun StatusHero(
         when (oneKukuState) {
             OneKukuCardState.INACTIVE -> R.string.onekuku_subtitle_inactive
             OneKukuCardState.ACTIVATING -> R.string.onekuku_subtitle_activating
-            OneKukuCardState.READY -> R.string.onekuku_subtitle_sleeping
+            OneKukuCardState.READY -> R.string.onekuku_subtitle_ready
             OneKukuCardState.EXECUTING -> R.string.onekuku_subtitle_running
             OneKukuCardState.FAILED -> R.string.onekuku_subtitle_failed
         },
@@ -737,18 +737,17 @@ fun StatusHero(
         when (oneKukuState) {
             OneKukuCardState.INACTIVE -> R.string.onekuku_detail_inactive
             OneKukuCardState.ACTIVATING -> R.string.onekuku_detail_activating
-            OneKukuCardState.READY -> R.string.onekuku_detail_sleeping
+            OneKukuCardState.READY -> R.string.onekuku_detail_ready
             OneKukuCardState.EXECUTING -> R.string.onekuku_detail_running
             OneKukuCardState.FAILED -> R.string.onekuku_detail_failed
         },
     )
-    val showPowerHint = oneKukuState == OneKukuCardState.INACTIVE ||
-        oneKukuState == OneKukuCardState.READY
+    val showResidentHint = oneKukuState == OneKukuCardState.READY
     val statusPill = stringResource(
         when (oneKukuState) {
             OneKukuCardState.INACTIVE -> R.string.onekuku_pill_inactive
             OneKukuCardState.ACTIVATING -> R.string.onekuku_pill_activating
-            OneKukuCardState.READY -> R.string.onekuku_pill_sleeping
+            OneKukuCardState.READY -> R.string.onekuku_pill_ready
             OneKukuCardState.EXECUTING -> R.string.onekuku_pill_running
             OneKukuCardState.FAILED -> R.string.onekuku_pill_failed
         },
@@ -803,6 +802,11 @@ fun StatusHero(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     Text(
+                        text = stringResource(R.string.onekuku_card_eyebrow),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = contentColor.copy(alpha = 0.72f),
+                    )
+                    Text(
                         title,
                         style = MaterialTheme.typography.titleLarge,
                         color = contentColor,
@@ -817,9 +821,9 @@ fun StatusHero(
                         style = MaterialTheme.typography.bodySmall,
                         color = contentColor.copy(alpha = 0.78f),
                     )
-                    if (showPowerHint) {
+                    if (showResidentHint) {
                         Text(
-                            stringResource(R.string.onekuku_hint_power),
+                            stringResource(R.string.onekuku_hint_resident),
                             style = MaterialTheme.typography.bodySmall,
                             color = contentColor.copy(alpha = 0.66f),
                         )
@@ -877,6 +881,176 @@ fun StatusHero(
                         modifier = Modifier.padding(horizontal = 4.dp),
                     )
                 }
+            }
+        }
+    }
+}
+
+/**
+ * 首页逻辑状态卡：通话配置侧（可恢复 / 执行中），与下方 OneKuku 通道卡分离。
+ */
+@Composable
+fun LogicStatusHero(
+    oneKukuState: OneKukuCardState,
+    hasSim: Boolean,
+    onRestore: () -> Unit,
+    onOpenDeviceDetails: (() -> Unit)? = null,
+) {
+    val restoring = oneKukuState == OneKukuCardState.EXECUTING
+    val channelReady = oneKukuState == OneKukuCardState.READY
+    val channelBusy = oneKukuState == OneKukuCardState.ACTIVATING
+    val alert = !hasSim || (!channelReady && !restoring && !channelBusy)
+    val busy = restoring || channelBusy
+    val containerColor = when {
+        alert -> MaterialTheme.colorScheme.errorContainer
+        busy -> MaterialTheme.colorScheme.primaryContainer
+        else -> Color.White
+    }
+    val contentColor = when {
+        alert -> MaterialTheme.colorScheme.onErrorContainer
+        busy -> MaterialTheme.colorScheme.onPrimaryContainer
+        else -> Color(0xFF1A1B20)
+    }
+    val title = stringResource(
+        when {
+            !hasSim -> R.string.logic_title_no_sim
+            restoring -> R.string.logic_title_restoring
+            channelBusy -> R.string.logic_title_waiting_channel
+            channelReady -> R.string.logic_title_ready
+            else -> R.string.logic_title_need_channel
+        },
+    )
+    val subtitle = stringResource(
+        when {
+            !hasSim -> R.string.logic_subtitle_no_sim
+            restoring -> R.string.logic_subtitle_restoring
+            channelBusy -> R.string.logic_subtitle_waiting_channel
+            channelReady -> R.string.logic_subtitle_ready
+            else -> R.string.logic_subtitle_need_channel
+        },
+    )
+    val detail = stringResource(
+        when {
+            !hasSim -> R.string.logic_detail_no_sim
+            restoring -> R.string.logic_detail_restoring
+            channelBusy -> R.string.logic_detail_waiting_channel
+            channelReady -> R.string.logic_detail_ready
+            else -> R.string.logic_detail_need_channel
+        },
+    )
+    val pill = stringResource(
+        when {
+            !hasSim -> R.string.logic_pill_no_sim
+            restoring -> R.string.onekuku_pill_running
+            channelBusy -> R.string.logic_pill_waiting
+            channelReady -> R.string.logic_pill_ready
+            else -> R.string.logic_pill_blocked
+        },
+    )
+    val actionLabel = stringResource(
+        if (restoring) R.string.onekuku_action_running else R.string.onekuku_action_restore,
+    )
+    val canRestore = hasSim && channelReady && !restoring
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.extraLarge,
+        color = containerColor,
+        tonalElevation = if (!alert && !busy) 2.dp else 0.dp,
+        shadowElevation = if (!alert && !busy) 1.dp else 0.dp,
+    ) {
+        Column(
+            modifier = Modifier.padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp),
+        ) {
+            Row(
+                verticalAlignment = Alignment.Top,
+                horizontalArrangement = Arrangement.spacedBy(18.dp),
+            ) {
+                Icon(
+                    imageVector = when {
+                        alert -> Icons.Filled.Warning
+                        busy -> Icons.Filled.Refresh
+                        else -> Icons.Filled.CheckCircle
+                    },
+                    contentDescription = null,
+                    modifier = Modifier.size(38.dp),
+                    tint = contentColor,
+                )
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.logic_card_eyebrow),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = contentColor.copy(alpha = 0.72f),
+                    )
+                    Text(
+                        title,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = contentColor,
+                    )
+                    Text(
+                        subtitle,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = contentColor,
+                    )
+                    Text(
+                        detail,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = contentColor.copy(alpha = 0.78f),
+                    )
+                    if (onOpenDeviceDetails != null) {
+                        Surface(
+                            onClick = onOpenDeviceDetails,
+                            shape = RoundedCornerShape(percent = 50),
+                            color = contentColor.copy(alpha = 0.14f),
+                        ) {
+                            Text(
+                                text = stringResource(R.string.home_device_details),
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = contentColor,
+                                maxLines = 1,
+                            )
+                        }
+                    }
+                }
+                Surface(
+                    shape = RoundedCornerShape(percent = 50),
+                    color = contentColor.copy(alpha = 0.14f),
+                ) {
+                    Text(
+                        text = pill,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = contentColor,
+                        maxLines = 1,
+                    )
+                }
+            }
+
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OneImsPrimaryButton(
+                    text = actionLabel,
+                    onClick = onRestore,
+                    enabled = canRestore,
+                    loading = restoring,
+                    loadingText = actionLabel,
+                )
+                Text(
+                    text = stringResource(
+                        if (canRestore) {
+                            R.string.onekuku_action_restore_sub
+                        } else {
+                            R.string.logic_action_restore_blocked_sub
+                        },
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = contentColor.copy(alpha = 0.72f),
+                    modifier = Modifier.padding(horizontal = 4.dp),
+                )
             }
         }
     }

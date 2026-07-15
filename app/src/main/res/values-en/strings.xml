@@ -411,15 +411,41 @@
     <string name="home_safety_note">Calls, messages, and data always take priority over IMS changes</string>
 
     <!-- OneKuku home control card (hides underlying privilege channel names) -->
+    <string name="logic_card_eyebrow">Logic status</string>
+    <string name="logic_title_ready">Call settings ready to restore</string>
+    <string name="logic_subtitle_ready">Channel is ready — restore the last successful profile</string>
+    <string name="logic_detail_ready">VoLTE / VoWiFi / VoNR snapshots apply to the selected SIM</string>
+    <string name="logic_title_need_channel">Waiting for OneKuku</string>
+    <string name="logic_subtitle_need_channel">Activate OneKuku below first</string>
+    <string name="logic_detail_need_channel">Call settings cannot be written while the channel is off</string>
+    <string name="logic_title_waiting_channel">Activating channel</string>
+    <string name="logic_subtitle_waiting_channel">Restore unlocks after pairing/connect finishes</string>
+    <string name="logic_detail_waiting_channel">Follow the OneKuku card and notification prompts</string>
+    <string name="logic_title_restoring">Restoring call settings</string>
+    <string name="logic_subtitle_restoring">Keep the app in the foreground briefly</string>
+    <string name="logic_detail_restoring">Writing IMS, VoWiFi, 5G and related items</string>
+    <string name="logic_title_no_sim">No SIM detected</string>
+    <string name="logic_subtitle_no_sim">Insert a SIM before restoring</string>
+    <string name="logic_detail_no_sim">Snapshots and carrier writes need a SIM</string>
+    <string name="logic_pill_ready">Ready</string>
+    <string name="logic_pill_waiting">Waiting</string>
+    <string name="logic_pill_blocked">Blocked</string>
+    <string name="logic_pill_no_sim">No SIM</string>
+    <string name="logic_action_restore_blocked_sub">Needs a resident OneKuku channel and a selected SIM</string>
+
+    <string name="onekuku_card_eyebrow">OneKuku channel</string>
     <string name="onekuku_title_inactive">One more step</string>
     <string name="onekuku_subtitle_inactive">OneKuku channel is inactive</string>
     <string name="onekuku_detail_inactive">Call settings may not auto-restore after reboot</string>
     <string name="onekuku_hint_power">Activate on demand, sleep when idle — no always-on drain</string>
+    <string name="onekuku_hint_resident">Channel stays resident — no auto-sleep</string>
     <string name="onekuku_pill_inactive">Inactive</string>
     <string name="onekuku_action_activate">Activate OneKuku</string>
-    <string name="onekuku_action_activate_sub">Prepares the restore environment in the background</string>
+    <string name="onekuku_action_activate_sub">Enter the 6-digit code from the notification</string>
 
-    <string name="onekuku_title_ready">Ready · Sleeping</string>
+    <string name="onekuku_title_ready">OneKuku ready · Resident</string>
+    <string name="onekuku_subtitle_ready">Channel is active and stays resident</string>
+    <string name="onekuku_detail_ready">Check status anytime; restore from the logic card above</string>
     <string name="onekuku_subtitle_sleeping">OneKuku channel is on; core sleeps on demand</string>
     <string name="onekuku_detail_sleeping">Auto-sleep after use to save power; call settings can try to auto-restore after reboot</string>
     <string name="onekuku_title_activating">Activating OneKuku</string>
@@ -429,7 +455,7 @@
     <string name="onekuku_pill_ready">Ready</string>
     <string name="onekuku_pill_sleeping">Sleeping</string>
     <string name="onekuku_action_restore">Restore calling</string>
-    <string name="onekuku_action_restore_sub">Wake OneKuku and restore configuration</string>
+    <string name="onekuku_action_restore_sub">Rewrite the last successful call-related profile</string>
 
     <string name="onekuku_title_running">Restoring call settings</string>
     <string name="onekuku_subtitle_running">OneKuku channel is working</string>
@@ -438,9 +464,9 @@
     <string name="onekuku_action_running">Restoring…</string>
 
     <string name="onekuku_subtitle_complete">Call settings restored</string>
-    <string name="onekuku_detail_complete">OneKuku finished and went back to sleep</string>
+    <string name="onekuku_detail_complete">OneKuku finished; channel stays resident</string>
     <string name="onekuku_action_check">Check OneKuku status</string>
-    <string name="onekuku_action_check_sub">Status only — use one-tap restore below to recover</string>
+    <string name="onekuku_action_check_sub">Status only — restore from the logic card above</string>
 
     <string name="onekuku_stage_inactive">Off</string>
     <string name="onekuku_stage_activate">Setup</string>
@@ -549,13 +575,14 @@
     <string name="onekuku_settings_check_status">Check OneKuku status</string>
     <string name="onekuku_settings_check_status_sub">Read-only check — no write, no restore</string>
     <string name="onekuku_settings_state_inactive">Inactive</string>
-    <string name="onekuku_settings_state_sleeping">Sleeping</string>
+    <string name="onekuku_settings_state_sleeping">Ready (resident)</string>
     <string name="onekuku_settings_state_running">Running</string>
     <string name="onekuku_settings_state_invalid">Invalid</string>
     <string name="onekuku_settings_restore_on">Auto restore enabled</string>
     <string name="onekuku_settings_restore_off">Auto restore disabled</string>
     <string name="onekuku_settings_auto_sleep">Auto-sleep when idle</string>
-    <string name="onekuku_settings_auto_sleep_sub">After restore, OneKuku sleeps automatically — no always-on drain</string>
+    <string name="onekuku_settings_auto_sleep_sub">Disabled: OneKuku stays resident and no longer auto-sleeps</string>
+    <string name="onekuku_settings_resident_note">OneKuku stays resident; auto-sleep is no longer offered.</string>
     <string name="onekuku_settings_reactivate">Reactivate OneKuku</string>
     <string name="onekuku_settings_reactivate_sub">Try to activate the OneKuku core service</string>
     <string name="onekuku_settings_view_status">View status</string>

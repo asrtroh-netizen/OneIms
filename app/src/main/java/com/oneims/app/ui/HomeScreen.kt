@@ -11,13 +11,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -65,6 +62,15 @@ fun HomeScreen(
         simSelectionEnabled = state.actionsEnabled,
     ) {
         item {
+            LogicStatusHero(
+                oneKukuState = state.oneKukuState,
+                hasSim = state.sims.isNotEmpty(),
+                onRestore = actions.onRestoreCallConfig,
+                onOpenDeviceDetails = { openDialog = HomeToolDialog.DeviceInfo },
+            )
+        }
+
+        item {
             StatusHero(
                 oneKukuState = state.oneKukuState,
                 onPrimaryAction = {
@@ -86,7 +92,6 @@ fun HomeScreen(
                         -> Unit
                     }
                 },
-                onOpenDeviceDetails = { openDialog = HomeToolDialog.DeviceInfo },
                 detailOverride = state.oneKukuDetailOverride,
             )
         }
@@ -144,42 +149,6 @@ fun HomeScreen(
                         .clip(MaterialTheme.shapes.large)
                         .background(MaterialTheme.colorScheme.surfaceContainerLow),
                 )
-            }
-        }
-
-        item {
-            SectionBlock(
-                title = stringResource(R.string.home_emergency_title),
-                description = stringResource(R.string.home_emergency_subtitle),
-            ) {
-                Column(
-                    modifier = Modifier.padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    val restoring = state.oneKukuState == OneKukuCardState.EXECUTING
-                    Button(
-                        onClick = actions.onRestoreCallConfig,
-                        enabled = state.actionsEnabled && !restoring,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = 56.dp),
-                    ) {
-                        Icon(
-                            Icons.Filled.Refresh,
-                            contentDescription = null,
-                        )
-                        Text(
-                            stringResource(
-                                if (restoring) {
-                                    R.string.onekuku_action_running
-                                } else {
-                                    R.string.onekuku_action_restore
-                                },
-                            ),
-                            modifier = Modifier.padding(start = 8.dp),
-                        )
-                    }
-                }
             }
         }
     }
@@ -400,11 +369,11 @@ fun HomeScreen(
                             checked = state.autoRestore,
                             onCheckedChange = actions.onAutoRestoreChange,
                         )
-                        SettingsSwitchRow(
-                            title = stringResource(R.string.onekuku_settings_auto_sleep),
-                            subtitle = stringResource(R.string.onekuku_settings_auto_sleep_sub),
-                            checked = state.autoSleep,
-                            onCheckedChange = actions.onAutoSleepChange,
+                        Text(
+                            text = stringResource(R.string.onekuku_settings_resident_note),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(vertical = 8.dp),
                         )
                         SettingsActionRow(
                             icon = Icons.Filled.Refresh,

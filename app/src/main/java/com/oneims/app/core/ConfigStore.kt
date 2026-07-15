@@ -464,7 +464,8 @@ object ConfigStore {
 
     /** OneKuku「用完自动休眠」偏好；默认开启。 */
     fun isOneKukuAutoSleep(context: Context): Boolean =
-        prefs(context).getBoolean(KEY_ONEKUKU_AUTO_SLEEP, true)
+        // 默认关闭：OneKuku 常驻；设置项仅作历史兼容，自动休眠路径已忽略该值。
+        prefs(context).getBoolean(KEY_ONEKUKU_AUTO_SLEEP, false)
 
     fun setOneKukuAutoSleep(context: Context, enabled: Boolean) {
         prefs(context).edit().putBoolean(KEY_ONEKUKU_AUTO_SLEEP, enabled).apply()

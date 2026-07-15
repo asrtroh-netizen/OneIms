@@ -15,7 +15,7 @@ enum class OneKukuCardState {
     /** 2 · 激活中（通知填码 / 配对 / 连接 / 启动） */
     ACTIVATING,
 
-    /** 3 · 已就绪（通道可用，含休眠） */
+    /** 3 · 已就绪（通道常驻可用） */
     READY,
 
     /** 4 · 执行中（一键恢复等） */
@@ -36,7 +36,7 @@ object OneKukuCardPolicy {
     ): OneKukuCardState = when {
         !serviceReady -> OneKukuCardState.INACTIVE
         isExecuting -> OneKukuCardState.EXECUTING
-        // taskComplete 与空闲休眠在卡片层同属「已就绪」；细则靠 detailOverride。
+        // taskComplete 与空闲常驻在卡片层同属「已就绪」；细则靠 detailOverride。
         else -> OneKukuCardState.READY
     }
 
@@ -63,11 +63,11 @@ object OneKukuCardPolicy {
         OneKukuCardState.FAILED -> 5
     }
 
-    /** 五态进度条标签（第 3 段用「休眠」：就绪即按需休眠，不另开一态）。 */
+    /** 五态进度条标签（第 3 段「就绪」：通道常驻，不另开休眠态）。 */
     fun stageLabelRes(): List<Int> = listOf(
         R.string.onekuku_stage_inactive,
         R.string.onekuku_stage_activate,
-        R.string.onekuku_stage_sleeping,
+        R.string.onekuku_stage_ready,
         R.string.onekuku_stage_execute,
         R.string.onekuku_stage_failed,
     )

@@ -2,43 +2,37 @@ package com.oneims.app.onekuku
 
 import android.content.Context
 import android.util.Log
-import com.oneims.app.core.ConfigStore
 
 /**
- * 执行结束后进入休眠；失败只记日志，不阻断主流程。
+ * 任务收尾：产品改为 OneKuku 常驻，执行结束后回到 ACTIVE，不再进入休眠。
+ * [sleep]/[sleepIfEnabled] 保留旧调用点，语义统一为「回到常驻」。
  */
 object OneKukuSleepController {
     private const val TAG = "OneIMS-OneKuku"
 
     fun sleep(): OneKukuCommandResult {
         return try {
-            OneKukuHiddenRunner.markSleeping()
-            Log.i(TAG, "sleep ok")
+            OneKukuHiddenRunner.markActive()
+            Log.i(TAG, "resident ok (sleep API kept for callers)")
             OneKukuCommandResult(
                 success = true,
-                state = OneKukuRunnerState.SLEEPING,
-                message = "OneKuku sleeping",
+                state = OneKukuRunnerState.ACTIVE,
+                message = "OneKuku resident",
             )
         } catch (error: Throwable) {
-            Log.w(TAG, "sleep failed: ${error.message}")
+            Log.w(TAG, "resident mark failed: ${error.message}")
             OneKukuCommandResult(
                 success = false,
                 state = OneKukuHiddenRunner.currentState(),
-                message = "sleep failed: ${error.message}",
+                message = "resident mark failed: ${error.message}",
             )
         }
     }
 
+    @Suppress("UNUSED_PARAMETER")
     fun sleepIfEnabled(context: Context): OneKukuCommandResult {
-        return if (ConfigStore.isOneKukuAutoSleep(context)) {
-            sleep()
-        } else {
-            Log.i(TAG, "auto-sleep disabled, keep current state")
-            OneKukuCommandResult(
-                success = true,
-                state = OneKukuHiddenRunner.currentState(),
-                message = "auto-sleep disabled",
-            )
-        }
+        // 常驻策略：忽略 autoSleep 偏好，任务后一律回 ACTIVE。
+        Log.i(TAG, "auto-sleep ignored; keep OneKuku resident")
+        return sleep()
     }
 }

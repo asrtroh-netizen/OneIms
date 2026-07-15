@@ -415,15 +415,41 @@
     <string name="home_safety_note">所有核心写入都以电话、短信和数据可用为最高优先级</string>
 
     <!-- OneKuku 首页总控卡（对用户隐藏底层通道名称） -->
+    <string name="logic_card_eyebrow">逻辑状态</string>
+    <string name="logic_title_ready">通话配置可恢复</string>
+    <string name="logic_subtitle_ready">通道已就绪，可一键写回上次成功配置</string>
+    <string name="logic_detail_ready">VoLTE / VoWiFi / VoNR 等快照会按当前 SIM 匹配后应用</string>
+    <string name="logic_title_need_channel">等待 OneKuku 通道</string>
+    <string name="logic_subtitle_need_channel">请先在下方激活 OneKuku</string>
+    <string name="logic_detail_need_channel">通道未就绪时无法写入通话配置</string>
+    <string name="logic_title_waiting_channel">通道激活中</string>
+    <string name="logic_subtitle_waiting_channel">配对或连接完成后即可恢复配置</string>
+    <string name="logic_detail_waiting_channel">请按下方 OneKuku 卡与通知栏提示操作</string>
+    <string name="logic_title_restoring">正在恢复通话配置</string>
+    <string name="logic_subtitle_restoring">请保持应用在前台片刻</string>
+    <string name="logic_detail_restoring">正在写回 IMS、VoWiFi、5G 等相关项</string>
+    <string name="logic_title_no_sim">未检测到 SIM</string>
+    <string name="logic_subtitle_no_sim">插入 SIM 后再恢复通话配置</string>
+    <string name="logic_detail_no_sim">无卡时无法匹配快照与写入运营商配置</string>
+    <string name="logic_pill_ready">可恢复</string>
+    <string name="logic_pill_waiting">等待中</string>
+    <string name="logic_pill_blocked">未就绪</string>
+    <string name="logic_pill_no_sim">无卡</string>
+    <string name="logic_action_restore_blocked_sub">需 OneKuku 常驻就绪且已选中 SIM</string>
+
+    <string name="onekuku_card_eyebrow">OneKuku 通道</string>
     <string name="onekuku_title_inactive">还差一步即可使用</string>
     <string name="onekuku_subtitle_inactive">OneKuku 通道未激活</string>
     <string name="onekuku_detail_inactive">重启后通话配置可能无法自动恢复</string>
     <string name="onekuku_hint_power">按需激活，用完休眠，不常驻不耗电</string>
+    <string name="onekuku_hint_resident">通道常驻保持就绪，不再自动休眠</string>
     <string name="onekuku_pill_inactive">未激活</string>
     <string name="onekuku_action_activate">立即激活 OneKuku</string>
     <string name="onekuku_action_activate_sub">下拉通知栏输入六位码，无需回到本页</string>
 
-    <string name="onekuku_title_ready">设备已就绪 · 休眠中</string>
+    <string name="onekuku_title_ready">OneKuku 已就绪 · 常驻</string>
+    <string name="onekuku_subtitle_ready">通道已激活并保持常驻</string>
+    <string name="onekuku_detail_ready">可随时检查状态；恢复通话请用上方逻辑状态卡</string>
     <string name="onekuku_subtitle_sleeping">OneKuku 通道已激活，核心按需休眠</string>
     <string name="onekuku_detail_sleeping">用完自动休眠，不常驻不耗电；重启后可尝试自动恢复通话配置</string>
     <string name="onekuku_title_activating">正在激活 OneKuku</string>
@@ -433,7 +459,7 @@
     <string name="onekuku_pill_ready">已就绪</string>
     <string name="onekuku_pill_sleeping">休眠中</string>
     <string name="onekuku_action_restore">一键恢复通话</string>
-    <string name="onekuku_action_restore_sub">后台唤醒 OneKuku 并恢复配置</string>
+    <string name="onekuku_action_restore_sub">写回上次成功的通话相关配置</string>
 
     <string name="onekuku_title_running">正在恢复通话配置</string>
     <string name="onekuku_subtitle_running">OneKuku 通道执行中</string>
@@ -442,9 +468,9 @@
     <string name="onekuku_action_running">正在恢复…</string>
 
     <string name="onekuku_subtitle_complete">通话配置已恢复</string>
-    <string name="onekuku_detail_complete">OneKuku 已完成任务并进入休眠</string>
+    <string name="onekuku_detail_complete">OneKuku 已完成任务，通道保持常驻</string>
     <string name="onekuku_action_check">检查 OneKuku 状态</string>
-    <string name="onekuku_action_check_sub">只检查服务状态；恢复请用下方一键恢复</string>
+    <string name="onekuku_action_check_sub">只检查通道状态；恢复请用上方逻辑状态卡</string>
 
     <string name="onekuku_stage_inactive">未激活</string>
     <string name="onekuku_stage_activate">激活</string>
@@ -554,13 +580,14 @@
     <string name="onekuku_settings_check_status">检查 OneKuku 状态</string>
     <string name="onekuku_settings_check_status_sub">只检查，不写入，不恢复</string>
     <string name="onekuku_settings_state_inactive">未激活</string>
-    <string name="onekuku_settings_state_sleeping">休眠中</string>
+    <string name="onekuku_settings_state_sleeping">已就绪（常驻）</string>
     <string name="onekuku_settings_state_running">执行中</string>
     <string name="onekuku_settings_state_invalid">失效</string>
     <string name="onekuku_settings_restore_on">已开启自动恢复</string>
     <string name="onekuku_settings_restore_off">已关闭自动恢复</string>
     <string name="onekuku_settings_auto_sleep">用完自动休眠</string>
-    <string name="onekuku_settings_auto_sleep_sub">恢复完成后 OneKuku 自动进入休眠，不常驻不耗电</string>
+    <string name="onekuku_settings_auto_sleep_sub">已停用：OneKuku 改为常驻，不再自动休眠</string>
+    <string name="onekuku_settings_resident_note">OneKuku 通道常驻保持就绪，不再提供「用完自动休眠」。</string>
     <string name="onekuku_settings_reactivate">重新激活 OneKuku</string>
     <string name="onekuku_settings_reactivate_sub">尝试激活 OneKuku 核心服务</string>
     <string name="onekuku_settings_view_status">查看状态</string>
