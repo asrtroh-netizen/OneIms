@@ -29,7 +29,12 @@ object OneKukuAdbMdns {
     private const val TYPE_CONNECT = "_adb-tls-connect._tcp"
     private const val DISCOVER_TIMEOUT_MS = 6_000L
 
-    /** 手机是否作为 Wi‑Fi 客户端已关联 AP（不含仅开 SoftAP/个人热点）。 */
+    /**
+     * 手机是否作为 Wi‑Fi 客户端已关联 AP（不含仅开 SoftAP/个人热点）。
+     *
+     * 注意：无定位/附近设备权限时 [WifiInfo.ssid] 常为 `<unknown ssid>`，
+     * 不能据此判未连接——以 networkId / Supplicant COMPLETED 为准。
+     */
     @Suppress("DEPRECATION")
     fun isWifiClientConnected(context: Context): Boolean {
         val wifi = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as? WifiManager
@@ -37,6 +42,13 @@ object OneKukuAdbMdns {
         if (!wifi.isWifiEnabled) return false
         val info = wifi.connectionInfo ?: return false
         if (info.networkId < 0) return false
+        // 有有效 networkId 即视为已关联已保存网络；SSID 可能因隐私被掩码。
+        val state = info.supplicantState
+        if (state == android.net.wifi.SupplicantState.COMPLETED ||
+            state == android.net.wifi.SupplicantState.ASSOCIATED
+        ) {
+            return true
+        }
         val ssid = info.ssid?.trim().orEmpty()
         return ssid.isNotEmpty() &&
             !ssid.equals("<unknown ssid>", ignoreCase = true) &&
