@@ -71,8 +71,8 @@ data class HomeActions(
     val onSelectSim: (Int) -> Unit,
     val onActivateOneKuku: () -> Unit,
     /**
-     * 图四说明弹窗一出现就调用：立刻挂配对通知 + 切入「激活中」相位，
-     * 不必等 mDNS / 连接探测结束。
+     * 从未配对时：图四说明弹窗一出现就调用——立刻挂配对通知 + 切入「激活中」相位。
+     * 已配对路径不会调用本回调（首页直接 [onActivateOneKuku]）。
      */
     val onBeginWirelessPairGuide: () -> Unit = {},
     /** 出门激活卡「启动通道」：始终走配对/安装流程，不与总控卡激活短路共用。 */

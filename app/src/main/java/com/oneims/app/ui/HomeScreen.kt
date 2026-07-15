@@ -35,6 +35,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import com.oneims.app.R
+import com.oneims.app.core.OneKukuEmbeddedAdbActivator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -68,10 +69,17 @@ fun HomeScreen(
                 oneKukuState = state.oneKukuState,
                 onPrimaryAction = {
                     when (state.oneKukuState) {
-                        // 未激活/失败：先弹出图四三步说明，确定后再激活并打开无线调试。
+                        // 未激活/失败：已配对过 → 直连激活（不弹六位码说明/通知）；
+                        // 从未配对 → 先出三步说明 + 状态栏填码入口。
                         OneKukuCardState.INACTIVE,
                         OneKukuCardState.FAILED,
-                        -> openDialog = HomeToolDialog.WirelessGuide
+                        -> {
+                            if (OneKukuEmbeddedAdbActivator.hasPairedOnce(context)) {
+                                actions.onActivateOneKuku()
+                            } else {
+                                openDialog = HomeToolDialog.WirelessGuide
+                            }
+                        }
                         OneKukuCardState.READY -> actions.onCheckOneKukuStatus()
                         OneKukuCardState.ACTIVATING,
                         OneKukuCardState.EXECUTING,

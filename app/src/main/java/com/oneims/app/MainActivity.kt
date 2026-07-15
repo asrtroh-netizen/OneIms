@@ -124,6 +124,7 @@ import com.oneims.app.ui.SponsorScreen
 import com.oneims.app.ui.ThemeMode
 import com.oneims.app.ui.theme.OneImsTheme
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.oneims.app.core.privilege.PrivilegeBridge
@@ -501,8 +502,9 @@ private fun AppRoot(
     }
 
     /**
-     * OneKuku 激活默认流程：通知栏填六位码（不弹 App 内输入框）。
-     * Mini ADB：已有 transport 则直接启动；否则保持等待配对（通知已在引导阶段挂出）。
+     * OneKuku 激活默认流程：
+     * - 从未配对：先挂通知栏等六位码，再探测；无 transport 则保持等待。
+     * - 已配对过：不预先弹六位码 UI，优先静默打开无线调试并直连；仅 NeedPairingCode 再挂通知。
      */
     fun prepareOneKukuCore() {
         awaitingCoreInstall = false
@@ -517,27 +519,56 @@ private fun AppRoot(
                 0x7101,
             )
         }
-        // 先挂 UI（通知 + 激活中色），再跑可能长达数秒的 mDNS/连接探测。
-        if (OneKukuActivationUi.phase != OneKukuActivationPhase.WAITING_PAIR &&
-            OneKukuActivationUi.phase != OneKukuActivationPhase.PAIRING &&
-            OneKukuActivationUi.phase != OneKukuActivationPhase.CONNECTING
-        ) {
-            OneKukuActivationUi.setPhase(OneKukuActivationPhase.WAITING_PAIR)
-            activationEpoch++
-            OneKukuPairingNotification.showWaiting(context)
-            publish(context.getString(R.string.onekuku_msg_pairing_notification_shown))
-        }
-        if (!pairingUiPrimed) {
-            OneKukuCoreComponent.prepare(context)
-            pairingUiPrimed = true
+        val pairedBefore = OneKukuEmbeddedAdbActivator.hasPairedOnce(context)
+        if (pairedBefore) {
+            // 已配对：卡片进「连接中」，不挂六位码通知，避免重启后假「又要配对」。
+            if (OneKukuActivationUi.phase != OneKukuActivationPhase.CONNECTING &&
+                OneKukuActivationUi.phase != OneKukuActivationPhase.STARTING &&
+                OneKukuActivationUi.phase != OneKukuActivationPhase.PAIRING
+            ) {
+                OneKukuActivationUi.setPhase(OneKukuActivationPhase.CONNECTING)
+                activationEpoch++
+            }
+        } else {
+            // 从未配对：先挂 UI（通知 + 激活中色），再跑可能长达数秒的 mDNS/连接探测。
+            if (OneKukuActivationUi.phase != OneKukuActivationPhase.WAITING_PAIR &&
+                OneKukuActivationUi.phase != OneKukuActivationPhase.PAIRING &&
+                OneKukuActivationUi.phase != OneKukuActivationPhase.CONNECTING
+            ) {
+                OneKukuActivationUi.setPhase(OneKukuActivationPhase.WAITING_PAIR)
+                activationEpoch++
+                OneKukuPairingNotification.showWaiting(context)
+                publish(context.getString(R.string.onekuku_msg_pairing_notification_shown))
+            }
         }
         scope.launch {
+            if (pairedBefore) {
+                // 对齐开机路径：有 WRITE_SECURE_SETTINGS 则静默开无线调试，避免跳设置页。
+                val wifiOn = ShizukuSetupHelper.tryEnableAdbWifi(context)
+                if (wifiOn) {
+                    delay(3_000L)
+                } else if (!pairingUiPrimed) {
+                    OneKukuCoreComponent.prepare(context)
+                    pairingUiPrimed = true
+                }
+            } else if (!pairingUiPrimed) {
+                OneKukuCoreComponent.prepare(context)
+                pairingUiPrimed = true
+            }
             publish(context.getString(R.string.onekuku_msg_activating))
             when (val outcome = OneKukuMiniAdbClient.activateExistingOrNeedPair(context)) {
                 is OneKukuMiniAdbClient.Outcome.NeedPairingCode -> {
                     OneKukuActivationUi.setPhase(OneKukuActivationPhase.WAITING_PAIR)
                     activationEpoch++
                     OneKukuPairingNotification.showWaiting(context)
+                    if (pairedBefore) {
+                        // 已配对但直连失败：这时才需要用户填码，并打开无线调试页便于操作。
+                        if (!pairingUiPrimed) {
+                            OneKukuCoreComponent.prepare(context)
+                            pairingUiPrimed = true
+                        }
+                        publish(context.getString(R.string.onekuku_msg_pairing_notification_shown))
+                    }
                 }
                 is OneKukuMiniAdbClient.Outcome.Success -> {
                     pairingUiPrimed = false
@@ -565,6 +596,21 @@ private fun AppRoot(
                         )
                         activationEpoch++
                         publish(context.getString(R.string.onekuku_msg_wifi_sta_required))
+                    } else if (pairedBefore) {
+                        // 已配对路径失败：保持失败态，不假装还在等六位码。
+                        pairingUiPrimed = false
+                        OneKukuActivationUi.setPhase(
+                            OneKukuActivationPhase.FAILED,
+                            failure = outcome.reason,
+                        )
+                        activationEpoch++
+                        OneKukuPairingNotification.cancel(context)
+                        publish(
+                            context.getString(
+                                R.string.onekuku_msg_embedded_adb_fallback,
+                                outcome.reason,
+                            ),
+                        )
                     } else {
                         OneKukuActivationUi.setPhase(OneKukuActivationPhase.WAITING_PAIR)
                         activationEpoch++
