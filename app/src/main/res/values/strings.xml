@@ -442,15 +442,15 @@
     <string name="onekuku_subtitle_inactive">OneKuku 通道未激活</string>
     <string name="onekuku_detail_inactive">重启后通话配置可能无法自动恢复</string>
     <string name="onekuku_hint_power">按需激活，用完休眠，不常驻不耗电</string>
-    <string name="onekuku_hint_resident">通道常驻保持就绪，不再自动休眠</string>
+    <string name="onekuku_hint_resident">通道保持 Active，不再自动休眠</string>
     <string name="onekuku_pill_inactive">未激活</string>
     <string name="onekuku_action_activate">立即激活 OneKuku</string>
     <string name="onekuku_action_activate_sub">下拉通知栏输入六位码，无需回到本页</string>
 
-    <string name="onekuku_title_ready">OneKuku 已就绪 · 常驻</string>
-    <string name="onekuku_nameplate_ready">已就绪 · 常驻</string>
-    <string name="onekuku_subtitle_ready">通道保持常驻，可随时检查状态</string>
-    <string name="onekuku_detail_ready">恢复通话请用下方逻辑状态卡</string>
+    <string name="onekuku_title_ready">OneKuku 已就绪 · Active</string>
+    <string name="onekuku_nameplate_ready">已就绪 · Active</string>
+    <string name="onekuku_subtitle_ready">通道已激活并保持 Active</string>
+    <string name="onekuku_detail_ready">可随时检查状态；恢复通话请用下方逻辑状态卡</string>
     <string name="onekuku_subtitle_sleeping">OneKuku 通道已激活，核心按需休眠</string>
     <string name="onekuku_detail_sleeping">用完自动休眠，不常驻不耗电；重启后可尝试自动恢复通话配置</string>
     <string name="onekuku_title_activating">正在激活 OneKuku</string>

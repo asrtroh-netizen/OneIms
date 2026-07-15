@@ -438,15 +438,15 @@
     <string name="onekuku_subtitle_inactive">OneKuku channel is inactive</string>
     <string name="onekuku_detail_inactive">Call settings may not auto-restore after reboot</string>
     <string name="onekuku_hint_power">Activate on demand, sleep when idle — no always-on drain</string>
-    <string name="onekuku_hint_resident">Channel stays resident — no auto-sleep</string>
+    <string name="onekuku_hint_resident">Channel stays Active — no auto-sleep</string>
     <string name="onekuku_pill_inactive">Inactive</string>
     <string name="onekuku_action_activate">Activate OneKuku</string>
     <string name="onekuku_action_activate_sub">Enter the 6-digit code from the notification</string>
 
-    <string name="onekuku_title_ready">OneKuku ready · Resident</string>
-    <string name="onekuku_nameplate_ready">Ready · Resident</string>
-    <string name="onekuku_subtitle_ready">Channel stays resident — check status anytime</string>
-    <string name="onekuku_detail_ready">Restore calling from the logic card below</string>
+    <string name="onekuku_title_ready">OneKuku ready · Active</string>
+    <string name="onekuku_nameplate_ready">Ready · Active</string>
+    <string name="onekuku_subtitle_ready">Channel is active and stays Active</string>
+    <string name="onekuku_detail_ready">Check status anytime; restore from the logic card below</string>
     <string name="onekuku_subtitle_sleeping">OneKuku channel is on; core sleeps on demand</string>
     <string name="onekuku_detail_sleeping">Auto-sleep after use to save power; call settings can try to auto-restore after reboot</string>
     <string name="onekuku_title_activating">Activating OneKuku</string>

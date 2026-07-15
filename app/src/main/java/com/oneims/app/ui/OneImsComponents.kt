@@ -1,9 +1,7 @@
 package com.oneims.app.ui
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.material3.ripple
 import androidx.compose.foundation.clickable
@@ -701,8 +699,7 @@ private fun ActionTile(
 
 /**
  * 首页顶部 OneKuku 总控卡：保留原 Hero 外壳（extraLarge 圆角、未激活红 / 已激活白、左图标），
- * 对内换成 OneKuku 四态文案、右上状态胶囊、轻量进度阶段与主操作按钮；
- * 就绪态用克制铭牌代替大字标题，避免「已就绪 · 常驻」抢视觉。
+ * 对内换成 OneKuku 四态文案、右上状态胶囊、轻量进度阶段与主操作按钮。
  */
 @Composable
 fun StatusHero(
@@ -713,7 +710,6 @@ fun StatusHero(
 ) {
     val alert = OneKukuCardPolicy.isAlert(oneKukuState)
     val busy = OneKukuCardPolicy.isBusy(oneKukuState)
-    val isReady = oneKukuState == OneKukuCardState.READY
     val ready = !alert
     val containerColor = when {
         alert -> MaterialTheme.colorScheme.errorContainer
@@ -753,6 +749,7 @@ fun StatusHero(
             OneKukuCardState.FAILED -> R.string.onekuku_detail_failed
         },
     )
+    val showResidentHint = oneKukuState == OneKukuCardState.READY
     val statusPill = stringResource(
         when (oneKukuState) {
             OneKukuCardState.INACTIVE -> R.string.onekuku_pill_inactive
@@ -790,85 +787,81 @@ fun StatusHero(
         shadowElevation = if (ready && !busy) 1.dp else 0.dp,
     ) {
         Column(
-            modifier = Modifier.padding(
-                horizontal = 20.dp,
-                vertical = if (isReady) 16.dp else 24.dp,
-            ),
-            verticalArrangement = Arrangement.spacedBy(if (isReady) 14.dp else 18.dp),
+            modifier = Modifier.padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp),
         ) {
-            if (isReady) {
-                OneKukuReadyHeader(
-                    contentColor = contentColor,
-                    subtitle = subtitle,
-                    onOpenDeviceDetails = onOpenDeviceDetails,
+            Row(
+                verticalAlignment = Alignment.Top,
+                horizontalArrangement = Arrangement.spacedBy(18.dp),
+            ) {
+                Icon(
+                    imageVector = when {
+                        alert -> Icons.Filled.Warning
+                        busy -> Icons.Filled.Refresh
+                        else -> Icons.Filled.CheckCircle
+                    },
+                    contentDescription = null,
+                    modifier = Modifier.size(38.dp),
+                    tint = contentColor,
                 )
-            } else {
-                Row(
-                    verticalAlignment = Alignment.Top,
-                    horizontalArrangement = Arrangement.spacedBy(18.dp),
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
-                    Icon(
-                        imageVector = when {
-                            alert -> Icons.Filled.Warning
-                            busy -> Icons.Filled.Refresh
-                            else -> Icons.Filled.CheckCircle
-                        },
-                        contentDescription = null,
-                        modifier = Modifier.size(38.dp),
-                        tint = contentColor,
+                    Text(
+                        text = stringResource(R.string.onekuku_card_eyebrow),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = contentColor.copy(alpha = 0.72f),
                     )
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                    ) {
+                    Text(
+                        title,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = contentColor,
+                    )
+                    Text(
+                        subtitle,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = contentColor,
+                    )
+                    Text(
+                        detail,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = contentColor.copy(alpha = 0.78f),
+                    )
+                    if (showResidentHint) {
                         Text(
-                            text = stringResource(R.string.onekuku_card_eyebrow),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = contentColor.copy(alpha = 0.72f),
-                        )
-                        Text(
-                            title,
-                            style = MaterialTheme.typography.titleLarge,
-                            color = contentColor,
-                        )
-                        Text(
-                            subtitle,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = contentColor,
-                        )
-                        Text(
-                            detail,
+                            stringResource(R.string.onekuku_hint_resident),
                             style = MaterialTheme.typography.bodySmall,
-                            color = contentColor.copy(alpha = 0.78f),
+                            color = contentColor.copy(alpha = 0.66f),
                         )
-                        if (onOpenDeviceDetails != null) {
-                            Surface(
-                                onClick = onOpenDeviceDetails,
-                                shape = RoundedCornerShape(percent = 50),
-                                color = contentColor.copy(alpha = 0.14f),
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.home_device_details),
-                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = contentColor,
-                                    maxLines = 1,
-                                )
-                            }
+                    }
+                    if (onOpenDeviceDetails != null) {
+                        Surface(
+                            onClick = onOpenDeviceDetails,
+                            shape = RoundedCornerShape(percent = 50),
+                            color = contentColor.copy(alpha = 0.14f),
+                        ) {
+                            Text(
+                                text = stringResource(R.string.home_device_details),
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = contentColor,
+                                maxLines = 1,
+                            )
                         }
                     }
-                    Surface(
-                        shape = RoundedCornerShape(percent = 50),
-                        color = contentColor.copy(alpha = 0.14f),
-                    ) {
-                        Text(
-                            text = statusPill,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = contentColor,
-                            maxLines = 1,
-                        )
-                    }
+                }
+                Surface(
+                    shape = RoundedCornerShape(percent = 50),
+                    color = contentColor.copy(alpha = 0.14f),
+                ) {
+                    Text(
+                        text = statusPill,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = contentColor,
+                        maxLines = 1,
+                    )
                 }
             }
 
@@ -883,9 +876,7 @@ fun StatusHero(
                     onClick = onPrimaryAction,
                     enabled = actionEnabled,
                     loading = actionLoading,
-                    // 激活中勿复用「正在恢复…」——划掉后台重开时用户会误以为在恢复配置。
                     loadingText = actionLabel,
-                    compact = isReady,
                 )
                 if (actionSub != null) {
                     Text(
@@ -895,75 +886,6 @@ fun StatusHero(
                         modifier = Modifier.padding(horizontal = 4.dp),
                     )
                 }
-            }
-        }
-    }
-}
-
-/**
- * 就绪态抬头：小眉标 + 细边铭牌，不用 titleLarge 喊「已就绪 · 常驻」。
- */
-@Composable
-private fun OneKukuReadyHeader(
-    contentColor: Color,
-    subtitle: String,
-    onOpenDeviceDetails: (() -> Unit)?,
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Text(
-            text = stringResource(R.string.onekuku_card_eyebrow),
-            style = MaterialTheme.typography.labelMedium,
-            color = contentColor.copy(alpha = 0.72f),
-        )
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .border(
-                    BorderStroke(1.dp, contentColor.copy(alpha = 0.20f)),
-                    RoundedCornerShape(10.dp),
-                ),
-            shape = RoundedCornerShape(10.dp),
-            color = contentColor.copy(alpha = 0.05f),
-            tonalElevation = 0.dp,
-            shadowElevation = 0.dp,
-        ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.CheckCircle,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp),
-                    tint = contentColor.copy(alpha = 0.88f),
-                )
-                Text(
-                    text = stringResource(R.string.onekuku_nameplate_ready),
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Medium,
-                    color = contentColor,
-                )
-            }
-        }
-        Text(
-            text = subtitle,
-            style = MaterialTheme.typography.bodySmall,
-            color = contentColor.copy(alpha = 0.78f),
-        )
-        if (onOpenDeviceDetails != null) {
-            Surface(
-                onClick = onOpenDeviceDetails,
-                shape = RoundedCornerShape(percent = 50),
-                color = contentColor.copy(alpha = 0.14f),
-            ) {
-                Text(
-                    text = stringResource(R.string.home_device_details),
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = contentColor,
-                    maxLines = 1,
-                )
             }
         }
     }
