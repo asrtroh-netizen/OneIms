@@ -374,8 +374,8 @@ private fun AppRoot(
         } else if (ConfigStore.isOneKukuBootAutoCheck(context) &&
             OneKukuEmbeddedAdbActivator.hasPairedOnce(context)
         ) {
-            // 只踢开机编排；真正「进首页自动连」在 prepareOneKukuCore 定义后的 LaunchedEffect。
-            OneKukuBootRestoreService.enqueue(context, debounceMs = 0L)
+            // 已配对未就绪：前台由下方 prepareOneKukuCore 单路径自动连。
+            // 勿再 enqueue 开机编排——双跑会抢 activate 锁，打开体感「卡老半天」。
         } else if (ConfigStore.isOneKukuBootAutoCheck(context)) {
             OneKukuBootRestoreService.enqueue(context, debounceMs = 2_000L)
         }
@@ -574,14 +574,42 @@ private fun AppRoot(
             }
         }
         scope.launch {
+            // 快路径：桥已在/可唤醒则立刻就绪，避免再跑无线调试等待 + mDNS。
+            OneKukuHiddenRunner.installBridge(OneKukuPrivilegeBridgeImpl)
+            val wake = OneKukuHiddenRunner.wake()
+            if (wake.success && OneKukuManager.isReady()) {
+                pairingUiPrimed = false
+                OneKukuActivationUi.setPhase(OneKukuActivationPhase.ACTIVE)
+                activationEpoch++
+                OneKukuPairingNotification.cancel(context)
+                shizukuRunning = OneKukuManager.isRunning()
+                shizukuGranted = OneKukuManager.isGranted()
+                if (bootUiHint == OneKukuBootUiHint.NEEDS_ACTIVATION ||
+                    bootUiHint == OneKukuBootUiHint.WAITING_WIFI
+                ) {
+                    val hint = if (OneKukuBootRestoreStore.shouldShowNoSnapshotNote(context)) {
+                        OneKukuBootUiHint.NO_SNAPSHOT_SLEEPING
+                    } else {
+                        OneKukuBootUiHint.READY_SLEEPING
+                    }
+                    OneKukuBootRestoreStore.writeHint(context, hint)
+                    bootUiHint = hint
+                }
+                publish(context.getString(R.string.onekuku_msg_embedded_adb_ok))
+                return@launch
+            }
             if (pairedBefore) {
-                // 对齐开机路径：有 WRITE_SECURE_SETTINGS 则静默开无线调试，避免跳设置页。
-                val wifiOn = ShizukuSetupHelper.tryEnableAdbWifi(context)
-                if (wifiOn) {
-                    delay(3_000L)
-                } else if (!pairingUiPrimed) {
-                    OneKukuCoreComponent.prepare(context)
-                    pairingUiPrimed = true
+                // 仅「刚从关→开」才短等 TLS 起来；本来就开着则零等待直连。
+                when (ShizukuSetupHelper.ensureAdbWifiEnabled(context)) {
+                    ShizukuSetupHelper.AdbWifiEnsureResult.ENABLED_NOW ->
+                        delay(1_200L)
+                    ShizukuSetupHelper.AdbWifiEnsureResult.ALREADY_ON -> Unit
+                    ShizukuSetupHelper.AdbWifiEnsureResult.FAILED -> {
+                        if (!pairingUiPrimed) {
+                            OneKukuCoreComponent.prepare(context)
+                            pairingUiPrimed = true
+                        }
+                    }
                 }
             } else if (!pairingUiPrimed) {
                 OneKukuCoreComponent.prepare(context)

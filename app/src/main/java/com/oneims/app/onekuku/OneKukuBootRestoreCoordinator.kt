@@ -341,9 +341,16 @@ object OneKukuBootRestoreCoordinator {
                 return BootReady.WAITING_WIFI
             }
 
-            val enabled = ShizukuSetupHelper.tryEnableAdbWifi(context)
-            Log.i(TAG, "boot: tryEnableAdbWifi=$enabled")
-            if (enabled) delay(3_000L)
+            when (val wifi = ShizukuSetupHelper.ensureAdbWifiEnabled(context)) {
+                ShizukuSetupHelper.AdbWifiEnsureResult.ENABLED_NOW -> {
+                    Log.i(TAG, "boot: adb_wifi enabled now, short wait")
+                    delay(1_200L)
+                }
+                ShizukuSetupHelper.AdbWifiEnsureResult.ALREADY_ON ->
+                    Log.i(TAG, "boot: adb_wifi already on, skip wait")
+                ShizukuSetupHelper.AdbWifiEnsureResult.FAILED ->
+                    Log.i(TAG, "boot: ensureAdbWifi failed")
+            }
         }
 
         Log.i(TAG, "boot: silent MiniAdb activateExistingOrNeedPair")
