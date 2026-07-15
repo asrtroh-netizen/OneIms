@@ -16,7 +16,7 @@
 
 ### ⬇️ 下载 APK（最新）
 
-**[OneIms 2.1.1 · GitHub Releases](https://github.com/asrtroh-netizen/OneIms/releases/tag/v2.1.1)**
+**[OneIms 2.1.4 · GitHub Releases](https://github.com/asrtroh-netizen/OneIms/releases/tag/v2.1.4)**
 
 > 本仓库 **只提供 README + APK 发布**，**不开放源代码**。  
 > 需要交流 / 反馈请走 Telegram，别来仓库里翻源码啦～
@@ -24,6 +24,11 @@
 </div>
 
 ---
+
+## ✨ What's New · 2.1.4
+
+* 🔁 **已配对更像 Shizuku**：记住配对后，重启先等 Wi‑Fi、多轮无码直连；若系统关掉了无线调试，会打开设置页并再试一次（一般只需拨开开关，不必重填六位码）
+* 🆕 从没配对过的设备，仍走正常通知栏填码
 
 ## ✨ What's New · 2.1.1
 
