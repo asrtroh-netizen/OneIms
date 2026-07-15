@@ -272,6 +272,12 @@ object OneKukuBootRestoreCoordinator {
         }
 
         Log.i(TAG, "boot: silent MiniAdb activateExistingOrNeedPair")
+        // 已配对：先尝试静默打开无线调试（需上次激活留下的 WRITE_SECURE_SETTINGS）。
+        if (OneKukuEmbeddedAdbActivator.hasPairedOnce(context)) {
+            val enabled = ShizukuSetupHelper.tryEnableAdbWifi(context)
+            Log.i(TAG, "boot: tryEnableAdbWifi=$enabled")
+            if (enabled) delay(3_000L)
+        }
         return when (val outcome = OneKukuMiniAdbClient.activateExistingOrNeedPair(context)) {
             is OneKukuMiniAdbClient.Outcome.Success -> {
                 if (OneKukuManager.isRunning() && !OneKukuManager.isGranted()) {
@@ -283,10 +289,13 @@ object OneKukuBootRestoreCoordinator {
             }
             is OneKukuMiniAdbClient.Outcome.NeedPairingCode -> {
                 Log.w(TAG, "boot: need pairing code for activate")
-                // 已配对设备：多半是重启后系统关掉了无线调试（不是用户手关）。
-                // 打开无线调试页，并短暂再试无码直连——贴近 Shizuku「开开关就能连」体感。
+                // 无权限写开关时：打开无线调试页，并短暂再试无码直连。
                 if (OneKukuEmbeddedAdbActivator.hasPairedOnce(context)) {
-                    ShizukuSetupHelper.openWirelessDebugging(context)
+                    if (!ShizukuSetupHelper.hasWriteSecureSettings(context)) {
+                        ShizukuSetupHelper.openWirelessDebugging(context)
+                    } else {
+                        ShizukuSetupHelper.tryEnableAdbWifi(context)
+                    }
                     delay(8_000L)
                     when (
                         val retry = OneKukuMiniAdbClient.activateExistingOrNeedPair(context)
@@ -296,7 +305,7 @@ object OneKukuBootRestoreCoordinator {
                                 OneKukuManager.requestActivation()
                             }
                             val ready = OneKukuManager.isReady()
-                            Log.i(TAG, "boot: retry after wireless page ready=$ready")
+                            Log.i(TAG, "boot: retry after wireless enable ready=$ready")
                             if (ready) return true
                         }
                         else -> Log.w(TAG, "boot: retry still need user action")
@@ -310,7 +319,9 @@ object OneKukuBootRestoreCoordinator {
                 if (OneKukuEmbeddedAdbActivator.hasPairedOnce(context) &&
                     outcome.reason != "wifi_sta_required"
                 ) {
-                    ShizukuSetupHelper.openWirelessDebugging(context)
+                    if (!ShizukuSetupHelper.tryEnableAdbWifi(context)) {
+                        ShizukuSetupHelper.openWirelessDebugging(context)
+                    }
                 }
                 false
             }

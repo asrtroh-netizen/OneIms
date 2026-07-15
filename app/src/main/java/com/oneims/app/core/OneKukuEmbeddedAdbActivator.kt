@@ -226,10 +226,43 @@ object OneKukuEmbeddedAdbActivator {
             when (boot) {
                 "ok" -> {
                     markPairedOnce(app)
+                    // 留下 WRITE_SECURE_SETTINGS，供下次开机静默写回 adb_wifi_enabled（Shizuku 同款思路）。
+                    val granted = grantWriteSecureSettings(manager, app.packageName)
+                    val wifiOn = ShizukuSetupHelper.tryEnableAdbWifi(app)
+                    Log.i(TAG, "post-boot grantSecure=$granted adbWifi=$wifiOn")
                     Outcome.Success(if (persisted) "core_running_tcpip" else "core_running")
                 }
                 else -> Outcome.Failed(boot)
             }
+        }
+
+    /** 经已建立的 ADB shell 给本包授予 WRITE_SECURE_SETTINGS（持久，跨重启）。 */
+    private fun grantWriteSecureSettings(
+        manager: AbsAdbConnectionManager,
+        packageName: String,
+    ): Boolean =
+        runCatching {
+            val cmd = "pm grant $packageName android.permission.WRITE_SECURE_SETTINGS\n"
+            manager.openStream("shell:").use { stream ->
+                stream.openOutputStream().use { out ->
+                    out.write(cmd.toByteArray(StandardCharsets.UTF_8))
+                    out.flush()
+                }
+                // 短暂排空，避免部分机型堵住
+                val input = stream.openInputStream()
+                val buf = ByteArray(256)
+                val deadline = System.currentTimeMillis() + 1_500L
+                while (System.currentTimeMillis() < deadline) {
+                    val n = runCatching {
+                        if (input.available() > 0) input.read(buf) else 0
+                    }.getOrDefault(0)
+                    if (n <= 0) Thread.sleep(40)
+                }
+            }
+            true
+        }.getOrElse {
+            Log.w(TAG, "pm grant WRITE_SECURE_SETTINGS failed", it)
+            false
         }
 
     /** connect 口 → 5555 → connectTls，任一成功即可。 */

@@ -4,7 +4,9 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.provider.Settings
+import android.util.Log
 
 /**
  * OneKuku 通道「无 WiFi 也能准备」助手。
@@ -14,6 +16,9 @@ import android.provider.Settings
  * 部分机型需要一个本地网络接口——开**个人热点**即可满足，无需真的联网。
  */
 object ShizukuSetupHelper {
+
+    private const val TAG = "OneIMS-WirelessDbg"
+    private const val GLOBAL_ADB_WIFI = "adb_wifi_enabled"
 
     /** 尝试直达「无线调试」设置页；失败则退回「开发者选项」。返回是否成功跳转。 */
     fun openWirelessDebugging(context: Context): Boolean {
@@ -31,6 +36,31 @@ object ShizukuSetupHelper {
             if (ok) return true
         }
         return false
+    }
+
+    fun hasWriteSecureSettings(context: Context): Boolean =
+        context.checkSelfPermission(android.Manifest.permission.WRITE_SECURE_SETTINGS) ==
+            PackageManager.PERMISSION_GRANTED
+
+    /**
+     * 开机无码重连关键一步：在已授予 [WRITE_SECURE_SETTINGS] 时写回
+     * `adb_wifi_enabled=1`（系统重启常会关掉无线调试；配对关系仍在）。
+     * 对齐 Shizuku / Tasker 常见做法。
+     */
+    fun tryEnableAdbWifi(context: Context): Boolean {
+        if (!hasWriteSecureSettings(context)) {
+            Log.i(TAG, "tryEnableAdbWifi: no WRITE_SECURE_SETTINGS")
+            return false
+        }
+        return runCatching {
+            Settings.Global.putInt(context.contentResolver, GLOBAL_ADB_WIFI, 1)
+            val now = Settings.Global.getInt(context.contentResolver, GLOBAL_ADB_WIFI, 0)
+            Log.i(TAG, "tryEnableAdbWifi: wrote adb_wifi_enabled=$now")
+            now == 1
+        }.getOrElse {
+            Log.w(TAG, "tryEnableAdbWifi failed", it)
+            false
+        }
     }
 
     /** 打开开发者选项页。 */
