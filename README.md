@@ -16,7 +16,7 @@
 
 ### ⬇️ 下载 APK（最新）
 
-**[OneIms 2.1.4 · GitHub Releases](https://github.com/asrtroh-netizen/OneIms/releases/tag/v2.1.4)**
+**[OneIms 2.1.5 · GitHub Releases](https://github.com/asrtroh-netizen/OneIms/releases/tag/v2.1.5)**
 
 > 本仓库 **只提供 README + APK 发布**，**不开放源代码**。  
 > 需要交流 / 反馈请走 Telegram，别来仓库里翻源码啦～
@@ -24,6 +24,13 @@
 </div>
 
 ---
+
+## ✨ What's New · 2.1.5
+
+* 🔐 **开机更接近全自动**：激活成功后留下安全设置权限；已配对重启时可静默打开无线调试，再走无码直连（没权限时仍打开设置页兜底）
+* ⚡ **冷开机 / 划掉后台重连更快**：已配对优先走快路径，压缩 Wi‑Fi / 无线调试等待；划掉后台重开约 1 秒级恢复
+* 🛡️ **开机前台服务只在开机完成白名单启动**，避免系统拦截后台拉起
+* 🎯 激活中按钮不再误显示「正在恢复…」
 
 ## ✨ What's New · 2.1.4
 
