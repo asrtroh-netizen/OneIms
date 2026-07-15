@@ -866,7 +866,8 @@ fun StatusHero(
                     onClick = onPrimaryAction,
                     enabled = actionEnabled,
                     loading = actionLoading,
-                    loadingText = stringResource(R.string.onekuku_action_running),
+                    // 激活中勿复用「正在恢复…」——划掉后台重开时用户会误以为在恢复配置。
+                    loadingText = actionLabel,
                 )
                 if (actionSub != null) {
                     Text(
