@@ -416,20 +416,20 @@
 
     <!-- OneKuku 首页总控卡（对用户隐藏底层通道名称） -->
     <string name="logic_card_eyebrow">逻辑状态</string>
-    <string name="logic_title_ready">通话配置可恢复</string>
-    <string name="logic_subtitle_ready">通道已就绪，可一键写回上次成功配置</string>
+    <string name="logic_title_ready">可恢复通话配置</string>
+    <string name="logic_subtitle_ready">一键写回上次成功配置</string>
     <string name="logic_detail_ready">VoLTE / VoWiFi / VoNR 等快照会按当前 SIM 匹配后应用</string>
-    <string name="logic_title_need_channel">等待 OneKuku 通道</string>
-    <string name="logic_subtitle_need_channel">请先在下方激活 OneKuku</string>
+    <string name="logic_title_need_channel">等待 OneKuku</string>
+    <string name="logic_subtitle_need_channel">请先在上方激活通道</string>
     <string name="logic_detail_need_channel">通道未就绪时无法写入通话配置</string>
     <string name="logic_title_waiting_channel">通道激活中</string>
-    <string name="logic_subtitle_waiting_channel">配对或连接完成后即可恢复配置</string>
-    <string name="logic_detail_waiting_channel">请按下方 OneKuku 卡与通知栏提示操作</string>
-    <string name="logic_title_restoring">正在恢复通话配置</string>
-    <string name="logic_subtitle_restoring">请保持应用在前台片刻</string>
+    <string name="logic_subtitle_waiting_channel">完成后即可恢复</string>
+    <string name="logic_detail_waiting_channel">请按上方 OneKuku 卡与通知栏提示操作</string>
+    <string name="logic_title_restoring">正在恢复</string>
+    <string name="logic_subtitle_restoring">请保持前台片刻</string>
     <string name="logic_detail_restoring">正在写回 IMS、VoWiFi、5G 等相关项</string>
     <string name="logic_title_no_sim">未检测到 SIM</string>
-    <string name="logic_subtitle_no_sim">插入 SIM 后再恢复通话配置</string>
+    <string name="logic_subtitle_no_sim">插卡后再恢复</string>
     <string name="logic_detail_no_sim">无卡时无法匹配快照与写入运营商配置</string>
     <string name="logic_pill_ready">可恢复</string>
     <string name="logic_pill_waiting">等待中</string>

@@ -362,13 +362,14 @@ fun OneImsPrimaryButton(
     enabled: Boolean = true,
     loading: Boolean = false,
     loadingText: String = stringResource(R.string.action_processing),
+    compact: Boolean = false,
 ) {
     Button(
         onClick = onClick,
         enabled = enabled && !loading,
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = 52.dp),
+            .heightIn(min = if (compact) 40.dp else 52.dp),
         shape = RoundedCornerShape(percent = 50),
         colors = ButtonDefaults.buttonColors(
             containerColor = Color.White,
@@ -376,19 +377,27 @@ fun OneImsPrimaryButton(
             disabledContainerColor = Color.White.copy(alpha = 0.38f),
             disabledContentColor = Color.Black.copy(alpha = 0.38f),
         ),
-        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 14.dp),
+        contentPadding = if (compact) {
+            PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+        } else {
+            PaddingValues(horizontal = 24.dp, vertical = 14.dp)
+        },
     ) {
         if (loading) {
             CircularProgressIndicator(
-                modifier = Modifier.size(18.dp),
+                modifier = Modifier.size(if (compact) 16.dp else 18.dp),
                 color = Color.Black,
                 strokeWidth = 2.dp,
             )
-            Spacer(modifier = Modifier.width(10.dp))
+            Spacer(modifier = Modifier.width(if (compact) 8.dp else 10.dp))
         }
         Text(
             text = if (loading) loadingText else text,
-            style = MaterialTheme.typography.labelLarge,
+            style = if (compact) {
+                MaterialTheme.typography.labelMedium
+            } else {
+                MaterialTheme.typography.labelLarge
+            },
             fontWeight = FontWeight.SemiBold,
         )
     }
@@ -887,7 +896,7 @@ fun StatusHero(
 }
 
 /**
- * 首页逻辑状态卡：通话配置侧（可恢复 / 执行中），与下方 OneKuku 通道卡分离。
+ * 首页逻辑状态卡（第二顺位、矮卡）：通话配置可恢复入口；通道细节见上方 OneKuku 卡。
  */
 @Composable
 fun LogicStatusHero(
@@ -929,15 +938,6 @@ fun LogicStatusHero(
             else -> R.string.logic_subtitle_need_channel
         },
     )
-    val detail = stringResource(
-        when {
-            !hasSim -> R.string.logic_detail_no_sim
-            restoring -> R.string.logic_detail_restoring
-            channelBusy -> R.string.logic_detail_waiting_channel
-            channelReady -> R.string.logic_detail_ready
-            else -> R.string.logic_detail_need_channel
-        },
-    )
     val pill = stringResource(
         when {
             !hasSim -> R.string.logic_pill_no_sim
@@ -954,18 +954,18 @@ fun LogicStatusHero(
 
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.extraLarge,
+        shape = MaterialTheme.shapes.large,
         color = containerColor,
-        tonalElevation = if (!alert && !busy) 2.dp else 0.dp,
+        tonalElevation = if (!alert && !busy) 1.dp else 0.dp,
         shadowElevation = if (!alert && !busy) 1.dp else 0.dp,
     ) {
         Column(
-            modifier = Modifier.padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(18.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Row(
-                verticalAlignment = Alignment.Top,
-                horizontalArrangement = Arrangement.spacedBy(18.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 Icon(
                     imageVector = when {
@@ -974,48 +974,30 @@ fun LogicStatusHero(
                         else -> Icons.Filled.CheckCircle
                     },
                     contentDescription = null,
-                    modifier = Modifier.size(38.dp),
+                    modifier = Modifier.size(26.dp),
                     tint = contentColor,
                 )
                 Column(
                     modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
                 ) {
                     Text(
                         text = stringResource(R.string.logic_card_eyebrow),
-                        style = MaterialTheme.typography.labelMedium,
+                        style = MaterialTheme.typography.labelSmall,
                         color = contentColor.copy(alpha = 0.72f),
                     )
                     Text(
                         title,
-                        style = MaterialTheme.typography.titleLarge,
+                        style = MaterialTheme.typography.titleMedium,
                         color = contentColor,
+                        maxLines = 1,
                     )
                     Text(
                         subtitle,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = contentColor,
-                    )
-                    Text(
-                        detail,
                         style = MaterialTheme.typography.bodySmall,
-                        color = contentColor.copy(alpha = 0.78f),
+                        color = contentColor.copy(alpha = 0.82f),
+                        maxLines = 2,
                     )
-                    if (onOpenDeviceDetails != null) {
-                        Surface(
-                            onClick = onOpenDeviceDetails,
-                            shape = RoundedCornerShape(percent = 50),
-                            color = contentColor.copy(alpha = 0.14f),
-                        ) {
-                            Text(
-                                text = stringResource(R.string.home_device_details),
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                style = MaterialTheme.typography.labelMedium,
-                                color = contentColor,
-                                maxLines = 1,
-                            )
-                        }
-                    }
                 }
                 Surface(
                     shape = RoundedCornerShape(percent = 50),
@@ -1023,34 +1005,42 @@ fun LogicStatusHero(
                 ) {
                     Text(
                         text = pill,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                        style = MaterialTheme.typography.labelMedium,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.labelSmall,
                         color = contentColor,
                         maxLines = 1,
                     )
                 }
             }
 
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
                 OneImsPrimaryButton(
                     text = actionLabel,
                     onClick = onRestore,
                     enabled = canRestore,
                     loading = restoring,
                     loadingText = actionLabel,
+                    compact = true,
+                    modifier = Modifier.weight(1f),
                 )
-                Text(
-                    text = stringResource(
-                        if (canRestore) {
-                            R.string.onekuku_action_restore_sub
-                        } else {
-                            R.string.logic_action_restore_blocked_sub
-                        },
-                    ),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = contentColor.copy(alpha = 0.72f),
-                    modifier = Modifier.padding(horizontal = 4.dp),
-                )
+                if (onOpenDeviceDetails != null) {
+                    Surface(
+                        onClick = onOpenDeviceDetails,
+                        shape = RoundedCornerShape(percent = 50),
+                        color = contentColor.copy(alpha = 0.14f),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.home_device_details),
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = contentColor,
+                            maxLines = 1,
+                        )
+                    }
+                }
             }
         }
     }

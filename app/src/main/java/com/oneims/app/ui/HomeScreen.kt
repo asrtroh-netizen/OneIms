@@ -62,15 +62,6 @@ fun HomeScreen(
         simSelectionEnabled = state.actionsEnabled,
     ) {
         item {
-            LogicStatusHero(
-                oneKukuState = state.oneKukuState,
-                hasSim = state.sims.isNotEmpty(),
-                onRestore = actions.onRestoreCallConfig,
-                onOpenDeviceDetails = { openDialog = HomeToolDialog.DeviceInfo },
-            )
-        }
-
-        item {
             StatusHero(
                 oneKukuState = state.oneKukuState,
                 onPrimaryAction = {
@@ -93,6 +84,15 @@ fun HomeScreen(
                     }
                 },
                 detailOverride = state.oneKukuDetailOverride,
+            )
+        }
+
+        item {
+            LogicStatusHero(
+                oneKukuState = state.oneKukuState,
+                hasSim = state.sims.isNotEmpty(),
+                onRestore = actions.onRestoreCallConfig,
+                onOpenDeviceDetails = { openDialog = HomeToolDialog.DeviceInfo },
             )
         }
 

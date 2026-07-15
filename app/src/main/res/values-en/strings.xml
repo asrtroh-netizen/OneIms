@@ -411,21 +411,21 @@
     <string name="home_safety_note">Calls, messages, and data always take priority over IMS changes</string>
 
     <!-- OneKuku home control card (hides underlying privilege channel names) -->
-    <string name="logic_card_eyebrow">Logic status</string>
-    <string name="logic_title_ready">Call settings ready to restore</string>
-    <string name="logic_subtitle_ready">Channel is ready — restore the last successful profile</string>
+    <string name="logic_card_eyebrow">Logic</string>
+    <string name="logic_title_ready">Restore call settings</string>
+    <string name="logic_subtitle_ready">One-tap write-back of last profile</string>
     <string name="logic_detail_ready">VoLTE / VoWiFi / VoNR snapshots apply to the selected SIM</string>
     <string name="logic_title_need_channel">Waiting for OneKuku</string>
-    <string name="logic_subtitle_need_channel">Activate OneKuku below first</string>
+    <string name="logic_subtitle_need_channel">Activate the channel above first</string>
     <string name="logic_detail_need_channel">Call settings cannot be written while the channel is off</string>
     <string name="logic_title_waiting_channel">Activating channel</string>
-    <string name="logic_subtitle_waiting_channel">Restore unlocks after pairing/connect finishes</string>
+    <string name="logic_subtitle_waiting_channel">Restore unlocks when ready</string>
     <string name="logic_detail_waiting_channel">Follow the OneKuku card and notification prompts</string>
-    <string name="logic_title_restoring">Restoring call settings</string>
-    <string name="logic_subtitle_restoring">Keep the app in the foreground briefly</string>
+    <string name="logic_title_restoring">Restoring…</string>
+    <string name="logic_subtitle_restoring">Keep the app in foreground</string>
     <string name="logic_detail_restoring">Writing IMS, VoWiFi, 5G and related items</string>
-    <string name="logic_title_no_sim">No SIM detected</string>
-    <string name="logic_subtitle_no_sim">Insert a SIM before restoring</string>
+    <string name="logic_title_no_sim">No SIM</string>
+    <string name="logic_subtitle_no_sim">Insert a SIM to restore</string>
     <string name="logic_detail_no_sim">Snapshots and carrier writes need a SIM</string>
     <string name="logic_pill_ready">Ready</string>
     <string name="logic_pill_waiting">Waiting</string>
