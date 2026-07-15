@@ -3,10 +3,9 @@ package com.oneims.app.core.privilege
 import android.os.IBinder
 
 /**
- * 优先 OneBridge；未就绪时回落 [fallback]（通常为 Shizuku）。
+ * 双源特权桥组合器（测试/实验用）。
  *
- * 生命周期监听：对 primary / fallback **双源订阅**，这样 OneBridge-only
- * 或 Shizuku-only 都能驱动 Guard / UI 刷新。
+ * Phase3 生产路径不再使用： [PrivilegeBridges.current] 仅挂 [OneBridgePrivilegeBridge]。
  */
 class FallbackPrivilegeBridge(
     private val primary: PrivilegeBridge,

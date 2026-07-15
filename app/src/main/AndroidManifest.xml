@@ -54,16 +54,6 @@
             android:multiprocess="false"
             tools:ignore="ExportedContentProvider" />
 
-        <!-- Shizuku Provider：过渡回落客户端接入点 -->
-        <provider
-            android:name="rikka.shizuku.ShizukuProvider"
-            android:authorities="${applicationId}.shizuku"
-            android:multiprocess="false"
-            android:enabled="true"
-            android:exported="true"
-            android:permission="android.permission.INTERACT_ACROSS_USERS_FULL"
-            tools:ignore="ExportedContentProvider" />
-
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

@@ -17,89 +17,62 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 /**
- * OneKuku「核心组件」安装与就绪探测（方案 A）。
+ * OneKuku「通道」安装与就绪探测。
  *
- * 产品面只说 OneKuku。包名优先级：
- * 1. [BRIDGE_PACKAGE] 自研 OneBridge（户外急救主路径）
- * 2. [BRANDED_CORE_PACKAGE] 换皮核心（过渡回落）
- * 3. [LEGACY_CORE_PACKAGE] 上游兼容包（过渡回落）
- *
- * 用户路径：**不再跳应用商店**；内置 APK / 下载 + ADB 拉起。
+ * Phase3：只认 [BRIDGE_PACKAGE]（OneBridge）。不再安装/探测换皮 Core 或上游 Shizuku。
+ * 用户路径：**不跳应用商店**；内置 `oneims-bridge.apk` + 无线调试 / 内嵌 ADB 拉起。
  */
 object OneKukuCoreComponent {
 
-    /** OneBridge 自研通道（优先；户外急救主路径）。 */
+    /** OneBridge 自研通道（唯一产品路径）。 */
     const val BRIDGE_PACKAGE: String = "com.oneims.bridge"
 
-    /** 换皮目标包名（过渡回落）。 */
+    /** @deprecated Phase3 已卸；保留常量避免旧引用编译炸掉。 */
+    @Deprecated("Phase3 removed branded core path")
     const val BRANDED_CORE_PACKAGE: String = "com.oneims.onekuku.core"
 
-    /** 上游兼容包名（过渡回落；不对用户展示）。 */
+    /** @deprecated Phase3 已卸；保留常量避免旧引用编译炸掉。 */
+    @Deprecated("Phase3 removed upstream Shizuku package path")
     const val LEGACY_CORE_PACKAGE: String = "moe.shizuku.privileged.api"
 
-    /** @deprecated 使用 [resolveCorePackage]；保留常量指向桥包以便文档引用。 */
+    /** @deprecated 使用 [resolveCorePackage]；指向桥包。 */
     const val CORE_PACKAGE: String = BRIDGE_PACKAGE
 
-    val CANDIDATE_PACKAGES: List<String> = listOf(
-        BRIDGE_PACKAGE,
-        BRANDED_CORE_PACKAGE,
-        LEGACY_CORE_PACKAGE,
-    )
+    val CANDIDATE_PACKAGES: List<String> = listOf(BRIDGE_PACKAGE)
 
-    /** 内置 OneBridge APK（主路径；未装桥时优先安装）。 */
+    /** 内置 OneBridge APK。 */
     const val BUNDLED_BRIDGE_ASSET_NAME: String = "oneims-bridge.apk"
 
-    /**
-     * 内置换皮 Core APK（过渡回落）。
-     * 仅当 [BUNDLED_BRIDGE_ASSET_NAME] 缺失时才会被 [installBundledApk] 使用。
-     */
+    /** @deprecated Phase3 不再内置换皮 Core。 */
+    @Deprecated("Phase3 removed")
     const val BUNDLED_CORE_ASSET_NAME: String = "onekuku-core.apk"
 
-    /** @deprecated 使用 [BUNDLED_BRIDGE_ASSET_NAME]；保留以免旧引用断裂。 */
+    /** @deprecated 使用 [BUNDLED_BRIDGE_ASSET_NAME]。 */
     const val BUNDLED_ASSET_NAME: String = BUNDLED_BRIDGE_ASSET_NAME
 
-    /** 安装探测顺序：桥优先，换皮 Core 回落。 */
-    val BUNDLED_ASSET_CANDIDATES: List<String> = listOf(
-        BUNDLED_BRIDGE_ASSET_NAME,
-        BUNDLED_CORE_ASSET_NAME,
-    )
+    val BUNDLED_ASSET_CANDIDATES: List<String> = listOf(BUNDLED_BRIDGE_ASSET_NAME)
 
     private const val CORE_REPO_OWNER = "asrtroh-netizen"
     private const val CORE_REPO_NAME = "OneIms"
     private const val CONNECT_TIMEOUT_MS = 8000
     private const val READ_TIMEOUT_MS = 8000
 
-    /** 自有换皮核心 Release 资产名约定（禁止再拉上游商店/仓库充数）。 */
-    private const val BRANDED_CORE_ASSET_PREFIX = "OneKuku-core"
+    /** Release 资产名约定：自有桥包。 */
+    private const val BRIDGE_ASSET_PREFIX = "OneBridge"
+    private const val BRIDGE_ASSET_ALT = "oneims-bridge"
 
     enum class Status {
-        /** 未安装核心组件 */
         MISSING,
-
-        /** 已安装但特权进程未跑 */
         INSTALLED_STOPPED,
-
-        /** 已运行但未授权给 OneIMS */
         RUNNING_NEED_AUTH,
-
-        /** 运行且已授权 */
         READY,
     }
 
     enum class PrepareResult {
-        /** 已跳转无线调试，并复制了 ADB 启动命令 */
         OPENED_ADB_GUIDE,
-
-        /** 已拉起内置 APK 安装器 */
         INSTALLING_BUNDLED,
-
-        /** 需要 IO 线程解析下载地址后调用 [downloadOfficialCore] */
         NEEDS_DOWNLOAD,
-
-        /** 已开始下载核心组件 */
         DOWNLOADING_CORE,
-
-        /** 失败 */
         FAILED,
     }
 
@@ -110,7 +83,7 @@ object OneKukuCoreComponent {
         else -> Status.MISSING
     }
 
-    /** 已安装的核心包（优先换皮包）。 */
+    /** 已安装的通道包（仅 OneBridge）。 */
     fun resolveCorePackage(context: Context): String? {
         val pm = context.applicationContext.packageManager
         for (pkg in CANDIDATE_PACKAGES) {
@@ -125,13 +98,12 @@ object OneKukuCoreComponent {
 
     fun isInstalled(context: Context): Boolean = resolveCorePackage(context) != null
 
-    fun isBrandedCoreInstalled(context: Context): Boolean =
-        resolveCorePackage(context) == BRANDED_CORE_PACKAGE
+    @Deprecated("Phase3: branded core path removed")
+    fun isBrandedCoreInstalled(context: Context): Boolean = false
 
     fun hasBundledApk(context: Context): Boolean =
         resolveBundledAssetName(context) != null
 
-    /** 返回 assets 中可用的内置 APK 文件名（桥优先）。 */
     fun resolveBundledAssetName(context: Context): String? {
         val assets = context.applicationContext.assets
         for (name in BUNDLED_ASSET_CANDIDATES) {
@@ -149,14 +121,11 @@ object OneKukuCoreComponent {
         return "adb shell sh /storage/emulated/0/Android/data/$pkg/start.sh"
     }
 
-    /**
-     * 免电脑引导脚本（方案 B · 剪贴板实现；原生内嵌 ADB 客户端另迭代）。
-     */
     fun guidedActivationScript(context: Context): String =
         context.getString(R.string.onekuku_adb_guide_script, adbStartCommand(context))
 
     /**
-     * 一键准备（同步部分）：缺组件优先装内置包，否则返回 [PrepareResult.NEEDS_DOWNLOAD]；
+     * 一键准备：缺组件优先装内置桥包；无内置则 [NEEDS_DOWNLOAD]。
      * 已装则开无线调试并复制 ADB 启动命令。**绝不**跳转应用市场。
      */
     fun prepare(context: Context): PrepareResult {
@@ -202,15 +171,11 @@ object OneKukuCoreComponent {
         }.getOrDefault(false)
     }
 
-    /**
-     * 从官方核心组件 Release 拉取 APK 并安装（UI 文案为 OneKuku，不诱导去商店）。
-     * [apkUrl] 须先在 IO 线程用 [resolveLatestCoreApkUrl] 解析。
-     */
     fun downloadOfficialCore(context: Context, apkUrl: String): Boolean {
         val app = context.applicationContext
         if (apkUrl.isBlank()) return false
         val dm = app.getSystemService(Context.DOWNLOAD_SERVICE) as? DownloadManager ?: return false
-        val fileName = "OneKuku-core.apk"
+        val fileName = "oneims-bridge.apk"
         val request = DownloadManager.Request(Uri.parse(apkUrl))
             .setTitle(app.getString(R.string.onekuku_core_download_title))
             .setDescription(app.getString(R.string.onekuku_core_download_desc))
@@ -247,7 +212,7 @@ object OneKukuCoreComponent {
         return true
     }
 
-    /** 阻塞：解析自有换皮核心最新 APK 直链。失败返回 null（绝不回落上游仓库）。 */
+    /** 阻塞：解析自有 OneBridge APK 直链。失败返回 null（绝不回落上游 Shizuku 仓库）。 */
     fun resolveLatestCoreApkUrl(): String? {
         var conn: HttpURLConnection? = null
         return try {
@@ -257,23 +222,22 @@ object OneKukuCoreComponent {
                 requestMethod = "GET"
                 connectTimeout = CONNECT_TIMEOUT_MS
                 readTimeout = READ_TIMEOUT_MS
-                setRequestProperty("User-Agent", "OneIms-OneKukuCore")
+                setRequestProperty("User-Agent", "OneIms-OneBridge")
                 setRequestProperty("Accept", "application/vnd.github+json")
             }
             if (conn.responseCode != HttpURLConnection.HTTP_OK) return null
             val json = conn.inputStream.bufferedReader().use { it.readText() }
             val assets = JSONObject(json).optJSONArray("assets") ?: return null
-            // 只认自有命名的核心包，避免误装上游 APK。
             var fallbackApk: String? = null
             for (i in 0 until assets.length()) {
                 val a = assets.optJSONObject(i) ?: continue
                 val name = a.optString("name")
                 val url = a.optString("browser_download_url").ifBlank { null } ?: continue
                 if (!name.endsWith(".apk", ignoreCase = true)) continue
-                if (name.startsWith(BRANDED_CORE_ASSET_PREFIX, ignoreCase = true)) {
+                if (name.startsWith(BRIDGE_ASSET_PREFIX, ignoreCase = true)) {
                     return url
                 }
-                if (fallbackApk == null && name.contains("onekuku-core", ignoreCase = true)) {
+                if (fallbackApk == null && name.contains(BRIDGE_ASSET_ALT, ignoreCase = true)) {
                     fallbackApk = url
                 }
             }

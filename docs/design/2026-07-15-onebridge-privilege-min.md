@@ -176,11 +176,14 @@ interface PrivilegeBridge {
 
 ### Phase 3 · 卸载上游依赖
 
-| 项 | 内容 |
-|---|---|
-| 移除 | 对外部 Shizuku App / 换皮 Core 的安装引导 |
-| 可选 | 删除 `rikka.shizuku` Maven 依赖（若接口已完全自有） |
-| 清理 | `OneKukuCore` fork 仓库降为归档 |
+| 项 | 内容 | 状态 |
+|---|---|---|
+| 移除 | 对外部 Shizuku App / 换皮 Core 的安装引导与探测 | ✅ 2026-07-15 |
+| 移除 | `rikka.shizuku` Maven + `ShizukuProvider` + `ShizukuPrivilegeBridge` | ✅ 2026-07-15 |
+| 清理 | `assets/onekuku-core.apk`；`CANDIDATE_PACKAGES` 仅 `com.oneims.bridge` | ✅ 2026-07-15 |
+| 可选 | 邻仓 `OneKukuCore` fork 归档 | 文档建议；本仓不强制 |
+
+**生产路径**：`PrivilegeBridges.current = OneBridgePrivilegeBridge()`。无线调试红线仍在。
 
 ---
 

@@ -7,16 +7,11 @@ import android.content.Intent
 import android.provider.Settings
 
 /**
- * Shizuku「无 WiFi 也能开启」助手。
+ * OneKuku 通道「无 WiFi 也能准备」助手。
  *
- * 关键事实（破除误区）：Shizuku 的无线调试连的是**手机本机回环 127.0.0.1**，
+ * 关键事实：无线调试连的是**手机本机回环 127.0.0.1**，
  * 并不需要连 WiFi 上外网。出门没 WiFi 时，只要「无线调试」开关能打开即可；
  * 部分机型需要一个本地网络接口——开**个人热点**即可满足，无需真的联网。
- *
- * App 无法直接替用户打开系统开关（需系统权限），本助手提供三件事：
- *   1) 一键跳转到「无线调试 / 开发者选项」设置页；
- *   2) 澄清「无需 WiFi」的正确认知 + 开热点兜底；
- *   3) 免电脑自助路径：Termux + 本机 adb 对 localhost 自配对的现成命令（一键复制）。
  */
 object ShizukuSetupHelper {
 
@@ -47,10 +42,10 @@ object ShizukuSetupHelper {
         true
     }.getOrDefault(false)
 
-    /** @deprecated 使用 [OneKukuCoreComponent.resolveCorePackage] */
-    const val SHIZUKU_PKG = OneKukuCoreComponent.LEGACY_CORE_PACKAGE
+    /** @deprecated 使用 [OneKukuCoreComponent.BRIDGE_PACKAGE] */
+    const val SHIZUKU_PKG = OneKukuCoreComponent.BRIDGE_PACKAGE
 
-    /** 是否已安装任一核心包（换皮优先）。 */
+    /** 是否已安装 OneBridge 通道。 */
     fun isShizukuInstalled(context: Context): Boolean =
         OneKukuCoreComponent.isInstalled(context)
 

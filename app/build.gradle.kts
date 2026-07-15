@@ -60,10 +60,6 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     debugImplementation("androidx.compose.ui:ui-tooling")
 
-    // Shizuku：以 ADB/root 权限调用系统隐藏 API（免 root 提权）
-    implementation("dev.rikka.shizuku:api:13.1.5")
-    implementation("dev.rikka.shizuku:provider:13.1.5")
-
     // 访问 hidden API（绕过 Android 隐藏 API 反射限制；6.x 起明确覆盖 Android 17）
     implementation("org.lsposed.hiddenapibypass:hiddenapibypass:6.1")
 

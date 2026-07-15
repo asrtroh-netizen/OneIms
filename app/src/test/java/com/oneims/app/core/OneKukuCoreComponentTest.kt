@@ -15,28 +15,20 @@ class OneKukuCoreComponentTest {
     }
 
     @Test
-    fun candidatePackages_preferBridgeThenBrandedThenLegacy() {
+    fun candidatePackages_onlyBridgeAfterPhase3() {
         assertEquals(
-            listOf(
-                OneKukuCoreComponent.BRIDGE_PACKAGE,
-                OneKukuCoreComponent.BRANDED_CORE_PACKAGE,
-                OneKukuCoreComponent.LEGACY_CORE_PACKAGE,
-            ),
+            listOf(OneKukuCoreComponent.BRIDGE_PACKAGE),
             OneKukuCoreComponent.CANDIDATE_PACKAGES,
         )
     }
 
     @Test
-    fun bundledAssetCandidates_preferBridgeThenCore() {
+    fun bundledAssetCandidates_onlyBridge() {
         assertEquals(
-            listOf(
-                OneKukuCoreComponent.BUNDLED_BRIDGE_ASSET_NAME,
-                OneKukuCoreComponent.BUNDLED_CORE_ASSET_NAME,
-            ),
+            listOf(OneKukuCoreComponent.BUNDLED_BRIDGE_ASSET_NAME),
             OneKukuCoreComponent.BUNDLED_ASSET_CANDIDATES,
         )
         assertEquals("oneims-bridge.apk", OneKukuCoreComponent.BUNDLED_BRIDGE_ASSET_NAME)
-        assertEquals("onekuku-core.apk", OneKukuCoreComponent.BUNDLED_CORE_ASSET_NAME)
         assertEquals(
             OneKukuCoreComponent.BUNDLED_BRIDGE_ASSET_NAME,
             OneKukuCoreComponent.BUNDLED_ASSET_NAME,

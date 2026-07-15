@@ -6,7 +6,7 @@ import android.os.Parcel
 import android.os.Process
 
 /**
- * OneBridge 客户端实现。binder 未送达时 [isRunning] 为 false，由 [FallbackPrivilegeBridge] 回落 Shizuku。
+ * OneBridge 客户端实现。binder 未送达时 [isRunning] 为 false。
  */
 class OneBridgePrivilegeBridge : PrivilegeBridge {
     override fun isRunning(): Boolean = BridgeBinderHolder.get() != null
