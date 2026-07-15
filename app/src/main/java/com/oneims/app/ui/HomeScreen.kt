@@ -24,6 +24,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,8 +35,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.oneims.app.R
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 private enum class HomeToolDialog {
+    Status,
     Snapshot,
     History,
     Settings,
@@ -130,7 +134,7 @@ fun HomeScreen(
                                 icon = Icons.Filled.Search,
                                 title = stringResource(R.string.onekuku_tool_status_title),
                                 subtitle = stringResource(R.string.onekuku_tool_status_sub),
-                                onClick = actions.onStatusCheck,
+                                onClick = { openDialog = HomeToolDialog.Status },
                                 enabled = state.actionsEnabled,
                             ),
                             ActionSpec(
@@ -163,7 +167,7 @@ fun HomeScreen(
                     icon = Icons.Filled.AccountBox,
                     title = stringResource(R.string.no_sim_hint),
                     subtitle = stringResource(R.string.no_sim_detail),
-                    onClick = actions.onStatusCheck,
+                    onClick = { openDialog = HomeToolDialog.Status },
                     modifier = Modifier
                         .clip(MaterialTheme.shapes.large)
                         .background(MaterialTheme.colorScheme.surfaceContainerLow),
@@ -209,6 +213,60 @@ fun HomeScreen(
     }
 
     when (openDialog) {
+        HomeToolDialog.Status -> {
+            var lines by remember { mutableStateOf<List<OneKukuHomeTools.SnapshotLine>?>(null) }
+            LaunchedEffect(
+                state.selectedSubId,
+                state.oneKukuState,
+                state.shizukuRunning,
+                state.shizukuGranted,
+            ) {
+                lines = withContext(Dispatchers.IO) {
+                    OneKukuHomeTools.buildStatusCheckLines(
+                        context = context,
+                        selectedSubId = state.selectedSubId,
+                        cardState = state.oneKukuState,
+                        serviceRunning = state.shizukuRunning,
+                        serviceGranted = state.shizukuGranted,
+                        sims = state.sims,
+                    )
+                }
+            }
+            AlertDialog(
+                onDismissRequest = { openDialog = null },
+                title = { Text(stringResource(R.string.onekuku_tool_status_title)) },
+                text = {
+                    if (lines == null) {
+                        Text(stringResource(R.string.onekuku_busy_status_check))
+                    } else {
+                        Column(
+                            modifier = Modifier.verticalScroll(rememberScrollState()),
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                        ) {
+                            lines.orEmpty().forEach { line ->
+                                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                    Text(
+                                        line.label,
+                                        style = MaterialTheme.typography.labelLarge,
+                                        color = MaterialTheme.colorScheme.primary,
+                                    )
+                                    Text(
+                                        line.value,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                    )
+                                }
+                            }
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { openDialog = null }) {
+                        Text(stringResource(R.string.action_close))
+                    }
+                },
+            )
+        }
+
         HomeToolDialog.Snapshot -> {
             val lines = OneKukuHomeTools.buildSnapshotLines(context, state.selectedSubId)
             AlertDialog(

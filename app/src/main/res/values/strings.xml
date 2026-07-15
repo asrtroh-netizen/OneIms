@@ -445,6 +445,15 @@
     <string name="onekuku_stage_activate">激活</string>
     <string name="onekuku_stage_execute">执行</string>
     <string name="onekuku_stage_done">完成</string>
+    <string name="onekuku_stage_inactive">未激活</string>
+    <string name="onekuku_stage_wait_pair">等配对</string>
+    <string name="onekuku_stage_pairing">配对</string>
+    <string name="onekuku_stage_connecting">连接</string>
+    <string name="onekuku_stage_starting">启动</string>
+    <string name="onekuku_stage_active">已激活</string>
+    <string name="onekuku_stage_sleeping">休眠</string>
+    <string name="onekuku_stage_executing">执行</string>
+    <string name="onekuku_stage_failed">失败</string>
 
     <string name="onekuku_msg_need_prepare">请先完成 OneKuku 核心服务准备</string>
     <string name="onekuku_msg_already_active">OneKuku 核心服务已激活</string>

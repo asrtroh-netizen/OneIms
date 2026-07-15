@@ -21,6 +21,61 @@ object OneKukuHomeTools {
 
     data class SnapshotLine(val label: String, val value: String)
 
+    fun buildStatusCheckLines(
+        context: Context,
+        selectedSubId: Int,
+        cardState: OneKukuCardState,
+        serviceRunning: Boolean,
+        serviceGranted: Boolean,
+        sims: List<com.oneims.app.model.SimInfo>,
+    ): List<SnapshotLine> {
+        val statusLabel = settingsStatusLabel(context, cardState, serviceRunning)
+        val simLine = sims.firstOrNull { it.subscriptionId == selectedSubId }?.let {
+            context.getString(R.string.onekuku_status_sim, it.slotIndex + 1, it.carrierName)
+        } ?: context.getString(R.string.onekuku_status_no_sim)
+        val fiveG = ConfigStore.fiveGDisplayConfig(context)
+        val fiveGLine = context.getString(
+            R.string.onekuku_status_5g,
+            if (fiveG.enabled) {
+                context.getString(R.string.onekuku_value_on)
+            } else {
+                context.getString(R.string.onekuku_value_off)
+            },
+        )
+        val imsLine = if (selectedSubId >= 0 && serviceGranted) {
+            sanitizeUserText(
+                com.oneims.app.core.ImsController.queryImsStatus(context, selectedSubId).rawText,
+            )
+        } else {
+            context.getString(R.string.onekuku_status_ims_skipped)
+        }
+        return listOf(
+            SnapshotLine(
+                label = context.getString(R.string.onekuku_tool_status_title),
+                value = context.getString(R.string.onekuku_status_onekuku, statusLabel),
+            ),
+            SnapshotLine(
+                label = context.getString(R.string.cap_group_radio_title),
+                value = "$simLine\n$fiveGLine",
+            ),
+            SnapshotLine(
+                label = "IMS / VoWiFi",
+                value = imsLine,
+            ),
+            SnapshotLine(
+                label = context.getString(R.string.onekuku_subtitle_active),
+                value = when {
+                    serviceRunning && serviceGranted ->
+                        context.getString(R.string.onekuku_settings_state_sleeping)
+                    serviceRunning ->
+                        context.getString(R.string.onekuku_settings_state_inactive)
+                    else ->
+                        context.getString(R.string.onekuku_settings_state_invalid)
+                },
+            ),
+        )
+    }
+
     fun hasConfigSnapshot(context: Context, subId: Int): Boolean {
         if (subId < 0) return false
         val sim = com.oneims.app.core.ImsController.listSims(context)

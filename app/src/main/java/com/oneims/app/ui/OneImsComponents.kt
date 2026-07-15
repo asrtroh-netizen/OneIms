@@ -854,44 +854,23 @@ fun StatusHero(
 
             OneKukuStageProgress(
                 litCount = OneKukuCardPolicy.litStageCount(oneKukuState),
+                current = oneKukuState,
                 contentColor = contentColor,
             )
 
             if (deviceInfo.isNotBlank()) {
-                var expanded by remember { mutableStateOf(false) }
                 HorizontalDivider(color = contentColor.copy(alpha = 0.16f))
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(role = Role.Button) { expanded = !expanded },
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = stringResource(R.string.home_device_details),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = contentColor,
-                    )
-                    Text(
-                        text = stringResource(
-                            if (expanded) {
-                                R.string.home_device_details_collapse
-                            } else {
-                                R.string.home_device_details_expand
-                            },
-                        ),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = contentColor.copy(alpha = 0.78f),
-                    )
-                }
-                AnimatedVisibility(visible = expanded) {
-                    Text(
-                        text = deviceInfo,
-                        style = MaterialTheme.typography.bodySmall,
-                        fontFamily = FontFamily.Monospace,
-                        color = contentColor.copy(alpha = 0.9f),
-                    )
-                }
+                Text(
+                    text = stringResource(R.string.home_device_details),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = contentColor,
+                )
+                Text(
+                    text = deviceInfo,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontFamily = FontFamily.Monospace,
+                    color = contentColor.copy(alpha = 0.9f),
+                )
             }
 
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -918,43 +897,48 @@ fun StatusHero(
 @Composable
 private fun OneKukuStageProgress(
     litCount: Int,
+    current: OneKukuCardState,
     contentColor: Color,
 ) {
-    val stages = listOf(
-        R.string.onekuku_stage_standby,
-        R.string.onekuku_stage_activate,
-        R.string.onekuku_stage_execute,
-        R.string.onekuku_stage_done,
-    )
+    val stages = OneKukuCardPolicy.stageLabelRes()
+    val currentIndex = current.ordinal.coerceIn(0, stages.lastIndex)
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState()),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(0.dp),
     ) {
         stages.forEachIndexed { index, labelRes ->
-            val lit = index < litCount
-            val stageColor = if (lit) contentColor else contentColor.copy(alpha = 0.32f)
+            val lit = index < litCount || (current == OneKukuCardState.FAILED && index == 0)
+            val isCurrent = index == currentIndex
+            val stageColor = when {
+                isCurrent -> contentColor
+                lit -> contentColor.copy(alpha = 0.7f)
+                else -> contentColor.copy(alpha = 0.28f)
+            }
             if (index > 0) {
                 Box(
                     modifier = Modifier
-                        .weight(1f)
+                        .width(10.dp)
                         .height(2.dp)
                         .background(
                             color = if (index < litCount) {
-                                contentColor.copy(alpha = 0.55f)
+                                contentColor.copy(alpha = 0.45f)
                             } else {
-                                contentColor.copy(alpha = 0.18f)
+                                contentColor.copy(alpha = 0.14f)
                             },
                         ),
                 )
             }
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(6.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.widthIn(min = 36.dp),
             ) {
                 Box(
                     modifier = Modifier
-                        .size(10.dp)
+                        .size(if (isCurrent) 12.dp else 8.dp)
                         .background(color = stageColor, shape = CircleShape),
                 )
                 Text(

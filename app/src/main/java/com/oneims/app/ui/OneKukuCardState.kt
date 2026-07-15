@@ -1,5 +1,7 @@
 package com.oneims.app.ui
 
+import com.oneims.app.R
+
 /**
  * 首页顶部 OneKuku 总控卡状态（规格 9 态）。
  *
@@ -69,21 +71,31 @@ object OneKukuCardPolicy {
             -> null
         }
 
-    /** 进度阶段点亮数（1–4）。 */
+    /** 进度阶段点亮数（1–9，与枚举顺序一致）。 */
     fun litStageCount(state: OneKukuCardState): Int = when (state) {
-        OneKukuCardState.INACTIVE,
-        OneKukuCardState.FAILED,
-        -> 1
-        OneKukuCardState.WAITING_PAIR,
-        OneKukuCardState.PAIRING,
-        OneKukuCardState.CONNECTING,
-        OneKukuCardState.STARTING,
-        -> 2
-        OneKukuCardState.EXECUTING -> 3
-        OneKukuCardState.ACTIVE,
-        OneKukuCardState.SLEEPING,
-        -> 4
+        OneKukuCardState.INACTIVE -> 1
+        OneKukuCardState.WAITING_PAIR -> 2
+        OneKukuCardState.PAIRING -> 3
+        OneKukuCardState.CONNECTING -> 4
+        OneKukuCardState.STARTING -> 5
+        OneKukuCardState.ACTIVE -> 6
+        OneKukuCardState.SLEEPING -> 7
+        OneKukuCardState.EXECUTING -> 8
+        OneKukuCardState.FAILED -> 1
     }
+
+    /** 九态进度条标签（短文案，适配窄屏）。 */
+    fun stageLabelRes(): List<Int> = listOf(
+        R.string.onekuku_stage_inactive,
+        R.string.onekuku_stage_wait_pair,
+        R.string.onekuku_stage_pairing,
+        R.string.onekuku_stage_connecting,
+        R.string.onekuku_stage_starting,
+        R.string.onekuku_stage_active,
+        R.string.onekuku_stage_sleeping,
+        R.string.onekuku_stage_executing,
+        R.string.onekuku_stage_failed,
+    )
 
     fun isBusy(state: OneKukuCardState): Boolean = when (state) {
         OneKukuCardState.PAIRING,

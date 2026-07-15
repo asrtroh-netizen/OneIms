@@ -4,7 +4,7 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
-val oneImsVersionName = "2.0.24"
+val oneImsVersionName = "2.0.25"
 
 android {
     namespace = "com.oneims.app"
@@ -15,7 +15,7 @@ android {
         applicationId = "com.oneims.app"
         minSdk = 31          // Tensor Pixel（Pixel 6 起）最低 Android 12
         targetSdk = 36
-        versionCode = 33
+        versionCode = 34
         versionName = oneImsVersionName
     }
 

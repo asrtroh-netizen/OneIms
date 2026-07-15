@@ -441,6 +441,15 @@
     <string name="onekuku_stage_activate">Active</string>
     <string name="onekuku_stage_execute">Run</string>
     <string name="onekuku_stage_done">Done</string>
+    <string name="onekuku_stage_inactive">Off</string>
+    <string name="onekuku_stage_wait_pair">Wait</string>
+    <string name="onekuku_stage_pairing">Pair</string>
+    <string name="onekuku_stage_connecting">Link</string>
+    <string name="onekuku_stage_starting">Boot</string>
+    <string name="onekuku_stage_active">On</string>
+    <string name="onekuku_stage_sleeping">Sleep</string>
+    <string name="onekuku_stage_executing">Run</string>
+    <string name="onekuku_stage_failed">Fail</string>
 
     <string name="onekuku_msg_need_prepare">Finish preparing the OneKuku core service first</string>
     <string name="onekuku_msg_already_active">OneKuku core service is already active</string>
