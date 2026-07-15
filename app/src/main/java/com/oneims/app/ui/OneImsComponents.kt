@@ -849,12 +849,12 @@ fun StatusHero(
                             style = MaterialTheme.typography.bodyLarge,
                             color = contentColor,
                         )
+                        Text(
+                            detail,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = contentColor.copy(alpha = 0.78f),
+                        )
                     }
-                    Text(
-                        detail,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = contentColor.copy(alpha = 0.78f),
-                    )
                     if (onOpenDeviceDetails != null) {
                         Surface(
                             onClick = onOpenDeviceDetails,
