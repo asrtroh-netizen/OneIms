@@ -16,7 +16,7 @@
 
 ### ⬇️ 下载 APK（最新）
 
-**[OneIms 2.1.0 · GitHub Releases](https://github.com/asrtroh-netizen/OneIms/releases/tag/v2.1.0)**
+**[OneIms 2.1.1 · GitHub Releases](https://github.com/asrtroh-netizen/OneIms/releases/tag/v2.1.1)**
 
 > 本仓库 **只提供 README + APK 发布**，**不开放源代码**。  
 > 需要交流 / 反馈请走 Telegram，别来仓库里翻源码啦～
