@@ -1,5 +1,7 @@
 package com.oneims.bridge.server
 
+import android.annotation.SuppressLint
+import android.content.Context
 import android.os.Binder
 import android.os.IBinder
 import android.os.Parcel
@@ -35,8 +37,9 @@ class BridgeBinder : Binder() {
             }
             BridgeProtocol.TRANSACTION_CHECK_PERMISSION -> {
                 data.enforceInterface(BridgeProtocol.DESCRIPTOR)
-                val callingUid = data.readInt()
-                val allowed = isAllowedUid(callingUid)
+                // 忽略 parcel 自报 uid，只信 Binder 调用方身份
+                data.readInt()
+                val allowed = isAllowedUid(getCallingUid())
                 reply?.writeNoException()
                 reply?.writeInt(if (allowed) 1 else 0)
                 return true
@@ -84,8 +87,7 @@ class BridgeBinder : Binder() {
 
     private fun isAllowedUid(uid: Int): Boolean {
         if (uid == Process.myUid()) return true
-        if (uid == 0 || uid == 2000) return true
-        return uid >= Process.FIRST_APPLICATION_UID
+        return packagesForUid(uid).any { it == BridgeProtocol.CLIENT_PACKAGE }
     }
 
     companion object {
@@ -100,5 +102,17 @@ class BridgeBinder : Binder() {
             val clazz = Class.forName("android.os.ServiceManager")
             clazz.getMethod("getService", String::class.java).invoke(null, name) as IBinder?
         }.getOrNull()
+
+        @SuppressLint("PrivateApi")
+        private fun packagesForUid(uid: Int): Array<String> = runCatching {
+            val atClass = Class.forName("android.app.ActivityThread")
+            val at = atClass.getMethod("currentActivityThread").invoke(null)
+                ?: atClass.getMethod("systemMain").invoke(null)
+            val ctx = at.javaClass.getMethod("getSystemContext").invoke(at) as Context
+            ctx.packageManager.getPackagesForUid(uid) ?: emptyArray()
+        }.getOrElse {
+            Log.w(TAG, "packagesForUid($uid) failed", it)
+            emptyArray()
+        }
     }
 }

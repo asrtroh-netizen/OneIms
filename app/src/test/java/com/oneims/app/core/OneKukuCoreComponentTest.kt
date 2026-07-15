@@ -20,6 +20,8 @@ class OneKukuCoreComponentTest {
         val cmd = OneKukuCoreComponent.bridgeBootShellCommand()
         assertTrue(cmd.contains("pm path"))
         assertTrue(cmd.contains("app_process"))
+        assertTrue(cmd.contains("OneBridge_started"))
+        assertTrue(!cmd.contains(" exec "))
         assertTrue(!cmd.contains("Android/data/"))
     }
 

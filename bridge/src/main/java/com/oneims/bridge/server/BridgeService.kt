@@ -15,11 +15,25 @@ object BridgeService {
 
     @JvmStatic
     fun main(args: Array<String>) {
+        // 拉起系统 Context，供 PackageManager 白名单与 Provider 投递使用
+        runCatching {
+            Class.forName("android.app.ActivityThread")
+                .getDeclaredMethod("systemMain")
+                .invoke(null)
+        }.onFailure { Log.w(TAG, "ActivityThread.systemMain failed", it) }
         Looper.prepareMainLooper()
         val binder = BridgeBinder()
         BridgeBinder.logReady()
-        runCatching { BinderDistributor.sendToClient(binder) }
-            .onFailure { Log.e(TAG, "send binder failed", it) }
+        val sent = runCatching {
+            BinderDistributor.sendToClient(binder)
+            true
+        }.getOrElse {
+            Log.e(TAG, "send binder failed", it)
+            false
+        }
+        if (!sent) {
+            Log.e(TAG, "binder NOT delivered to ${BridgeProtocol.CLIENT_PROVIDER_AUTHORITY}")
+        }
         Looper.loop()
     }
 }

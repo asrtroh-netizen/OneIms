@@ -123,15 +123,17 @@ object OneKukuCoreComponent {
 
     /**
      * 不依赖 `Android/data/.../start.sh` 是否已写出——装完通道即可拉起。
-     * 与 bridge 模块 `assets/start.sh` 语义等价。
+     * 与 bridge 模块 `assets/start.sh` 语义对齐；**不用 exec**，后台拉起后 echo 标记，
+     * 避免内嵌 ADB shell 流被 app_process 占死导致假绿/挂死。
      */
     fun bridgeBootShellCommand(packageName: String = BRIDGE_PACKAGE): String =
         "pkill -f onebridge_server 2>/dev/null || true; " +
             "APK=\$(pm path $packageName 2>/dev/null | head -n 1 | cut -d: -f2 | tr -d '\\r'); " +
-            "if [ -z \"\$APK\" ]; then echo OneBridge_missing >&2; exit 1; fi; " +
+            "if [ -z \"\$APK\" ]; then echo OneBridge_missing; exit 1; fi; " +
             "export CLASSPATH=\"\$APK\"; " +
-            "exec /system/bin/app_process /system/bin --nice-name=onebridge_server " +
-            "com.oneims.bridge.server.BridgeService"
+            "/system/bin/app_process /system/bin --nice-name=onebridge_server " +
+            "com.oneims.bridge.server.BridgeService >/dev/null 2>&1 & " +
+            "echo OneBridge_started"
 
     fun guidedActivationScript(context: Context): String =
         context.getString(R.string.onekuku_adb_guide_script, adbStartCommand(context))

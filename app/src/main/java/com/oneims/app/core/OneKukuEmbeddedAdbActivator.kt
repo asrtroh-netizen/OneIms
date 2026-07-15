@@ -34,7 +34,8 @@ import java.util.Date
 import java.util.Random
 
 /**
- * 方案 B · 原生内嵌 ADB（libadb-android）：本机无线调试配对后执行核心 start.sh。
+ * 方案 B · 原生内嵌 ADB（libadb-android）：本机无线调试配对后拉起 OneBridge。
+ * Success 仅在 binder 已送达（[OneKukuManager.isRunning]）时返回，禁止 start_issued 假绿。
  */
 object OneKukuEmbeddedAdbActivator {
 
@@ -44,11 +45,20 @@ object OneKukuEmbeddedAdbActivator {
     private const val PREFS = "onekuku_adb_identity"
     private const val KEY_PRIVATE = "private_key_b64"
     private const val KEY_CERT = "cert_b64"
+    private const val BINDER_WAIT_MS = 5_000L
+    private const val BINDER_POLL_MS = 400L
 
     sealed class Outcome {
         data object NeedPairingCode : Outcome()
         data class Success(val detail: String) : Outcome()
         data class Failed(val reason: String) : Outcome()
+    }
+
+    /** 解析 shell 启动输出：必须见到 started 标记，且不得含 missing。 */
+    internal fun isShellBootOutputOk(output: String): Boolean {
+        val text = output.trim()
+        if (text.contains("OneBridge_missing", ignoreCase = false)) return false
+        return text.contains("OneBridge_started")
     }
 
     suspend fun activate(context: Context, pairingCode: String?): Outcome =
@@ -121,13 +131,20 @@ object OneKukuEmbeddedAdbActivator {
             }
             if (!shellOk) return@withContext Outcome.Failed("start_failed")
 
-            Thread.sleep(800)
-            if (OneKukuManager.isRunning()) {
-                Outcome.Success(if (persisted) "core_running_tcpip" else "core_running")
-            } else {
-                Outcome.Success(if (persisted) "start_issued_tcpip" else "start_issued")
+            if (!awaitBinderRunning()) {
+                return@withContext Outcome.Failed("binder_not_received")
             }
+            Outcome.Success(if (persisted) "core_running_tcpip" else "core_running")
         }
+
+    private fun awaitBinderRunning(): Boolean {
+        val deadline = System.currentTimeMillis() + BINDER_WAIT_MS
+        while (System.currentTimeMillis() < deadline) {
+            if (OneKukuManager.isRunning()) return true
+            Thread.sleep(BINDER_POLL_MS)
+        }
+        return OneKukuManager.isRunning()
+    }
 
     /**
      * 通过 ADB 服务 `tcpip:5555` 把 adbd 切到固定端口，再连回 127.0.0.1:5555。
@@ -161,11 +178,36 @@ object OneKukuEmbeddedAdbActivator {
                 out.write(command.toByteArray(StandardCharsets.UTF_8))
                 out.flush()
             }
+            val input = stream.openInputStream()
             val buf = ByteArray(4096)
-            val read = runCatching { stream.openInputStream().read(buf) }.getOrDefault(-1)
-            val text = if (read > 0) String(buf, 0, read, StandardCharsets.UTF_8) else ""
+            val collected = StringBuilder()
+            val readDeadline = System.currentTimeMillis() + 4_000L
+            while (System.currentTimeMillis() < readDeadline) {
+                val available = runCatching { input.available() }.getOrDefault(0)
+                if (available > 0) {
+                    val n = input.read(buf, 0, minOf(buf.size, available))
+                    if (n > 0) collected.append(String(buf, 0, n, StandardCharsets.UTF_8))
+                    if (isShellBootOutputOk(collected.toString()) ||
+                        collected.contains("OneBridge_missing")
+                    ) {
+                        break
+                    }
+                } else if (collected.contains("OneBridge_started") ||
+                    collected.contains("OneBridge_missing")
+                ) {
+                    break
+                } else {
+                    Thread.sleep(50)
+                }
+            }
+            // 尾读一次，兼容部分机型 available() 始终为 0
+            if (collected.isEmpty()) {
+                val n = runCatching { input.read(buf) }.getOrDefault(-1)
+                if (n > 0) collected.append(String(buf, 0, n, StandardCharsets.UTF_8))
+            }
+            val text = collected.toString()
             Log.i(TAG, "shell out=$text")
-            true
+            isShellBootOutputOk(text)
         }
 
     /**
