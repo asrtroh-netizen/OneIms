@@ -18,12 +18,14 @@ import com.oneims.app.core.CarrierConfigKeys
 import com.oneims.app.core.CarrierConfigOverrideWriter
 import com.oneims.app.core.ConfigStore
 import com.oneims.app.core.ImsController
+import com.oneims.app.core.OneKukuEmbeddedAdbActivator
 import com.oneims.app.core.OneKukuManager
 import com.oneims.app.core.OneKukuMiniAdbClient
 import com.oneims.app.core.OneKukuPairingNotification
 import com.oneims.app.core.OneKukuPrivilegeBridgeImpl
 import com.oneims.app.core.ReapplyManager
 import com.oneims.app.core.ReapplyTrigger
+import com.oneims.app.core.ShizukuSetupHelper
 import kotlinx.coroutines.delay
 
 /**
@@ -281,11 +283,35 @@ object OneKukuBootRestoreCoordinator {
             }
             is OneKukuMiniAdbClient.Outcome.NeedPairingCode -> {
                 Log.w(TAG, "boot: need pairing code for activate")
+                // 已配对设备：多半是重启后系统关掉了无线调试（不是用户手关）。
+                // 打开无线调试页，并短暂再试无码直连——贴近 Shizuku「开开关就能连」体感。
+                if (OneKukuEmbeddedAdbActivator.hasPairedOnce(context)) {
+                    ShizukuSetupHelper.openWirelessDebugging(context)
+                    delay(8_000L)
+                    when (
+                        val retry = OneKukuMiniAdbClient.activateExistingOrNeedPair(context)
+                    ) {
+                        is OneKukuMiniAdbClient.Outcome.Success -> {
+                            if (OneKukuManager.isRunning() && !OneKukuManager.isGranted()) {
+                                OneKukuManager.requestActivation()
+                            }
+                            val ready = OneKukuManager.isReady()
+                            Log.i(TAG, "boot: retry after wireless page ready=$ready")
+                            if (ready) return true
+                        }
+                        else -> Log.w(TAG, "boot: retry still need user action")
+                    }
+                }
                 OneKukuPairingNotification.showWaiting(context)
                 false
             }
             is OneKukuMiniAdbClient.Outcome.Failed -> {
                 Log.w(TAG, "boot: silent activate failed reason=${outcome.reason}")
+                if (OneKukuEmbeddedAdbActivator.hasPairedOnce(context) &&
+                    outcome.reason != "wifi_sta_required"
+                ) {
+                    ShizukuSetupHelper.openWirelessDebugging(context)
+                }
                 false
             }
         }
