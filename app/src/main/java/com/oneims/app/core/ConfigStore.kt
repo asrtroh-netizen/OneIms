@@ -57,6 +57,8 @@ object ConfigStore {
     private const val KEY_SIM_COUNTRY_ISO = "sim_country_draft_iso"
     private const val KEY_ONEKUKU_AUTO_SLEEP = "onekuku_auto_sleep"
     private const val KEY_ONEKUKU_AUTO_RESTORE = "onekuku_auto_restore"
+    /** 与守护解耦后的「开机自动检查」；无键时默认开，旧数据回退 guard。 */
+    private const val KEY_ONEKUKU_BOOT_AUTO_CHECK = "onekuku_boot_auto_check"
 
     data class Applied(
         val subId: Int,
@@ -440,12 +442,24 @@ object ConfigStore {
     }
 
     /**
-     * OneKuku「开机自动检查」：与守护开关共用存储，开启后开机/服务就绪时会尝试检查并恢复。
+     * OneKuku「开机自动检查」：独立键，默认开启。
+     * 写入时同步守护开关，便于 [BootReceiver] 仍拉起 GuardService。
      */
-    fun isOneKukuBootAutoCheck(context: Context): Boolean = isGuardEnabled(context)
+    fun isOneKukuBootAutoCheck(context: Context): Boolean {
+        val p = prefs(context)
+        if (p.contains(KEY_ONEKUKU_BOOT_AUTO_CHECK)) {
+            return p.getBoolean(KEY_ONEKUKU_BOOT_AUTO_CHECK, true)
+        }
+        // 旧安装：跟守护；全新无任何键 → 默认开
+        if (p.contains(KEY_GUARD)) return p.getBoolean(KEY_GUARD, false)
+        return true
+    }
 
     fun setOneKukuBootAutoCheck(context: Context, enabled: Boolean) {
-        setGuardEnabled(context, enabled)
+        prefs(context).edit()
+            .putBoolean(KEY_ONEKUKU_BOOT_AUTO_CHECK, enabled)
+            .putBoolean(KEY_GUARD, enabled)
+            .apply()
     }
 
     /** OneKuku「用完自动休眠」偏好；默认开启。 */

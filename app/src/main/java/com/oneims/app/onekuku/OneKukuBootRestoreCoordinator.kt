@@ -19,6 +19,8 @@ import com.oneims.app.core.CarrierConfigOverrideWriter
 import com.oneims.app.core.ConfigStore
 import com.oneims.app.core.ImsController
 import com.oneims.app.core.OneKukuManager
+import com.oneims.app.core.OneKukuMiniAdbClient
+import com.oneims.app.core.OneKukuPairingNotification
 import com.oneims.app.core.OneKukuPrivilegeBridgeImpl
 import com.oneims.app.core.ReapplyManager
 import com.oneims.app.core.ReapplyTrigger
@@ -30,7 +32,8 @@ import kotlinx.coroutines.delay
 object OneKukuBootRestoreCoordinator {
     private const val TAG = "OneIMS-OneKuku"
     private const val STABLE_WAIT_MS = 2_000L
-    private const val POST_READY_DELAY_MS = 20_000L
+    /** SIM 已稳定后再短等，给 telephony/IMS 收口；原 20s 体感过慢。 */
+    private const val POST_READY_DELAY_MS = 5_000L
     private const val SIM_POLL_MS = 1_500L
     private const val SIM_WAIT_MAX_MS = 90_000L
     private const val CHANNEL = "oneims_boot_restore"
@@ -105,14 +108,11 @@ object OneKukuBootRestoreCoordinator {
             return
         }
 
-        if (!OneKukuManager.isReady()) {
-            val wake = OneKukuHiddenRunner.wake()
-            if (!wake.success || !OneKukuManager.isReady()) {
-                Log.w(TAG, "OneKuku unavailable for auto restore")
-                OneKukuBootRestoreStore.writeHint(context, OneKukuBootUiHint.NEEDS_ACTIVATION)
-                notifyNeedsRestore(context)
-                return
-            }
+        if (!ensureOneKukuReadyForBoot(context)) {
+            Log.w(TAG, "OneKuku unavailable for auto restore after silent activate")
+            OneKukuBootRestoreStore.writeHint(context, OneKukuBootUiHint.NEEDS_ACTIVATION)
+            notifyNeedsRestore(context)
+            return
         }
 
         OneKukuBootRestoreStore.writeHint(context, OneKukuBootUiHint.RESTORING)
@@ -234,17 +234,14 @@ object OneKukuBootRestoreCoordinator {
         }
     }
 
-    private fun reapplyLastCapabilityProfile(context: Context) {
+    private suspend fun reapplyLastCapabilityProfile(context: Context) {
         if (ConfigStore.lastApplied(context) == null) {
             Log.i(TAG, "no lastApplied profile, skip capability reapply")
             return
         }
-        if (!OneKukuManager.isReady()) {
-            val wake = OneKukuHiddenRunner.wake()
-            if (!wake.success || !OneKukuManager.isReady()) {
-                Log.w(TAG, "OneKuku not ready for capability reapply: ${wake.message}")
-                return
-            }
+        if (!ensureOneKukuReadyForBoot(context)) {
+            Log.w(TAG, "OneKuku not ready for capability reapply")
+            return
         }
         runCatching {
             val result = ReapplyManager.reapply(context, ReapplyTrigger.BOOT)
@@ -254,6 +251,43 @@ object OneKukuBootRestoreCoordinator {
             )
         }.onFailure {
             Log.w(TAG, "boot capability reapply failed: ${it.message}")
+        }
+    }
+
+    /**
+     * 开机恢复前尽量把通道拉起来：先 wake；仍未就绪则无配对码静默 activate
+     *（已有 transport / 本机身份可直连时）。需要填码时挂通知，不阻塞死等。
+     */
+    private suspend fun ensureOneKukuReadyForBoot(context: Context): Boolean {
+        OneKukuHiddenRunner.installBridge(OneKukuPrivilegeBridgeImpl)
+        if (OneKukuManager.isReady()) return true
+
+        val wake = OneKukuHiddenRunner.wake()
+        if (wake.success && OneKukuManager.isReady()) return true
+        if (OneKukuManager.isRunning() && !OneKukuManager.isGranted()) {
+            OneKukuManager.requestActivation()
+            if (OneKukuManager.isReady()) return true
+        }
+
+        Log.i(TAG, "boot: silent MiniAdb activateExistingOrNeedPair")
+        return when (val outcome = OneKukuMiniAdbClient.activateExistingOrNeedPair(context)) {
+            is OneKukuMiniAdbClient.Outcome.Success -> {
+                if (OneKukuManager.isRunning() && !OneKukuManager.isGranted()) {
+                    OneKukuManager.requestActivation()
+                }
+                val ready = OneKukuManager.isReady()
+                Log.i(TAG, "boot: silent activate success ready=$ready detail=${outcome.detail}")
+                ready
+            }
+            is OneKukuMiniAdbClient.Outcome.NeedPairingCode -> {
+                Log.w(TAG, "boot: need pairing code for activate")
+                OneKukuPairingNotification.showWaiting(context)
+                false
+            }
+            is OneKukuMiniAdbClient.Outcome.Failed -> {
+                Log.w(TAG, "boot: silent activate failed reason=${outcome.reason}")
+                false
+            }
         }
     }
 
