@@ -305,12 +305,15 @@ object OneKukuBootRestoreCoordinator {
 
         val pairedBefore = OneKukuEmbeddedAdbActivator.hasPairedOnce(context)
         if (pairedBefore) {
-            OneKukuBootRestoreStore.writeHint(context, OneKukuBootUiHint.WAITING_WIFI)
             val wifiOk = withContext(Dispatchers.IO) {
                 OneKukuAdbMdns.waitForWifiClient(context, BOOT_WIFI_WAIT_MS)
             }
             Log.i(TAG, "boot: pre-wait Wi‑Fi ok=$wifiOk")
-            if (!wifiOk) return BootReady.WAITING_WIFI
+            if (!wifiOk) {
+                // 仅真未 STA 时钉等待态，避免已连旧网先闪 WAITING_WIFI。
+                OneKukuBootRestoreStore.writeHint(context, OneKukuBootUiHint.WAITING_WIFI)
+                return BootReady.WAITING_WIFI
+            }
 
             val enabled = ShizukuSetupHelper.tryEnableAdbWifi(context)
             Log.i(TAG, "boot: tryEnableAdbWifi=$enabled")

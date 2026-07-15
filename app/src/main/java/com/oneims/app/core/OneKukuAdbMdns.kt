@@ -1,6 +1,8 @@
 package com.oneims.app.core
 
 import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
 import android.net.wifi.WifiManager
@@ -32,23 +34,36 @@ object OneKukuAdbMdns {
     /**
      * 手机是否作为 Wi‑Fi 客户端已关联 AP（不含仅开 SoftAP/个人热点）。
      *
-     * 注意：无定位/附近设备权限时 [WifiInfo.ssid] 常为 `<unknown ssid>`，
-     * 不能据此判未连接——以 networkId / Supplicant COMPLETED 为准。
+     * 优先 [ConnectivityManager]：不依赖定位/NEARBY 权限，避免
+     * `WifiInfo.networkId=-1` 把已连旧网误判成未 STA（会永久钉 `WAITING_WIFI`）。
+     * WifiManager 仅作兜底；`networkId<0` 时仍认 COMPLETED/ASSOCIATED。
      */
     @Suppress("DEPRECATION")
     fun isWifiClientConnected(context: Context): Boolean {
-        val wifi = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as? WifiManager
+        val app = context.applicationContext
+        val cm = app.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+        if (cm != null) {
+            for (network in cm.allNetworks) {
+                val caps = cm.getNetworkCapabilities(network) ?: continue
+                if (!caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) continue
+                // SoftAP-only 通常没有 INTERNET；STA 入网才有。
+                if (caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
+                    return true
+                }
+            }
+        }
+        val wifi = app.getSystemService(Context.WIFI_SERVICE) as? WifiManager
             ?: return false
         if (!wifi.isWifiEnabled) return false
         val info = wifi.connectionInfo ?: return false
-        if (info.networkId < 0) return false
-        // 有有效 networkId 即视为已关联已保存网络；SSID 可能因隐私被掩码。
         val state = info.supplicantState
         if (state == android.net.wifi.SupplicantState.COMPLETED ||
             state == android.net.wifi.SupplicantState.ASSOCIATED
         ) {
+            // 隐私限制下 networkId 常为 -1，不能当作未连接。
             return true
         }
+        if (info.networkId >= 0) return true
         val ssid = info.ssid?.trim().orEmpty()
         return ssid.isNotEmpty() &&
             !ssid.equals("<unknown ssid>", ignoreCase = true) &&
