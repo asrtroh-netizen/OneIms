@@ -347,11 +347,14 @@ object OneKukuHomeTools {
         state: OneKukuCardState,
         serviceRunning: Boolean,
     ): String = when {
-        state == OneKukuCardState.RUNNING ->
+        state == OneKukuCardState.EXECUTING ->
             context.getString(R.string.onekuku_settings_state_running)
+        state == OneKukuCardState.FAILED ->
+            context.getString(R.string.onekuku_settings_state_inactive)
         state == OneKukuCardState.INACTIVE && !serviceRunning ->
             context.getString(R.string.onekuku_settings_state_invalid)
-        state == OneKukuCardState.INACTIVE ->
+        state == OneKukuCardState.INACTIVE ||
+            state == OneKukuCardState.WAITING_PAIR ->
             context.getString(R.string.onekuku_settings_state_inactive)
         else -> context.getString(R.string.onekuku_settings_state_sleeping)
     }

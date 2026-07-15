@@ -80,6 +80,33 @@
     <string name="onekuku_msg_waiting_pair_detail">请保持无线调试配对页面打开，并在通知栏输入 6 位码</string>
     <string name="onekuku_msg_activating">正在激活 OneKuku…</string>
     <string name="onekuku_title_waiting_pair">OneKuku 等待配对</string>
+    <string name="onekuku_title_pairing">正在配对…</string>
+    <string name="onekuku_title_connecting">正在连接通道…</string>
+    <string name="onekuku_title_starting">正在启动通道…</string>
+    <string name="onekuku_title_active">OneKuku 已激活</string>
+    <string name="onekuku_title_failed">激活失败</string>
+    <string name="onekuku_subtitle_waiting_pair">请在通知栏填入六位码</string>
+    <string name="onekuku_subtitle_pairing">正在校验无线调试配对码</string>
+    <string name="onekuku_subtitle_connecting">正在建立本机调试连接</string>
+    <string name="onekuku_subtitle_starting">正在拉起通道进程</string>
+    <string name="onekuku_subtitle_active">通道已就绪</string>
+    <string name="onekuku_subtitle_failed">可下拉通知重试填码</string>
+    <string name="onekuku_detail_waiting_pair">保持系统配对页打开，下拉通知输入 6 位码</string>
+    <string name="onekuku_detail_pairing">配对中，请稍候</string>
+    <string name="onekuku_detail_connecting">连接中，请稍候</string>
+    <string name="onekuku_detail_starting">启动中，请稍候</string>
+    <string name="onekuku_detail_active">通话配置可自动恢复；也可使用下方一键恢复</string>
+    <string name="onekuku_detail_failed">请保持配对页打开后重试</string>
+    <string name="onekuku_pill_waiting_pair">等待配对</string>
+    <string name="onekuku_pill_pairing">配对中</string>
+    <string name="onekuku_pill_connecting">连接中</string>
+    <string name="onekuku_pill_starting">启动中</string>
+    <string name="onekuku_pill_active">已激活</string>
+    <string name="onekuku_pill_failed">失败</string>
+    <string name="onekuku_action_activating">激活中…</string>
+    <string name="onekuku_msg_phase_pairing">正在配对六位码…</string>
+    <string name="onekuku_msg_phase_connecting">正在连接无线调试…</string>
+    <string name="onekuku_msg_phase_starting">正在启动 OneKuku 通道…</string>
     <string name="onekuku_msg_pairing_notification_shown">已发出配对通知：请下拉状态栏填入六位码，无需回到本应用</string>
 
     <!-- 能力页 -->

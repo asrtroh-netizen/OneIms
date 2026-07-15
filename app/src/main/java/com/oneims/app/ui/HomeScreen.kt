@@ -62,10 +62,18 @@ fun HomeScreen(
                 oneKukuState = state.oneKukuState,
                 onPrimaryAction = {
                     when (state.oneKukuState) {
-                        OneKukuCardState.INACTIVE -> actions.onActivateOneKuku()
+                        OneKukuCardState.INACTIVE,
+                        OneKukuCardState.WAITING_PAIR,
+                        OneKukuCardState.FAILED,
+                        -> actions.onActivateOneKuku()
                         OneKukuCardState.SLEEPING,
-                        OneKukuCardState.COMPLETE -> actions.onCheckOneKukuStatus()
-                        OneKukuCardState.RUNNING -> Unit
+                        OneKukuCardState.ACTIVE,
+                        -> actions.onCheckOneKukuStatus()
+                        OneKukuCardState.PAIRING,
+                        OneKukuCardState.CONNECTING,
+                        OneKukuCardState.STARTING,
+                        OneKukuCardState.EXECUTING,
+                        -> Unit
                     }
                 },
                 deviceInfo = state.deviceInfo,
@@ -172,7 +180,7 @@ fun HomeScreen(
                     modifier = Modifier.padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
-                    val restoring = state.oneKukuState == OneKukuCardState.RUNNING
+                    val restoring = state.oneKukuState == OneKukuCardState.EXECUTING
                     Button(
                         onClick = actions.onRestoreCallConfig,
                         enabled = state.actionsEnabled && !restoring,

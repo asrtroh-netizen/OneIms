@@ -318,13 +318,8 @@ private fun AppRoot(
     var activationEpoch by remember { mutableIntStateOf(0) }
     val bootForceInactive = bootUiHint == OneKukuBootUiHint.NEEDS_ACTIVATION
     val activationPhase = remember(activationEpoch) { OneKukuActivationUi.phase }
-    val oneKukuState = when (activationPhase) {
-        OneKukuActivationPhase.WAITING_PAIR,
-        OneKukuActivationPhase.FAILED -> OneKukuCardState.INACTIVE
-        OneKukuActivationPhase.PAIRING,
-        OneKukuActivationPhase.CONNECTING,
-        OneKukuActivationPhase.STARTING -> OneKukuCardState.RUNNING
-        else -> OneKukuCardPolicy.resolve(
+    val oneKukuState = OneKukuCardPolicy.fromActivationPhase(activationPhase)
+        ?: OneKukuCardPolicy.resolve(
             serviceReady = shizukuRunning && shizukuGranted && !bootForceInactive,
             isExecuting = oneKukuRestoring ||
                 bootUiHint == OneKukuBootUiHint.RESTORING ||
@@ -332,14 +327,15 @@ private fun AppRoot(
                 OneKukuHiddenRunner.currentState() == OneKukuRunnerState.STARTING,
             taskComplete = oneKukuTaskComplete || bootUiHint == OneKukuBootUiHint.RESTORE_COMPLETE,
         )
-    }
     val oneKukuDetailOverride = when {
         activationPhase == OneKukuActivationPhase.WAITING_PAIR ->
             context.getString(R.string.onekuku_msg_waiting_pair_detail)
-        activationPhase == OneKukuActivationPhase.PAIRING ||
-            activationPhase == OneKukuActivationPhase.CONNECTING ||
-            activationPhase == OneKukuActivationPhase.STARTING ->
-            context.getString(R.string.onekuku_msg_activating)
+        activationPhase == OneKukuActivationPhase.PAIRING ->
+            context.getString(R.string.onekuku_msg_phase_pairing)
+        activationPhase == OneKukuActivationPhase.CONNECTING ->
+            context.getString(R.string.onekuku_msg_phase_connecting)
+        activationPhase == OneKukuActivationPhase.STARTING ->
+            context.getString(R.string.onekuku_msg_phase_starting)
         activationPhase == OneKukuActivationPhase.FAILED ->
             OneKukuActivationUi.lastFailureReason?.let {
                 context.getString(R.string.onekuku_pair_text_fail, it)
