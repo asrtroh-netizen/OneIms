@@ -85,12 +85,15 @@ object OneKukuMiniAdbClient {
         withContext(Dispatchers.IO) {
             val parsed = parsePairingInput(rawInput)
                 ?: return@withContext Outcome.Failed("invalid_pairing_input")
-            // pairPortOverride：当前 activator 仍靠 mDNS；端口覆盖留给后续增强，先记日志
             if (parsed.pairPortOverride != null) {
-                Log.i(TAG, "pairing port hint=${parsed.pairPortOverride} (mDNS preferred)")
+                Log.i(TAG, "pairing port override=${parsed.pairPortOverride}")
             }
             when (
-                val o = OneKukuEmbeddedAdbActivator.activate(context, pairingCode = parsed.code)
+                val o = OneKukuEmbeddedAdbActivator.activate(
+                    context,
+                    pairingCode = parsed.code,
+                    pairPortOverride = parsed.pairPortOverride,
+                )
             ) {
                 is OneKukuEmbeddedAdbActivator.Outcome.NeedPairingCode -> Outcome.NeedPairingCode
                 is OneKukuEmbeddedAdbActivator.Outcome.Success -> Outcome.Success(o.detail)

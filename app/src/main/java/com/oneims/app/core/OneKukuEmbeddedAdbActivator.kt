@@ -45,8 +45,8 @@ object OneKukuEmbeddedAdbActivator {
     private const val PREFS = "onekuku_adb_identity"
     private const val KEY_PRIVATE = "private_key_b64"
     private const val KEY_CERT = "cert_b64"
-    private const val BINDER_WAIT_MS = 5_000L
-    private const val BINDER_POLL_MS = 400L
+    private const val BINDER_WAIT_MS = 12_000L
+    private const val BINDER_POLL_MS = 300L
 
     sealed class Outcome {
         data object NeedPairingCode : Outcome()
@@ -61,7 +61,11 @@ object OneKukuEmbeddedAdbActivator {
         return text.contains("OneBridge_started")
     }
 
-    suspend fun activate(context: Context, pairingCode: String?): Outcome =
+    suspend fun activate(
+        context: Context,
+        pairingCode: String?,
+        pairPortOverride: Int? = null,
+    ): Outcome =
         withContext(Dispatchers.IO) {
             if (!OneKukuCoreComponent.isInstalled(context)) {
                 return@withContext Outcome.Failed("core_missing")
@@ -73,34 +77,42 @@ object OneKukuEmbeddedAdbActivator {
                     return@withContext Outcome.Failed("manager_init")
                 }
 
-            val ports = OneKukuAdbMdns.discover(app)
-            Log.i(TAG, "mdns pair=${ports.pairPort} connect=${ports.connectPort}")
+            var ports = OneKukuAdbMdns.discover(app)
+            Log.i(
+                TAG,
+                "mdns pair=${ports.pairPort} connect=${ports.connectPort} " +
+                    "override=$pairPortOverride",
+            )
 
             val code = pairingCode?.trim().orEmpty()
+            val effectivePairPort = ports.pairPort ?: pairPortOverride?.takeIf { it in 1..65535 }
 
             // Pixel 等机型：只开个人热点、未以 STA 连上 Wi‑Fi 时 tls_port=0，mDNS 扫不到端口。
             // 这时弹「要配对码」会误导——系统根本出不了可用的无线调试端口。
-            if (ports.pairPort == null && ports.connectPort == null &&
+            if (effectivePairPort == null && ports.connectPort == null &&
                 !OneKukuAdbMdns.isWifiClientConnected(app)
             ) {
                 return@withContext Outcome.Failed("wifi_sta_required")
             }
 
             // 系统已弹出配对页（能扫到 pair 端口）但用户还没填码 → 立刻要码，别先瞎连。
-            if (code.length < 6 && ports.pairPort != null) {
+            if (code.length < 6 && effectivePairPort != null) {
                 return@withContext Outcome.NeedPairingCode
             }
 
-            if (ports.pairPort != null && code.length >= 6) {
+            if (effectivePairPort != null && code.length >= 6) {
                 val paired = runCatching {
-                    manager.pair(HOST, ports.pairPort, code)
+                    manager.pair(HOST, effectivePairPort, code)
                     true
                 }.getOrElse {
-                    Log.w(TAG, "pair failed", it)
+                    Log.w(TAG, "pair failed port=$effectivePairPort", it)
                     false
                 }
                 if (!paired) return@withContext Outcome.Failed("pair_failed")
-            } else if (code.length >= 6 && ports.pairPort == null) {
+                // pair 成功后 pairing 服务会注销；必须重扫 connect 端口，不能用旧快照。
+                ports = OneKukuAdbMdns.discover(app)
+                Log.i(TAG, "post-pair mdns pair=${ports.pairPort} connect=${ports.connectPort}")
+            } else if (code.length >= 6 && effectivePairPort == null) {
                 // 用户填了码，但系统配对页已关掉 / mDNS 没扫到
                 return@withContext Outcome.Failed("pair_port_missing")
             }
@@ -131,18 +143,17 @@ object OneKukuEmbeddedAdbActivator {
             val startPkg = OneKukuCoreComponent.resolveCorePackage(app)
                 ?: OneKukuCoreComponent.HOST_PACKAGE
             val startCmd = OneKukuCoreComponent.bridgeBootShellCommand(startPkg) + "\n"
-            val shellOk = runCatching {
-                writeShell(manager, startCmd)
+            // 保持 shell 流打开直到 binder 到达，降低会话关闭拖死子进程的概率。
+            val boot = runCatching {
+                writeShellAndAwaitBinder(manager, startCmd)
             }.getOrElse {
-                Log.w(TAG, "shell failed", it)
-                false
+                Log.w(TAG, "shell/binder failed", it)
+                "start_failed"
             }
-            if (!shellOk) return@withContext Outcome.Failed("start_failed")
-
-            if (!awaitBinderRunning()) {
-                return@withContext Outcome.Failed("binder_not_received")
+            when (boot) {
+                "ok" -> Outcome.Success(if (persisted) "core_running_tcpip" else "core_running")
+                else -> Outcome.Failed(boot)
             }
-            Outcome.Success(if (persisted) "core_running_tcpip" else "core_running")
         }
 
     private fun awaitBinderRunning(): Boolean {
@@ -180,7 +191,14 @@ object OneKukuEmbeddedAdbActivator {
         }
     }
 
-    private fun writeShell(manager: AbsAdbConnectionManager, command: String): Boolean =
+    /**
+     * 写启动命令 → 读到 started → **在同一 shell 流内**等待 binder。
+     * @return `"ok"` / `"start_failed"` / `"binder_not_received"`
+     */
+    private fun writeShellAndAwaitBinder(
+        manager: AbsAdbConnectionManager,
+        command: String,
+    ): String =
         manager.openStream("shell:").use { stream ->
             stream.openOutputStream().use { out ->
                 out.write(command.toByteArray(StandardCharsets.UTF_8))
@@ -189,33 +207,33 @@ object OneKukuEmbeddedAdbActivator {
             val input = stream.openInputStream()
             val buf = ByteArray(4096)
             val collected = StringBuilder()
-            val readDeadline = System.currentTimeMillis() + 4_000L
+            val readDeadline = System.currentTimeMillis() + 6_000L
             while (System.currentTimeMillis() < readDeadline) {
                 val available = runCatching { input.available() }.getOrDefault(0)
                 if (available > 0) {
                     val n = input.read(buf, 0, minOf(buf.size, available))
                     if (n > 0) collected.append(String(buf, 0, n, StandardCharsets.UTF_8))
-                    if (isShellBootOutputOk(collected.toString()) ||
-                        collected.contains("OneBridge_missing")
-                    ) {
-                        break
-                    }
-                } else if (collected.contains("OneBridge_started") ||
+                } else {
+                    Thread.sleep(40)
+                }
+                if (isShellBootOutputOk(collected.toString()) ||
                     collected.contains("OneBridge_missing")
                 ) {
                     break
-                } else {
-                    Thread.sleep(50)
                 }
             }
             // 尾读一次，兼容部分机型 available() 始终为 0
-            if (collected.isEmpty()) {
+            if (!isShellBootOutputOk(collected.toString()) &&
+                !collected.contains("OneBridge_missing")
+            ) {
                 val n = runCatching { input.read(buf) }.getOrDefault(-1)
                 if (n > 0) collected.append(String(buf, 0, n, StandardCharsets.UTF_8))
             }
             val text = collected.toString()
             Log.i(TAG, "shell out=$text")
-            isShellBootOutputOk(text)
+            if (!isShellBootOutputOk(text)) return@use "start_failed"
+            if (!awaitBinderRunning()) return@use "binder_not_received"
+            "ok"
         }
 
     /**

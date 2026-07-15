@@ -22,6 +22,7 @@ class OneKukuCoreComponentTest {
         assertTrue(cmd.contains(OneKukuCoreComponent.HOST_PACKAGE))
         assertTrue(cmd.contains("app_process"))
         assertTrue(cmd.contains("OneBridge_started"))
+        assertTrue(cmd.contains("nohup"))
         assertTrue(!cmd.contains(" exec "))
         assertTrue(!cmd.contains("Android/data/"))
     }

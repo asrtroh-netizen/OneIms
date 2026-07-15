@@ -70,6 +70,16 @@ class WirelessPairingCodeReceiver : BroadcastReceiver() {
                                 app.getString(R.string.onekuku_msg_wifi_sta_required)
                             "invalid_pairing_input" ->
                                 app.getString(R.string.onekuku_pair_need_six_digits)
+                            "pair_failed" ->
+                                app.getString(R.string.onekuku_pair_reason_pair_failed)
+                            "pair_port_missing" ->
+                                app.getString(R.string.onekuku_pair_reason_port_missing)
+                            "connect_failed" ->
+                                app.getString(R.string.onekuku_pair_reason_connect_failed)
+                            "start_failed" ->
+                                app.getString(R.string.onekuku_pair_reason_start_failed)
+                            "binder_not_received" ->
+                                app.getString(R.string.onekuku_pair_reason_binder)
                             else -> outcome.reason
                         }
                         OneKukuPairingNotification.showFailure(app, msg)

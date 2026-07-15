@@ -143,12 +143,14 @@ object OneKukuCoreComponent {
      * Phase4：默认宿主包（类已打进主 APK）；**不用 exec**，后台拉起后 echo 标记。
      */
     fun bridgeBootShellCommand(packageName: String = HOST_PACKAGE): String =
+        // nohup + 子 shell：避免 adb shell: 流关闭时 SIGHUP 干掉 onebridge_server，
+        // 否则 binder 刚投递就被 DeathRecipient 清掉，UI 表现为「仍在等待配对」。
         "pkill -f onebridge_server 2>/dev/null || true; " +
             "APK=\$(pm path $packageName 2>/dev/null | head -n 1 | cut -d: -f2 | tr -d '\\r'); " +
             "if [ -z \"\$APK\" ]; then echo OneBridge_missing; exit 1; fi; " +
             "export CLASSPATH=\"\$APK\"; " +
-            "/system/bin/app_process /system/bin --nice-name=onebridge_server " +
-            "com.oneims.bridge.server.BridgeService >/dev/null 2>&1 & " +
+            "(nohup /system/bin/app_process /system/bin --nice-name=onebridge_server " +
+            "com.oneims.bridge.server.BridgeService >/dev/null 2>&1 &); " +
             "echo OneBridge_started"
 
     fun guidedActivationScript(context: Context): String =

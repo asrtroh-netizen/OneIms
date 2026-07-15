@@ -113,16 +113,47 @@ object OneKukuPairingNotification {
         )
     }
 
+    /**
+     * 失败时保留失败文案 + RemoteInput 重试，**不要**立刻盖回「等待配对」
+     * （否则用户只看到还在等待，以为填码没生效）。
+     */
     fun showFailure(context: Context, reason: String) {
-        postSimple(
-            context,
-            title = context.getString(R.string.onekuku_pair_title_fail),
-            text = context.getString(R.string.onekuku_pair_text_fail, reason),
-            ongoing = false,
-            autoCancel = true,
+        val app = context.applicationContext
+        ensureChannel(app)
+        val nm = app.getSystemService(NotificationManager::class.java) ?: return
+
+        val replyIntent = Intent(app, WirelessPairingCodeReceiver::class.java)
+            .setAction(ACTION_SUBMIT_CODE)
+        val replyPending = PendingIntent.getBroadcast(
+            app,
+            2,
+            replyIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE,
         )
-        // 失败后再次挂上等待通知，方便重试且无需回 App
-        showWaiting(context)
+        val remoteInput = RemoteInput.Builder(KEY_REMOTE_INPUT)
+            .setLabel(app.getString(R.string.onekuku_pair_input_hint))
+            .build()
+        val replyAction = NotificationCompat.Action.Builder(
+            android.R.drawable.ic_input_add,
+            app.getString(R.string.onekuku_pair_action),
+            replyPending,
+        ).addRemoteInput(remoteInput).build()
+
+        val detail = app.getString(R.string.onekuku_pair_text_fail, reason)
+        nm.notify(
+            NOTIFICATION_ID,
+            NotificationCompat.Builder(app, CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_launcher_monochrome)
+                .setContentTitle(app.getString(R.string.onekuku_pair_title_fail))
+                .setContentText(detail)
+                .setStyle(NotificationCompat.BigTextStyle().bigText(detail))
+                .addAction(replyAction)
+                .setOngoing(true)
+                .setOnlyAlertOnce(false)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setCategory(NotificationCompat.CATEGORY_ERROR)
+                .build(),
+        )
     }
 
     fun cancel(context: Context) {

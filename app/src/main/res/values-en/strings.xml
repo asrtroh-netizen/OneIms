@@ -65,8 +65,13 @@
     <string name="onekuku_pair_title_ok">OneKuku paired</string>
     <string name="onekuku_pair_text_ok">OneKuku paired successfully</string>
     <string name="onekuku_pair_title_fail">Pairing failed</string>
-    <string name="onekuku_pair_text_fail">Pairing failed: %1$s</string>
+    <string name="onekuku_pair_text_fail">Pairing failed: %1$s (retry from this notification)</string>
     <string name="onekuku_pair_need_six_digits">Enter a 6-digit code (or port + space + code)</string>
+    <string name="onekuku_pair_reason_pair_failed">Code rejected—keep the pairing page open and retry</string>
+    <string name="onekuku_pair_reason_port_missing">No pairing port—open “Pair device with pairing code” first</string>
+    <string name="onekuku_pair_reason_connect_failed">Paired but connect failed—toggle wireless debugging and retry</string>
+    <string name="onekuku_pair_reason_start_failed">Channel process did not start—enter the code again</string>
+    <string name="onekuku_pair_reason_binder">Channel started but binder missing—open the app and tap Activate once</string>
     <string name="onekuku_msg_waiting_pair_detail">Keep the wireless-debug pairing page open and enter the 6-digit code in the notification</string>
     <string name="onekuku_msg_activating">Activating OneKuku…</string>
     <string name="onekuku_title_waiting_pair">OneKuku waiting to pair</string>

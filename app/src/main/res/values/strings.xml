@@ -70,8 +70,13 @@
     <string name="onekuku_pair_title_ok">OneKuku 配对成功</string>
     <string name="onekuku_pair_text_ok">OneKuku 配对成功</string>
     <string name="onekuku_pair_title_fail">配对失败</string>
-    <string name="onekuku_pair_text_fail">配对失败：%1$s</string>
+    <string name="onekuku_pair_text_fail">配对失败：%1$s（可直接在本通知重试填码）</string>
     <string name="onekuku_pair_need_six_digits">请输入 6 位配对码（或 端口+空格+六位码）</string>
+    <string name="onekuku_pair_reason_pair_failed">六位码校验失败，请保持配对页打开并重试</string>
+    <string name="onekuku_pair_reason_port_missing">未发现配对端口，请打开「使用配对码配对设备」页后再填</string>
+    <string name="onekuku_pair_reason_connect_failed">已配对但连接失败，请重开无线调试后再试</string>
+    <string name="onekuku_pair_reason_start_failed">通道进程未启动成功，请再填一次码</string>
+    <string name="onekuku_pair_reason_binder">通道已启动但未回传权限通道，请回到 App 点一次激活重试</string>
     <string name="onekuku_msg_waiting_pair_detail">请保持无线调试配对页面打开，并在通知栏输入 6 位码</string>
     <string name="onekuku_msg_activating">正在激活 OneKuku…</string>
     <string name="onekuku_title_waiting_pair">OneKuku 等待配对</string>
