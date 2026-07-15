@@ -29,6 +29,18 @@
         android:name="android.hardware.telephony"
         android:required="false" />
 
+    <!--
+      Android 11+ 包可见性：不声明则 getPackageInfo(com.oneims.bridge) 恒失败，
+      表现为「已装通道仍弹还没装」死循环。
+    -->
+    <queries>
+        <package android:name="com.oneims.bridge" />
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:mimeType="application/vnd.android.package-archive" />
+        </intent>
+    </queries>
+
     <!-- 新补丁禁止 shell 直接覆盖 CarrierConfig，改由活动 Instrumentation 接收权限委托。 -->
     <instrumentation
         android:name=".core.BrokerInstrumentation"

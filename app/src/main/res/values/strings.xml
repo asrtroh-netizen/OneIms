@@ -46,7 +46,7 @@
     <string name="onekuku_msg_core_download_failed">未找到内置 OneKuku 通道（oneims-bridge.apk）。请确认 assets 已打包；不会再下载上游完整提权组件充数</string>
     <string name="onekuku_msg_core_missing_hint">还没装 OneKuku 通道。请安装内置的 OneKuku 通道（oneims-bridge，不是上游完整提权 App）。</string>
     <string name="onekuku_core_missing_title">还没装 OneKuku 通道</string>
-    <string name="onekuku_core_missing_body">六位码配对窗要等通道装好才会出现。请先完成安装（系统安装器会弹出）；装好后回到这里再点「启动通道」。</string>
+    <string name="onekuku_core_missing_body">六位码配对窗要等通道装好才会出现。请先完成安装（系统安装器会弹出）；装好后请回到 OneIMS——若仍停在本页，点「继续安装」或再次点「启动通道」。</string>
     <string name="onekuku_core_missing_install">继续安装</string>
     <string name="onekuku_msg_embedded_adb_starting">正在用内嵌 ADB 拉起 OneKuku 通道…</string>
     <string name="onekuku_msg_embedded_adb_ok">内嵌 ADB 已发出启动指令，请确认通道就绪后授权</string>

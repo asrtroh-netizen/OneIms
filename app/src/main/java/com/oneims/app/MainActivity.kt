@@ -41,6 +41,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import android.content.Intent
 import androidx.core.util.Consumer
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import com.oneims.app.core.CarrierProfiles
 import com.oneims.app.core.ApnCatalogEntry
 import com.oneims.app.core.CompatChecker
@@ -254,6 +256,8 @@ private fun AppRoot(
     var adbPairCode by remember { mutableStateOf("") }
     var adbPairBusy by remember { mutableStateOf(false) }
     var coreMissingDialogVisible by remember { mutableStateOf(false) }
+    /** 系统安装器返回后，ON_RESUME 自动续跑配对，避免「已装仍弹还没装」死循环。 */
+    var awaitingCoreInstall by remember { mutableStateOf(false) }
 
     var volte by remember { mutableStateOf(true) }
     var vowifi by remember { mutableStateOf(true) }
@@ -416,6 +420,7 @@ private fun AppRoot(
         if (!OneKukuCoreComponent.isInstalled(context)) {
             // 未装核心时以前只 snackbar，体感像「点了没弹窗」——改为显式对话框
             coreMissingDialogVisible = true
+            awaitingCoreInstall = true
             when (val result = OneKukuCoreComponent.prepare(context)) {
                 OneKukuCoreComponent.PrepareResult.INSTALLING_BUNDLED ->
                     publish(context.getString(R.string.onekuku_msg_installing_bundled_core))
@@ -446,6 +451,7 @@ private fun AppRoot(
             }
             return
         }
+        awaitingCoreInstall = false
         coreMissingDialogVisible = false
         // 立刻弹窗：热点/mDNS 可能要数秒，不能等失败后才让用户看见输入框
         adbPairCode = ""
@@ -484,6 +490,22 @@ private fun AppRoot(
                 }
             }
         }
+    }
+
+    DisposableEffect(Unit) {
+        val activity = context as? ComponentActivity
+            ?: return@DisposableEffect onDispose { }
+        val observer = LifecycleEventObserver { _, event ->
+            if (event != Lifecycle.Event.ON_RESUME) return@LifecycleEventObserver
+            if (!awaitingCoreInstall) return@LifecycleEventObserver
+            if (!OneKukuCoreComponent.isInstalled(context)) return@LifecycleEventObserver
+            // 装完从系统安装器 / 通道页返回：自动关掉「还没装」并进入配对
+            awaitingCoreInstall = false
+            coreMissingDialogVisible = false
+            prepareOneKukuCore()
+        }
+        activity.lifecycle.addObserver(observer)
+        onDispose { activity.lifecycle.removeObserver(observer) }
     }
 
     /** 「启动通道」专用：不走总控卡 isRunning 短路，保证能进配对/安装弹窗。 */
