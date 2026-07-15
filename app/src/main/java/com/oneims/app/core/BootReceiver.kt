@@ -19,8 +19,21 @@ class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {
         val action = intent?.action ?: return
         when (action) {
+            Intent.ACTION_LOCKED_BOOT_COMPLETED -> {
+                val pending = goAsync()
+                try {
+                    // Direct Boot：只拉守护；恢复编排依赖 CE 存储与无线调试，等解锁后再跑。
+                    if (ConfigStore.isGuardEnabled(context) ||
+                        ConfigStore.lastApplied(context) != null
+                    ) {
+                        GuardService.start(context)
+                    }
+                    Log.i(TAG, "boot action=$action skip restore enqueue until unlocked")
+                } finally {
+                    pending.finish()
+                }
+            }
             Intent.ACTION_BOOT_COMPLETED,
-            Intent.ACTION_LOCKED_BOOT_COMPLETED,
             Intent.ACTION_USER_UNLOCKED,
             -> {
                 val pending = goAsync()
