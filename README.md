@@ -14,14 +14,16 @@
 
 <br/>
 
-### ⬇️ 下载 APK（最新 · 双版本 2.2.0）
+### ⬇️ 下载 APK（最新 · v2.2.1 · 请自选产品线）
 
-| 线 | 下载 |
-|---|---|
-| **OneKuku**（内嵌通道 · 主线） | [OneIms-OneKuku-2.2.0.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v2.2.0/OneIms-OneKuku-2.2.0.apk) |
-| **OneLink**（官方 Shizuku · 轻量壳） | [OneIms-OneLink-2.2.0.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v2.2.0/OneIms-OneLink-2.2.0.apk) |
+> **两个包功能相同（IMS/诊断/恢复），差别只在「特权通道怎么激活」——看下方选购指南，**只装其中一个**即可；进阶用户也可同机并存对比。
 
-[📦 全部 Release 资产](https://github.com/asrtroh-netizen/OneIms/releases/tag/v2.2.0)
+| 推荐给… | 包 | 下载 |
+|---|---|---|
+| 🟢 **想少装 App、App 内一键配对** | **OneKuku（独立激活）** | [OneIms-OneKuku-standalone-2.2.1.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v2.2.1/OneIms-OneKuku-standalone-2.2.1.apk) |
+| 🔵 **已有 Shizuku / 要最轻壳** | **OneLink（Shizuku）** | [OneIms-OneLink-Shizuku-2.2.1.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v2.2.1/OneIms-OneLink-Shizuku-2.2.1.apk) |
+
+[📦 全部 Release 资产](https://github.com/asrtroh-netizen/OneIms/releases/tag/v2.2.1)
 
 > 本仓库 **只提供 README + APK 发布**，**不开放源代码**。  
 > 需要交流 / 反馈请走 Telegram，别来仓库里翻源码啦～
@@ -30,16 +32,77 @@
 
 ---
 
+## 🧭 怎么选？OneKuku vs OneLink（2.2.1 起）
+
+两个 APK **业务功能一致**（VoLTE/VoWiFi/诊断/恢复/独家功能），区别只在 **特权通道** 怎么获得：
+
+| | **OneKuku（独立激活）** | **OneLink（Shizuku）** |
+|---|---|---|
+| **适合谁** | 不想另外装 Shizuku；希望 **App 内无线调试 + 通知栏填码** 一条龙 | 已熟悉 **[Shizuku](https://shizuku.rikka.app/)**；想要 **更小安装包、更轻壳** |
+| **包名** | `com.oneims.app` | `com.oneims.onelink` |
+| **激活方式** | 内嵌 OneBridge · 无线调试配对 · 可通知栏六位码 | **Shizuku 已 Start 且已对本 App 授权**：App 内一点即可唤醒；**未 Start**：一点才跳转官方 Shizuku 去 Start，再回 App 点授权（与 2.0.8/2.0.9 相同） |
+| **额外依赖** | 无（通道打进包内） | 需自行安装官方 **Shizuku**；日常保持 Shizuku 已 Start 即可 |
+| **体积** | 较大（含内嵌 ADB/Bridge） | 较小（无内嵌 ADB/Bridge） |
+| **同机并存** | ✅ 可与 OneLink 同时安装（不同包名） | ✅ 可与 OneKuku 同时安装 |
+
+**怎么选（一句话）：**
+
+* 你是 **「我只想在一个 App 里搞定」** → 下 **OneKuku（独立激活）**
+* 你是 **「我手机本来就有 Shizuku」** → 下 **OneLink（Shizuku）**
+* 不确定 → 先试 **OneKuku**；若你本来就在用 Shizuku 生态，再换 **OneLink** 也行
+
+---
+
 ## 📦 双版本产品线（备注）
 
-自 **2.2.x** 起支持 **OneKuku** / **OneLink** 双线（不同包名，可同机并存）：
-
-| 对外名称 | 包名 | 特权通道 | 备注 |
+| 对外名称 | 包名 | 特权通道 | Release 文件名 |
 |---|---|---|---|
-| **OneIms · OneKuku** `2.2.0-onekuku` | `com.oneims.app` | 内嵌 OneBridge + 无线调试配对 | **现有主线**；见上方 OneKuku 下载 |
-| **OneIms · OneLink** `2.2.0-onelink` | `com.oneims.onelink` | 官方 [Shizuku](https://shizuku.rikka.app/) | **轻量壳**：一点激活 → 打开 Shizuku 配对/授权，不自建内嵌 ADB / 常驻通道 |
+| **OneIms · OneKuku** `2.2.1-onekuku` | `com.oneims.app` | 内嵌 OneBridge + 无线调试配对 | `OneIms-OneKuku-standalone-2.2.1.apk`（备注：独立激活） |
+| **OneIms · OneLink** `2.2.1-onelink` | `com.oneims.onelink` | 官方 Shizuku | `OneIms-OneLink-Shizuku-2.2.1.apk`（备注：Shizuku） |
 
-> 发版命名 APK：`OneIms-OneKuku-2.2.0.apk` · `OneIms-OneLink-2.2.0.apk`（双包同版号上传 Release）。
+> **2.2.1 起双包同版号一起更新**；请只从本页 Release 链接下载，勿混装未知来源包。
+
+---
+
+## ✨ What's New · 2.2.1
+
+**本版主线：正式拆分双产品线，把选择权交给你。**
+
+### 🔄 从旧版升级？可选装哪个（2.2.1）
+
+> **不是两个都要装** — 业务一样，只是通道不同。按下面选 **其中一个** 覆盖安装或新装即可。
+
+| 你现在的状态 | 推荐升级包 | 说明 |
+|---|---|---|
+| 一直在用 **OneIms 2.2.0 / 2.1.x**（包名 `com.oneims.app`） | 🟢 **OneKuku（独立激活）** | **最省事**：等同原来那条主线，配置/快照仍在同一包内，直接覆盖升级 |
+| 手机 **长期装着 Shizuku**，想 App 更轻 | 🔵 **OneLink（Shizuku）** | 新包名 `com.oneims.onelink`：在 Shizuku 里对本包 **再授权一次**（不是再走无线调试配对）+ **重新保存配置快照**（与 OneKuku 数据不互通） |
+| **两个都想试** | 先 🟢 OneKuku，再 🔵 OneLink | 可同机并存对比；注意 **各自授权通道、各自存快照** |
+| 从 **很老的单包**（只有 `OneIms-x.x.x.apk`）升级 | 🟢 **OneKuku** | 体验与历史版本最接近 |
+
+**可选升级一句话：**
+
+* **不想折腾** → 继续 **OneKuku**，覆盖安装 `OneIms-OneKuku-standalone-2.2.1.apk`
+* **本来就用 Shizuku** → 改装 **OneLink**，下载 `OneIms-OneLink-Shizuku-2.2.1.apk`
+* **拿不准** → 先 OneKuku；用顺了再决定是否试 OneLink
+
+> OneKuku ↔ OneLink **不能靠覆盖安装互转**（包名不同）。换线 = 新装 + 对本包重新授权通道 + 重新保存通话配置快照。
+
+### 📦 双产品线 · 自选下载
+
+* 🟢 **OneKuku（独立激活）**：内嵌通道，App 内配对，**不需另装 Shizuku**（延续 2.2.0 主线体验）
+* 🔵 **OneLink（Shizuku）**：轻量壳；**Shizuku 已开时一点授权/唤醒**，未开才跳转官方 Shizuku，包体更小
+* 📱 两包 **不同 applicationId**，可同机并存；README 提供选购对照表
+
+### 🏠 首页状态框 · 更简单
+
+* 🏷️ 激活后 steady 态收成 **「已就绪 / 休眠中」** 两档（不再混用「就绪·休眠」）
+* 📊 进度条 **四段**：未激活 → 激活 → 就绪/休眠 → 失败（「执行」并入就绪段）
+* 💤 通道休眠时标题/胶囊显示 **休眠**；唤醒或执行任务时显示 **已就绪**
+
+### 🔌 架构（用户可感知部分）
+
+* OneLink 线去掉内嵌 ADB / OneBridge 常驻等 **OneKuku 专属** 能力，IMS 与恢复业务与 OneKuku **共用同一套代码**
+* OneKuku 线保持 2.2.0 的通道常驻、划掉后台尽量存活等改进
 
 ---
 
