@@ -25,6 +25,19 @@
 
 ---
 
+## 📦 双版本产品线（备注）
+
+自 **2.2.x** 起支持 **OneKuku** / **OneLink** 双线（不同包名，可同机并存）：
+
+| 对外名称 | 包名 | 特权通道 | 备注 |
+|---|---|---|---|
+| **OneIms · OneKuku** `2.2.0-onekuku` | `com.oneims.app` | 内嵌 OneBridge + 无线调试配对 | **现有主线**；上方 Release 为当前 OneKuku 包 |
+| **OneIms · OneLink** `2.2.0-onelink` | `com.oneims.onelink` | 官方 [Shizuku](https://shizuku.rikka.app/) | **轻量壳**：一点激活 → 打开 Shizuku 配对/授权，不自建内嵌 ADB / 常驻通道 |
+
+> 发版命名 APK：`OneIms-OneKuku-2.2.0.apk` · `OneIms-OneLink-2.2.0.apk`（双包同版号上传 Release）。
+
+---
+
 ## ✨ What's New · 2.2.0
 
 首页总控与通道体验收成一版更干净、更稳的主线：通道常驻、就绪态更安静、推荐配置归位。
