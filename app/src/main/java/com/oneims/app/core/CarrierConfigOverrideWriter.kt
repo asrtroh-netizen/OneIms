@@ -48,6 +48,8 @@ object CarrierConfigOverrideWriter {
             usedPersistent = overrideConfigBestEffort(context, subId, values)
             true
         }.getOrElse { error ->
+            // 写入尚未真正开始时不得吞掉异常：上层需跳过「自动回滚」恐吓文案。
+            rethrowIfWriteNeverStarted(error)
             Log.w(TAG, "batch write failed: ${error.message}")
             failures += "batch: ${sanitizeOverrideError(error)}"
             false
@@ -63,6 +65,7 @@ object CarrierConfigOverrideWriter {
                     usedPersistent = usedPersistent && persistent
                     verifyOverride(context, subId, single)
                 }.getOrElse { error ->
+                    rethrowIfWriteNeverStarted(error)
                     Log.w(TAG, "key=$key failed: ${error.message}")
                     failures += "$key: ${sanitizeOverrideError(error)}"
                     false
@@ -130,6 +133,7 @@ object CarrierConfigOverrideWriter {
                     persistent = persistent,
                 )
             }.getOrElse {
+                rethrowIfWriteNeverStarted(it)
                 Result(
                     success = false,
                     message = "clear failed · $target · ${sanitizeOverrideError(it)}",
@@ -267,6 +271,19 @@ object CarrierConfigOverrideWriter {
             return "需要系统级持久写入权限；已尝试临时覆盖仍失败"
         }
         return error.message ?: error.javaClass.simpleName
+    }
+
+    /**
+     * [BrokerExecutionException.operationStarted]=false 表示 AMS/桥尚未真正开写；
+     * 必须原样抛给 [ImsController]，避免被聚合成 partial/fail 后误触发回滚文案。
+     */
+    internal fun rethrowIfWriteNeverStarted(error: Throwable) {
+        val bee = generateSequence(error) { it.cause }
+            .filterIsInstance<BrokerExecutionException>()
+            .firstOrNull()
+        if (bee != null && !bee.operationStarted) {
+            throw bee
+        }
     }
 
     private fun placeResetValue(

@@ -68,6 +68,8 @@ class BootReceiver : BroadcastReceiver() {
                 }
             }
             WifiManager.NETWORK_STATE_CHANGED_ACTION -> {
+                // OneLink 轻壳不靠 Wi‑Fi/ADB 续跑；仅 OneKuku 内嵌激活会钉 WAITING_WIFI。
+                if (ChannelLine.usesShizuku) return
                 // 仅「本开机已停在等 Wi‑Fi」时续跑；禁止在未 attempted 时靠 Wi‑Fi 广播抢启 FGS。
                 if (!ConfigStore.isOneKukuBootAutoCheck(context)) return
                 if (OneKukuBootRestoreStore.readHint(context) != OneKukuBootUiHint.WAITING_WIFI) {

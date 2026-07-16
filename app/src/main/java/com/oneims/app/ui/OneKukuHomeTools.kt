@@ -2,6 +2,7 @@ package com.oneims.app.ui
 
 import android.content.Context
 import com.oneims.app.R
+import com.oneims.app.core.ChannelLine
 import com.oneims.app.core.ConfigStore
 import com.oneims.app.core.VoWifiNameFormatManager
 import com.oneims.app.model.WfcMode
@@ -376,12 +377,23 @@ object OneKukuHomeTools {
         }
     }
 
-    fun sanitizeUserText(raw: String): String =
-        raw
-            .replace(Regex("(?i)shizuku"), "OneKuku")
+    fun sanitizeUserText(raw: String, context: Context? = null): String {
+        // OneLink：保留 Shizuku，并把历史「OneKuku」错误文案收成 OneLink。
+        // OneKuku 线：把第三方 Shizuku 名收成通道名。
+        val channelLabel =
+            context?.getString(ChannelLine.displayNameRes)
+                ?: if (ChannelLine.usesShizuku) "OneLink" else "OneKuku"
+        var text = raw
+        if (ChannelLine.usesShizuku) {
+            text = text.replace(Regex("(?i)onekuku"), channelLabel)
+        } else {
+            text = text.replace(Regex("(?i)shizuku"), channelLabel)
+        }
+        return text
             .replace(Regex("(?i)\\badb\\b"), "调试桥")
             .replace(Regex("(?i)termux"), "终端助手")
             .trim()
+    }
 
     fun restoreResultLabel(context: Context, status: ConfigStore.ReapplyStatus): String {
         val msg = status.message
@@ -402,16 +414,15 @@ object OneKukuHomeTools {
         state: OneKukuCardState,
         serviceRunning: Boolean,
     ): String = when {
-        state == OneKukuCardState.EXECUTING ->
+        state == OneKukuCardState.READY ->
             context.getString(R.string.onekuku_settings_state_running)
-        state == OneKukuCardState.FAILED ->
-            context.getString(R.string.onekuku_settings_state_inactive)
         state == OneKukuCardState.INACTIVE && !serviceRunning ->
             context.getString(R.string.onekuku_settings_state_invalid)
         state == OneKukuCardState.INACTIVE ||
             state == OneKukuCardState.ACTIVATING ->
             context.getString(R.string.onekuku_settings_state_inactive)
-        else -> context.getString(R.string.onekuku_settings_state_sleeping)
+        state == OneKukuCardState.SLEEPING ->
+            context.getString(R.string.onekuku_settings_state_sleeping)
     }
 
     fun classifyRestoreOutcome(

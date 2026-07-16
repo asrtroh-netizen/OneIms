@@ -8,6 +8,8 @@ import android.widget.Toast
 import androidx.core.app.RemoteInput
 import com.oneims.app.MainActivity
 import com.oneims.app.R
+import com.oneims.app.onekuku.OneKukuHiddenRunner
+import com.oneims.app.onekuku.OneKukuSleepController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -59,9 +61,16 @@ class WirelessPairingCodeReceiver : BroadcastReceiver() {
                                 Intent(ACTION_CONTINUE_RESTORE).setPackage(app.packageName),
                             )
                         }
-                        // 管道相位清回 IDLE，首页改走 resolve（就绪），避免一直显示激活中。
+                        // 管道相位清回 IDLE；对齐 Shizuku：停 App 常驻，特权留在 onebridge_server。
                         OneKukuActivationUi.setPhase(OneKukuActivationPhase.IDLE)
-                        OneKukuResidentService.start(app)
+                        if (ChannelLine.usesEmbeddedBridge) {
+                            OneKukuResidentService.stop(app)
+                            if (ConfigStore.isOneKukuAutoSleep(app)) {
+                                OneKukuSleepController.sleepIfEnabled(app)
+                            } else {
+                                OneKukuHiddenRunner.markActive()
+                            }
+                        }
                         bringAppToForeground(app)
                     }
                     is OneKukuMiniAdbClient.Outcome.NeedPairingCode -> {

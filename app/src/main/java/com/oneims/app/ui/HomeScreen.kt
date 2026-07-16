@@ -8,14 +8,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.AccountBox
-import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -32,15 +28,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import com.oneims.app.R
+import com.oneims.app.core.ChannelLine
 import com.oneims.app.core.OneKukuEmbeddedAdbActivator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 private enum class HomeToolDialog {
     Status,
-    Snapshot,
-    History,
-    Settings,
     DeviceInfo,
     WirelessGuide,
 }
@@ -64,23 +58,24 @@ fun HomeScreen(
         item {
             StatusHero(
                 oneKukuState = state.oneKukuState,
+                channelSleeping = state.oneKukuChannelSleeping,
                 onPrimaryAction = {
                     when (state.oneKukuState) {
-                        // 未激活/失败：已配对过 → 直连激活（不弹六位码说明/通知）；
-                        // 从未配对 → 先出三步说明 + 状态栏填码入口。
-                        OneKukuCardState.INACTIVE,
-                        OneKukuCardState.FAILED,
-                        -> {
-                            if (OneKukuEmbeddedAdbActivator.hasPairedOnce(context)) {
+                        // OneLink：新 UI + 2.0.9 逻辑 → 直接开 Shizuku，不弹内嵌 ADB 三步说明。
+                        // OneKuku：已配对直连；从未配对才出无线调试说明 + 通知栏填码。
+                        OneKukuCardState.INACTIVE -> {
+                            if (ChannelLine.usesShizuku ||
+                                OneKukuEmbeddedAdbActivator.hasPairedOnce(context)
+                            ) {
                                 actions.onActivateOneKuku()
                             } else {
                                 openDialog = HomeToolDialog.WirelessGuide
                             }
                         }
-                        OneKukuCardState.READY -> actions.onCheckOneKukuStatus()
-                        OneKukuCardState.ACTIVATING,
-                        OneKukuCardState.EXECUTING,
-                        -> Unit
+                        OneKukuCardState.READY,
+                        OneKukuCardState.SLEEPING,
+                        -> actions.onCheckOneKukuStatus()
+                        OneKukuCardState.ACTIVATING -> Unit
                     }
                 },
                 onOpenDeviceDetails = { openDialog = HomeToolDialog.DeviceInfo },
@@ -120,29 +115,14 @@ fun HomeScreen(
                                     state.sims.isNotEmpty(),
                             ),
                             ActionSpec(
-                                icon = Icons.Filled.Search,
-                                title = stringResource(R.string.onekuku_tool_status_title),
-                                subtitle = stringResource(R.string.onekuku_tool_status_sub),
-                                onClick = { openDialog = HomeToolDialog.Status },
-                                enabled = state.actionsEnabled,
-                            ),
-                            ActionSpec(
-                                icon = Icons.Filled.Info,
-                                title = stringResource(R.string.onekuku_tool_snapshot_title),
-                                subtitle = stringResource(R.string.onekuku_tool_snapshot_sub),
-                                onClick = { openDialog = HomeToolDialog.Snapshot },
-                            ),
-                            ActionSpec(
-                                icon = Icons.AutoMirrored.Filled.List,
-                                title = stringResource(R.string.onekuku_tool_history_title),
-                                subtitle = stringResource(R.string.onekuku_tool_history_sub),
-                                onClick = { openDialog = HomeToolDialog.History },
-                            ),
-                            ActionSpec(
-                                icon = Icons.Filled.Settings,
-                                title = stringResource(R.string.onekuku_tool_settings_title),
-                                subtitle = stringResource(R.string.onekuku_tool_settings_sub),
-                                onClick = { openDialog = HomeToolDialog.Settings },
+                                icon = Icons.Filled.PlayArrow,
+                                title = stringResource(R.string.onekuku_action_restore),
+                                subtitle = stringResource(R.string.onekuku_action_restore_sub),
+                                onClick = actions.onRestoreCallConfig,
+                                // 与「保存」成对：同一通道就绪门禁，避免无快照时误触写回。
+                                enabled = state.actionsEnabled &&
+                                    state.oneKukuState == OneKukuCardState.READY &&
+                                    state.sims.isNotEmpty(),
                             ),
                         ),
                     )
@@ -264,147 +244,6 @@ fun HomeScreen(
                                 }
                             }
                         }
-                    }
-                },
-                confirmButton = {
-                    TextButton(onClick = { openDialog = null }) {
-                        Text(stringResource(R.string.action_close))
-                    }
-                },
-            )
-        }
-
-        HomeToolDialog.Snapshot -> {
-            val lines = OneKukuHomeTools.buildSnapshotLines(context, state.selectedSubId)
-            AlertDialog(
-                onDismissRequest = { openDialog = null },
-                title = { Text(stringResource(R.string.onekuku_tool_snapshot_title)) },
-                text = {
-                    if (lines == null) {
-                        Text(stringResource(R.string.onekuku_snapshot_empty))
-                    } else {
-                        Column(
-                            modifier = Modifier.verticalScroll(rememberScrollState()),
-                            verticalArrangement = Arrangement.spacedBy(10.dp),
-                        ) {
-                            lines.forEach { line ->
-                                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                    Text(
-                                        line.label,
-                                        style = MaterialTheme.typography.labelLarge,
-                                        color = MaterialTheme.colorScheme.primary,
-                                    )
-                                    Text(
-                                        line.value,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                    )
-                                }
-                            }
-                        }
-                    }
-                },
-                confirmButton = {
-                    TextButton(onClick = { openDialog = null }) {
-                        Text(stringResource(R.string.action_close))
-                    }
-                },
-            )
-        }
-
-        HomeToolDialog.History -> {
-            val lines = OneKukuHomeTools.buildRestoreHistoryLines(context)
-            AlertDialog(
-                onDismissRequest = { openDialog = null },
-                title = { Text(stringResource(R.string.onekuku_tool_history_title)) },
-                text = {
-                    if (lines == null) {
-                        Text(stringResource(R.string.onekuku_history_empty))
-                    } else {
-                        Column(
-                            modifier = Modifier.verticalScroll(rememberScrollState()),
-                            verticalArrangement = Arrangement.spacedBy(10.dp),
-                        ) {
-                            lines.forEach { line ->
-                                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                    Text(
-                                        line.label,
-                                        style = MaterialTheme.typography.labelLarge,
-                                        color = MaterialTheme.colorScheme.primary,
-                                    )
-                                    Text(
-                                        line.value,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                    )
-                                }
-                            }
-                        }
-                    }
-                },
-                confirmButton = {
-                    TextButton(onClick = { openDialog = null }) {
-                        Text(stringResource(R.string.action_close))
-                    }
-                },
-            )
-        }
-
-        HomeToolDialog.Settings -> {
-            AlertDialog(
-                onDismissRequest = { openDialog = null },
-                title = { Text(stringResource(R.string.onekuku_tool_settings_title)) },
-                text = {
-                    Column(
-                        modifier = Modifier.verticalScroll(rememberScrollState()),
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                    ) {
-                        Text(
-                            stringResource(
-                                R.string.onekuku_settings_status,
-                                OneKukuHomeTools.settingsStatusLabel(
-                                    context = context,
-                                    state = state.oneKukuState,
-                                    serviceRunning = state.shizukuRunning,
-                                ),
-                            ),
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.padding(bottom = 8.dp),
-                        )
-                        SettingsSwitchRow(
-                            title = stringResource(R.string.onekuku_settings_boot_check),
-                            subtitle = stringResource(R.string.onekuku_settings_boot_check_sub),
-                            checked = state.bootAutoCheck,
-                            onCheckedChange = actions.onBootAutoCheckChange,
-                        )
-                        SettingsSwitchRow(
-                            title = stringResource(R.string.onekuku_settings_auto_restore),
-                            subtitle = stringResource(R.string.onekuku_settings_auto_restore_sub),
-                            checked = state.autoRestore,
-                            onCheckedChange = actions.onAutoRestoreChange,
-                        )
-                        Text(
-                            text = stringResource(R.string.onekuku_settings_resident_note),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(vertical = 8.dp),
-                        )
-                        SettingsActionRow(
-                            icon = Icons.Filled.Refresh,
-                            title = stringResource(R.string.onekuku_settings_reactivate),
-                            subtitle = stringResource(R.string.onekuku_settings_reactivate_sub),
-                            onClick = {
-                                openDialog = null
-                                actions.onForceReactivateOneKuku()
-                            },
-                        )
-                        SettingsActionRow(
-                            icon = Icons.Filled.Search,
-                            title = stringResource(R.string.onekuku_settings_check_status),
-                            subtitle = stringResource(R.string.onekuku_settings_check_status_sub),
-                            onClick = {
-                                openDialog = null
-                                actions.onCheckOneKukuStatus()
-                            },
-                        )
                     }
                 },
                 confirmButton = {

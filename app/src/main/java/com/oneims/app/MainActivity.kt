@@ -73,6 +73,7 @@ import com.oneims.app.core.OneKukuMiniAdbClient
 import com.oneims.app.core.OneKukuPairingNotification
 import com.oneims.app.core.OneKukuActivationUi
 import com.oneims.app.core.OneKukuActivationPhase
+import com.oneims.app.core.ChannelLine
 import com.oneims.app.core.OneKukuManager
 import com.oneims.app.core.WirelessPairingCodeReceiver
 import com.oneims.app.core.SimpleFiveGDisplayConfig
@@ -324,6 +325,9 @@ private fun AppRoot(
     /** 本轮引导是否已打开过无线调试，避免弹窗确认与激活重复抢会话。 */
     var pairingUiPrimed by remember { mutableStateOf(false) }
     val bootForceInactive = bootUiHint == OneKukuBootUiHint.NEEDS_ACTIVATION
+    // activationEpoch：生命周期休眠/唤醒后强制重组，才能读到 HiddenRunner 最新态。
+    @Suppress("UNUSED_VARIABLE")
+    val runnerEpoch = activationEpoch
     val oneKukuState = OneKukuCardPolicy.fromActivationPhase(activationPhase)
         ?: OneKukuCardPolicy.resolve(
             serviceReady = shizukuRunning && shizukuGranted && !bootForceInactive,
@@ -332,9 +336,21 @@ private fun AppRoot(
                 bootUiHint == OneKukuBootUiHint.WAITING_WIFI ||
                 OneKukuHiddenRunner.currentState() == OneKukuRunnerState.EXECUTING ||
                 OneKukuHiddenRunner.currentState() == OneKukuRunnerState.STARTING,
+            channelSleeping = OneKukuCardPolicy.isChannelSleeping(
+                OneKukuHiddenRunner.currentState(),
+            ),
             taskComplete = oneKukuTaskComplete || bootUiHint == OneKukuBootUiHint.RESTORE_COMPLETE,
         )
+    val oneKukuChannelSleeping = oneKukuState == OneKukuCardState.SLEEPING
     val oneKukuDetailOverride = when {
+        // OneLink：不展示内嵌 ADB 配对相位文案（即便相位短暂残留）。
+        ChannelLine.usesShizuku &&
+            (
+                activationPhase == OneKukuActivationPhase.WAITING_PAIR ||
+                    activationPhase == OneKukuActivationPhase.PAIRING ||
+                    activationPhase == OneKukuActivationPhase.CONNECTING
+                ) ->
+            context.getString(R.string.onekuku_msg_need_prepare)
         activationPhase == OneKukuActivationPhase.WAITING_PAIR ->
             context.getString(R.string.onekuku_msg_waiting_pair_detail)
         activationPhase == OneKukuActivationPhase.PAIRING ->
@@ -361,6 +377,37 @@ private fun AppRoot(
             }
         }
         else -> null
+    }
+
+    /**
+     * 通道就绪后的收尾（对齐 Shizuku）：
+     * 特权活在桥接进程，不靠 App 前台常驻。
+     * 前台收尾一律标「就绪」；关 App / 退后台由生命周期切入「休眠」。
+     */
+    fun settleOneKukuChannelAfterReady() {
+        if (ChannelLine.usesEmbeddedBridge) {
+            OneKukuResidentService.stop(context)
+        }
+        OneKukuHiddenRunner.installBridge(OneKukuPrivilegeBridgeImpl)
+        OneKukuHiddenRunner.markActive()
+        activationEpoch++
+    }
+
+    /** App 退后台 / 关闭：已授权则进入休眠（不拆桥、不要求重配对）。 */
+    fun sleepChannelWhenBackgrounded() {
+        if (!OneKukuManager.isReady()) return
+        if (OneKukuCardPolicy.isBusy(oneKukuState)) return
+        OneKukuHiddenRunner.installBridge(OneKukuPrivilegeBridgeImpl)
+        OneKukuSleepController.sleep(context)
+        activationEpoch++
+    }
+
+    /** App 回到前台：已授权则从休眠拉回就绪。 */
+    fun wakeChannelWhenForegrounded() {
+        if (!OneKukuManager.isReady()) return
+        OneKukuHiddenRunner.installBridge(OneKukuPrivilegeBridgeImpl)
+        OneKukuHiddenRunner.wake()
+        activationEpoch++
     }
 
     // 已有快照却仍挂着「暂无」提示：异步清掉，避免下轮又被读回。
@@ -394,7 +441,7 @@ private fun AppRoot(
                 bootUiHint = hint
             }
             OneKukuActivationUi.setPhase(OneKukuActivationPhase.IDLE)
-            OneKukuResidentService.start(context)
+            settleOneKukuChannelAfterReady()
         } else if (ConfigStore.isOneKukuBootAutoCheck(context) &&
             OneKukuEmbeddedAdbActivator.hasPairedOnce(context)
         ) {
@@ -525,11 +572,58 @@ private fun AppRoot(
     }
 
     /**
+     * OneLink 线激活：复刻 2.0.8/2.0.9（接入 OneKuku 内嵌栈之前）的纯 Shizuku 路径。
+     * 不装 OneBridge、不收六位码、不钉「激活中」；配对/Start 全在官方 Shizuku 里完成。
+     * 须定义在 [beginWirelessPairGuide] / [prepareOneKukuCore] 之前（本地函数不可前向引用）。
+     */
+    fun prepareOneLinkShizukuChannel() {
+        awaitingCoreInstall = false
+        coreMissingDialogVisible = false
+        adbPairDialogVisible = false
+        // 2.0.9 无 CONNECTING 相位；避免打开 Shizuku 后首页一直钉在「激活中」。
+        OneKukuActivationUi.setPhase(OneKukuActivationPhase.IDLE)
+        activationEpoch++
+        shizukuRunning = OneKukuManager.isRunning()
+        shizukuGranted = OneKukuManager.isGranted()
+        when {
+            OneKukuManager.isGranted() -> {
+                OneKukuHiddenRunner.installBridge(OneKukuPrivilegeBridgeImpl)
+                OneKukuHiddenRunner.wake()
+                OneKukuSleepController.sleepIfEnabled(context)
+                publish(context.getString(R.string.onekuku_msg_already_active))
+            }
+            OneKukuManager.isRunning() -> {
+                OneKukuManager.requestActivation()
+                publish(context.getString(R.string.onekuku_msg_permission_requested))
+            }
+            else -> {
+                val result = ShizukuSetupHelper.openShizukuApp(context)
+                publish(
+                    context.getString(
+                        when (result) {
+                            0 -> R.string.log_shizuku_opened
+                            1 -> R.string.log_shizuku_not_installed
+                            else -> R.string.log_open_failed
+                        },
+                    ),
+                )
+            }
+        }
+        shizukuRunning = OneKukuManager.isRunning()
+        shizukuGranted = OneKukuManager.isGranted()
+    }
+
+    /**
      * 图四说明弹窗出现时立刻执行：挂配对通知 + WAITING_PAIR（卡片离开红色）。
      * 不在这里跑 mDNS/connect，避免「说明出来了、通知还要等半天」。
      * 打开无线调试仅一次，确认后再 [prepareOneKukuCore] 继续激活。
      */
     fun beginWirelessPairGuide() {
+        // OneLink：不进内嵌配对引导，直接走 2.0.9 Shizuku 激活。
+        if (ChannelLine.usesShizuku) {
+            prepareOneLinkShizukuChannel()
+            return
+        }
         awaitingCoreInstall = false
         coreMissingDialogVisible = false
         adbPairDialogVisible = false
@@ -559,10 +653,16 @@ private fun AppRoot(
 
     /**
      * OneKuku 激活默认流程：
-     * - 从未配对：先挂通知栏等六位码，再探测；无 transport 则保持等待。
-     * - 已配对过：不预先弹六位码 UI，优先静默打开无线调试并直连；仅 NeedPairingCode 再挂通知。
+     * - OneLink 线：走官方 Shizuku（安装/启动管理器 + 授权），不跑内置 OneBridge 配对。
+     * - OneKuku 线：
+     *   - 从未配对：先挂通知栏等六位码，再探测；无 transport 则保持等待。
+     *   - 已配对过：不预先弹六位码 UI，优先静默打开无线调试并直连；仅 NeedPairingCode 再挂通知。
      */
     fun prepareOneKukuCore(forceRestart: Boolean = false) {
+        if (ChannelLine.usesShizuku) {
+            prepareOneLinkShizukuChannel()
+            return
+        }
         awaitingCoreInstall = false
         coreMissingDialogVisible = false
         adbPairDialogVisible = false
@@ -599,7 +699,7 @@ private fun AppRoot(
                     OneKukuActivationUi.setPhase(OneKukuActivationPhase.IDLE)
                     activationEpoch++
                     OneKukuPairingNotification.cancel(context)
-                    OneKukuResidentService.start(context)
+                    settleOneKukuChannelAfterReady()
                     shizukuRunning = OneKukuManager.isRunning()
                     shizukuGranted = OneKukuManager.isGranted()
                     if (bootUiHint == OneKukuBootUiHint.NEEDS_ACTIVATION ||
@@ -630,7 +730,7 @@ private fun AppRoot(
                     OneKukuActivationUi.setPhase(OneKukuActivationPhase.IDLE)
                     activationEpoch++
                     OneKukuPairingNotification.cancel(context)
-                    OneKukuResidentService.start(context)
+                    settleOneKukuChannelAfterReady()
                     shizukuRunning = OneKukuManager.isRunning()
                     shizukuGranted = OneKukuManager.isGranted()
                     if (bootUiHint == OneKukuBootUiHint.NEEDS_ACTIVATION ||
@@ -698,7 +798,7 @@ private fun AppRoot(
                     OneKukuActivationUi.setPhase(OneKukuActivationPhase.IDLE)
                     activationEpoch++
                     OneKukuPairingNotification.cancel(context)
-                    OneKukuResidentService.start(context)
+                    settleOneKukuChannelAfterReady()
                     shizukuRunning = OneKukuManager.isRunning()
                     if (OneKukuManager.isRunning() && !OneKukuManager.isGranted()) {
                         OneKukuManager.requestActivation()
@@ -745,13 +845,15 @@ private fun AppRoot(
         }
     }
 
-    // Shizuku 体感：已配对且通道未就绪时，进首页自动无码直连，不必再点总控卡。
+    // OneKuku：已配对且通道未就绪时，进首页自动无码直连。
+    // OneLink：轻壳，不在此自动跑内嵌 ADB；未就绪时由用户点总控 → 打开 Shizuku。
     LaunchedEffect(Unit) {
         if (OneKukuManager.isReady()) {
             OneKukuActivationUi.setPhase(OneKukuActivationPhase.IDLE)
-            OneKukuResidentService.start(context)
+            settleOneKukuChannelAfterReady()
             return@LaunchedEffect
         }
+        if (!ChannelLine.usesEmbeddedBridge) return@LaunchedEffect
         if (!OneKukuEmbeddedAdbActivator.hasPairedOnce(context)) return@LaunchedEffect
         val phase = OneKukuActivationUi.phase
         if (phase == OneKukuActivationPhase.CONNECTING ||
@@ -776,7 +878,7 @@ private fun AppRoot(
         delay(45_000L)
         if (OneKukuManager.isReady()) {
             OneKukuActivationUi.setPhase(OneKukuActivationPhase.IDLE)
-            OneKukuResidentService.start(context)
+            settleOneKukuChannelAfterReady()
             return@LaunchedEffect
         }
         val stillBusy = OneKukuActivationUi.phase == OneKukuActivationPhase.CONNECTING ||
@@ -795,13 +897,19 @@ private fun AppRoot(
         val activity = context as? ComponentActivity
             ?: return@DisposableEffect onDispose { }
         val observer = LifecycleEventObserver { _, event ->
-            if (event != Lifecycle.Event.ON_RESUME) return@LifecycleEventObserver
-            if (!awaitingCoreInstall) return@LifecycleEventObserver
-            if (!OneKukuCoreComponent.isInstalled(context)) return@LifecycleEventObserver
-            // 装完从系统安装器 / 通道页返回：自动关掉「还没装」并进入配对
-            awaitingCoreInstall = false
-            coreMissingDialogVisible = false
-            prepareOneKukuCore()
+            when (event) {
+                Lifecycle.Event.ON_STOP -> sleepChannelWhenBackgrounded()
+                Lifecycle.Event.ON_START -> wakeChannelWhenForegrounded()
+                Lifecycle.Event.ON_RESUME -> {
+                    if (!awaitingCoreInstall) return@LifecycleEventObserver
+                    if (!OneKukuCoreComponent.isInstalled(context)) return@LifecycleEventObserver
+                    // 装完从系统安装器 / 通道页返回：自动关掉「还没装」并进入配对
+                    awaitingCoreInstall = false
+                    coreMissingDialogVisible = false
+                    prepareOneKukuCore()
+                }
+                else -> Unit
+            }
         }
         activity.lifecycle.addObserver(observer)
         onDispose { activity.lifecycle.removeObserver(observer) }
@@ -814,6 +922,7 @@ private fun AppRoot(
             return
         }
         prepareOneKukuCore()
+        if (ChannelLine.usesShizuku) return
         OneKukuBootRestoreStore.writeHint(context, OneKukuBootUiHint.NEEDS_ACTIVATION)
         bootUiHint = OneKukuBootUiHint.NEEDS_ACTIVATION
     }
@@ -831,7 +940,7 @@ private fun AppRoot(
                         adbPairDialogVisible = false
                         OneKukuPairingNotification.cancel(context)
                         OneKukuActivationUi.setPhase(OneKukuActivationPhase.IDLE)
-                        OneKukuResidentService.start(context)
+                        settleOneKukuChannelAfterReady()
                         shizukuRunning = OneKukuManager.isRunning()
                         if (OneKukuManager.isRunning() && !OneKukuManager.isGranted()) {
                             OneKukuManager.requestActivation()
@@ -1229,6 +1338,7 @@ private fun AppRoot(
                         shizukuRunning = shizukuRunning,
                         shizukuGranted = shizukuGranted,
                         oneKukuState = oneKukuState,
+                        oneKukuChannelSleeping = oneKukuChannelSleeping,
                         deviceInfo = deviceInfo,
                         sims = sims,
                         selectedSubId = selectedSubId,
@@ -1346,10 +1456,18 @@ private fun AppRoot(
                                 busyLabel != null ->
                                     publish(context.getString(R.string.operation_already_running))
                                 !OneKukuManager.isRunning() -> {
-                                    // 无 transport：先走通知栏配对，成功后再恢复
+                                    // OneLink：先开 Shizuku；OneKuku：先走通知栏配对，成功后再恢复
                                     OneKukuActivationUi.pendingRestoreAfterPair = true
                                     prepareOneKukuCore()
-                                    publish(context.getString(R.string.onekuku_msg_pairing_notification_shown))
+                                    publish(
+                                        context.getString(
+                                            if (ChannelLine.usesShizuku) {
+                                                R.string.onekuku_msg_need_prepare
+                                            } else {
+                                                R.string.onekuku_msg_pairing_notification_shown
+                                            },
+                                        ),
+                                    )
                                 }
                                 else -> {
                                     val restoreOutcome =

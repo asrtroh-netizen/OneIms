@@ -394,17 +394,34 @@ object OneKukuEmbeddedAdbActivator {
     }
 
     /**
-     * 探测本机是否已有 `127.0.0.1:5555` 可连。
+     * 通过 ADB 服务 `tcpip:5555` 把 adbd 切到固定端口，再连回 127.0.0.1:5555。
+     * 失败不阻断后续 start.sh（仍可用当前无线调试连接）。
      *
-     * **不再下发 `tcpip:5555`**：该指令会重启 adbd，踢掉同机其它依赖无线调试的客户端
-     * （Shizuku / 黑域 / Stellar / InstallerX 等）。已配对设备下次仍走 mDNS connect 口即可。
+     * 仅 OneKuku 内嵌激活路径调用；OneLink/Shizuku 线不走本对象。
+     * 注意：会重启 adbd，可能踢掉同机其它无线调试客户端——这是出门保活换取的取舍。
      */
     private fun persistTcpip5555(manager: AbsAdbConnectionManager): Boolean {
+        if (!ChannelLine.usesEmbeddedBridge) {
+            Log.i(TAG, "skip tcpip: not embedded bridge channel")
+            return false
+        }
+        val switched = runCatching {
+            manager.openStream("tcpip:5555").use { stream ->
+                val buf = ByteArray(64)
+                runCatching { stream.openInputStream().read(buf) }
+            }
+            true
+        }.getOrElse {
+            Log.w(TAG, "tcpip:5555 failed", it)
+            false
+        }
+        if (!switched) return false
+        Thread.sleep(600)
         return runCatching {
             manager.connect(HOST, PERSIST_PORT)
             true
         }.getOrElse {
-            Log.i(TAG, "no live :$PERSIST_PORT (skip tcpip switch to protect peer clients)")
+            Log.w(TAG, "reconnect :$PERSIST_PORT failed", it)
             false
         }
     }

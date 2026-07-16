@@ -99,6 +99,32 @@ class CorePoliciesTest {
             OperationFeedbackKind.PERMISSION_DELEGATION_FAILED,
             OperationFeedbackPolicy.classify("配置未写入：Shizuku delegate failed"),
         )
+        assertEquals(
+            OperationFeedbackKind.PERMISSION_DELEGATION_FAILED,
+            OperationFeedbackPolicy.classify(
+                "配置未写入：ActivityManager rejected BrokerInstrumentation " +
+                    "(channel=onekuku, bridgeUid=2000, appUid=10234)",
+            ),
+        )
+        // 真机旧路径：AM reject 被聚成 partial/fail 后又叠「自动回滚也失败」——仍须优先判权限代理失败。
+        assertEquals(
+            OperationFeedbackKind.PERMISSION_DELEGATION_FAILED,
+            OperationFeedbackPolicy.classify(
+                """
+                操作失败: IllegalStateException: 写入失败: IllegalStateException: partial/fail ·
+                当前目标: 卡1 · 中国联通 · applyAll · 0/13 · persistent · batch:
+                ActivityManager rejected BrokerInstrumentation;
+                自动回滚也失败: clear failed · ActivityManager rejected BrokerInstrumentation。
+                """.trimIndent(),
+            ),
+        )
+        assertEquals(
+            OperationFeedbackKind.PERMISSION_DELEGATION_FAILED,
+            OperationFeedbackPolicy.classify(
+                "配置未写入：ActivityManager rejected BrokerInstrumentation " +
+                    "(channel=onelink, bridgeUid=2000, appUid=10234)",
+            ),
+        )
     }
 
     @Test

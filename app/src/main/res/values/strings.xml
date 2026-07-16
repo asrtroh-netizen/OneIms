@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">OneIms</string>
+    <!-- 双线品牌名：flavor 可覆盖为 OneKuku / OneLink -->
+    <string name="channel_display_name">OneKuku</string>
 
     <!-- 通用 -->
     <string name="please_select_sim">请先选卡</string>
@@ -435,37 +437,38 @@
     <string name="logic_pill_waiting">等待中</string>
     <string name="logic_pill_blocked">未就绪</string>
     <string name="logic_pill_no_sim">无卡</string>
-    <string name="logic_action_restore_blocked_sub">需 OneKuku 常驻就绪且已选中 SIM</string>
+    <string name="logic_action_restore_blocked_sub">需 OneKuku 通道就绪且已选中 SIM</string>
 
     <string name="onekuku_card_eyebrow">OneKuku 通道</string>
     <string name="onekuku_title_inactive">还差一步即可使用</string>
     <string name="onekuku_subtitle_inactive">OneKuku 通道未激活</string>
     <string name="onekuku_detail_inactive">重启后通话配置可能无法自动恢复</string>
     <string name="onekuku_hint_power">按需激活，用完休眠，不常驻不耗电</string>
-    <string name="onekuku_hint_resident">通道保持 Active，不再自动休眠</string>
+    <string name="onekuku_hint_resident">特权由 onebridge_server 保活（学 Shizuku），App 不前台常驻</string>
     <string name="onekuku_pill_inactive">未激活</string>
     <string name="onekuku_action_activate">立即激活 OneKuku</string>
     <string name="onekuku_action_activate_sub">下拉通知栏输入六位码，无需回到本页</string>
 
     <string name="onekuku_title_ready">OneKuku 已就绪</string>
-    <string name="onekuku_nameplate_ready">Active</string>
-    <string name="onekuku_badge_active">Active</string>
-    <string name="onekuku_subtitle_ready">通道已激活并保持 Active</string>
-    <string name="onekuku_detail_ready">可随时保存通话配置，见下方快速开始</string>
+    <string name="onekuku_title_sleeping">OneKuku 休眠中</string>
+    <string name="onekuku_nameplate_ready">Ready</string>
+    <string name="onekuku_badge_active">已就绪</string>
+    <string name="onekuku_subtitle_ready">OneKuku 通道已激活，核心按需休眠</string>
+    <string name="onekuku_detail_ready">用完自动休眠，不常驻不耗电；重启后可尝试自动恢复通话配置</string>
     <string name="onekuku_subtitle_sleeping">OneKuku 通道已激活，核心按需休眠</string>
     <string name="onekuku_detail_sleeping">用完自动休眠，不常驻不耗电；重启后可尝试自动恢复通话配置</string>
     <string name="onekuku_title_activating">正在激活 OneKuku</string>
     <string name="onekuku_subtitle_activating">配对、连接与通道启动进行中</string>
     <string name="onekuku_detail_activating">请按通知栏提示操作；也可打开系统无线调试</string>
     <string name="onekuku_pill_activating">激活中</string>
-    <string name="onekuku_pill_ready">已就绪</string>
-    <string name="onekuku_pill_sleeping">休眠中</string>
+    <string name="onekuku_pill_ready">就绪</string>
+    <string name="onekuku_pill_sleeping">休眠</string>
     <string name="onekuku_action_save_config">保存通话配置</string>
     <string name="onekuku_action_save_config_sub">把当前通话相关配置记为快照</string>
     <string name="onekuku_msg_config_saved">通话配置已保存</string>
     <string name="onekuku_msg_config_save_need_sim">请先选中 SIM 再保存</string>
-    <string name="onekuku_action_restore">一键恢复通话</string>
-    <string name="onekuku_action_restore_sub">写回上次成功的通话相关配置</string>
+    <string name="onekuku_action_restore">一键应用上次配置</string>
+    <string name="onekuku_action_restore_sub">写回上次保存的通话配置快照</string>
 
     <string name="onekuku_title_running">正在恢复通话配置</string>
     <string name="onekuku_subtitle_running">OneKuku 通道执行中</string>
@@ -474,12 +477,12 @@
     <string name="onekuku_action_running">正在恢复…</string>
 
     <string name="onekuku_subtitle_complete">通话配置已恢复</string>
-    <string name="onekuku_detail_complete">OneKuku 已完成任务，通道保持常驻</string>
+    <string name="onekuku_detail_complete">OneKuku 已完成任务，通道已休眠待命</string>
     <string name="onekuku_action_check">检查 OneKuku 状态</string>
     <string name="onekuku_action_check_sub">只检查通道；恢复见下方快速开始</string>
 
     <string name="onekuku_stage_inactive">未激活</string>
-    <string name="onekuku_stage_activate">激活</string>
+    <string name="onekuku_stage_activate">激活中</string>
     <string name="onekuku_stage_ready">就绪</string>
     <string name="onekuku_stage_execute">执行</string>
     <string name="onekuku_stage_failed">失败</string>
@@ -586,18 +589,18 @@
     <string name="onekuku_settings_check_status">检查 OneKuku 状态</string>
     <string name="onekuku_settings_check_status_sub">只检查，不写入，不恢复</string>
     <string name="onekuku_settings_state_inactive">未激活</string>
-    <string name="onekuku_settings_state_sleeping">已就绪（常驻）</string>
+    <string name="onekuku_settings_state_sleeping">休眠中</string>
     <string name="onekuku_settings_state_running">执行中</string>
     <string name="onekuku_settings_state_invalid">失效</string>
     <string name="onekuku_settings_restore_on">已开启自动恢复</string>
     <string name="onekuku_settings_restore_off">已关闭自动恢复</string>
     <string name="onekuku_settings_auto_sleep">用完自动休眠</string>
-    <string name="onekuku_settings_auto_sleep_sub">已停用：OneKuku 改为常驻，不再自动休眠</string>
-    <string name="onekuku_settings_resident_note">OneKuku 通道常驻保持就绪，不再提供「用完自动休眠」。</string>
-    <string name="onekuku_resident_channel">OneKuku 常驻</string>
-    <string name="onekuku_resident_channel_desc">保持 OneKuku 通道在后台就绪</string>
-    <string name="onekuku_resident_notif_title">OneKuku 常驻中</string>
-    <string name="onekuku_resident_notif_text">已连过 Wi‑Fi 后通道会尽量顶在后台，掉线时静默重连</string>
+    <string name="onekuku_settings_auto_sleep_sub">恢复完成后 OneKuku 自动进入休眠，不常驻不耗电；唤醒秒级</string>
+    <string name="onekuku_settings_resident_note">已对齐 Shizuku：特权在 shell 进程，App 不再以前台服务常驻轮询。</string>
+    <string name="onekuku_resident_channel">OneKuku（已停用常驻）</string>
+    <string name="onekuku_resident_channel_desc">历史通知渠道；现已不再拉起前台常驻</string>
+    <string name="onekuku_resident_notif_title">OneKuku（已停用）</string>
+    <string name="onekuku_resident_notif_text">特权由 onebridge_server 保活，无需本通知</string>
     <string name="onekuku_settings_reactivate">重新激活 OneKuku</string>
     <string name="onekuku_settings_reactivate_sub">尝试激活 OneKuku 核心服务</string>
     <string name="onekuku_settings_view_status">查看状态</string>
@@ -626,7 +629,7 @@
     <string name="onekuku_restore_view_history">查看恢复记录</string>
 
     <string name="home_quick_actions">快速开始</string>
-    <string name="home_quick_actions_sub">先确认设备状态，再应用运营商建议</string>
+    <string name="home_quick_actions_sub">保存当前通话配置，或一键应用上次快照</string>
     <string name="home_adb_prep_title">激活 OneKuku</string>
     <string name="home_adb_prep_sub">点「立即激活」后下拉通知栏填入六位码即可，无需切回本应用，也无需安装其它通道 App。</string>
     <string name="home_adb_prep_steps">① 连上 Wi‑Fi\n② 打开系统无线调试 → 使用配对码配对设备\n③ 下拉通知栏输入 6 位码</string>

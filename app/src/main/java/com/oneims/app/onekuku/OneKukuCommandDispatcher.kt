@@ -27,7 +27,7 @@ object OneKukuCommandDispatcher {
                     message = "OneKuku state=$state",
                 )
             }
-            OneKukuCommand.SLEEP_ONEKUKU -> OneKukuSleepController.sleep()
+            OneKukuCommand.SLEEP_ONEKUKU -> OneKukuSleepController.sleep(context)
             OneKukuCommand.RESTORE_ALL_CALL_CONFIGS ->
                 OneKukuRestoreManager.restoreAll(context, subId)
             OneKukuCommand.RESTORE_IMS ->

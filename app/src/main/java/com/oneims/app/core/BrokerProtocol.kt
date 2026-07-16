@@ -99,6 +99,8 @@ internal object OperationFeedbackPolicy {
             "startdelegateshellpermissionidentity" in lower ||
             "permission delegation" in lower ||
             "shell permission delegate" in lower ||
+            "activitymanager rejected" in lower ||
+            "rejected brokerinstrumentation" in lower ||
             "配置未写入" in normalized ||
             "no configuration was written" in lower
         ) {

@@ -377,16 +377,9 @@ object ConfigStore {
         stored.getString(modeKey, null)?.let { value ->
             return SignalBarDisplayMode.fromStored(value)
         }
-        // 旧版曾用布尔开关兼作样式；仅在样式 key 缺失时迁移一次，不回写布尔。
-        val legacyBoolKey = "${KEY_SIGNAL_STRENGTH_ADJUSTMENT}_$subId"
-        if (stored.contains(legacyBoolKey)) {
-            return if (stored.getBoolean(legacyBoolKey, false)) {
-                SignalBarDisplayMode.FIVE_BARS
-            } else {
-                SignalBarDisplayMode.AUTO
-            }
-        }
-        return if (
+        // 仅认真正的旧版全局样式键。绝不读取 KEY_SIGNAL_STRENGTH_ADJUSTMENT：
+        // 该布尔是能力页「信号阈值」现行偏好，再当格子迁移源会把「只开阈值」误读成五格。
+        val legacyMode = if (
             subId == getSelectedSubId(context) &&
             stored.getString(LEGACY_KEY_SIGNAL_BAR_MODE, null) == "FIVE_BARS"
         ) {
@@ -394,6 +387,9 @@ object ConfigStore {
         } else {
             SignalBarDisplayMode.AUTO
         }
+        // 落盘 v2，避免下次再走 legacy；不触碰阈值布尔。
+        setSignalBarDisplayMode(context, subId, legacyMode)
+        return legacyMode
     }
 
     @SuppressLint("ApplySharedPref")
@@ -407,7 +403,7 @@ object ConfigStore {
     }
 
     /**
-     * 能力页「5G 信号强度/阈值调整」开关。独立存储，不再由独家页格子模式派生。
+     * 能力页「5G 信号强度/阈值调整」开关。独立存储，与独家页格子模式互不派生。
      */
     fun signalStrengthAdjustmentEnabled(context: Context, subId: Int): Boolean {
         if (subId < 0) return false
@@ -416,18 +412,23 @@ object ConfigStore {
         if (stored.contains(key)) {
             return stored.getBoolean(key, false)
         }
-        // 旧版串写：样式非 AUTO 即视为开启阈值；迁移后写入独立布尔，避免继续耦合。
-        val legacyEnabled = signalBarDisplayMode(context, subId) != SignalBarDisplayMode.AUTO
-        setSignalStrengthAdjustmentEnabled(context, subId, legacyEnabled)
-        return legacyEnabled
+        // 缺省 false，并立刻落盘封印；不再用格子模式反推，否则独家页选五格会串开能力页阈值。
+        setSignalStrengthAdjustmentEnabled(context, subId, false)
+        return false
     }
 
     @SuppressLint("ApplySharedPref")
     fun setSignalStrengthAdjustmentEnabled(context: Context, subId: Int, enabled: Boolean) {
         require(subId >= 0) { "Invalid subscription id: $subId" }
-        val saved = prefs(context).edit()
+        val editor = prefs(context).edit()
             .putBoolean("${KEY_SIGNAL_STRENGTH_ADJUSTMENT}_$subId", enabled)
-            .commit()
+        // 若格子 v2 尚未落盘，显式写成 AUTO，杜绝任何「缺 key 回落」路径再碰阈值布尔。
+        val modeKey = "${KEY_SIGNAL_BAR_DISPLAY_MODE}_$subId"
+        if (!prefs(context).contains(modeKey)) {
+            editor.putString(modeKey, SignalBarDisplayMode.AUTO.name)
+            editor.remove(LEGACY_KEY_SIGNAL_BAR_MODE)
+        }
+        val saved = editor.commit()
         check(saved) { "Failed to persist signal-strength adjustment preference" }
     }
 
@@ -462,10 +463,9 @@ object ConfigStore {
             .apply()
     }
 
-    /** OneKuku「用完自动休眠」偏好；默认开启。 */
+    /** OneKuku「用完自动休眠」偏好；默认开启（降发热；唤醒走秒级 binder）。 */
     fun isOneKukuAutoSleep(context: Context): Boolean =
-        // 默认关闭：OneKuku 常驻；设置项仅作历史兼容，自动休眠路径已忽略该值。
-        prefs(context).getBoolean(KEY_ONEKUKU_AUTO_SLEEP, false)
+        prefs(context).getBoolean(KEY_ONEKUKU_AUTO_SLEEP, true)
 
     fun setOneKukuAutoSleep(context: Context, enabled: Boolean) {
         prefs(context).edit().putBoolean(KEY_ONEKUKU_AUTO_SLEEP, enabled).apply()

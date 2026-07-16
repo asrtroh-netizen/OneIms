@@ -19,6 +19,39 @@ object ShizukuSetupHelper {
 
     private const val TAG = "OneIMS-WirelessDbg"
     private const val GLOBAL_ADB_WIFI = "adb_wifi_enabled"
+    private val SHIZUKU_MANAGER_PACKAGES = listOf(
+        "moe.shizuku.privileged.api",
+        "moe.shizuku.manager",
+    )
+
+    /**
+     * 对齐 2.0.8 / 2.0.9：打开官方 Shizuku；未安装则跳应用市场。
+     * OneLink 轻壳专用路径（配对/启动在 Shizuku 内完成）。
+     *
+     * @return 0=已打开 Shizuku，1=未装（已尝试跳商店），2=失败
+     */
+    fun openShizukuApp(context: Context): Int {
+        val pm = context.packageManager
+        for (pkg in SHIZUKU_MANAGER_PACKAGES) {
+            val launch = pm.getLaunchIntentForPackage(pkg) ?: continue
+            val ok = runCatching {
+                context.startActivity(launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                true
+            }.getOrDefault(false)
+            if (ok) return 0
+        }
+        return runCatching {
+            context.startActivity(
+                Intent(Intent.ACTION_VIEW)
+                    .setData(android.net.Uri.parse("market://details?id=${SHIZUKU_MANAGER_PACKAGES[0]}"))
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            )
+            1
+        }.getOrDefault(2)
+    }
+
+    /** @return 是否成功拉起已安装的 Shizuku 界面（不含跳商店）。 */
+    fun openShizukuManager(context: Context): Boolean = openShizukuApp(context) == 0
 
     /** 尝试直达「无线调试」设置页；失败则退回「开发者选项」。返回是否成功跳转。 */
     fun openWirelessDebugging(context: Context): Boolean {
@@ -105,22 +138,6 @@ object ShizukuSetupHelper {
     /** 是否已安装 OneBridge 通道。 */
     fun isShizukuInstalled(context: Context): Boolean =
         OneKukuCoreComponent.isInstalled(context)
-
-    /**
-     * @deprecated 改走 [OneKukuCoreComponent.prepare]，禁止再跳应用市场装独立通道 App。
-     * 保留兼容：已装则打开组件；未装返回 1（由调用方改走内置/下载），不再跳市场。
-     */
-    @Deprecated("Use OneKukuCoreComponent.prepare")
-    fun openShizukuApp(context: Context): Int {
-        val pkg = OneKukuCoreComponent.resolveCorePackage(context) ?: return 1
-        val launch = context.packageManager.getLaunchIntentForPackage(pkg)
-        if (launch != null) {
-            return runCatching {
-                context.startActivity(launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); 0
-            }.getOrDefault(2)
-        }
-        return 1
-    }
 
     /** 打开个人热点设置（给无线调试提供本地网络接口的兜底）。 */
     fun openHotspotSettings(context: Context): Boolean {

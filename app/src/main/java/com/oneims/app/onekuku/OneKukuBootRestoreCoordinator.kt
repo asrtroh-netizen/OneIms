@@ -16,6 +16,7 @@ import com.oneims.app.MainActivity
 import com.oneims.app.R
 import com.oneims.app.core.CarrierConfigKeys
 import com.oneims.app.core.CarrierConfigOverrideWriter
+import com.oneims.app.core.ChannelLine
 import com.oneims.app.core.ConfigStore
 import com.oneims.app.core.ImsController
 import com.oneims.app.core.OneKukuAdbMdns
@@ -320,8 +321,9 @@ object OneKukuBootRestoreCoordinator {
     }
 
     /**
-     * 开机恢复前尽量把通道拉起来：已配对时 **Wi‑Fi 前置** → 静默开无线调试 → 无码直连。
-     * 仅从未配对 / 真需填码时返回 [BootReady.NEED_USER]。
+     * 开机恢复前尽量把通道拉起来。
+     * - OneLink：轻壳，只认官方 Shizuku 是否就绪，绝不走内嵌 ADB / 六位码。
+     * - OneKuku：已配对时 Wi‑Fi 前置 → 静默开无线调试 → 无码直连。
      */
     private suspend fun ensureOneKukuReadyForBoot(context: Context): BootReady {
         OneKukuHiddenRunner.installBridge(OneKukuPrivilegeBridgeImpl)
@@ -332,6 +334,11 @@ object OneKukuBootRestoreCoordinator {
         if (OneKukuManager.isRunning() && !OneKukuManager.isGranted()) {
             OneKukuManager.requestActivation()
             if (OneKukuManager.isReady()) return BootReady.READY
+        }
+
+        if (ChannelLine.usesShizuku) {
+            Log.i(TAG, "boot onelink: thin shell — need user to start/grant Shizuku")
+            return BootReady.NEED_USER
         }
 
         val pairedBefore = OneKukuEmbeddedAdbActivator.hasPairedOnce(context)

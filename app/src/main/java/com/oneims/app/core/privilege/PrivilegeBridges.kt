@@ -1,9 +1,11 @@
 package com.oneims.app.core.privilege
 
 /**
- * 进程内特权桥单一真源。Phase3 起仅挂 OneBridge，不再回落 Shizuku。
+ * 进程内特权桥单一真源。
+ * 具体实现由各 productFlavor 的 [ChannelBridgeBootstrap] 注入：
+ * OneKuku→OneBridge，OneLink→Shizuku。
  */
 object PrivilegeBridges {
     @Volatile
-    var current: PrivilegeBridge = OneBridgePrivilegeBridge()
+    var current: PrivilegeBridge = ChannelBridgeBootstrap.create()
 }

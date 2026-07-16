@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- 内嵌 ADB mDNS 发现配对/连接端口 -->
+    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
+
+    <!-- 提示卸载旧独立 OneBridge 包残留 -->
+    <queries>
+        <package android:name="com.oneims.bridge" />
+    </queries>
+
+    <application>
+        <!-- OneBridge：接收 shell 进程投递的 binder -->
+        <provider
+            android:name=".core.privilege.BridgeBinderProvider"
+            android:authorities="${applicationId}.onebridge"
+            android:exported="true"
+            android:multiprocess="false"
+            tools:ignore="ExportedContentProvider" />
+
+        <!-- OneKuku 通道常驻保活（激活成功后顶在后台，Wi‑Fi 下静默重连） -->
+        <service
+            android:name=".core.OneKukuResidentService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Keep OneKuku privilege channel resident and silently reconnect on Wi-Fi" />
+        </service>
+
+        <!-- 通知栏 RemoteInput 提交无线调试六位码 -->
+        <receiver
+            android:name=".core.WirelessPairingCodeReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.oneims.app.action.SUBMIT_WIRELESS_PAIRING_CODE" />
+            </intent-filter>
+        </receiver>
+    </application>
+</manifest>

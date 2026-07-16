@@ -2,37 +2,48 @@ package com.oneims.app.onekuku
 
 import android.content.Context
 import android.util.Log
+import com.oneims.app.core.ConfigStore
+import com.oneims.app.core.OneKukuResidentService
 
 /**
- * 任务收尾：产品改为 OneKuku 常驻，执行结束后回到 ACTIVE，不再进入休眠。
- * [sleep]/[sleepIfEnabled] 保留旧调用点，语义统一为「回到常驻」。
+ * 执行结束后进入休眠；失败只记日志，不阻断主流程。
+ *
+ * 对齐 Shizuku：特权活在 `onebridge_server`，休眠只停 App 侧 FG/标签；
+ * binder 仍在时 [OneKukuHiddenRunner.wake] 为秒级状态翻转。
  */
 object OneKukuSleepController {
     private const val TAG = "OneIMS-OneKuku"
 
-    fun sleep(): OneKukuCommandResult {
+    fun sleep(context: Context? = null): OneKukuCommandResult {
         return try {
-            OneKukuHiddenRunner.markActive()
-            Log.i(TAG, "resident ok (sleep API kept for callers)")
+            OneKukuHiddenRunner.markSleeping()
+            context?.let { OneKukuResidentService.stop(it) }
+            Log.i(TAG, "sleep ok")
             OneKukuCommandResult(
                 success = true,
-                state = OneKukuRunnerState.ACTIVE,
-                message = "OneKuku resident",
+                state = OneKukuRunnerState.SLEEPING,
+                message = "OneKuku sleeping",
             )
         } catch (error: Throwable) {
-            Log.w(TAG, "resident mark failed: ${error.message}")
+            Log.w(TAG, "sleep failed: ${error.message}")
             OneKukuCommandResult(
                 success = false,
                 state = OneKukuHiddenRunner.currentState(),
-                message = "resident mark failed: ${error.message}",
+                message = "sleep failed: ${error.message}",
             )
         }
     }
 
-    @Suppress("UNUSED_PARAMETER")
     fun sleepIfEnabled(context: Context): OneKukuCommandResult {
-        // 常驻策略：忽略 autoSleep 偏好，任务后一律回 ACTIVE。
-        Log.i(TAG, "auto-sleep ignored; keep OneKuku resident")
-        return sleep()
+        return if (ConfigStore.isOneKukuAutoSleep(context)) {
+            sleep(context)
+        } else {
+            Log.i(TAG, "auto-sleep disabled, keep current state")
+            OneKukuCommandResult(
+                success = true,
+                state = OneKukuHiddenRunner.currentState(),
+                message = "auto-sleep disabled",
+            )
+        }
     }
 }

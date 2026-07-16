@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">OneIms</string>
+    <string name="channel_display_name">OneKuku</string>
 
     <!-- Common -->
     <string name="please_select_sim">Select a SIM first</string>
@@ -431,23 +432,24 @@
     <string name="logic_pill_waiting">Waiting</string>
     <string name="logic_pill_blocked">Blocked</string>
     <string name="logic_pill_no_sim">No SIM</string>
-    <string name="logic_action_restore_blocked_sub">Needs a resident OneKuku channel and a selected SIM</string>
+    <string name="logic_action_restore_blocked_sub">Needs a ready OneKuku channel and a selected SIM</string>
 
     <string name="onekuku_card_eyebrow">OneKuku channel</string>
     <string name="onekuku_title_inactive">One more step</string>
     <string name="onekuku_subtitle_inactive">OneKuku channel is inactive</string>
     <string name="onekuku_detail_inactive">Call settings may not auto-restore after reboot</string>
     <string name="onekuku_hint_power">Activate on demand, sleep when idle — no always-on drain</string>
-    <string name="onekuku_hint_resident">Channel stays Active — no auto-sleep</string>
+    <string name="onekuku_hint_resident">Privilege stays in onebridge_server (Shizuku-like); app is not FG-resident</string>
     <string name="onekuku_pill_inactive">Inactive</string>
     <string name="onekuku_action_activate">Activate OneKuku</string>
     <string name="onekuku_action_activate_sub">Enter the 6-digit code from the notification</string>
 
     <string name="onekuku_title_ready">OneKuku ready</string>
-    <string name="onekuku_nameplate_ready">Active</string>
-    <string name="onekuku_badge_active">Active</string>
-    <string name="onekuku_subtitle_ready">Channel is active and stays Active</string>
-    <string name="onekuku_detail_ready">Save call settings anytime via Quick start below</string>
+    <string name="onekuku_title_sleeping">OneKuku sleeping</string>
+    <string name="onekuku_nameplate_ready">Ready</string>
+    <string name="onekuku_badge_active">Ready</string>
+    <string name="onekuku_subtitle_ready">Channel activated; core sleeps on demand</string>
+    <string name="onekuku_detail_ready">Auto-sleep when idle to save power; wake is instant if the binder is still up</string>
     <string name="onekuku_action_save_config">Save call settings</string>
     <string name="onekuku_action_save_config_sub">Snapshot the current call-related profile</string>
     <string name="onekuku_msg_config_saved">Call settings saved</string>
@@ -460,8 +462,8 @@
     <string name="onekuku_pill_activating">Activating</string>
     <string name="onekuku_pill_ready">Ready</string>
     <string name="onekuku_pill_sleeping">Sleeping</string>
-    <string name="onekuku_action_restore">Restore calling</string>
-    <string name="onekuku_action_restore_sub">Rewrite the last successful call-related profile</string>
+    <string name="onekuku_action_restore">Apply last config</string>
+    <string name="onekuku_action_restore_sub">Rewrite the last saved call settings snapshot</string>
 
     <string name="onekuku_title_running">Restoring call settings</string>
     <string name="onekuku_subtitle_running">OneKuku channel is working</string>
@@ -470,12 +472,12 @@
     <string name="onekuku_action_running">Restoring…</string>
 
     <string name="onekuku_subtitle_complete">Call settings restored</string>
-    <string name="onekuku_detail_complete">OneKuku finished; channel stays resident</string>
+    <string name="onekuku_detail_complete">OneKuku finished; channel is sleeping on standby</string>
     <string name="onekuku_action_check">Check OneKuku status</string>
     <string name="onekuku_action_check_sub">Status only — restore from Quick start below</string>
 
     <string name="onekuku_stage_inactive">Off</string>
-    <string name="onekuku_stage_activate">Setup</string>
+    <string name="onekuku_stage_activate">Activating</string>
     <string name="onekuku_stage_ready">Ready</string>
     <string name="onekuku_stage_execute">Run</string>
     <string name="onekuku_stage_failed">Fail</string>
@@ -581,18 +583,18 @@
     <string name="onekuku_settings_check_status">Check OneKuku status</string>
     <string name="onekuku_settings_check_status_sub">Read-only check — no write, no restore</string>
     <string name="onekuku_settings_state_inactive">Inactive</string>
-    <string name="onekuku_settings_state_sleeping">Ready (resident)</string>
+    <string name="onekuku_settings_state_sleeping">Sleeping</string>
     <string name="onekuku_settings_state_running">Running</string>
     <string name="onekuku_settings_state_invalid">Invalid</string>
     <string name="onekuku_settings_restore_on">Auto restore enabled</string>
     <string name="onekuku_settings_restore_off">Auto restore disabled</string>
     <string name="onekuku_settings_auto_sleep">Auto-sleep when idle</string>
-    <string name="onekuku_settings_auto_sleep_sub">Disabled: OneKuku stays resident and no longer auto-sleeps</string>
-    <string name="onekuku_settings_resident_note">OneKuku stays resident; auto-sleep is no longer offered.</string>
-    <string name="onekuku_resident_channel">OneKuku resident</string>
-    <string name="onekuku_resident_channel_desc">Keep the OneKuku channel ready in the background</string>
-    <string name="onekuku_resident_notif_title">OneKuku resident</string>
-    <string name="onekuku_resident_notif_text">After Wi‑Fi once, the channel stays up and silently reconnects if dropped</string>
+    <string name="onekuku_settings_auto_sleep_sub">After restore, OneKuku sleeps to save power; wake is near-instant</string>
+    <string name="onekuku_settings_resident_note">Aligned with Shizuku: privilege lives in the shell process; the app no longer runs a resident foreground poller.</string>
+    <string name="onekuku_resident_channel">OneKuku (resident retired)</string>
+    <string name="onekuku_resident_channel_desc">Legacy channel; foreground resident poller is no longer started</string>
+    <string name="onekuku_resident_notif_title">OneKuku (retired)</string>
+    <string name="onekuku_resident_notif_text">Privilege is held by onebridge_server; this notification is unused</string>
     <string name="onekuku_settings_reactivate">Reactivate OneKuku</string>
     <string name="onekuku_settings_reactivate_sub">Try to activate the OneKuku core service</string>
     <string name="onekuku_settings_view_status">View status</string>
@@ -621,7 +623,7 @@
     <string name="onekuku_restore_view_history">View restore history</string>
 
     <string name="home_quick_actions">Quick start</string>
-    <string name="home_quick_actions_sub">Check device status before applying carrier recommendations</string>
+    <string name="home_quick_actions_sub">Save the current call profile, or apply the last snapshot</string>
     <string name="home_adb_prep_title">Activate OneKuku</string>
     <string name="home_adb_prep_sub">Tap Activate, then enter the 6-digit code in the notification shade—no need to return to the app or install another channel app.</string>
     <string name="home_adb_prep_steps">① Join Wi‑Fi\n② Open Wireless debugging → Pair device with pairing code\n③ Pull down the notification and enter the 6-digit code</string>

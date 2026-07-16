@@ -23,8 +23,10 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 /**
- * OneKuku 通道常驻保活：激活成功后以前台服务顶在后台，
- * 周期性检查 binder；掉了且已配对 + Wi‑Fi 可用时静默重连（不刷「激活中」）。
+ * 历史「App 前台常驻轮询」实现，**已对齐 Shizuku 废弃默认路径**。
+ *
+ * 特权应活在 adb 拉起的 `onebridge_server`，不靠本 Service 每 20s 巡检。
+ * [start] 现为空操作；[stop] 仍可用于清掉旧版本残留前台通知。
  */
 class OneKukuResidentService : Service() {
 
@@ -128,9 +130,9 @@ class OneKukuResidentService : Service() {
         private const val INTERVAL_MS = 20_000L
 
         fun start(context: Context) {
-            val i = Intent(context, OneKukuResidentService::class.java)
-            if (Build.VERSION.SDK_INT >= 26) context.startForegroundService(i)
-            else context.startService(i)
+            // Shizuku 模型：Keep App alive is meaningless；绝不拉起 FG 轮询。
+            Log.i(TAG, "start ignored (shizuku-like: onebridge_server holds privilege)")
+            stop(context)
         }
 
         fun stop(context: Context) {

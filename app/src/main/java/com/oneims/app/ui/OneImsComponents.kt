@@ -698,19 +698,21 @@ private fun ActionTile(
 }
 
 /**
- * 首页顶部 OneKuku 总控卡：保留原 Hero 外壳（extraLarge 圆角、未激活红 / 已激活白、左图标），
- * 对内换成 OneKuku 四态文案、右上状态胶囊、轻量进度阶段与主操作按钮。
+ * 首页顶部通道总控卡：四态（未激活 / 激活中 / 就绪 / 休眠）。
+ * 就绪与休眠时大标题只显示通道名，使用状态只在右上大胶囊展示。
  */
 @Composable
 fun StatusHero(
     oneKukuState: OneKukuCardState,
+    channelSleeping: Boolean,
     onPrimaryAction: () -> Unit,
     onOpenDeviceDetails: (() -> Unit)? = null,
     detailOverride: String? = null,
 ) {
     val alert = OneKukuCardPolicy.isAlert(oneKukuState)
     val busy = OneKukuCardPolicy.isBusy(oneKukuState)
-    val ready = !alert
+    val settled = OneKukuCardPolicy.isSettled(oneKukuState)
+    val readyLook = !alert
     val containerColor = when {
         alert -> MaterialTheme.colorScheme.errorContainer
         busy -> MaterialTheme.colorScheme.primaryContainer
@@ -722,22 +724,20 @@ fun StatusHero(
         else -> Color(0xFF1A1B20)
     }
 
-    val title = stringResource(
-        when (oneKukuState) {
-            OneKukuCardState.INACTIVE -> R.string.onekuku_title_inactive
-            OneKukuCardState.ACTIVATING -> R.string.onekuku_title_activating
-            OneKukuCardState.READY -> R.string.onekuku_title_ready
-            OneKukuCardState.EXECUTING -> R.string.onekuku_title_running
-            OneKukuCardState.FAILED -> R.string.onekuku_title_failed
-        },
-    )
+    // 就绪/休眠：标题只用通道名，不把「就绪/休眠」缀在名称后。
+    val title = when (oneKukuState) {
+        OneKukuCardState.READY,
+        OneKukuCardState.SLEEPING,
+        -> stringResource(R.string.channel_display_name)
+        OneKukuCardState.INACTIVE -> stringResource(R.string.onekuku_title_inactive)
+        OneKukuCardState.ACTIVATING -> stringResource(R.string.onekuku_title_activating)
+    }
     val subtitle = stringResource(
         when (oneKukuState) {
             OneKukuCardState.INACTIVE -> R.string.onekuku_subtitle_inactive
             OneKukuCardState.ACTIVATING -> R.string.onekuku_subtitle_activating
             OneKukuCardState.READY -> R.string.onekuku_subtitle_ready
-            OneKukuCardState.EXECUTING -> R.string.onekuku_subtitle_running
-            OneKukuCardState.FAILED -> R.string.onekuku_subtitle_failed
+            OneKukuCardState.SLEEPING -> R.string.onekuku_subtitle_sleeping
         },
     )
     val detail = detailOverride ?: stringResource(
@@ -745,8 +745,7 @@ fun StatusHero(
             OneKukuCardState.INACTIVE -> R.string.onekuku_detail_inactive
             OneKukuCardState.ACTIVATING -> R.string.onekuku_detail_activating
             OneKukuCardState.READY -> R.string.onekuku_detail_ready
-            OneKukuCardState.EXECUTING -> R.string.onekuku_detail_running
-            OneKukuCardState.FAILED -> R.string.onekuku_detail_failed
+            OneKukuCardState.SLEEPING -> R.string.onekuku_detail_sleeping
         },
     )
     val statusPill = stringResource(
@@ -754,24 +753,20 @@ fun StatusHero(
             OneKukuCardState.INACTIVE -> R.string.onekuku_pill_inactive
             OneKukuCardState.ACTIVATING -> R.string.onekuku_pill_activating
             OneKukuCardState.READY -> R.string.onekuku_pill_ready
-            OneKukuCardState.EXECUTING -> R.string.onekuku_pill_running
-            OneKukuCardState.FAILED -> R.string.onekuku_pill_failed
+            OneKukuCardState.SLEEPING -> R.string.onekuku_pill_sleeping
         },
     )
     val actionLabel = stringResource(
         when (oneKukuState) {
-            OneKukuCardState.INACTIVE,
-            OneKukuCardState.FAILED,
-            -> R.string.onekuku_action_activate
-            OneKukuCardState.READY -> R.string.onekuku_action_check
+            OneKukuCardState.INACTIVE -> R.string.onekuku_action_activate
+            OneKukuCardState.READY,
+            OneKukuCardState.SLEEPING,
+            -> R.string.onekuku_action_check
             OneKukuCardState.ACTIVATING -> R.string.onekuku_action_activating
-            OneKukuCardState.EXECUTING -> R.string.onekuku_action_running
         },
     )
     val actionSub = when (oneKukuState) {
-        OneKukuCardState.INACTIVE,
-        OneKukuCardState.FAILED,
-        -> stringResource(R.string.onekuku_action_activate_sub)
+        OneKukuCardState.INACTIVE -> stringResource(R.string.onekuku_action_activate_sub)
         else -> null
     }
     val actionEnabled = !busy
@@ -781,8 +776,8 @@ fun StatusHero(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.extraLarge,
         color = containerColor,
-        tonalElevation = if (ready && !busy) 2.dp else 0.dp,
-        shadowElevation = if (ready && !busy) 1.dp else 0.dp,
+        tonalElevation = if (readyLook && !busy) 2.dp else 0.dp,
+        shadowElevation = if (readyLook && !busy) 1.dp else 0.dp,
     ) {
         Column(
             modifier = Modifier.padding(24.dp),
@@ -796,6 +791,8 @@ fun StatusHero(
                     imageVector = when {
                         alert -> Icons.Filled.Warning
                         busy -> Icons.Filled.Refresh
+                        channelSleeping || oneKukuState == OneKukuCardState.SLEEPING ->
+                            Icons.Filled.CheckCircle
                         else -> Icons.Filled.CheckCircle
                     },
                     contentDescription = null,
@@ -811,39 +808,12 @@ fun StatusHero(
                         style = MaterialTheme.typography.labelMedium,
                         color = contentColor.copy(alpha = 0.72f),
                     )
-                    if (oneKukuState == OneKukuCardState.READY) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        ) {
-                            Text(
-                                title,
-                                style = MaterialTheme.typography.titleLarge,
-                                color = contentColor,
-                                modifier = Modifier.weight(1f, fill = false),
-                            )
-                            Surface(
-                                shape = RoundedCornerShape(percent = 50),
-                                color = contentColor.copy(alpha = 0.12f),
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.onekuku_badge_active),
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = contentColor,
-                                    maxLines = 1,
-                                )
-                            }
-                        }
-                    } else {
-                        Text(
-                            title,
-                            style = MaterialTheme.typography.titleLarge,
-                            color = contentColor,
-                        )
-                    }
-                    if (oneKukuState != OneKukuCardState.READY) {
+                    Text(
+                        title,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = contentColor,
+                    )
+                    if (!settled) {
                         Text(
                             subtitle,
                             style = MaterialTheme.typography.bodyLarge,
@@ -867,7 +837,8 @@ fun StatusHero(
                         Text(
                             text = statusPill,
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                            style = MaterialTheme.typography.labelMedium,
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.SemiBold,
                             color = contentColor,
                             maxLines = 1,
                         )
@@ -895,8 +866,8 @@ fun StatusHero(
                 contentColor = contentColor,
             )
 
-            // 就绪态：检查入口已在「快速开始」，主按钮多余。
-            if (oneKukuState != OneKukuCardState.READY) {
+            // 就绪/休眠：检查入口已在「快速开始」，主按钮多余。
+            if (!settled) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     OneImsPrimaryButton(
                         text = actionLabel,
@@ -924,7 +895,6 @@ private fun OneKukuStageProgress(
     litCount: Int,
     contentColor: Color,
 ) {
-    // 旧四态疏朗布局：等分铺满 + 连线 weight(1f)，五态同样沿用，避免横向滚动挤成一团。
     val stages = OneKukuCardPolicy.stageLabelRes()
     Row(
         modifier = Modifier.fillMaxWidth(),

@@ -4,7 +4,8 @@ import android.util.Log
 import java.util.concurrent.atomic.AtomicReference
 
 /**
- * 后台唤醒/状态机：通道常驻 ACTIVE，不展示终端。
+ * 后台唤醒/状态机：平时休眠，不展示终端。
+ * 已激活时 [wake] 只做状态翻转（秒级），不必重走 ADB。
  */
 object OneKukuHiddenRunner {
     private const val TAG = "OneIMS-OneKuku"
@@ -16,7 +17,7 @@ object OneKukuHiddenRunner {
     fun installBridge(privilegeBridge: OneKukuPrivilegeBridge) {
         bridge = privilegeBridge
         if (privilegeBridge.isActivated()) {
-            state.set(OneKukuRunnerState.ACTIVE)
+            state.set(OneKukuRunnerState.SLEEPING)
         } else {
             state.set(OneKukuRunnerState.INACTIVE)
         }
@@ -35,8 +36,8 @@ object OneKukuHiddenRunner {
     }
 
     fun markSleeping() {
-        // 兼容旧入口；产品已改为常驻，等价于 ACTIVE。
-        markActive()
+        state.set(OneKukuRunnerState.SLEEPING)
+        Log.i(TAG, "state=SLEEPING")
     }
 
     fun markFailed(reason: String) {
@@ -53,12 +54,12 @@ object OneKukuHiddenRunner {
         if (!b.isActivated()) {
             state.set(OneKukuRunnerState.INACTIVE)
         } else if (state.get() != OneKukuRunnerState.EXECUTING) {
-            state.set(OneKukuRunnerState.ACTIVE)
+            state.set(OneKukuRunnerState.SLEEPING)
         }
     }
 
     /**
-     * 唤醒核心：不弹终端；成功后进入 ACTIVE（执行任务时转入 EXECUTING，结束后回 ACTIVE）。
+     * 唤醒核心：不弹终端；已激活则秒级进 ACTIVE，否则 requestWake。
      */
     fun wake(): OneKukuCommandResult {
         val b = bridge
@@ -69,7 +70,7 @@ object OneKukuHiddenRunner {
             )
         if (b.isActivated()) {
             state.set(OneKukuRunnerState.ACTIVE)
-            Log.i(TAG, "wake: already activated")
+            Log.i(TAG, "wake: already activated (instant)")
             return OneKukuCommandResult(true, OneKukuRunnerState.ACTIVE, "OneKuku active")
         }
         state.set(OneKukuRunnerState.STARTING)

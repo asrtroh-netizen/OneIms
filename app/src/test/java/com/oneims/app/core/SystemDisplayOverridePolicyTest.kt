@@ -307,4 +307,39 @@ class SystemDisplayOverridePolicyTest {
             composed.lteRsrpThresholds.contentEquals(fourBarSignalPreset().lteRsrpThresholds),
         )
     }
+
+    @Test
+    fun composeIndependent_adjustmentAloneMustNotForceFiveBarInflate() {
+        // 回归：能力页只开阈值 + 格子 AUTO 时，绝不能把 inflate 写成五格。
+        val baseline = fourBarSignalPreset()
+        val composed = checkNotNull(
+            composeIndependentSignalPreset(
+                baseline = baseline,
+                adjustmentEnabled = true,
+                barMode = ConfigStore.SignalBarDisplayMode.AUTO,
+            ),
+        )
+        assertFalse(
+            "threshold-only apply must keep baseline inflate, not five-bar style",
+            composed.inflateSignalStrength,
+        )
+        assertTrue(composed.nrSsrsrpThresholds.contentEquals(carrierImsNrSsrsrpThresholds()))
+    }
+
+    @Test
+    fun composeIndependent_fiveBarsAloneMustNotRewriteCarrierImsNr() {
+        val baseline = fourBarSignalPreset()
+        val composed = checkNotNull(
+            composeIndependentSignalPreset(
+                baseline = baseline,
+                adjustmentEnabled = false,
+                barMode = ConfigStore.SignalBarDisplayMode.FIVE_BARS,
+            ),
+        )
+        assertTrue(composed.inflateSignalStrength)
+        assertTrue(
+            "bar-style-only apply must keep baseline NR thresholds",
+            composed.nrSsrsrpThresholds.contentEquals(baseline.nrSsrsrpThresholds),
+        )
+    }
 }

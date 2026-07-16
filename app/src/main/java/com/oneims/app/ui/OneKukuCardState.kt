@@ -1,42 +1,42 @@
 package com.oneims.app.ui
 
 import com.oneims.app.R
+import com.oneims.app.onekuku.OneKukuRunnerState
 
 /**
- * 首页顶部 OneKuku 总控卡状态（规格 5 态）。
+ * 首页顶部通道总控卡状态（四态）。
  *
- * 1 未激活 → 2 激活中（等配对/配对/连接/启动）→ 3 已就绪 → 4 执行中；5 失败。
- * 底层激活相位仍可细分，卡片层收敛，避免九段进度挤成一团。
+ * 未激活 → 激活中 → 就绪 ↔ 休眠
+ * （关 App / 退后台 → 休眠；再打开 → 就绪；特权桥进程仍在则无需重配对）
  */
 enum class OneKukuCardState {
-    /** 1 · 未激活 */
+    /** 未激活 */
     INACTIVE,
 
-    /** 2 · 激活中（通知填码 / 配对 / 连接 / 启动） */
+    /** 激活中（授权 / 配对 / 连接 / 启动） */
     ACTIVATING,
 
-    /** 3 · 已就绪（通道常驻可用） */
+    /** 就绪（App 在前台使用中） */
     READY,
 
-    /** 4 · 执行中（一键恢复等） */
-    EXECUTING,
-
-    /** 5 · 失败 */
-    FAILED,
+    /** 休眠（App 已关闭或退后台；通道仍已授权） */
+    SLEEPING,
 }
 
 /**
- * 将底层运行/授权/执行标志与激活相位收敛为卡片 5 态。
+ * 将底层运行/授权/执行标志与激活相位收敛为卡片四态。
  */
 object OneKukuCardPolicy {
     fun resolve(
         serviceReady: Boolean,
         isExecuting: Boolean,
-        @Suppress("UNUSED_PARAMETER") taskComplete: Boolean,
+        channelSleeping: Boolean,
+        @Suppress("UNUSED_PARAMETER") taskComplete: Boolean = false,
     ): OneKukuCardState = when {
         !serviceReady -> OneKukuCardState.INACTIVE
-        isExecuting -> OneKukuCardState.EXECUTING
-        // taskComplete 与空闲常驻在卡片层同属「已就绪」；细则靠 detailOverride。
+        // 执行中对外仍展示「就绪」（使用中），不单独占一态。
+        isExecuting -> OneKukuCardState.READY
+        channelSleeping -> OneKukuCardState.SLEEPING
         else -> OneKukuCardState.READY
     }
 
@@ -47,41 +47,43 @@ object OneKukuCardPolicy {
             com.oneims.app.core.OneKukuActivationPhase.CONNECTING,
             com.oneims.app.core.OneKukuActivationPhase.STARTING,
             -> OneKukuCardState.ACTIVATING
+            // 激活失败回到未激活（详情靠 detailOverride）。
             com.oneims.app.core.OneKukuActivationPhase.FAILED ->
-                OneKukuCardState.FAILED
+                OneKukuCardState.INACTIVE
             com.oneims.app.core.OneKukuActivationPhase.ACTIVE,
             com.oneims.app.core.OneKukuActivationPhase.IDLE,
             -> null
         }
 
-    /** 进度阶段点亮数（1–5）。 */
+    /** 进度阶段点亮数（1–4）：未激活 → 激活中 → 就绪 → 休眠。 */
     fun litStageCount(state: OneKukuCardState): Int = when (state) {
         OneKukuCardState.INACTIVE -> 1
         OneKukuCardState.ACTIVATING -> 2
         OneKukuCardState.READY -> 3
-        OneKukuCardState.EXECUTING -> 4
-        OneKukuCardState.FAILED -> 5
+        OneKukuCardState.SLEEPING -> 4
     }
 
-    /** 五态进度条标签（第 3 段「就绪」：通道常驻，不另开休眠态）。 */
+    /** 四段进度条标签（固定顺序）。 */
     fun stageLabelRes(): List<Int> = listOf(
         R.string.onekuku_stage_inactive,
         R.string.onekuku_stage_activate,
         R.string.onekuku_stage_ready,
-        R.string.onekuku_stage_execute,
-        R.string.onekuku_stage_failed,
+        R.string.onekuku_stage_sleeping,
     )
 
-    fun isBusy(state: OneKukuCardState): Boolean = when (state) {
-        OneKukuCardState.ACTIVATING,
-        OneKukuCardState.EXECUTING,
-        -> true
-        else -> false
-    }
+    /** 通道休眠中。 */
+    fun isChannelSleeping(runnerState: OneKukuRunnerState): Boolean =
+        runnerState == OneKukuRunnerState.SLEEPING
 
-    fun isAlert(state: OneKukuCardState): Boolean = when (state) {
-        OneKukuCardState.INACTIVE,
-        OneKukuCardState.FAILED,
+    fun isBusy(state: OneKukuCardState): Boolean =
+        state == OneKukuCardState.ACTIVATING
+
+    fun isAlert(state: OneKukuCardState): Boolean =
+        state == OneKukuCardState.INACTIVE
+
+    fun isSettled(state: OneKukuCardState): Boolean = when (state) {
+        OneKukuCardState.READY,
+        OneKukuCardState.SLEEPING,
         -> true
         else -> false
     }

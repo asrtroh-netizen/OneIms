@@ -192,10 +192,18 @@ object SystemApiBroker {
         try {
             ensureExempt()
             check(PrivilegeBridges.current.isRunning()) {
-                "OneKuku core service is not running"
+                if (ChannelLine.usesShizuku) {
+                    "OneLink / Shizuku is not running"
+                } else {
+                    "OneKuku core service is not running"
+                }
             }
             check(PrivilegeBridges.current.isGranted()) {
-                "OneKuku is not activated"
+                if (ChannelLine.usesShizuku) {
+                    "OneLink is not activated"
+                } else {
+                    "OneKuku is not activated"
+                }
             }
         } catch (error: Throwable) {
             throw BrokerExecutionException(
@@ -224,8 +232,12 @@ object SystemApiBroker {
                 )
             }
             if (!started) {
+                val bridgeUid = runCatching { PrivilegeBridges.current.getUid() }.getOrDefault(-1)
                 throw BrokerExecutionException(
-                    message = "ActivityManager rejected BrokerInstrumentation",
+                    message =
+                        "ActivityManager rejected BrokerInstrumentation" +
+                            " (channel=${ChannelLine.id}, bridgeUid=$bridgeUid," +
+                            " appUid=${Process.myUid()})",
                     operationStarted = false,
                 )
             }

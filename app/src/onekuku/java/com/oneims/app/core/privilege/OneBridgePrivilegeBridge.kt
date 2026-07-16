@@ -4,6 +4,7 @@ import android.os.Binder
 import android.os.IBinder
 import android.os.Parcel
 import android.os.Process
+import android.util.Log
 
 /**
  * OneBridge 客户端实现。binder 未送达时 [isRunning] 为 false。
@@ -106,11 +107,20 @@ private class RemoteSystemServiceBinder(
             out.appendFrom(data, 0, data.dataSize())
             bridge.transact(OneBridgeProtocol.TRANSACTION_TRANSACT_REMOTE, out, result, 0)
             result.readException()
-            if (result.readInt() != 1) return false
+            if (result.readInt() != 1) {
+                Log.e(TAG, "OneBridge remote transact reported failure service=$serviceName code=$code")
+                return false
+            }
             reply?.appendFrom(result, result.dataPosition(), result.dataAvail())
             true
-        } catch (_: Throwable) {
-            false
+        } catch (error: Throwable) {
+            // 禁止静默 false：否则上层只能看到「ActivityManager rejected」，无法区分桥故障与 AMS 拒绝。
+            Log.e(TAG, "OneBridge remote transact failed service=$serviceName code=$code", error)
+            when (error) {
+                is RuntimeException -> throw error
+                is Error -> throw error
+                else -> throw RuntimeException(error)
+            }
         } finally {
             out.recycle()
             result.recycle()
@@ -118,4 +128,8 @@ private class RemoteSystemServiceBinder(
     }
 
     override fun pingBinder(): Boolean = bridge.pingBinder()
+
+    private companion object {
+        private const val TAG = "OneBridgeClient"
+    }
 }

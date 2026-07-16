@@ -6,7 +6,7 @@ import com.oneims.app.R
 /**
  * 独家页「信号格显示样式」入口。
  *
- * 只更新格子模式偏好，并与能力页「信号阈值」开关组合写入；两侧互不覆盖对方的本地选择。
+ * 本地只更新格子模式偏好；系统写入时与能力页阈值开关组合，但两侧 prefs 互不派生、互不覆盖。
  * 只对传入的 [subId]（应为 UI 的 selectedSubId）操作。
  */
 object SignalBarSystemStyleManager {

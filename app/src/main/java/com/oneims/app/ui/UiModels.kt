@@ -55,6 +55,8 @@ data class HomeUiState(
     val shizukuRunning: Boolean,
     val shizukuGranted: Boolean,
     val oneKukuState: OneKukuCardState,
+    /** 通道是否处于休眠（就绪路径下区分「就绪 / 休眠」展示）。 */
+    val oneKukuChannelSleeping: Boolean = false,
     val deviceInfo: String,
     val sims: List<SimInfo>,
     val selectedSubId: Int,
