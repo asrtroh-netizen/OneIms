@@ -699,7 +699,7 @@ private fun ActionTile(
 
 /**
  * 首页顶部通道总控卡：四态（未激活 / 激活中 / 就绪 / 休眠）。
- * 就绪与休眠时大标题只显示通道名，使用状态只在右上大胶囊展示。
+ * 大标题只显示通道名；使用状态胶囊紧跟大字后面（就绪显示 Active）。
  */
 @Composable
 fun StatusHero(
@@ -724,7 +724,7 @@ fun StatusHero(
         else -> Color(0xFF1A1B20)
     }
 
-    // 就绪/休眠：标题只用通道名，不把「就绪/休眠」缀在名称后。
+    // 就绪/休眠：标题只用通道名；胶囊单独表达使用状态。
     val title = when (oneKukuState) {
         OneKukuCardState.READY,
         OneKukuCardState.SLEEPING,
@@ -772,6 +772,23 @@ fun StatusHero(
     val actionEnabled = !busy
     val actionLoading = busy
 
+    @Composable
+    fun StatusPillChip() {
+        Surface(
+            shape = RoundedCornerShape(percent = 50),
+            color = contentColor.copy(alpha = 0.14f),
+        ) {
+            Text(
+                text = statusPill,
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = contentColor,
+                maxLines = 1,
+            )
+        }
+    }
+
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.extraLarge,
@@ -791,8 +808,6 @@ fun StatusHero(
                     imageVector = when {
                         alert -> Icons.Filled.Warning
                         busy -> Icons.Filled.Refresh
-                        channelSleeping || oneKukuState == OneKukuCardState.SLEEPING ->
-                            Icons.Filled.CheckCircle
                         else -> Icons.Filled.CheckCircle
                     },
                     contentDescription = null,
@@ -808,11 +823,18 @@ fun StatusHero(
                         style = MaterialTheme.typography.labelMedium,
                         color = contentColor.copy(alpha = 0.72f),
                     )
-                    Text(
-                        title,
-                        style = MaterialTheme.typography.titleLarge,
-                        color = contentColor,
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        Text(
+                            title,
+                            style = MaterialTheme.typography.titleLarge,
+                            color = contentColor,
+                            modifier = Modifier.weight(1f, fill = false),
+                        )
+                        StatusPillChip()
+                    }
                     if (!settled) {
                         Text(
                             subtitle,
@@ -826,37 +848,19 @@ fun StatusHero(
                         )
                     }
                 }
-                Column(
-                    horizontalAlignment = Alignment.End,
-                    verticalArrangement = Arrangement.spacedBy(6.dp),
-                ) {
+                if (onOpenDeviceDetails != null) {
                     Surface(
+                        onClick = onOpenDeviceDetails,
                         shape = RoundedCornerShape(percent = 50),
-                        color = contentColor.copy(alpha = 0.14f),
+                        color = contentColor.copy(alpha = 0.10f),
                     ) {
                         Text(
-                            text = statusPill,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.SemiBold,
-                            color = contentColor,
+                            text = stringResource(R.string.home_device_details),
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = contentColor.copy(alpha = 0.88f),
                             maxLines = 1,
                         )
-                    }
-                    if (onOpenDeviceDetails != null) {
-                        Surface(
-                            onClick = onOpenDeviceDetails,
-                            shape = RoundedCornerShape(percent = 50),
-                            color = contentColor.copy(alpha = 0.10f),
-                        ) {
-                            Text(
-                                text = stringResource(R.string.home_device_details),
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = contentColor.copy(alpha = 0.88f),
-                                maxLines = 1,
-                            )
-                        }
                     }
                 }
             }
@@ -866,7 +870,6 @@ fun StatusHero(
                 contentColor = contentColor,
             )
 
-            // 就绪/休眠：检查入口已在「快速开始」，主按钮多余。
             if (!settled) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     OneImsPrimaryButton(

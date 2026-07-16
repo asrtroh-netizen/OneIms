@@ -13,8 +13,15 @@
     <string name="onekuku_title_failed">激活失败</string>
 
     <string name="onekuku_subtitle_inactive">OneLink 通道未激活（需已安装并启动 Shizuku）</string>
-    <string name="onekuku_subtitle_ready">OneLink 通道已就绪</string>
-    <string name="onekuku_subtitle_sleeping">OneLink 通道已激活</string>
+    <string name="onekuku_subtitle_ready">通道已就绪，可立即使用</string>
+    <string name="onekuku_subtitle_sleeping">通道已休眠</string>
+    <string name="onekuku_detail_ready">应用在前台时为 Active；关掉或退到后台会进入休眠，再打开即可唤醒，无需重授权</string>
+    <string name="onekuku_detail_sleeping">特权仍在官方 Shizuku；重新打开应用会回到 Active，无需重新激活</string>
+    <string name="onekuku_pill_ready">Active</string>
+    <string name="onekuku_pill_sleeping">休眠</string>
+    <string name="onekuku_stage_ready">Active</string>
+    <string name="onekuku_stage_activate">激活中</string>
+    <string name="onekuku_stage_sleeping">休眠</string>
     <string name="onekuku_subtitle_running">OneLink 通道执行中</string>
     <string name="onekuku_subtitle_activating">正在连接 Shizuku…</string>
     <string name="onekuku_subtitle_waiting_pair">请在官方 Shizuku 内启动并授权</string>
@@ -61,17 +68,11 @@
     <string name="home_adb_prep_steps">① 安装并打开官方 Shizuku\n② 在 Shizuku 内启动服务\n③ 回到本应用完成授权</string>
 
     <string name="onekuku_detail_inactive">请先激活 OneLink（官方 Shizuku），以便重启后恢复通话配置</string>
-    <string name="onekuku_detail_sleeping">通道按需工作，不靠本应用前台常驻；重启后可尝试自动恢复通话配置</string>
     <string name="onekuku_detail_failed">请打开 Shizuku 启动服务后重试授权</string>
     <string name="onekuku_pill_waiting_pair">待授权</string>
     <string name="onekuku_pill_pairing">授权中</string>
-    <string name="onekuku_pill_ready">就绪</string>
-    <string name="onekuku_pill_sleeping">休眠</string>
     <string name="onekuku_stage_wait_pair">待授权</string>
     <string name="onekuku_stage_pairing">授权</string>
-    <string name="onekuku_stage_ready">就绪</string>
-    <string name="onekuku_stage_activate">激活中</string>
-    <string name="onekuku_stage_sleeping">休眠</string>
     <string name="onekuku_status_onekuku">OneLink：%1$s</string>
 
     <!-- 资源 key 仍叫 shizuku_*，但对用户绝不能再写「OneKuku」 -->

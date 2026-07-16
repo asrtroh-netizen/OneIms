@@ -70,18 +70,8 @@ object UpdateChecker {
         val obj = JSONObject(json)
         val tag = obj.optString("tag_name").ifBlank { obj.optString("name") }
         val notes = obj.optString("body").trim()
-        // 从 assets 里挑第一个 .apk 直链
         val assets = obj.optJSONArray("assets")
-        var apkUrl = ""
-        if (assets != null) {
-            for (i in 0 until assets.length()) {
-                val a = assets.optJSONObject(i) ?: continue
-                val name = a.optString("name")
-                if (name.endsWith(".apk", ignoreCase = true)) {
-                    apkUrl = a.optString("browser_download_url"); break
-                }
-            }
-        }
+        val apkUrl = pickChannelApkUrl(assets)
         val latestDisplay = tag.trim().removePrefix("v").removePrefix("V")
         val newer = isRemoteNewer(tag, current)
         val msg = when {
@@ -98,6 +88,38 @@ object UpdateChecker {
             releaseNotes = notes,
             message = msg,
         )
+    }
+
+    /**
+     * 双产品线同 Release 挂两包：必须按当前渠道挑选，禁止 OneLink 误下 OneKuku。
+     * 优先匹配渠道关键词；找不到再回退任意 .apk（兼容旧单包 Release）。
+     */
+    private fun pickChannelApkUrl(assets: org.json.JSONArray?): String {
+        if (assets == null || assets.length() == 0) return ""
+        val preferred = mutableListOf<String>()
+        val fallback = mutableListOf<String>()
+        for (i in 0 until assets.length()) {
+            val a = assets.optJSONObject(i) ?: continue
+            val name = a.optString("name")
+            if (!name.endsWith(".apk", ignoreCase = true)) continue
+            val url = a.optString("browser_download_url")
+            if (url.isBlank()) continue
+            if (matchesCurrentChannelApk(name)) {
+                preferred += url
+            } else {
+                fallback += url
+            }
+        }
+        return preferred.firstOrNull() ?: fallback.firstOrNull().orEmpty()
+    }
+
+    private fun matchesCurrentChannelApk(fileName: String): Boolean {
+        val n = fileName.lowercase()
+        return if (ChannelLine.usesShizuku) {
+            n.contains("onelink") || (n.contains("shizuku") && !n.contains("onekuku"))
+        } else {
+            n.contains("onekuku") || n.contains("standalone")
+        }
     }
 
     /** 版本号语义化比较：按点分数字段逐位比大小，忽略 v 前缀与非数字后缀。 */
@@ -127,9 +149,10 @@ object UpdateChecker {
     fun downloadAndInstall(context: Context, url: String, versionName: String) {
         val app = context.applicationContext
         val dm = app.getSystemService(Context.DOWNLOAD_SERVICE) as? DownloadManager ?: return
-        val fileName = "OneIms-$versionName.apk"
+        val brand = app.getString(R.string.channel_display_name)
+        val fileName = "OneIms-$brand-$versionName.apk"
         val request = DownloadManager.Request(Uri.parse(url))
-            .setTitle("OneIms $versionName")
+            .setTitle("OneIms $brand $versionName")
             .setDescription(app.getString(R.string.update_downloading))
             .setMimeType("application/vnd.android.package-archive")
             .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)

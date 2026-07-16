@@ -448,19 +448,19 @@
     <string name="onekuku_title_sleeping">OneKuku sleeping</string>
     <string name="onekuku_nameplate_ready">Ready</string>
     <string name="onekuku_badge_active">Ready</string>
-    <string name="onekuku_subtitle_ready">Channel activated; core sleeps on demand</string>
-    <string name="onekuku_detail_ready">Auto-sleep when idle to save power; wake is instant if the binder is still up</string>
+    <string name="onekuku_subtitle_ready">Channel is ready to use</string>
+    <string name="onekuku_detail_ready">Foreground shows Active; closing or backgrounding sleeps the channel. Reopen to wake — no re-pair needed</string>
+    <string name="onekuku_subtitle_sleeping">Channel is sleeping</string>
+    <string name="onekuku_detail_sleeping">Privilege stays in the channel process; reopen the app to return to Active without reactivating</string>
     <string name="onekuku_action_save_config">Save call settings</string>
     <string name="onekuku_action_save_config_sub">Snapshot the current call-related profile</string>
     <string name="onekuku_msg_config_saved">Call settings saved</string>
     <string name="onekuku_msg_config_save_need_sim">Select a SIM before saving</string>
-    <string name="onekuku_subtitle_sleeping">OneKuku channel is on; core sleeps on demand</string>
-    <string name="onekuku_detail_sleeping">Auto-sleep after use to save power; call settings can try to auto-restore after reboot</string>
     <string name="onekuku_title_activating">Activating OneKuku</string>
     <string name="onekuku_subtitle_activating">Pairing, connecting, and starting the channel</string>
     <string name="onekuku_detail_activating">Follow the notification prompts, or open system wireless debugging</string>
     <string name="onekuku_pill_activating">Activating</string>
-    <string name="onekuku_pill_ready">Ready</string>
+    <string name="onekuku_pill_ready">Active</string>
     <string name="onekuku_pill_sleeping">Sleeping</string>
     <string name="onekuku_action_restore">Apply last config</string>
     <string name="onekuku_action_restore_sub">Rewrite the last saved call settings snapshot</string>
@@ -478,7 +478,7 @@
 
     <string name="onekuku_stage_inactive">Off</string>
     <string name="onekuku_stage_activate">Activating</string>
-    <string name="onekuku_stage_ready">Ready</string>
+    <string name="onekuku_stage_ready">Active</string>
     <string name="onekuku_stage_execute">Run</string>
     <string name="onekuku_stage_failed">Fail</string>
     <string name="onekuku_stage_standby">Standby</string>

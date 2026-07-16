@@ -13,8 +13,15 @@
     <string name="onekuku_title_failed">Activation failed</string>
 
     <string name="onekuku_subtitle_inactive">OneLink is inactive (install and start Shizuku first)</string>
-    <string name="onekuku_subtitle_ready">OneLink channel ready</string>
-    <string name="onekuku_subtitle_sleeping">OneLink channel active</string>
+    <string name="onekuku_subtitle_ready">Channel is ready to use</string>
+    <string name="onekuku_subtitle_sleeping">Channel is sleeping</string>
+    <string name="onekuku_detail_ready">Foreground shows Active; closing or backgrounding sleeps the channel. Reopen to wake — no re-auth needed</string>
+    <string name="onekuku_detail_sleeping">Privilege stays in official Shizuku; reopen the app to return to Active without reactivating</string>
+    <string name="onekuku_pill_ready">Active</string>
+    <string name="onekuku_pill_sleeping">Sleeping</string>
+    <string name="onekuku_stage_activate">Activating</string>
+    <string name="onekuku_stage_ready">Active</string>
+    <string name="onekuku_stage_sleeping">Sleeping</string>
     <string name="onekuku_subtitle_running">OneLink channel busy</string>
     <string name="onekuku_subtitle_activating">Connecting to Shizuku…</string>
     <string name="onekuku_subtitle_waiting_pair">Start Shizuku and grant access</string>
@@ -60,17 +67,11 @@
     <string name="home_adb_prep_steps">① Install and open official Shizuku\n② Start the service in Shizuku\n③ Return here to finish authorization</string>
 
     <string name="onekuku_detail_inactive">Activate OneLink (official Shizuku) so call settings can restore after reboot</string>
-    <string name="onekuku_detail_sleeping">Works on demand; no app foreground keep-alive. Call settings can try to auto-restore after reboot</string>
     <string name="onekuku_detail_failed">Open Shizuku, start the service, then retry</string>
     <string name="onekuku_pill_waiting_pair">Authorize</string>
     <string name="onekuku_pill_pairing">Authorizing</string>
-    <string name="onekuku_pill_ready">Ready</string>
-    <string name="onekuku_pill_sleeping">Sleeping</string>
     <string name="onekuku_stage_wait_pair">Auth</string>
     <string name="onekuku_stage_pairing">Auth</string>
-    <string name="onekuku_stage_activate">Activating</string>
-    <string name="onekuku_stage_ready">Ready</string>
-    <string name="onekuku_stage_sleeping">Sleeping</string>
     <string name="onekuku_status_onekuku">OneLink: %1$s</string>
 
     <!-- Resource keys still say shizuku_*, but user-facing text must not say OneKuku -->

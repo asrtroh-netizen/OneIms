@@ -453,15 +453,15 @@
     <string name="onekuku_title_sleeping">OneKuku 休眠中</string>
     <string name="onekuku_nameplate_ready">Ready</string>
     <string name="onekuku_badge_active">已就绪</string>
-    <string name="onekuku_subtitle_ready">OneKuku 通道已激活，核心按需休眠</string>
-    <string name="onekuku_detail_ready">用完自动休眠，不常驻不耗电；重启后可尝试自动恢复通话配置</string>
-    <string name="onekuku_subtitle_sleeping">OneKuku 通道已激活，核心按需休眠</string>
-    <string name="onekuku_detail_sleeping">用完自动休眠，不常驻不耗电；重启后可尝试自动恢复通话配置</string>
+    <string name="onekuku_subtitle_ready">通道已就绪，可立即使用</string>
+    <string name="onekuku_detail_ready">应用在前台时为 Active；关掉或退到后台会进入休眠，再打开即可唤醒，无需重配对</string>
+    <string name="onekuku_subtitle_sleeping">通道已休眠</string>
+    <string name="onekuku_detail_sleeping">特权仍在通道进程；重新打开应用会回到 Active，无需重新激活</string>
     <string name="onekuku_title_activating">正在激活 OneKuku</string>
     <string name="onekuku_subtitle_activating">配对、连接与通道启动进行中</string>
     <string name="onekuku_detail_activating">请按通知栏提示操作；也可打开系统无线调试</string>
     <string name="onekuku_pill_activating">激活中</string>
-    <string name="onekuku_pill_ready">就绪</string>
+    <string name="onekuku_pill_ready">Active</string>
     <string name="onekuku_pill_sleeping">休眠</string>
     <string name="onekuku_action_save_config">保存通话配置</string>
     <string name="onekuku_action_save_config_sub">把当前通话相关配置记为快照</string>
@@ -483,7 +483,7 @@
 
     <string name="onekuku_stage_inactive">未激活</string>
     <string name="onekuku_stage_activate">激活中</string>
-    <string name="onekuku_stage_ready">就绪</string>
+    <string name="onekuku_stage_ready">Active</string>
     <string name="onekuku_stage_execute">执行</string>
     <string name="onekuku_stage_failed">失败</string>
     <string name="onekuku_stage_standby">待命</string>
