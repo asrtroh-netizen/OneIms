@@ -116,7 +116,9 @@ object UpdateChecker {
     private fun matchesCurrentChannelApk(fileName: String): Boolean {
         val n = fileName.lowercase()
         return if (ChannelLine.usesShizuku) {
-            n.contains("onelink") || (n.contains("shizuku") && !n.contains("onekuku"))
+            n.contains("onelink") ||
+                n.contains("lite") ||
+                (n.contains("shizuku") && !n.contains("onekuku"))
         } else {
             n.contains("onekuku") || n.contains("standalone")
         }

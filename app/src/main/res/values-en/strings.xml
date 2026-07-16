@@ -449,9 +449,9 @@
     <string name="onekuku_nameplate_ready">Ready</string>
     <string name="onekuku_badge_active">Ready</string>
     <string name="onekuku_subtitle_ready">Channel is ready to use</string>
-    <string name="onekuku_detail_ready">Foreground shows Active; closing or backgrounding sleeps the channel. Reopen to wake — no re-pair needed</string>
+    <string name="onekuku_detail_ready">Foreground shows Ready; closing or backgrounding sleeps the channel. Reopen to wake — no re-pair needed</string>
     <string name="onekuku_subtitle_sleeping">Channel is sleeping</string>
-    <string name="onekuku_detail_sleeping">Privilege stays in the channel process; reopen the app to return to Active without reactivating</string>
+    <string name="onekuku_detail_sleeping">Privilege stays in the channel process; reopen the app to return to Ready without reactivating</string>
     <string name="onekuku_action_save_config">Save call settings</string>
     <string name="onekuku_action_save_config_sub">Snapshot the current call-related profile</string>
     <string name="onekuku_msg_config_saved">Call settings saved</string>
@@ -460,7 +460,7 @@
     <string name="onekuku_subtitle_activating">Pairing, connecting, and starting the channel</string>
     <string name="onekuku_detail_activating">Follow the notification prompts, or open system wireless debugging</string>
     <string name="onekuku_pill_activating">Activating</string>
-    <string name="onekuku_pill_ready">Active</string>
+    <string name="onekuku_pill_ready">Ready</string>
     <string name="onekuku_pill_sleeping">Sleeping</string>
     <string name="onekuku_action_restore">Apply last config</string>
     <string name="onekuku_action_restore_sub">Rewrite the last saved call settings snapshot</string>
@@ -478,7 +478,7 @@
 
     <string name="onekuku_stage_inactive">Off</string>
     <string name="onekuku_stage_activate">Activating</string>
-    <string name="onekuku_stage_ready">Active</string>
+    <string name="onekuku_stage_ready">Ready</string>
     <string name="onekuku_stage_execute">Run</string>
     <string name="onekuku_stage_failed">Fail</string>
     <string name="onekuku_stage_standby">Standby</string>
@@ -980,4 +980,11 @@
     <string name="settings_sponsor_subtitle">View the WeChat sponsorship QR code</string>
     <string name="about_support_oneims">Support OneIMS</string>
     <string name="about_support_oneims_sub">Open the support page</string>
+    <string name="diagnostics_trial_section_title">Trial actions</string>
+    <string name="diagnostics_trial_section_sub">These may write or export system config — confirm before running</string>
+    <string name="diagnostics_trial_title">Confirm trial action</string>
+    <string name="diagnostics_trial_reapply_body">Replays the last successful call-settings override. This may change CarrierConfig for the current SIM.</string>
+    <string name="diagnostics_trial_export_body">Exports all readable CarrierConfig entries for the current SIM into the diagnostics log. No values are modified.</string>
+    <string name="diagnostics_trial_confirm">Run</string>
+    <string name="diagnostics_trial_cancel">Cancel</string>
 </resources>
