@@ -1542,6 +1542,9 @@ private fun AppRoot(
                                                 state = OneKukuCardPolicy.resolve(
                                                     serviceReady = running && granted,
                                                     isExecuting = false,
+                                                    channelSleeping = OneKukuCardPolicy.isChannelSleeping(
+                                                        OneKukuHiddenRunner.currentState(),
+                                                    ),
                                                     taskComplete = false,
                                                 ),
                                                 serviceRunning = running,

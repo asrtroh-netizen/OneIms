@@ -413,16 +413,19 @@ object OneKukuHomeTools {
         context: Context,
         state: OneKukuCardState,
         serviceRunning: Boolean,
-    ): String = when {
-        state == OneKukuCardState.READY ->
+    ): String = when (state) {
+        OneKukuCardState.READY ->
             context.getString(R.string.onekuku_settings_state_running)
-        state == OneKukuCardState.INACTIVE && !serviceRunning ->
-            context.getString(R.string.onekuku_settings_state_invalid)
-        state == OneKukuCardState.INACTIVE ||
-            state == OneKukuCardState.ACTIVATING ->
-            context.getString(R.string.onekuku_settings_state_inactive)
-        state == OneKukuCardState.SLEEPING ->
+        OneKukuCardState.SLEEPING ->
             context.getString(R.string.onekuku_settings_state_sleeping)
+        OneKukuCardState.ACTIVATING ->
+            context.getString(R.string.onekuku_settings_state_inactive)
+        OneKukuCardState.INACTIVE ->
+            if (!serviceRunning) {
+                context.getString(R.string.onekuku_settings_state_invalid)
+            } else {
+                context.getString(R.string.onekuku_settings_state_inactive)
+            }
     }
 
     fun classifyRestoreOutcome(
