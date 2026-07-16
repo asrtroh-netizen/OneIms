@@ -40,8 +40,8 @@
 |---|---|---|
 | **适合谁** | 不想另外装 Shizuku；希望 **App 内无线调试 + 通知栏填码** 一条龙 | 已熟悉 **[Shizuku](https://shizuku.rikka.app/)**；想要 **更小安装包、更轻壳** |
 | **包名** | `com.oneims.app` | `com.oneims.onelink` |
-| **激活方式** | 内嵌 OneBridge · 无线调试配对 · 可通知栏六位码 | **Shizuku 已 Start 且已对本 App 授权**：App 内一点即可唤醒；**未 Start**：一点才跳转官方 Shizuku 去 Start，再回 App 点授权（与 2.0.8/2.0.9 相同） |
-| **额外依赖** | 无（通道打进包内） | 需自行安装官方 **Shizuku**；日常保持 Shizuku 已 Start 即可 |
+| **激活方式** | 内嵌 OneBridge · 无线调试配对 · 可通知栏六位码 | **日常**：保持官方 Shizuku 已 Start → App 内**一点即可**授权/唤醒（与 2.0.8/2.0.9 相同）。仅当 Shizuku **未运行**时，一点会打开官方 Shizuku 让你 Start，再回 App |
+| **额外依赖** | 无（通道打进包内） | 需自行安装官方 **Shizuku**；日常保持已 Start 即可，不必每次重走配对 |
 | **体积** | 较大（含内嵌 ADB/Bridge） | 较小（无内嵌 ADB/Bridge） |
 | **同机并存** | ✅ 可与 OneLink 同时安装（不同包名） | ✅ 可与 OneKuku 同时安装 |
 
@@ -90,7 +90,7 @@
 ### 📦 双产品线 · 自选下载
 
 * 🟢 **OneKuku（独立激活）**：内嵌通道，App 内配对，**不需另装 Shizuku**（延续 2.2.0 主线体验）
-* 🔵 **OneLink（Shizuku）**：轻量壳；**Shizuku 已开时一点授权/唤醒**，未开才跳转官方 Shizuku，包体更小
+* 🔵 **OneLink（Shizuku）**：轻量壳；**Shizuku 已开时一点即可**，未运行时打开官方 Shizuku Start，包体更小
 * 📱 两包 **不同 applicationId**，可同机并存；README 提供选购对照表
 
 ### 🏠 首页状态框 · 更简单
