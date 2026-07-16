@@ -14,16 +14,16 @@
 
 <br/>
 
-### ⬇️ 下载 APK（最新 · v2.2.2 · 请自选产品线）
+### ⬇️ 下载 APK（最新 · v2.3.0 · 请自选产品线）
 
 > **两个包功能相同（IMS/诊断/恢复），差别只在「特权通道怎么激活」——看下方选购指南，**只装其中一个**即可；进阶用户也可同机并存对比。
 
 | 推荐给… | 包 | 下载 |
 |---|---|---|
-| 🟢 **想少装 App、App 内一键配对** | **OneKuku（独立激活）** | [OneIms-OneKuku-standalone-2.2.2.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v2.2.2/OneIms-OneKuku-standalone-2.2.2.apk) |
-| 🔵 **已有 Shizuku / 要最轻壳** | **OneLink（Shizuku）** | [OneIms-OneLink-Shizuku-2.2.2.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v2.2.2/OneIms-OneLink-Shizuku-2.2.2.apk) |
+| 🟢 **想少装 App、App 内一键配对** | **OneKuku（独立激活）** | [OneIms-OneKuku-standalone-2.3.0.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v2.3.0/OneIms-OneKuku-standalone-2.3.0.apk) |
+| 🔵 **已有 Shizuku / 要最轻壳** | **OneIms Lite（Shizuku）** | [OneIms-Lite-Shizuku-2.3.0.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v2.3.0/OneIms-Lite-Shizuku-2.3.0.apk) |
 
-[📦 全部 Release 资产](https://github.com/asrtroh-netizen/OneIms/releases/tag/v2.2.2)
+[📦 全部 Release 资产](https://github.com/asrtroh-netizen/OneIms/releases/tag/v2.3.0)
 
 > 本仓库 **只提供 README + APK 发布**，**不开放源代码**。  
 > 需要交流 / 反馈请走 Telegram，别来仓库里翻源码啦～
@@ -36,20 +36,20 @@
 
 两个 APK **业务功能一致**（VoLTE/VoWiFi/诊断/恢复/独家功能），区别只在 **特权通道** 怎么获得：
 
-| | **OneKuku（独立激活）** | **OneLink（Shizuku）** |
+| | **OneKuku（独立激活）** | **OneIms Lite（Shizuku）** |
 |---|---|---|
 | **适合谁** | 不想另外装 Shizuku；希望 **App 内无线调试 + 通知栏填码** 一条龙 | 已熟悉 **[Shizuku](https://shizuku.rikka.app/)**；想要 **更小安装包、更轻壳** |
 | **包名** | `com.oneims.app` | `com.oneims.onelink` |
 | **激活方式** | 内嵌 OneBridge · 无线调试配对 · 可通知栏六位码 | **日常**：保持官方 Shizuku 已 Start → App 内**一点即可**授权/唤醒（与 2.0.8/2.0.9 相同）。仅当 Shizuku **未运行**时，一点会打开官方 Shizuku 让你 Start，再回 App |
 | **额外依赖** | 无（通道打进包内） | 需自行安装官方 **Shizuku**；日常保持已 Start 即可，不必每次重走配对 |
 | **体积** | 较大（含内嵌 ADB/Bridge） | 较小（无内嵌 ADB/Bridge） |
-| **同机并存** | ✅ 可与 OneLink 同时安装（不同包名） | ✅ 可与 OneKuku 同时安装 |
+| **同机并存** | ✅ 可与 OneIms Lite 同时安装（不同包名） | ✅ 可与 OneKuku 同时安装 |
 
 **怎么选（一句话）：**
 
 * 你是 **「我只想在一个 App 里搞定」** → 下 **OneKuku（独立激活）**
-* 你是 **「我手机本来就有 Shizuku」** → 下 **OneLink（Shizuku）**
-* 不确定 → 先试 **OneKuku**；若你本来就在用 Shizuku 生态，再换 **OneLink** 也行
+* 你是 **「我手机本来就有 Shizuku」** → 下 **OneIms Lite（Shizuku）**
+* 不确定 → 先试 **OneKuku**；若你本来就在用 Shizuku 生态，再换 **OneIms Lite** 也行
 
 ---
 
@@ -57,37 +57,56 @@
 
 | 对外名称 | 包名 | 特权通道 | Release 文件名 |
 |---|---|---|---|
-| **OneIms · OneKuku** `2.2.2-onekuku` | `com.oneims.app` | 内嵌 OneBridge + 无线调试配对 | `OneIms-OneKuku-standalone-2.2.2.apk`（备注：独立激活） |
-| **OneIms · OneLink** `2.2.2-onelink` | `com.oneims.onelink` | 官方 Shizuku | `OneIms-OneLink-Shizuku-2.2.2.apk`（备注：Shizuku） |
+| **OneIms · OneKuku** `2.3.0-onekuku` | `com.oneims.app` | 内嵌 OneBridge + 无线调试配对 | `OneIms-OneKuku-standalone-2.3.0.apk`（备注：独立激活） |
+| **OneIms · OneIms Lite** `2.3.0-onelink` | `com.oneims.onelink` | 官方 Shizuku | `OneIms-Lite-Shizuku-2.3.0.apk`（备注：Shizuku） |
 
 > **双包同版号一起更新**；请只从本页 Release 链接下载，勿混装未知来源包。
 
 ---
 
-## ✨ What's New · 2.2.2
+## ✨ What's New · 2.3.0
 
-**本版主线：首页通道状态卡统一四态；就绪胶囊显示 Active；应用内更新按产品线选包。**
+**本版主线：就绪文案回归；排障精简；OneLink 更名为 OneIms Lite。**
 
-### 🏠 首页状态卡 · 四态
+### 🏠 状态卡
 
-* 四态：**未激活 → 激活中 → Active ↔ 休眠**
-* 前台为 **Active**；关闭 / 退后台进入 **休眠**；再打开从休眠回到 Active
-* 划掉后台 **不必重新配对 / 重新激活**（特权仍在通道进程）
-* 状态胶囊紧跟大字标题后显示（就绪文案为 **Active**，不再写「就绪」）
-* 进度条四段：未激活 → 激活中 → Active → 休眠
-
-### 📦 应用内更新
-
-* Release 同挂双包时，**OneKuku / OneLink 各自下载对应 APK**，不再误下另一条产品线
+* 就绪胶囊恢复显示 **就绪**（大字通道名仍不缀状态）
+* 休眠逻辑不变
 
 ### 🛠️ 排障
 
-* 「只读检查」四项（健康 / ePDG / 诊断 / 配置查看）回到一级网格，一眼可点
+* 移除「一键检测 / 一键修复」
+* 只读检查四项保留
+* 重应用 / 完整导出改为 **弹出确认后的试操作**
+
+### 🏷️ 产品线
+
+* Shizuku 轻壳对外名称：**OneIms Lite**（包名仍为 `com.oneims.onelink`）
+* 应用内更新：OneKuku ↔ OneKuku，OneIms Lite ↔ Lite/Shizuku 包
+
+### 🐞 修复（承接 2.2.2）
+
+* OneIms Lite：`BrokerInstrumentation` 全限定类名，修复 AMS 拒启导致无法写入的问题
 
 ### 🔄 升级
 
-* 🟢 OneKuku：覆盖安装 `OneIms-OneKuku-standalone-2.2.2.apk`
-* 🔵 OneLink：覆盖安装 `OneIms-OneLink-Shizuku-2.2.2.apk`
+* 🟢 OneKuku：覆盖安装 `OneIms-OneKuku-standalone-2.3.0.apk`
+* 🔵 OneIms Lite：覆盖安装 `OneIms-Lite-Shizuku-2.3.0.apk`
+
+---
+
+## ✨ What's New · 2.2.2
+
+**本版主线：首页通道状态卡统一四态；应用内更新按产品线选包；Broker 拒启修复。**
+
+### 🏠 首页状态卡 · 四态
+
+* 四态：**未激活 → 激活中 → 就绪 ↔ 休眠**
+* 划掉后台 **不必重新配对 / 重新激活**
+
+### 📦 应用内更新
+
+* Release 同挂双包时，各自下载对应 APK
 
 ---
 
@@ -95,8 +114,8 @@
 
 **本版主线：正式拆分双产品线，把选择权交给你。**
 
-* 🟢 **OneKuku（独立激活）** / 🔵 **OneLink（Shizuku）** 双包同版号
-* 选购指南与升级路径见上一版说明；下载请改用上方 **v2.2.2** 链接
+* 🟢 **OneKuku（独立激活）** / 🔵 **OneIms Lite（Shizuku）** 双包同版号
+* 选购指南与升级路径见上一版说明；下载请改用上方 **v2.3.0** 链接
 
 ---
 
