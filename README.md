@@ -14,9 +14,14 @@
 
 <br/>
 
-### ⬇️ 下载 APK（最新）
+### ⬇️ 下载 APK（最新 · 双版本 2.2.0）
 
-**[OneIms 2.2.0 · GitHub Releases](https://github.com/asrtroh-netizen/OneIms/releases/tag/v2.2.0)**
+| 线 | 下载 |
+|---|---|
+| **OneKuku**（内嵌通道 · 主线） | [OneIms-OneKuku-2.2.0.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v2.2.0/OneIms-OneKuku-2.2.0.apk) |
+| **OneLink**（官方 Shizuku · 轻量壳） | [OneIms-OneLink-2.2.0.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v2.2.0/OneIms-OneLink-2.2.0.apk) |
+
+[📦 全部 Release 资产](https://github.com/asrtroh-netizen/OneIms/releases/tag/v2.2.0)
 
 > 本仓库 **只提供 README + APK 发布**，**不开放源代码**。  
 > 需要交流 / 反馈请走 Telegram，别来仓库里翻源码啦～
@@ -31,7 +36,7 @@
 
 | 对外名称 | 包名 | 特权通道 | 备注 |
 |---|---|---|---|
-| **OneIms · OneKuku** `2.2.0-onekuku` | `com.oneims.app` | 内嵌 OneBridge + 无线调试配对 | **现有主线**；上方 Release 为当前 OneKuku 包 |
+| **OneIms · OneKuku** `2.2.0-onekuku` | `com.oneims.app` | 内嵌 OneBridge + 无线调试配对 | **现有主线**；见上方 OneKuku 下载 |
 | **OneIms · OneLink** `2.2.0-onelink` | `com.oneims.onelink` | 官方 [Shizuku](https://shizuku.rikka.app/) | **轻量壳**：一点激活 → 打开 Shizuku 配对/授权，不自建内嵌 ADB / 常驻通道 |
 
 > 发版命名 APK：`OneIms-OneKuku-2.2.0.apk` · `OneIms-OneLink-2.2.0.apk`（双包同版号上传 Release）。
