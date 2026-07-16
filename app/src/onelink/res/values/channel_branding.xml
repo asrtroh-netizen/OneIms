@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- OneIms Lite 独立产品线：IMS + 官方 Shizuku；覆盖一切「六位码 / OneBridge / 无线配对」心智 -->
-    <string name="channel_display_name">OneIms Lite</string>
+    <!-- OneLink 独立产品线：IMS + 官方 Shizuku；覆盖一切「六位码 / OneBridge / 无线配对」心智 -->
+    <string name="channel_display_name">OneLink</string>
     <string name="app_name">OneIms Lite</string>
 
-    <string name="onekuku_card_eyebrow">OneIms Lite 通道</string>
-    <string name="onekuku_title_active">OneIms Lite 已激活</string>
-    <string name="onekuku_title_ready">OneIms Lite 已就绪</string>
-    <string name="onekuku_title_sleeping">OneIms Lite 休眠中</string>
-    <string name="onekuku_title_activating">正在激活 OneIms Lite</string>
-    <string name="onekuku_title_waiting_pair">OneIms Lite 等待授权</string>
+    <string name="onekuku_card_eyebrow">OneLink 通道</string>
+    <string name="onekuku_title_active">OneLink 已激活</string>
+    <string name="onekuku_title_ready">OneLink 已就绪</string>
+    <string name="onekuku_title_sleeping">OneLink 休眠中</string>
+    <string name="onekuku_title_activating">正在激活 OneLink</string>
+    <string name="onekuku_title_waiting_pair">OneLink 等待授权</string>
     <string name="onekuku_title_failed">激活失败</string>
 
-    <string name="onekuku_subtitle_inactive">OneIms Lite 通道未激活（需已安装并启动 Shizuku）</string>
+    <string name="onekuku_subtitle_inactive">OneLink 通道未激活（需已安装并启动 Shizuku）</string>
     <string name="onekuku_subtitle_ready">通道已就绪，可立即使用</string>
     <string name="onekuku_subtitle_sleeping">通道已休眠</string>
     <string name="onekuku_detail_ready">应用在前台时为就绪；关掉或退到后台会进入休眠，再打开即可唤醒，无需重授权</string>
@@ -22,128 +22,128 @@
     <string name="onekuku_stage_ready">就绪</string>
     <string name="onekuku_stage_activate">激活中</string>
     <string name="onekuku_stage_sleeping">休眠</string>
-    <string name="onekuku_subtitle_running">OneIms Lite 通道执行中</string>
+    <string name="onekuku_subtitle_running">OneLink 通道执行中</string>
     <string name="onekuku_subtitle_activating">正在连接 Shizuku…</string>
     <string name="onekuku_subtitle_waiting_pair">请在官方 Shizuku 内启动并授权</string>
     <string name="onekuku_subtitle_pairing">正在等待 Shizuku 授权</string>
     <string name="onekuku_subtitle_connecting">正在连接 Shizuku…</string>
-    <string name="onekuku_subtitle_starting">正在完成 OneIms Lite 授权</string>
+    <string name="onekuku_subtitle_starting">正在完成 OneLink 授权</string>
     <string name="onekuku_subtitle_failed">请打开 Shizuku 启动服务后重试授权</string>
-    <string name="onekuku_subtitle_active">OneIms Lite 通道已就绪</string>
+    <string name="onekuku_subtitle_active">OneLink 通道已就绪</string>
     <string name="onekuku_subtitle_complete">通话配置已恢复</string>
 
-    <string name="onekuku_action_activate">立即激活 OneIms Lite</string>
+    <string name="onekuku_action_activate">立即激活 OneLink</string>
     <string name="onekuku_action_activate_sub">打开官方 Shizuku，启动后回到本应用授权</string>
-    <string name="onekuku_action_check">检查 OneIms Lite 状态</string>
+    <string name="onekuku_action_check">检查 OneLink 状态</string>
 
-    <string name="onekuku_msg_already_active">OneIms Lite 通道已激活</string>
-    <string name="onekuku_msg_permission_requested">已发起 OneIms Lite / Shizuku 授权请求</string>
-    <string name="onekuku_msg_activated">OneIms Lite 通道已激活</string>
-    <string name="onekuku_msg_need_active">请先激活 OneIms Lite（启动 Shizuku 并授权）</string>
-    <string name="onekuku_msg_need_prepare">请先在 Shizuku 内完成启动，再回到本应用授权 OneIms Lite</string>
+    <string name="onekuku_msg_already_active">OneLink 通道已激活</string>
+    <string name="onekuku_msg_permission_requested">已发起 OneLink / Shizuku 授权请求</string>
+    <string name="onekuku_msg_activated">OneLink 通道已激活</string>
+    <string name="onekuku_msg_need_active">请先激活 OneLink（启动 Shizuku 并授权）</string>
+    <string name="onekuku_msg_need_prepare">请先在 Shizuku 内完成启动，再回到本应用授权 OneLink</string>
     <string name="onekuku_msg_waiting_pair_detail">请在官方 Shizuku 内启动服务，再回到本应用完成授权</string>
     <string name="onekuku_msg_pairing_notification_shown">请打开官方 Shizuku 启动服务，再回到本应用授权</string>
     <string name="onekuku_msg_phase_pairing">正在等待 Shizuku 授权…</string>
     <string name="onekuku_msg_phase_connecting">正在连接 Shizuku…</string>
-    <string name="onekuku_msg_phase_starting">正在完成 OneIms Lite 授权…</string>
+    <string name="onekuku_msg_phase_starting">正在完成 OneLink 授权…</string>
 
     <string name="log_shizuku_opened">已打开官方 Shizuku（请在其中启动后再回来授权）</string>
     <string name="log_shizuku_not_installed">未安装 Shizuku，已尝试跳转应用商店</string>
     <string name="shizuku_not_running_message">Shizuku 尚未运行，请先在官方 Shizuku 内启动</string>
-    <string name="home_status_shizuku_off">请先激活 OneIms Lite</string>
-    <string name="home_status_permission">激活 OneIms Lite 后即可写入配置</string>
-    <string name="logic_title_need_channel">等待 OneIms Lite</string>
-    <string name="support_need_shizuku">需先激活 OneIms Lite</string>
+    <string name="home_status_shizuku_off">请先激活 OneLink</string>
+    <string name="home_status_permission">激活 OneLink 后即可写入配置</string>
+    <string name="logic_title_need_channel">等待 OneLink</string>
+    <string name="support_need_shizuku">需先激活 OneLink</string>
 
-    <string name="compat_shizuku">③ OneIms Lite / Shizuku: %1$s</string>
+    <string name="compat_shizuku">③ OneLink / Shizuku: %1$s</string>
 
-    <string name="onekuku_boot_fg_channel">OneIms Lite 开机就绪</string>
-    <string name="onekuku_boot_fg_channel_desc">重启后后台检查 OneIms Lite 与通话配置</string>
-    <string name="onekuku_boot_fg_title">OneIms Lite 正在后台就绪</string>
+    <string name="onekuku_boot_fg_channel">OneLink 开机就绪</string>
+    <string name="onekuku_boot_fg_channel_desc">重启后后台检查 OneLink 与通话配置</string>
+    <string name="onekuku_boot_fg_title">OneLink 正在后台就绪</string>
     <string name="onekuku_boot_fg_text">检查 Shizuku 与通话配置，完成后通知会消失</string>
 
-    <!-- 死路径兜底：OneIms Lite 不应弹出此引导，万一误触也不提六位码 -->
-    <string name="home_adb_prep_title">激活 OneIms Lite</string>
+    <!-- 死路径兜底：OneLink 不应弹出此引导，万一误触也不提六位码 -->
+    <string name="home_adb_prep_title">激活 OneLink</string>
     <string name="home_adb_prep_sub">点「立即激活」后将打开官方 Shizuku；在其中启动服务，再回到本应用授权即可。</string>
     <string name="home_adb_prep_steps">① 安装并打开官方 Shizuku\n② 在 Shizuku 内启动服务\n③ 回到本应用完成授权</string>
 
-    <string name="onekuku_detail_inactive">请先激活 OneIms Lite（官方 Shizuku），以便重启后恢复通话配置</string>
+    <string name="onekuku_detail_inactive">请先激活 OneLink（官方 Shizuku），以便重启后恢复通话配置</string>
     <string name="onekuku_detail_failed">请打开 Shizuku 启动服务后重试授权</string>
     <string name="onekuku_pill_waiting_pair">待授权</string>
     <string name="onekuku_pill_pairing">授权中</string>
     <string name="onekuku_stage_wait_pair">待授权</string>
     <string name="onekuku_stage_pairing">授权</string>
-    <string name="onekuku_status_onekuku">OneIms Lite：%1$s</string>
+    <string name="onekuku_status_onekuku">OneLink：%1$s</string>
 
     <!-- 资源 key 仍叫 shizuku_*，但对用户绝不能再写「OneKuku」 -->
     <string name="shizuku_setup_title">打不开 Shizuku？先完成安装与启动</string>
     <string name="shizuku_setup_subtitle">安装官方 Shizuku，启动服务后回到本应用授权</string>
     <string name="setup_open_shizuku">打开官方 Shizuku</string>
     <string name="setup_open_shizuku_sub">在 Shizuku 内启动服务，再回到本应用完成授权</string>
-    <string name="shizuku_permission_granted_message">OneIms Lite 已授权成功</string>
-    <string name="shizuku_permission_denied_message">OneIms Lite / Shizuku 授权未通过</string>
-    <string name="shizuku_permission_required_message">请先在首页激活 OneIms Lite（启动 Shizuku 并授权），再执行系统写入</string>
-    <string name="shizuku_already_granted_message">OneIms Lite 已激活，无需重复操作</string>
-    <string name="compat_advice_need_shizuku">请先激活 OneIms Lite（官方 Shizuku）再来。</string>
+    <string name="shizuku_permission_granted_message">OneLink 已授权成功</string>
+    <string name="shizuku_permission_denied_message">OneLink / Shizuku 授权未通过</string>
+    <string name="shizuku_permission_required_message">请先在首页激活 OneLink（启动 Shizuku 并授权），再执行系统写入</string>
+    <string name="shizuku_already_granted_message">OneLink 已激活，无需重复操作</string>
+    <string name="compat_advice_need_shizuku">请先激活 OneLink（官方 Shizuku）再来。</string>
     <string name="diagnostic_check_shizuku_running">Shizuku 服务运行</string>
     <string name="diagnostic_check_shizuku_running_yes">Shizuku 正在运行</string>
     <string name="diagnostic_check_shizuku_running_no">Shizuku 未运行</string>
-    <string name="diagnostic_check_shizuku_start_guidance">请打开官方 Shizuku 启动服务，再回到本应用授权 OneIms Lite。</string>
-    <string name="diagnostic_check_shizuku_permission">OneIms Lite / Shizuku 授权</string>
+    <string name="diagnostic_check_shizuku_start_guidance">请打开官方 Shizuku 启动服务，再回到本应用授权 OneLink。</string>
+    <string name="diagnostic_check_shizuku_permission">OneLink / Shizuku 授权</string>
     <string name="diagnostic_check_shizuku_permission_unavailable">Shizuku 未运行，无法检查授权</string>
-    <string name="reapply_trigger_shizuku_ready">OneIms Lite 通道就绪</string>
-    <string name="reapply_trigger_bridge_ready">OneIms Lite 通道就绪</string>
+    <string name="reapply_trigger_shizuku_ready">OneLink 通道就绪</string>
+    <string name="reapply_trigger_bridge_ready">OneLink 通道就绪</string>
 
-    <string name="logic_detail_waiting_channel">请按上方 OneIms Lite 卡提示，在官方 Shizuku 内启动并授权</string>
-    <string name="logic_action_restore_blocked_sub">需 OneIms Lite 已授权且已选中 SIM</string>
-    <string name="home_emergency_restore_detail">通过 OneIms Lite（Shizuku）恢复最近保存的通话配置。不会清空配置。</string>
-    <string name="home_emergency_subtitle">重启后如果 VoLTE、VoWiFi 或 5G 配置失效，可通过 OneIms Lite 恢复重启前保存的通话配置。</string>
-    <string name="home_adb_start_core">立即激活 OneIms Lite</string>
-    <string name="capabilities_select_sim_notice">请先在下方选择 SIM，并确认 OneIms Lite 已激活；条件不满足时不会执行写入。</string>
-    <string name="diagnostics_prereq_short">请选择 SIM 并激活 OneIms Lite</string>
-    <string name="onekuku_msg_activation_denied">OneIms Lite 授权未通过</string>
-    <string name="onekuku_msg_status_ok">OneIms Lite 状态正常</string>
-    <string name="onekuku_tool_settings_title">OneIms Lite 设置</string>
-    <string name="onekuku_settings_status">OneIms Lite 状态：%1$s</string>
-    <string name="onekuku_settings_auto_restore_sub">检测到配置失效时，自动尝试通过 OneIms Lite 恢复</string>
-    <string name="onekuku_settings_check_status">检查 OneIms Lite 状态</string>
+    <string name="logic_detail_waiting_channel">请按上方 OneLink 卡提示，在官方 Shizuku 内启动并授权</string>
+    <string name="logic_action_restore_blocked_sub">需 OneLink 已授权且已选中 SIM</string>
+    <string name="home_emergency_restore_detail">通过 OneLink（Shizuku）恢复最近保存的通话配置。不会清空配置。</string>
+    <string name="home_emergency_subtitle">重启后如果 VoLTE、VoWiFi 或 5G 配置失效，可通过 OneLink 恢复重启前保存的通话配置。</string>
+    <string name="home_adb_start_core">立即激活 OneLink</string>
+    <string name="capabilities_select_sim_notice">请先在下方选择 SIM，并确认 OneLink 已激活；条件不满足时不会执行写入。</string>
+    <string name="diagnostics_prereq_short">请选择 SIM 并激活 OneLink</string>
+    <string name="onekuku_msg_activation_denied">OneLink 授权未通过</string>
+    <string name="onekuku_msg_status_ok">OneLink 状态正常</string>
+    <string name="onekuku_tool_settings_title">OneLink 设置</string>
+    <string name="onekuku_settings_status">OneLink 状态：%1$s</string>
+    <string name="onekuku_settings_auto_restore_sub">检测到配置失效时，自动尝试通过 OneLink 恢复</string>
+    <string name="onekuku_settings_check_status">检查 OneLink 状态</string>
     <string name="onekuku_settings_auto_sleep_sub">恢复完成后按需休眠，不靠本应用前台常驻</string>
     <string name="onekuku_settings_resident_note">特权在官方 Shizuku 进程；本应用不再以前台服务常驻轮询。</string>
-    <string name="onekuku_settings_reactivate">重新激活 OneIms Lite</string>
-    <string name="onekuku_settings_reactivate_sub">打开 Shizuku 并重新授权 OneIms Lite</string>
-    <string name="onekuku_status_ims_skipped">IMS/VoWiFi：需先激活 OneIms Lite 后再检查</string>
-    <string name="onekuku_restore_onekuku_inactive">OneIms Lite 未激活，请先激活后恢复</string>
-    <string name="onekuku_restore_need_active_title">OneIms Lite 未激活</string>
-    <string name="onekuku_restore_need_active_body">OneIms Lite 未激活，请先启动 Shizuku 并授权后再恢复</string>
-    <string name="onekuku_history_onekuku_label">OneIms Lite</string>
-    <string name="onekuku_history_status">当前 OneIms Lite 状态：%1$s</string>
-    <string name="config_dump_failed">读取 CarrierConfig 失败（需 OneIms Lite 已激活且选中有效 SIM）</string>
-    <string name="operation_feedback_permission_delegate_failed">权限代理启动失败，配置未写入。请在官方 Shizuku 内停止再启动服务，回到本应用重新授权 OneIms Lite 后重试；仍失败请复制排障日志（含 channel/uid）。</string>
-    <string name="one_click_check_desc">一次性检查 OneIms Lite、选卡、基础通信、IMS 注册等关键状态，结果按清单方式展示。</string>
+    <string name="onekuku_settings_reactivate">重新激活 OneLink</string>
+    <string name="onekuku_settings_reactivate_sub">打开 Shizuku 并重新授权 OneLink</string>
+    <string name="onekuku_status_ims_skipped">IMS/VoWiFi：需先激活 OneLink 后再检查</string>
+    <string name="onekuku_restore_onekuku_inactive">OneLink 未激活，请先激活后恢复</string>
+    <string name="onekuku_restore_need_active_title">OneLink 未激活</string>
+    <string name="onekuku_restore_need_active_body">OneLink 未激活，请先启动 Shizuku 并授权后再恢复</string>
+    <string name="onekuku_history_onekuku_label">OneLink</string>
+    <string name="onekuku_history_status">当前 OneLink 状态：%1$s</string>
+    <string name="config_dump_failed">读取 CarrierConfig 失败（需 OneLink 已激活且选中有效 SIM）</string>
+    <string name="operation_feedback_permission_delegate_failed">权限代理启动失败，配置未写入。请在官方 Shizuku 内停止再启动服务，回到本应用重新授权 OneLink 后重试；仍失败请复制排障日志（含 channel/uid）。</string>
+    <string name="one_click_check_desc">一次性检查 OneLink、选卡、基础通信、IMS 注册等关键状态，结果按清单方式展示。</string>
 
     <!-- 漏网：文案值仍含 OneKuku（多为死路径/兜底，仍覆盖以免误触） -->
-    <string name="onekuku_msg_activating">正在激活 OneIms Lite…</string>
-    <string name="onekuku_detail_complete">OneIms Lite 已完成任务</string>
-    <string name="onekuku_adb_guide_script">请使用官方 Shizuku 激活 OneIms Lite：\n1) 安装并打开官方 Shizuku\n2) 在 Shizuku 内启动服务\n3) 回到 OneIMS 点「立即激活 OneIms Lite」完成授权\n\n本产品线不使用无线调试六位码或内嵌 OneBridge。</string>
+    <string name="onekuku_msg_activating">正在激活 OneLink…</string>
+    <string name="onekuku_detail_complete">OneLink 已完成任务</string>
+    <string name="onekuku_adb_guide_script">请使用官方 Shizuku 激活 OneLink：\n1) 安装并打开官方 Shizuku\n2) 在 Shizuku 内启动服务\n3) 回到 OneIMS 点「立即激活 OneLink」完成授权\n\n本产品线不使用无线调试六位码或内嵌 OneBridge。</string>
     <string name="onekuku_core_download_title">官方 Shizuku</string>
     <string name="onekuku_core_download_desc">请安装官方 Shizuku（应用商店）</string>
     <string name="onekuku_core_missing_title">未安装官方 Shizuku</string>
     <string name="onekuku_msg_installing_bundled_core">请前往应用商店安装官方 Shizuku</string>
     <string name="onekuku_msg_downloading_core">请安装官方 Shizuku 后返回授权…</string>
     <string name="onekuku_msg_core_download_started">请在应用商店安装官方 Shizuku，完成后返回本应用</string>
-    <string name="onekuku_msg_core_download_failed">未安装官方 Shizuku。请从应用商店安装后再回来授权 OneIms Lite</string>
-    <string name="onekuku_msg_core_missing_hint">还没装官方 Shizuku。请安装 Shizuku 后回到本应用授权 OneIms Lite。</string>
-    <string name="onekuku_pair_channel_name">OneIms Lite 授权</string>
-    <string name="onekuku_pair_title_waiting">OneIms Lite 等待授权</string>
+    <string name="onekuku_msg_core_download_failed">未安装官方 Shizuku。请从应用商店安装后再回来授权 OneLink</string>
+    <string name="onekuku_msg_core_missing_hint">还没装官方 Shizuku。请安装 Shizuku 后回到本应用授权 OneLink。</string>
+    <string name="onekuku_pair_channel_name">OneLink 授权</string>
+    <string name="onekuku_pair_title_waiting">OneLink 等待授权</string>
     <string name="onekuku_pair_text_waiting">请在官方 Shizuku 内启动服务，再回到本应用授权</string>
     <string name="onekuku_pair_title_progress">正在等待 Shizuku 授权…</string>
     <string name="onekuku_pair_text_progress">正在等待 Shizuku 授权…</string>
-    <string name="onekuku_pair_title_ok">OneIms Lite 授权成功</string>
-    <string name="onekuku_pair_text_ok">OneIms Lite 授权成功</string>
-    <string name="onekuku_resident_channel">OneIms Lite（无需 App 常驻）</string>
-    <string name="onekuku_resident_notif_title">OneIms Lite</string>
+    <string name="onekuku_pair_title_ok">OneLink 授权成功</string>
+    <string name="onekuku_pair_text_ok">OneLink 授权成功</string>
+    <string name="onekuku_resident_channel">OneLink（无需 App 常驻）</string>
+    <string name="onekuku_resident_notif_title">OneLink</string>
     <string name="reapply_explanation">CarrierConfig 覆盖使用临时模式（persistent=false），重启手机或通道后可能被系统清除，因此 OneIms 会幂等重放最近一次成功配置。触发原因和结果会记录在下方。</string>
-    <string name="termux_hint">OneIms Lite 产品线请直接使用官方 Shizuku，无需 Termux / 无线调试配对。</string>
+    <string name="termux_hint">OneLink 产品线请直接使用官方 Shizuku，无需 Termux / 无线调试配对。</string>
     <string name="compat_strategy_direct">权限代理探测失败；非 root 仍尝试 Instrumentation，root 才走直调 ⚠️</string>
-    <string name="diagnostics_select_sim_notice">请选择 SIM 并激活 OneIms Lite</string>
+    <string name="diagnostics_select_sim_notice">请选择 SIM 并激活 OneLink</string>
 </resources>
