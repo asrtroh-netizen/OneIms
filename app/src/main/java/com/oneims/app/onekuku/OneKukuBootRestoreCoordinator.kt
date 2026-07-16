@@ -337,7 +337,22 @@ object OneKukuBootRestoreCoordinator {
         }
 
         if (ChannelLine.usesShizuku) {
-            Log.i(TAG, "boot onelink: thin shell — need user to start/grant Shizuku")
+            // OneLink：官方 Shizuku 常依赖旧网回来；短等 Wi‑Fi 后再认一次就绪。
+            val wifiOk = withContext(Dispatchers.IO) {
+                OneKukuAdbMdns.waitForWifiClient(context, BOOT_WIFI_WAIT_MS)
+            }
+            Log.i(TAG, "boot onelink: wait Wi‑Fi ok=$wifiOk")
+            if (OneKukuManager.isReady()) return BootReady.READY
+            val wakeAgain = OneKukuHiddenRunner.wake()
+            if ((wakeAgain.success || OneKukuManager.isRunning()) && !OneKukuManager.isGranted()) {
+                OneKukuManager.requestActivation()
+            }
+            if (OneKukuManager.isReady()) return BootReady.READY
+            if (!wifiOk) {
+                OneKukuBootRestoreStore.writeHint(context, OneKukuBootUiHint.WAITING_WIFI)
+                return BootReady.WAITING_WIFI
+            }
+            Log.i(TAG, "boot onelink: Wi‑Fi up but Shizuku not ready — need user")
             return BootReady.NEED_USER
         }
 

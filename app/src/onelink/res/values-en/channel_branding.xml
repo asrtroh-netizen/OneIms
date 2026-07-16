@@ -15,9 +15,9 @@
     <string name="onekuku_subtitle_inactive">OneLink is inactive (install and start Shizuku first)</string>
     <string name="onekuku_subtitle_ready">Channel is ready to use</string>
     <string name="onekuku_subtitle_sleeping">Channel is sleeping</string>
-    <string name="onekuku_detail_ready">Foreground shows Ready; closing or backgrounding sleeps the channel. Reopen to wake — no re-auth needed</string>
-    <string name="onekuku_detail_sleeping">Privilege stays in official Shizuku; reopen the app to return to Ready without reactivating</string>
-    <string name="onekuku_pill_ready">Ready</string>
+    <string name="onekuku_detail_ready">Foreground pill shows Active; closing or backgrounding sleeps the channel. Reopen to wake — no re-auth needed</string>
+    <string name="onekuku_detail_sleeping">Privilege stays in official Shizuku; reopen the app to return to Active without reactivating</string>
+    <string name="onekuku_pill_ready">Active</string>
     <string name="onekuku_pill_sleeping">Sleeping</string>
     <string name="onekuku_stage_activate">Activating</string>
     <string name="onekuku_stage_ready">Ready</string>

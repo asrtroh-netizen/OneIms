@@ -460,7 +460,7 @@
     <string name="onekuku_subtitle_activating">Pairing, connecting, and starting the channel</string>
     <string name="onekuku_detail_activating">Follow the notification prompts, or open system wireless debugging</string>
     <string name="onekuku_pill_activating">Activating</string>
-    <string name="onekuku_pill_ready">Ready</string>
+    <string name="onekuku_pill_ready">Active</string>
     <string name="onekuku_pill_sleeping">Sleeping</string>
     <string name="onekuku_action_restore">Apply last config</string>
     <string name="onekuku_action_restore_sub">Rewrite the last saved call settings snapshot</string>

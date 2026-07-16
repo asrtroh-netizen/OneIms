@@ -68,13 +68,10 @@ class BootReceiver : BroadcastReceiver() {
                 }
             }
             WifiManager.NETWORK_STATE_CHANGED_ACTION -> {
-                // OneLink 轻壳不靠 Wi‑Fi/ADB 续跑；仅 OneKuku 内嵌激活会钉 WAITING_WIFI。
-                if (ChannelLine.usesShizuku) return
-                // 仅「本开机已停在等 Wi‑Fi」时续跑；禁止在未 attempted 时靠 Wi‑Fi 广播抢启 FGS。
+                // 双产品：本开机尚未成功恢复时，旧网重连必须再 enqueue 一次。
+                // OneKuku 另保留 WAITING_WIFI 精确续跑；OneLink 不依赖内嵌 ADB，但仍需 Wi‑Fi
+                // 让官方 Shizuku / 网络侧就绪后再写开机前配置。
                 if (!ConfigStore.isOneKukuBootAutoCheck(context)) return
-                if (OneKukuBootRestoreStore.readHint(context) != OneKukuBootUiHint.WAITING_WIFI) {
-                    return
-                }
                 @Suppress("DEPRECATION")
                 val info = if (android.os.Build.VERSION.SDK_INT >= 33) {
                     intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO, NetworkInfo::class.java)
@@ -82,6 +79,18 @@ class BootReceiver : BroadcastReceiver() {
                     intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO)
                 }
                 if (info?.isConnected != true) return
+
+                val hint = OneKukuBootRestoreStore.readHint(context)
+                val waitingWifi = hint == OneKukuBootUiHint.WAITING_WIFI
+                val notAttempted = !OneKukuBootRestoreStore.hasAttemptedThisBoot(context)
+                val hasProfile = ConfigStore.lastApplied(context) != null
+                if (ChannelLine.usesShizuku) {
+                    if (!waitingWifi && !(notAttempted && hasProfile)) return
+                    Log.i(TAG, "wifi connected (onelink) waitingWifi=$waitingWifi attempted=${!notAttempted} → enqueue restore")
+                    OneKukuBootRestoreService.enqueue(context, debounceMs = 1_000L)
+                    return
+                }
+                if (!waitingWifi) return
                 if (!OneKukuAdbMdns.isWifiClientConnected(context)) return
                 Log.i(TAG, "wifi connected while WAITING_WIFI → enqueue restore")
                 OneKukuBootRestoreService.enqueue(context, debounceMs = 1_000L)
