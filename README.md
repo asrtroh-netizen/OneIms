@@ -80,6 +80,10 @@
 
 * Release 同挂双包时，**OneKuku / OneLink 各自下载对应 APK**，不再误下另一条产品线
 
+### 🐞 修复
+
+* OneLink：`BrokerInstrumentation` 使用全限定类名，修复双产品线拆分后 AMS 拒启导致「应用核心能力」无法写入的问题
+
 ### 🛠️ 排障
 
 * 「只读检查」四项（健康 / ePDG / 诊断 / 配置查看）回到一级网格，一眼可点

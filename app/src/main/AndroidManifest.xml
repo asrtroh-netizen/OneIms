@@ -35,9 +35,12 @@
         </intent>
     </queries>
 
-    <!-- 新补丁禁止 shell 直接覆盖 CarrierConfig，改由活动 Instrumentation 接收权限委托。 -->
+    <!-- 新补丁禁止 shell 直接覆盖 CarrierConfig，改由活动 Instrumentation 接收权限委托。
+         必须写全限定类名：OneLink applicationId=com.oneims.onelink 而类在 com.oneims.app.*，
+         相对名 .core.BrokerInstrumentation 会被解析成不存在的 com.oneims.onelink.core.*，
+         AMS startInstrumentation 直接返回 false（2.0.9 单包时碰巧包名=namespace 所以没炸）。 -->
     <instrumentation
-        android:name=".core.BrokerInstrumentation"
+        android:name="com.oneims.app.core.BrokerInstrumentation"
         android:functionalTest="false"
         android:handleProfiling="false"
         android:targetPackage="${applicationId}" />
