@@ -14,16 +14,23 @@
 
 <br/>
 
-### ⬇️ 下载 APK（最新 · v2.3.0 · 请自选产品线）
+### ⬇️ 下载 APK（最新 · v2.3.1 · 请自选产品线）
 
 > **两个包功能相同（IMS/诊断/恢复），差别只在「特权通道怎么激活」——看下方选购指南，**只装其中一个**即可；进阶用户也可同机并存对比。
 
 | 推荐给… | 包 | 下载 |
 |---|---|---|
-| 🟢 **想少装 App、App 内一键配对** | **OneKuku（独立激活）** | [OneIms-OneKuku-standalone-2.3.0.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v2.3.0/OneIms-OneKuku-standalone-2.3.0.apk) |
-| 🔵 **已有 Shizuku / 要最轻壳** | **OneIms Lite（Shizuku）** | [OneIms-Lite-Shizuku-2.3.0.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v2.3.0/OneIms-Lite-Shizuku-2.3.0.apk) |
+| 🟢 **想少装 App、App 内一键配对** | **OneKuku（独立激活）** | [OneIms-OneKuku-standalone-2.3.1.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v2.3.1/OneIms-OneKuku-standalone-2.3.1.apk) |
+| 🔵 **已有 / 想用 Shizuku 轻壳** | **OneIms Lite（Shizuku）** | [OneIms-Lite-Shizuku-2.3.1.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v2.3.1/OneIms-Lite-Shizuku-2.3.1.apk) |
 
-[📦 全部 Release 资产](https://github.com/asrtroh-netizen/OneIms/releases/tag/v2.3.0)
+[📦 全部 Release 资产](https://github.com/asrtroh-netizen/OneIms/releases/tag/v2.3.1)
+
+> 💙 **友情推荐特权通道**：[asrtroh 修缮版 Shizuku V15.0](https://github.com/asrtroh-netizen/shizuku)（配对一次 · 旧 Wi‑Fi 自连 · 开机 FGS 内激活）  
+> 下载正式包：[Releases](https://github.com/asrtroh-netizen/shizuku/releases) · 截图：
+>
+> <img src="docs/screenshots/shizuku-asrtroh-home-active.png" alt="asrtroh Shizuku Active" width="280" />
+>
+> 装 **OneIms Lite** 时优先用这只；装完请关掉电池优化，保持首页 **Active**。上游能力仍归 [RikkaApps/Shizuku](https://github.com/RikkaApps/Shizuku)。
 
 > 本仓库 **只提供 README + APK 发布**，**不开放源代码**。  
 > 需要交流 / 反馈请走 Telegram，别来仓库里翻源码啦～
@@ -38,17 +45,17 @@
 
 | | **OneKuku（独立激活）** | **OneIms Lite（Shizuku）** |
 |---|---|---|
-| **适合谁** | 不想另外装 Shizuku；希望 **App 内无线调试 + 通知栏填码** 一条龙 | 已熟悉 **[Shizuku](https://shizuku.rikka.app/)**；想要 **更小安装包、更轻壳** |
+| **适合谁** | 不想另外装 Shizuku；希望 **App 内无线调试 + 通知栏填码** 一条龙 | 已熟悉 Shizuku；想要 **更小安装包、更轻壳** |
 | **包名** | `com.oneims.app` | `com.oneims.onelink` |
-| **激活方式** | 内嵌 OneBridge · 无线调试配对 · 可通知栏六位码 | **日常**：保持官方 Shizuku 已 Start → App 内**一点即可**授权/唤醒（与 2.0.8/2.0.9 相同）。仅当 Shizuku **未运行**时，一点会打开官方 Shizuku 让你 Start，再回 App |
-| **额外依赖** | 无（通道打进包内） | 需自行安装官方 **Shizuku**；日常保持已 Start 即可，不必每次重走配对 |
-| **体积** | 较大（含内嵌 ADB/Bridge） | 较小（无内嵌 ADB/Bridge） |
-| **同机并存** | ✅ 可与 OneIms Lite 同时安装（不同包名） | ✅ 可与 OneKuku 同时安装 |
+| **激活方式** | 内嵌 OneBridge · 无线调试配对 · 可通知栏六位码 | **推荐搭配** [asrtroh 修缮版 Shizuku](https://github.com/asrtroh-netizen/shizuku)（开机自启更稳）；也可使用官方 [RikkaApps/Shizuku](https://shizuku.rikka.app/) |
+| **额外依赖** | 无（通道打进包内） | 需安装 Shizuku；日常保持 **Active** 即可 |
+| **体积** | 较大（含内嵌 ADB/Bridge） | 较小 |
+| **同机并存** | ✅ 可与 OneIms Lite 同时安装 | ✅ 可与 OneKuku 同时安装 |
 
 **怎么选（一句话）：**
 
 * 你是 **「我只想在一个 App 里搞定」** → 下 **OneKuku（独立激活）**
-* 你是 **「我手机本来就有 Shizuku」** → 下 **OneIms Lite（Shizuku）**
+* 你是 **「我手机本来就有 / 想用 Shizuku」** → 下 **OneIms Lite** + **[asrtroh Shizuku V15.0](https://github.com/asrtroh-netizen/shizuku/releases)**（友情推荐）
 * 不确定 → 先试 **OneKuku**；若你本来就在用 Shizuku 生态，再换 **OneIms Lite** 也行
 
 ---
@@ -57,10 +64,33 @@
 
 | 对外名称 | 包名 | 特权通道 | Release 文件名 |
 |---|---|---|---|
-| **OneIms · OneKuku** `2.3.0-onekuku` | `com.oneims.app` | 内嵌 OneBridge + 无线调试配对 | `OneIms-OneKuku-standalone-2.3.0.apk`（备注：独立激活） |
-| **OneIms · OneIms Lite** `2.3.0-onelink` | `com.oneims.onelink` | 官方 Shizuku | `OneIms-Lite-Shizuku-2.3.0.apk`（备注：Shizuku） |
+| **OneIms · OneKuku** `2.3.1-onekuku` | `com.oneims.app` | 内嵌 OneBridge + 无线调试配对 | `OneIms-OneKuku-standalone-2.3.1.apk`（备注：独立激活） |
+| **OneIms · OneIms Lite** `2.3.1-onelink` | `com.oneims.onelink` | 官方 Shizuku | `OneIms-Lite-Shizuku-2.3.1.apk`（备注：Shizuku） |
 
 > **双包同版号一起更新**；请只从本页 Release 链接下载，勿混装未知来源包。
+
+---
+
+## ✨ What's New · 2.3.1
+
+**本版主线：开机全量配置恢复；高级选项与核心解耦；双卡归属防串写。**
+
+### 🔄 开机恢复
+
+* 冷开后自动重放：**核心 IMS**、**应用高级选项**、extras、NR5G、信号阈值、信号格、5G 显示增强
+* 「应用高级选项」不再依赖必须先有核心 `lastApplied`
+* 高级选项 / 5G 显示记录目标 **subId**，避免双卡串写
+* 快照 `RESTORE_ALL` 补齐 advanced / extras / five_g_display（按卡）
+* SIM 未稳时不再永久占位，便于稍后重试
+
+### 🏠 首页 / 设备卡
+
+* 承接 2.3.0 后的设备卡诊断弹层与作者 GitHub 链接等体验修补
+
+### 🔄 升级
+
+* 🟢 OneKuku：覆盖安装 `OneIms-OneKuku-standalone-2.3.1.apk`
+* 🔵 OneIms Lite：覆盖安装 `OneIms-Lite-Shizuku-2.3.1.apk`
 
 ---
 

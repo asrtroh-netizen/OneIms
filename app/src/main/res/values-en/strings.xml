@@ -239,6 +239,11 @@
     <string name="about_version">v%1$s · Tensor Pixel · rootless</string>
     <string name="about_author">Developer</string>
     <string name="about_author_name">小喵崽</string>
+    <string name="about_author_github_sub">Open the GitHub project page · product site coming soon</string>
+    <string name="about_author_github_badge">GitHub</string>
+    <string name="about_recommend_shizuku_title">Recommended Shizuku (asrtroh fork)</string>
+    <string name="about_recommend_shizuku_sub">Pair once · auto Wi‑Fi reconnect · stabler boot · open GitHub</string>
+    <string name="about_recommend_shizuku_badge">Rec</string>
     <string name="about_donate_title">Support the project</string>
     <string name="about_donate_detail">Always free · No ads added · Donations help keep it maintained</string>
 
@@ -648,8 +653,17 @@
     <string name="setup_hotspot_sub">Create a local network without a router</string>
     <string name="setup_copy_cmd_sub">Copy the Termux startup steps</string>
     <string name="home_device_details">Device details</string>
+    <string name="home_device_details_sub">Model, OS, and bypass strategy for troubleshooting</string>
     <string name="home_device_details_expand">Expand</string>
     <string name="home_device_details_collapse">Collapse</string>
+    <string name="home_device_version_line">OneIms %1$s (%2$d)</string>
+    <string name="home_device_chip_android">OS</string>
+    <string name="home_device_chip_tensor">SoC</string>
+    <string name="home_device_chip_sim">SIM</string>
+    <string name="home_device_chip_delegate">Delegation</string>
+    <string name="home_device_meta_codename">Codename</string>
+    <string name="home_device_meta_patch">Security patch</string>
+    <string name="home_device_meta_strategy">Write strategy</string>
     <string name="home_emergency_title">Emergency restore</string>
     <string name="home_emergency_subtitle">If VoLTE, VoWiFi, or 5G settings are lost after reboot, use OneKuku to restore the calling configuration saved before reboot.</string>
     <string name="home_emergency_detail">Clears CarrierConfig overrides for the selected SIM and restores carrier defaults.</string>
@@ -663,8 +677,8 @@
     <string name="diagnostics_title">Diagnostics &amp; repair</string>
     <string name="diagnostics_subtitle">Run read-only checks before higher-risk repairs</string>
     <string name="diagnostics_select_sim_notice">The offline APN library remains available; privileged diagnostics and repairs require a selected SIM and OneKuku.</string>
-    <string name="diagnostics_checks">Read-only checks</string>
-    <string name="diagnostics_checks_sub">These actions do not modify system settings</string>
+    <string name="diagnostics_checks">Checks</string>
+    <string name="diagnostics_checks_sub">Tap to view details in a dialog — no config changes, nothing written to the log</string>
     <string name="tool_health_sub">Check calls, data, and SIM</string>
     <string name="tool_epdg_sub">Verify the VoWiFi gateway</string>
     <string name="tool_diag_sub">Query IMS registration technology</string>
@@ -985,6 +999,14 @@
     <string name="diagnostics_trial_title">Confirm trial action</string>
     <string name="diagnostics_trial_reapply_body">Replays the last successful call-settings override. This may change CarrierConfig for the current SIM.</string>
     <string name="diagnostics_trial_export_body">Exports all readable CarrierConfig entries for the current SIM into the diagnostics log. No values are modified.</string>
+    <string name="diagnostics_trial_health_body">Checks phone, data, and SIM status. Results go to the diagnostics log; no system settings are changed.</string>
+    <string name="diagnostics_trial_epdg_body">Probes carrier ePDG reachability. Results go to the diagnostics log; no system settings are changed.</string>
+    <string name="diagnostics_trial_ims_body">Queries current IMS-related status. Results go to the diagnostics log; no system settings are changed.</string>
+    <string name="diagnostics_trial_config_body">Dumps a readable CarrierConfig summary into the diagnostics log. No values are modified.</string>
     <string name="diagnostics_trial_confirm">Run</string>
     <string name="diagnostics_trial_cancel">Cancel</string>
+    <string name="log_open_action">View diagnostics log</string>
+    <string name="log_open_sub">Open full log in a dialog; copy or clear</string>
+    <string name="log_dialog_title">Diagnostics log</string>
+    <string name="log_empty">No log yet</string>
 </resources>

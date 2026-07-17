@@ -1,10 +1,13 @@
 package com.oneims.app.ui
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Star
@@ -12,16 +15,19 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.oneims.app.BuildConfig
 import com.oneims.app.R
+import com.oneims.app.core.UpdateChecker
 
 @Composable
 fun SettingsScreen(
     state: SettingsUiState,
     actions: SettingsActions,
 ) {
+    val context = LocalContext.current
     OneImsPage(
         title = stringResource(R.string.settings_title),
         subtitle = stringResource(R.string.settings_subtitle),
@@ -127,9 +133,36 @@ fun SettingsScreen(
                 GroupDivider()
                 SettingsActionRow(
                     icon = Icons.Filled.Star,
-                    title = stringResource(R.string.about_author),
-                    subtitle = stringResource(R.string.about_author_name),
-                    onClick = null,
+                    title = stringResource(R.string.about_author_name),
+                    subtitle = stringResource(R.string.about_author_github_sub),
+                    onClick = {
+                        runCatching {
+                            context.startActivity(
+                                Intent(
+                                    Intent.ACTION_VIEW,
+                                    Uri.parse(UpdateChecker.projectPageUrl()),
+                                ),
+                            )
+                        }
+                    },
+                    trailingText = stringResource(R.string.about_author_github_badge),
+                )
+                GroupDivider()
+                SettingsActionRow(
+                    icon = Icons.Filled.Favorite,
+                    title = stringResource(R.string.about_recommend_shizuku_title),
+                    subtitle = stringResource(R.string.about_recommend_shizuku_sub),
+                    onClick = {
+                        runCatching {
+                            context.startActivity(
+                                Intent(
+                                    Intent.ACTION_VIEW,
+                                    Uri.parse("https://github.com/asrtroh-netizen/shizuku"),
+                                ),
+                            )
+                        }
+                    },
+                    trailingText = stringResource(R.string.about_recommend_shizuku_badge),
                 )
             }
         }

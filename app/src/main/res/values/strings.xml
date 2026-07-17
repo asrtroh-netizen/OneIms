@@ -241,6 +241,11 @@
     <string name="about_version">v%1$s · Tensor Pixel · 免 root</string>
     <string name="about_author">开发者</string>
     <string name="about_author_name">小喵崽</string>
+    <string name="about_author_github_sub">打开 GitHub 项目页 · 明天会有独立产品站</string>
+    <string name="about_author_github_badge">GitHub</string>
+    <string name="about_recommend_shizuku_title">推荐 Shizuku（asrtroh 修缮版）</string>
+    <string name="about_recommend_shizuku_sub">配对一次 · 旧 Wi‑Fi 自连 · 开机更稳 · 打开 GitHub</string>
+    <string name="about_recommend_shizuku_badge">推荐</string>
     <string name="about_donate_title">捐赠支持</string>
     <string name="about_donate_detail">永久免费 · 不增加广告 · 支持作者持续维护</string>
 
@@ -654,8 +659,17 @@
     <string name="setup_hotspot_sub">无路由器时创建本机网络</string>
     <string name="setup_copy_cmd_sub">复制 Termux 启动步骤</string>
     <string name="home_device_details">设备详情</string>
+    <string name="home_device_details_sub">型号、系统与兼容策略，方便对照排障</string>
     <string name="home_device_details_expand">展开</string>
     <string name="home_device_details_collapse">收起</string>
+    <string name="home_device_version_line">OneIms %1$s (%2$d)</string>
+    <string name="home_device_chip_android">系统</string>
+    <string name="home_device_chip_tensor">芯片</string>
+    <string name="home_device_chip_sim">SIM</string>
+    <string name="home_device_chip_delegate">权限代理</string>
+    <string name="home_device_meta_codename">设备代号</string>
+    <string name="home_device_meta_patch">安全补丁</string>
+    <string name="home_device_meta_strategy">写入策略</string>
     <string name="home_emergency_title">应急恢复</string>
     <string name="home_emergency_subtitle">重启后如果 VoLTE、VoWiFi 或 5G 配置失效，可使用 OneKuku 恢复重启前保存的通话配置。</string>
     <string name="home_emergency_detail">清空当前 SIM 的 CarrierConfig 覆盖并恢复运营商默认值。</string>
@@ -670,8 +684,8 @@
     <string name="diagnostics_subtitle">先只读检查，再执行有风险的修复</string>
     <string name="diagnostics_prereq_short">请选择 SIM 并激活 OneKuku</string>
     <string name="diagnostics_select_sim_notice">@string/diagnostics_prereq_short</string>
-    <string name="diagnostics_checks">只读检查</string>
-    <string name="diagnostics_checks_sub">不会修改系统配置</string>
+    <string name="diagnostics_checks">检查</string>
+    <string name="diagnostics_checks_sub">点选后弹出详情结果，不会改写配置，也不写入日志</string>
     <string name="tool_health_sub">检查电话、数据与 SIM</string>
     <string name="tool_epdg_sub">验证 VoWiFi 网关连通</string>
     <string name="tool_diag_sub">查询 IMS 注册技术</string>
@@ -986,6 +1000,14 @@
     <string name="diagnostics_trial_title">确认试操作</string>
     <string name="diagnostics_trial_reapply_body">将重放最近一次成功的通话配置覆盖。可能改写当前 SIM 的 CarrierConfig，确认后继续。</string>
     <string name="diagnostics_trial_export_body">将把当前 SIM 可读的完整 CarrierConfig 导出到诊断日志，不修改任何值。确认后继续。</string>
+    <string name="diagnostics_trial_health_body">将检查电话、数据与 SIM 状态，结果写入诊断日志，不改写系统配置。确认后继续。</string>
+    <string name="diagnostics_trial_epdg_body">将探测运营商 ePDG 可达性，结果写入诊断日志，不改写系统配置。确认后继续。</string>
+    <string name="diagnostics_trial_ims_body">将查询当前 IMS 相关状态，结果写入诊断日志，不改写系统配置。确认后继续。</string>
+    <string name="diagnostics_trial_config_body">将导出当前可读 CarrierConfig 摘要到诊断日志，不修改任何值。确认后继续。</string>
     <string name="diagnostics_trial_confirm">确认执行</string>
     <string name="diagnostics_trial_cancel">取消</string>
+    <string name="log_open_action">查看诊断日志</string>
+    <string name="log_open_sub">弹出完整日志，可复制或清空</string>
+    <string name="log_dialog_title">诊断日志</string>
+    <string name="log_empty">暂无日志</string>
 </resources>
