@@ -3,38 +3,52 @@ package com.oneims.app.ui
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.res.colorResource
+import com.oneims.app.R
 
 /**
- * 邻仓 `_forks/thedjchi-Shizuku` 首页色板（硬色）。
- * 用 surface 亮度判断明暗，跟 App 内主题开关一致（不单看系统 isSystemInDarkTheme）。
+ * 严格映射邻仓 Shizuku 本地资源（勿自造色值）。
+ *
+ * 真源：
+ * - `.../values/colors.xml`（hero_* / app_color_*）
+ * - `home_item_container.xml` → `?colorSurfaceContainerLow`
+ * - `bg_action_tile.xml` → `?colorSurfaceContainerHigh`
+ * - `themes.xml` → primary = app_color_light / app_color_dark（由 [Theme] 注入）
  */
 object ShizukuHomePalette {
-    /** Shizuku `app_color_light` / 截图「启动」钮。 */
-    val accent = Color(0xFF0B57D0)
-    val onAccent = Color.White
-
-    val heroInactiveBg = Color(0xFFF9DEDC)
-    val heroInactiveFg = Color(0xFF410E0B)
-    val heroActivatingBg = Color(0xFFD3E3FD)
-    val heroActivatingFg = Color(0xFF041E49)
-    val heroReadyBg = Color(0xFFFFFFFF)
-    val heroReadyFg = Color(0xFF1A1B20)
-
-    private val tileSurfaceLight = Color(0xFFE8E8EF)
-    private val tileSurfaceDark = Color(0xFF2B2930)
-    private val tileContentLight = Color(0xFF1A1B20)
-    private val tileContentDark = Color(0xFFE2E2E9)
+    @Composable
+    fun heroInactiveBg(): Color = colorResource(R.color.shizuku_hero_inactive_bg)
 
     @Composable
-    private fun isDarkUi(): Boolean =
-        MaterialTheme.colorScheme.surface.luminance() < 0.5f
+    fun heroInactiveFg(): Color = colorResource(R.color.shizuku_hero_inactive_fg)
 
     @Composable
-    fun tileSurface(): Color =
-        if (isDarkUi()) tileSurfaceDark else tileSurfaceLight
+    fun heroActivatingBg(): Color = colorResource(R.color.shizuku_hero_activating_bg)
 
     @Composable
-    fun tileContent(): Color =
-        if (isDarkUi()) tileContentDark else tileContentLight
+    fun heroActivatingFg(): Color = colorResource(R.color.shizuku_hero_activating_fg)
+
+    @Composable
+    fun heroReadyBg(): Color = colorResource(R.color.shizuku_hero_ready_bg)
+
+    @Composable
+    fun heroReadyFg(): Color = colorResource(R.color.shizuku_hero_ready_fg)
+
+    /** 对应 themes 的 appColorPrimary（Theme.kt 已写入 colorScheme.primary）。 */
+    @Composable
+    fun accent(): Color = MaterialTheme.colorScheme.primary
+
+    @Composable
+    fun onAccent(): Color = MaterialTheme.colorScheme.onPrimary
+
+    /** home_item_container */
+    @Composable
+    fun cardSurface(): Color = MaterialTheme.colorScheme.surfaceContainerLow
+
+    /** bg_action_tile */
+    @Composable
+    fun tileSurface(): Color = MaterialTheme.colorScheme.surfaceContainerHigh
+
+    @Composable
+    fun tileContent(): Color = MaterialTheme.colorScheme.onSurface
 }

@@ -44,7 +44,12 @@ object OneImsTokens {
  * 高对比主题下都能维持清晰的信息层级。
  */
 
-/** 与邻仓新作 Shizuku（thedjchi）亮色板对齐：主色 #0B57D0 + hero 三态色。 */
+/**
+ * 主色对齐邻仓 Shizuku `colors.xml`：
+ * - light `app_color_light` = #0B57D0
+ * - dark `app_color_dark` = #A9C7FF
+ * hero 容器色与同文件 hero_* 一致（供非首页组件复用）。
+ */
 private val LightColors = lightColorScheme(
     primary = Color(0xFF0B57D0),
     onPrimary = Color.White,

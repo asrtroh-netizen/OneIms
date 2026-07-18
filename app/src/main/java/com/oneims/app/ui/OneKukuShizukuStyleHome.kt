@@ -57,14 +57,14 @@ fun OneKukuShizukuStyleStatusHero(
         OneKukuCardState.INACTIVE -> HeroVisual.INACTIVE
     }
     val containerColor = when (hero) {
-        HeroVisual.INACTIVE -> ShizukuHomePalette.heroInactiveBg
-        HeroVisual.ACTIVATING -> ShizukuHomePalette.heroActivatingBg
-        HeroVisual.READY -> ShizukuHomePalette.heroReadyBg
+        HeroVisual.INACTIVE -> ShizukuHomePalette.heroInactiveBg()
+        HeroVisual.ACTIVATING -> ShizukuHomePalette.heroActivatingBg()
+        HeroVisual.READY -> ShizukuHomePalette.heroReadyBg()
     }
     val contentColor = when (hero) {
-        HeroVisual.INACTIVE -> ShizukuHomePalette.heroInactiveFg
-        HeroVisual.ACTIVATING -> ShizukuHomePalette.heroActivatingFg
-        HeroVisual.READY -> ShizukuHomePalette.heroReadyFg
+        HeroVisual.INACTIVE -> ShizukuHomePalette.heroInactiveFg()
+        HeroVisual.ACTIVATING -> ShizukuHomePalette.heroActivatingFg()
+        HeroVisual.READY -> ShizukuHomePalette.heroReadyFg()
     }
     val title = when (hero) {
         HeroVisual.READY -> stringResource(R.string.channel_display_name)
@@ -246,7 +246,7 @@ fun OneKukuWirelessStartCard(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.extraLarge,
-        color = ShizukuHomePalette.tileSurface(),
+        color = ShizukuHomePalette.cardSurface(),
         tonalElevation = 1.dp,
         shadowElevation = 1.dp,
     ) {
@@ -286,10 +286,10 @@ fun OneKukuWirelessStartCard(
                     onClick = onStart,
                     enabled = startEnabled,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = ShizukuHomePalette.accent,
-                        contentColor = ShizukuHomePalette.onAccent,
-                        disabledContainerColor = ShizukuHomePalette.accent.copy(alpha = 0.38f),
-                        disabledContentColor = ShizukuHomePalette.onAccent.copy(alpha = 0.70f),
+                        containerColor = ShizukuHomePalette.accent(),
+                        contentColor = ShizukuHomePalette.onAccent(),
+                        disabledContainerColor = ShizukuHomePalette.accent().copy(alpha = 0.38f),
+                        disabledContentColor = ShizukuHomePalette.onAccent().copy(alpha = 0.70f),
                     ),
                 ) {
                     Text(stringResource(R.string.onekuku_home_wireless_start))

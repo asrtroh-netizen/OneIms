@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 原样摘自 _forks/thedjchi-Shizuku/manager/src/main/res/values/colors.xml，勿擅自改色值。 -->
+<resources>
+    <color name="shizuku_app_color_light">#0B57D0</color>
+    <color name="shizuku_app_color_dark">#A9C7FF</color>
+
+    <color name="shizuku_hero_inactive_bg">#F9DEDC</color>
+    <color name="shizuku_hero_inactive_fg">#410E0B</color>
+    <color name="shizuku_hero_activating_bg">#D3E3FD</color>
+    <color name="shizuku_hero_activating_fg">#041E49</color>
+    <color name="shizuku_hero_ready_bg">#FFFFFF</color>
+    <color name="shizuku_hero_ready_fg">#1A1B20</color>
+</resources>
