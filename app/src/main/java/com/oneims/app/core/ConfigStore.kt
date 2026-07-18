@@ -27,8 +27,26 @@ object ConfigStore {
     private const val KEY_REAPPLY_TRIGGER = "last_reapply_trigger"
     private const val KEY_REAPPLY_MESSAGE = "last_reapply_message"
     private const val KEY_ADVANCED_HAS = "advanced_has"
+    private const val KEY_ADVANCED_SUB_ID = "advanced_sub_id"
     private const val KEY_ADVANCED_PREFIX = "advanced_"
+    /** 按 subId 隔离后的 has 键前缀：`advanced_has_<subId>`。 */
+    private const val KEY_ADVANCED_HAS_PREFIX = "advanced_has_"
+    private val ADVANCED_OPTION_FIELDS = listOf(
+        "wfc_roaming",
+        "show_wfc_mode",
+        "show_wfc_roaming_mode",
+        "wifi_only",
+        "allow_apn_add",
+        "vowifi_icon",
+        "data_rat_icon",
+        "4g_for_lte",
+        "hide_lte_plus",
+        "show_ims_status",
+        "ss_over_cdma",
+        "enhanced_4g",
+    )
     private const val KEY_5G_ENABLED = "five_g_display_enabled"
+    private const val KEY_5G_LAST_SUB_ID = "five_g_display_last_sub_id"
     private const val KEY_5G_MODE = "five_g_display_mode"
     private const val KEY_5G_PLUS_DL = "five_g_plus_dl_threshold"
     private const val KEY_5G_A_DL = "five_g_a_dl_threshold"
@@ -263,31 +281,117 @@ object ConfigStore {
         )
     }
 
-    fun saveAdvancedOptions(context: Context, options: PixelImsOptions) {
+    /**
+     * 按 subId 持久化高级选项（双卡各一份，互不覆盖）。
+     * 同时更新 [KEY_ADVANCED_SUB_ID] 为「最近一次成功应用」的卡，供诊断展示。
+     */
+    fun saveAdvancedOptions(context: Context, options: PixelImsOptions, subId: Int) {
+        require(subId >= 0) { "Invalid subscription id for advanced options: $subId" }
+        migrateLegacyAdvancedIfNeeded(context)
         prefs(context).edit()
-            .putBoolean(KEY_ADVANCED_HAS, true)
-            .putBoolean(KEY_ADVANCED_PREFIX + "wfc_roaming", options.wfcRoamingEnabled)
-            .putBoolean(KEY_ADVANCED_PREFIX + "show_wfc_mode", options.showWfcMode)
+            .putBoolean(advancedHasKey(subId), true)
+            .putInt(KEY_ADVANCED_SUB_ID, subId)
+            .putBoolean(advancedFieldKey("wfc_roaming", subId), options.wfcRoamingEnabled)
+            .putBoolean(advancedFieldKey("show_wfc_mode", subId), options.showWfcMode)
             .putBoolean(
-                KEY_ADVANCED_PREFIX + "show_wfc_roaming_mode",
+                advancedFieldKey("show_wfc_roaming_mode", subId),
                 options.showWfcRoamingMode,
             )
-            .putBoolean(KEY_ADVANCED_PREFIX + "wifi_only", options.supportWifiOnly)
-            .putBoolean(KEY_ADVANCED_PREFIX + "allow_apn_add", options.allowAddingApns)
-            .putBoolean(KEY_ADVANCED_PREFIX + "vowifi_icon", options.showVowifiIcon)
-            .putBoolean(KEY_ADVANCED_PREFIX + "data_rat_icon", options.alwaysShowDataRatIcon)
-            .putBoolean(KEY_ADVANCED_PREFIX + "4g_for_lte", options.show4gForLteIcon)
-            .putBoolean(KEY_ADVANCED_PREFIX + "hide_lte_plus", options.hideLtePlusIcon)
-            .putBoolean(KEY_ADVANCED_PREFIX + "show_ims_status", options.showImsStatus)
-            .putBoolean(KEY_ADVANCED_PREFIX + "ss_over_cdma", options.ssOverCdma)
-            .putBoolean(KEY_ADVANCED_PREFIX + "enhanced_4g", options.enhanced4g)
+            .putBoolean(advancedFieldKey("wifi_only", subId), options.supportWifiOnly)
+            .putBoolean(advancedFieldKey("allow_apn_add", subId), options.allowAddingApns)
+            .putBoolean(advancedFieldKey("vowifi_icon", subId), options.showVowifiIcon)
+            .putBoolean(advancedFieldKey("data_rat_icon", subId), options.alwaysShowDataRatIcon)
+            .putBoolean(advancedFieldKey("4g_for_lte", subId), options.show4gForLteIcon)
+            .putBoolean(advancedFieldKey("hide_lte_plus", subId), options.hideLtePlusIcon)
+            .putBoolean(advancedFieldKey("show_ims_status", subId), options.showImsStatus)
+            .putBoolean(advancedFieldKey("ss_over_cdma", subId), options.ssOverCdma)
+            .putBoolean(advancedFieldKey("enhanced_4g", subId), options.enhanced4g)
             .apply()
     }
 
-    fun lastAdvancedOptions(context: Context): PixelImsOptions? {
+    /** 是否存在任意一张卡的高级选项重放源（含未迁移的旧全局键）。 */
+    fun hasAnyAdvancedOptions(context: Context): Boolean {
+        migrateLegacyAdvancedIfNeeded(context)
+        return listAdvancedOptionSubIds(context).isNotEmpty()
+    }
+
+    /** 所有已持久化高级选项的 subId（升序，稳定重放顺序）。 */
+    fun listAdvancedOptionSubIds(context: Context): List<Int> {
+        migrateLegacyAdvancedIfNeeded(context)
         val p = prefs(context)
-        if (!p.getBoolean(KEY_ADVANCED_HAS, false)) return null
+        val prefix = "${KEY_ADVANCED_HAS}_"
+        return p.all.keys
+            .mapNotNull { key ->
+                if (!key.startsWith(prefix)) return@mapNotNull null
+                key.removePrefix(prefix).toIntOrNull()?.takeIf { it >= 0 }
+            }
+            .distinct()
+            .sorted()
+    }
+
+    fun lastAdvancedOptions(context: Context, subId: Int): PixelImsOptions? {
+        if (subId < 0) return null
+        migrateLegacyAdvancedIfNeeded(context)
+        val p = prefs(context)
+        if (!p.getBoolean(advancedHasKey(subId), false)) return null
         return PixelImsOptions(
+            wfcRoamingEnabled = p.getBoolean(advancedFieldKey("wfc_roaming", subId), false),
+            showWfcMode = p.getBoolean(advancedFieldKey("show_wfc_mode", subId), false),
+            showWfcRoamingMode =
+                p.getBoolean(advancedFieldKey("show_wfc_roaming_mode", subId), false),
+            supportWifiOnly = p.getBoolean(advancedFieldKey("wifi_only", subId), false),
+            allowAddingApns = p.getBoolean(advancedFieldKey("allow_apn_add", subId), false),
+            showVowifiIcon = p.getBoolean(advancedFieldKey("vowifi_icon", subId), false),
+            alwaysShowDataRatIcon =
+                p.getBoolean(advancedFieldKey("data_rat_icon", subId), false),
+            show4gForLteIcon = p.getBoolean(advancedFieldKey("4g_for_lte", subId), false),
+            hideLtePlusIcon = p.getBoolean(advancedFieldKey("hide_lte_plus", subId), false),
+            showImsStatus = p.getBoolean(advancedFieldKey("show_ims_status", subId), false),
+            ssOverCdma = p.getBoolean(advancedFieldKey("ss_over_cdma", subId), false),
+            enhanced4g = p.getBoolean(advancedFieldKey("enhanced_4g", subId), false),
+        )
+    }
+
+    /**
+     * 最近一次成功「应用高级选项」的 subId（诊断用）；无任何记录时返回 -1。
+     * 开机重放请用 [listAdvancedOptionSubIds]，勿再依赖本单值。
+     */
+    fun lastAdvancedOptionsSubId(context: Context): Int {
+        migrateLegacyAdvancedIfNeeded(context)
+        val ids = listAdvancedOptionSubIds(context)
+        if (ids.isEmpty()) return -1
+        val p = prefs(context)
+        if (p.contains(KEY_ADVANCED_SUB_ID)) {
+            val last = p.getInt(KEY_ADVANCED_SUB_ID, -1)
+            if (last in ids) return last
+        }
+        return ids.last()
+    }
+
+    private fun advancedHasKey(subId: Int): String = "${KEY_ADVANCED_HAS}_$subId"
+
+    private fun advancedFieldKey(field: String, subId: Int): String =
+        "${KEY_ADVANCED_PREFIX}${field}_$subId"
+
+    /** 旧版全局单槽 advanced_* → 迁到 advanced_*_$subId，避免升级后双卡仍只剩一张。 */
+    private fun migrateLegacyAdvancedIfNeeded(context: Context) {
+        val p = prefs(context)
+        if (!p.getBoolean(KEY_ADVANCED_HAS, false)) return
+        val legacySubId = when {
+            p.contains(KEY_ADVANCED_SUB_ID) -> p.getInt(KEY_ADVANCED_SUB_ID, -1)
+            else -> lastApplied(context)?.subId?.takeIf { it >= 0 }
+                ?: getSelectedSubId(context).takeIf { it >= 0 }
+                ?: -1
+        }
+        if (legacySubId < 0) {
+            p.edit().remove(KEY_ADVANCED_HAS).apply()
+            return
+        }
+        if (p.getBoolean(advancedHasKey(legacySubId), false)) {
+            clearLegacyAdvancedKeys(context)
+            return
+        }
+        val options = PixelImsOptions(
             wfcRoamingEnabled = p.getBoolean(KEY_ADVANCED_PREFIX + "wfc_roaming", false),
             showWfcMode = p.getBoolean(KEY_ADVANCED_PREFIX + "show_wfc_mode", false),
             showWfcRoamingMode =
@@ -303,6 +407,72 @@ object ConfigStore {
             ssOverCdma = p.getBoolean(KEY_ADVANCED_PREFIX + "ss_over_cdma", false),
             enhanced4g = p.getBoolean(KEY_ADVANCED_PREFIX + "enhanced_4g", false),
         )
+        // 直接写 per-sub，避免 save→migrate 递归；再清旧键。
+        prefs(context).edit()
+            .putBoolean(advancedHasKey(legacySubId), true)
+            .putInt(KEY_ADVANCED_SUB_ID, legacySubId)
+            .putBoolean(advancedFieldKey("wfc_roaming", legacySubId), options.wfcRoamingEnabled)
+            .putBoolean(advancedFieldKey("show_wfc_mode", legacySubId), options.showWfcMode)
+            .putBoolean(
+                advancedFieldKey("show_wfc_roaming_mode", legacySubId),
+                options.showWfcRoamingMode,
+            )
+            .putBoolean(advancedFieldKey("wifi_only", legacySubId), options.supportWifiOnly)
+            .putBoolean(advancedFieldKey("allow_apn_add", legacySubId), options.allowAddingApns)
+            .putBoolean(advancedFieldKey("vowifi_icon", legacySubId), options.showVowifiIcon)
+            .putBoolean(
+                advancedFieldKey("data_rat_icon", legacySubId),
+                options.alwaysShowDataRatIcon,
+            )
+            .putBoolean(advancedFieldKey("4g_for_lte", legacySubId), options.show4gForLteIcon)
+            .putBoolean(advancedFieldKey("hide_lte_plus", legacySubId), options.hideLtePlusIcon)
+            .putBoolean(advancedFieldKey("show_ims_status", legacySubId), options.showImsStatus)
+            .putBoolean(advancedFieldKey("ss_over_cdma", legacySubId), options.ssOverCdma)
+            .putBoolean(advancedFieldKey("enhanced_4g", legacySubId), options.enhanced4g)
+            .apply()
+        clearLegacyAdvancedKeys(context)
+    }
+
+    private fun clearLegacyAdvancedKeys(context: Context) {
+        prefs(context).edit()
+            .remove(KEY_ADVANCED_HAS)
+            .remove(KEY_ADVANCED_PREFIX + "wfc_roaming")
+            .remove(KEY_ADVANCED_PREFIX + "show_wfc_mode")
+            .remove(KEY_ADVANCED_PREFIX + "show_wfc_roaming_mode")
+            .remove(KEY_ADVANCED_PREFIX + "wifi_only")
+            .remove(KEY_ADVANCED_PREFIX + "allow_apn_add")
+            .remove(KEY_ADVANCED_PREFIX + "vowifi_icon")
+            .remove(KEY_ADVANCED_PREFIX + "data_rat_icon")
+            .remove(KEY_ADVANCED_PREFIX + "4g_for_lte")
+            .remove(KEY_ADVANCED_PREFIX + "hide_lte_plus")
+            .remove(KEY_ADVANCED_PREFIX + "show_ims_status")
+            .remove(KEY_ADVANCED_PREFIX + "ss_over_cdma")
+            .remove(KEY_ADVANCED_PREFIX + "enhanced_4g")
+            .apply()
+    }
+
+    private fun clearAllAdvancedOptions(context: Context) {
+        val p = prefs(context)
+        val editor = p.edit()
+        for (key in p.all.keys) {
+            if (key == KEY_ADVANCED_HAS ||
+                key == KEY_ADVANCED_SUB_ID ||
+                key.startsWith("${KEY_ADVANCED_HAS}_") ||
+                key.startsWith(KEY_ADVANCED_PREFIX)
+            ) {
+                editor.remove(key)
+            }
+        }
+        editor.apply()
+    }
+
+    /** 上次成功写入系统 5G 显示覆盖的目标 subId；无记录时返回 -1。 */
+    fun lastFiveGDisplaySubId(context: Context): Int =
+        prefs(context).getInt(KEY_5G_LAST_SUB_ID, -1)
+
+    fun setLastFiveGDisplaySubId(context: Context, subId: Int) {
+        require(subId >= 0) { "Invalid subscription id for 5G display: $subId" }
+        prefs(context).edit().putInt(KEY_5G_LAST_SUB_ID, subId).apply()
     }
 
     /**
@@ -438,8 +608,9 @@ object ConfigStore {
     fun clearAppliedProfiles(context: Context) {
         prefs(context).edit()
             .remove(KEY_HAS)
-            .remove(KEY_ADVANCED_HAS)
+            .remove(KEY_5G_LAST_SUB_ID)
             .apply()
+        clearAllAdvancedOptions(context)
     }
 
     /**

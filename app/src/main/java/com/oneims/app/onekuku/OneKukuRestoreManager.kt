@@ -2,7 +2,10 @@ package com.oneims.app.onekuku
 
 import android.content.Context
 import android.util.Log
+import com.oneims.app.core.ConfigStore
 import com.oneims.app.core.ImsController
+import com.oneims.app.core.PixelImsCompat
+import com.oneims.app.core.PixelImsOptions
 import com.oneims.app.core.SystemDisplayOverrideManager
 import com.oneims.app.core.VoWifiNameFormatManager
 import com.oneims.app.model.ConfigResult
@@ -10,7 +13,7 @@ import com.oneims.app.model.WfcMode
 
 /**
  * 按快照恢复通话配置：单项失败不阻断后续，末尾汇总。
- * 顺序：身份 → IMS → WFC → 5G NR → 信号强度 → VoWiFi 名称。
+ * 顺序：身份 → IMS → WFC → 5G NR → 信号强度 → VoWiFi 名称 → 高级选项 → 5G 显示 → extras。
  */
 object OneKukuRestoreManager {
     private const val TAG = "OneIMS-Restore"
@@ -90,6 +93,15 @@ object OneKukuRestoreManager {
                 detail["vowifi_name"] = runNamed("vowifi_name") {
                     restoreVoWifiName(context, writeSubId, snapshot)
                 }
+                detail["advanced"] = runNamed("advanced") {
+                    restoreAdvanced(context, writeSubId, snapshot)
+                }
+                detail["five_g_display"] = runNamed("five_g_display") {
+                    restoreFiveGDisplay(context, writeSubId, snapshot)
+                }
+                detail["extras"] = runNamed("extras") {
+                    restoreExtras(context, writeSubId, snapshot)
+                }
                 detail["verify"] = runNamed("verify") {
                     val result = verify(context, writeSubId)
                     ConfigResult(result.success, result.message)
@@ -148,7 +160,7 @@ object OneKukuRestoreManager {
         val sims = ImsController.listSims(context)
         val ok = when (val resolved = OneKukuSnapshotStore.resolveForSelectedSim(context, subId, sims)) {
             is SnapshotMatchResult.Matched ->
-                OneKukuBootRestoreCoordinator.isSnapshotEffective(
+                OneKukuBootRestoreCoordinator.isSnapshotCarrierVerified(
                     context = context,
                     subId = resolved.writeSubId,
                     snapshot = resolved.snapshot,
@@ -282,6 +294,96 @@ object OneKukuRestoreManager {
             )
             ConfigResult(true, message)
         }.getOrElse { ConfigResult(false, it.message ?: "vowifi name failed") }
+    }
+
+    private fun restoreAdvanced(
+        context: Context,
+        subId: Int,
+        snapshot: OneKukuSnapshot,
+    ): ConfigResult {
+        val fromSnapshot = snapshotAdvancedOptions(snapshot)
+        if (fromSnapshot != null) {
+            return PixelImsCompat.applyOptions(context, subId, fromSnapshot)
+        }
+        // 无本卡快照时，仅回放本卡 per-subId prefs，禁止串写其它卡的高级选项。
+        val options = ConfigStore.lastAdvancedOptions(context, subId)
+            ?: return ConfigResult(true, "skip")
+        return PixelImsCompat.applyOptions(context, subId, options)
+    }
+
+    private fun restoreFiveGDisplay(
+        context: Context,
+        subId: Int,
+        snapshot: OneKukuSnapshot,
+    ): ConfigResult {
+        val enabledInSnap = snapshot.bool("five_g_display", "enabled", false)
+        val prefs = ConfigStore.fiveGDisplayConfig(context)
+        val owned = ConfigStore.lastFiveGDisplaySubId(context)
+        if (!enabledInSnap) {
+            // 无本卡快照记录时，仅当归属卡匹配才用全局 prefs 回写。
+            if (!prefs.enabled || (owned >= 0 && owned != subId)) {
+                return ConfigResult(true, "skip")
+            }
+        } else if (owned >= 0 && owned != subId) {
+            return ConfigResult(true, "skip")
+        }
+        val config = if (enabledInSnap || prefs.enabled) {
+            prefs.copy(enabled = true)
+        } else {
+            return ConfigResult(true, "skip")
+        }
+        return runCatching {
+            val message = SystemDisplayOverrideManager.applyFiveGDisplay(
+                context = context,
+                subId = subId,
+                config = config,
+            )
+            ConfigResult(true, message)
+        }.getOrElse { ConfigResult(false, it.message ?: "five_g_display failed") }
+    }
+
+    private fun restoreExtras(
+        context: Context,
+        subId: Int,
+        snapshot: OneKukuSnapshot,
+    ): ConfigResult {
+        val hasExtras = snapshot.entries.any { it.configGroup == "extras" }
+        if (!hasExtras) {
+            val caps = ConfigStore.capabilityUiState(context, subId)
+            if (caps == null || (!caps.vilte && !caps.ut && !caps.crossSim)) {
+                return ConfigResult(true, "skip")
+            }
+            return ImsController.applyCarrierExtras(
+                context,
+                subId,
+                caps.vilte,
+                caps.ut,
+                caps.crossSim,
+            )
+        }
+        val vilte = snapshot.bool("extras", "vilte", false)
+        val ut = snapshot.bool("extras", "ut", false)
+        val crossSim = snapshot.bool("extras", "cross_sim", false)
+        if (!vilte && !ut && !crossSim) return ConfigResult(true, "skip")
+        return ImsController.applyCarrierExtras(context, subId, vilte, ut, crossSim)
+    }
+
+    private fun snapshotAdvancedOptions(snapshot: OneKukuSnapshot): PixelImsOptions? {
+        if (snapshot.entries.none { it.configGroup == "advanced" }) return null
+        return PixelImsOptions(
+            wfcRoamingEnabled = snapshot.bool("advanced", "wfc_roaming", false),
+            showWfcMode = snapshot.bool("advanced", "show_wfc_mode", false),
+            showWfcRoamingMode = snapshot.bool("advanced", "show_wfc_roaming_mode", false),
+            supportWifiOnly = snapshot.bool("advanced", "wifi_only", false),
+            allowAddingApns = snapshot.bool("advanced", "allow_apn_add", false),
+            showVowifiIcon = snapshot.bool("advanced", "vowifi_icon", false),
+            alwaysShowDataRatIcon = snapshot.bool("advanced", "data_rat_icon", false),
+            show4gForLteIcon = snapshot.bool("advanced", "4g_for_lte", false),
+            hideLtePlusIcon = snapshot.bool("advanced", "hide_lte_plus", false),
+            showImsStatus = snapshot.bool("advanced", "show_ims_status", false),
+            ssOverCdma = snapshot.bool("advanced", "ss_over_cdma", false),
+            enhanced4g = snapshot.bool("advanced", "enhanced_4g", false),
+        )
     }
 
     private fun OneKukuSnapshot.entry(type: String, key: String): String? =

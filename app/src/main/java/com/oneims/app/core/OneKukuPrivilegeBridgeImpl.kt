@@ -95,10 +95,49 @@ object OneKukuSnapshotFactory {
                     )
                 }
             }
-            // 5G 显示相关：仅在已启用时记录摘要，不存敏感串全文过长
-            if (fiveG.enabled) {
+            // 高级选项按卡持久化：本卡有重放源才写入本卡快照，禁止把卡 A 的选项灌进卡 B。
+            ConfigStore.lastAdvancedOptions(context, sim.subscriptionId)?.let { opt ->
+                add(SnapshotEntry("advanced", "wfc_roaming", opt.wfcRoamingEnabled.toString(), method, true))
+                add(SnapshotEntry("advanced", "show_wfc_mode", opt.showWfcMode.toString(), method, true))
+                add(
+                    SnapshotEntry(
+                        "advanced",
+                        "show_wfc_roaming_mode",
+                        opt.showWfcRoamingMode.toString(),
+                        method,
+                        true,
+                    ),
+                )
+                add(SnapshotEntry("advanced", "wifi_only", opt.supportWifiOnly.toString(), method, true))
+                add(SnapshotEntry("advanced", "allow_apn_add", opt.allowAddingApns.toString(), method, true))
+                add(SnapshotEntry("advanced", "vowifi_icon", opt.showVowifiIcon.toString(), method, true))
+                add(
+                    SnapshotEntry(
+                        "advanced",
+                        "data_rat_icon",
+                        opt.alwaysShowDataRatIcon.toString(),
+                        method,
+                        true,
+                    ),
+                )
+                add(SnapshotEntry("advanced", "4g_for_lte", opt.show4gForLteIcon.toString(), method, true))
+                add(SnapshotEntry("advanced", "hide_lte_plus", opt.hideLtePlusIcon.toString(), method, true))
+                add(SnapshotEntry("advanced", "show_ims_status", opt.showImsStatus.toString(), method, true))
+                add(SnapshotEntry("advanced", "ss_over_cdma", opt.ssOverCdma.toString(), method, true))
+                add(SnapshotEntry("advanced", "enhanced_4g", opt.enhanced4g.toString(), method, true))
+            }
+            // 5G 显示：仅归属卡记录
+            if (fiveG.enabled && ConfigStore.lastFiveGDisplaySubId(context) == sim.subscriptionId) {
                 add(SnapshotEntry("five_g_display", "enabled", "true", method, true))
                 add(SnapshotEntry("five_g_display", "mode", fiveG.mode, method, true))
+            }
+            // 运营商附加能力（ViLTE / UT / Cross-SIM）
+            caps?.let { c ->
+                if (c.vilte || c.ut || c.crossSim) {
+                    add(SnapshotEntry("extras", "vilte", c.vilte.toString(), method, true))
+                    add(SnapshotEntry("extras", "ut", c.ut.toString(), method, true))
+                    add(SnapshotEntry("extras", "cross_sim", c.crossSim.toString(), method, true))
+                }
             }
         }
 
