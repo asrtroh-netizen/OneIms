@@ -7,16 +7,19 @@
 | 项 | 选择 | 原因 |
 |---|---|---|
 | 自启逻辑 | **原样保留 HSSkyBoy** | 现方案（thedjchi 对齐/补丁）仍有问题，停止继续改 |
-| UI/品牌 | **库内皮 = thedjchi V15** | 三态/两态 Hero + 2×2 快捷格 + `#0B57D0`；显示名 `Shizuku` |
+| UI/品牌 | **库内皮 = thedjchi V15** | Hero + 无线 + 2×2 + 胶囊行；显示名 `Shizuku` |
 | 包名 | 上游 `moe.shizuku.privileged.api` | 保持 Shizuku API 契约；与官版 Shizuku 互斥安装 |
 
-## 换皮清单
+## 换皮清单（最新）
 
-- `app_name` → `Shizuku`（对齐库内皮，非 OneIms Lite 字样）
-- Hero 色：`hero_inactive_*` / `hero_ready_*`（来自 thedjchi）
-- Compose 首页：`LibrarySkinHome.kt`（Hero + 无线启动卡 + 2×2 Apps/Terminal/Root/PC ADB）
+- Hero：Active / Inactive 两态 + 阶段条
+- 无线调试卡：按钮顺序 **分步指南 · 配对 · 启动**
+- 2×2：应用管理 / 终端 / Root / 电脑 ADB（点击弹窗）
+- **2×2 下一行胶囊**：启动 / 语言 / 主题（点击弹窗；语言为 OneIMS 胶囊高亮样式）
+- 顶栏：**去掉 Settings / About**（运行中保留「停止」）
+- 自动化 Intent 卡 + 隐身说明卡
 - 主色 `#0B57D0` / `#A9C7FF`；卡片 20dp
-- APK 输出名：`OneIms-Lite-HSSkyBoy-v{version}-{variant}.apk`（文件名历史保留）
+- APK 输出名：`Shizuku-v{version}-{variant}.apk`；交付副本 `E:\GQ\One\_forks\Shizuku.apk`
 
 ## 自启链路（未改逻辑）
 
@@ -33,11 +36,13 @@
 
 ## 产物
 
-- `E:\GQ\One\_forks\HSSkyBoy-Shizuku\out\apk\OneIms-Lite-HSSkyBoy-v13.6.1-RC2.r1.a04135f-release.apk`
-- 副本：`E:\GQ\One\_forks\OneIms-Lite-HSSkyBoy-v13.6.1-RC2.r1.a04135f-release.apk`
+- 构建：`manager/build/outputs/apk/release/Shizuku-v13.6.1-RC2.r4.785160f-release.apk`（约 3.59 MB）
+- 交付：`E:\GQ\One\_forks\Shizuku.apk`、`E:\GQ\One\_forks\out\apk\Shizuku.apk`
 
 ## 验证
 
-- `:manager:assembleRelease`：**PASS**（JDK 21 + SDK 36 + NDK 27 + CMake 3.22.1，`BUILD SUCCESSFUL in 2m 25s`）
+- `:manager:assembleRelease`：**PASS**（本地 Gradle 8.14 + JDK 21，`BUILD SUCCESSFUL in 3m 12s`）
 - 开机自启实机：NOT RUN（需冷重启 + 已配对 Wi‑Fi + 无线调试/权限就绪）
+- UI 像素级对照截图：NOT RUN（需真机安装对照）
 - **未改** `thedjchi-Shizuku` 自启补丁代码
+- **未 push** 到 `github.com/HSSkyBoy/Shizuku`（仅本地 commit）
