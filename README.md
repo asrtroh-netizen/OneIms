@@ -14,16 +14,16 @@
 
 <br/>
 
-### ⬇️ 下载 APK（最新 · v2.3.1 · 请自选产品线）
+### ⬇️ 下载 APK（最新 · v3.0.0 稳定版 · 请自选产品线）
 
 > **两个包功能相同（IMS/诊断/恢复），差别只在「特权通道怎么激活」——看下方选购指南，**只装其中一个**即可；进阶用户也可同机并存对比。
 
 | 推荐给… | 包 | 下载 |
 |---|---|---|
-| 🟢 **想少装 App、App 内一键配对** | **OneKuku（独立激活）** | [OneIms-OneKuku-standalone-2.3.1.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v2.3.1/OneIms-OneKuku-standalone-2.3.1.apk) |
-| 🔵 **已有 / 想用 Shizuku 轻壳** | **OneIms Lite（Shizuku）** | [OneIms-Lite-Shizuku-2.3.1.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v2.3.1/OneIms-Lite-Shizuku-2.3.1.apk) |
+| 🟢 **想少装 App、App 内一键配对** | **OneKuku（独立激活）** | [OneIms-OneKuku-standalone-3.0.0.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.0.0/OneIms-OneKuku-standalone-3.0.0.apk) |
+| 🔵 **已有 / 想用 Shizuku 轻壳** | **OneIms Lite（Shizuku）** | [OneIms-Lite-Shizuku-3.0.0.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.0.0/OneIms-Lite-Shizuku-3.0.0.apk) |
 
-[📦 全部 Release 资产](https://github.com/asrtroh-netizen/OneIms/releases/tag/v2.3.1)
+[📦 全部 Release 资产](https://github.com/asrtroh-netizen/OneIms/releases/tag/v3.0.0)
 
 > 💙 **友情推荐特权通道**：[asrtroh 修缮版 Shizuku V15.0](https://github.com/asrtroh-netizen/shizuku)（配对一次 · 旧 Wi‑Fi 自连 · 开机 FGS 内激活）  
 > 下载正式包：[Releases](https://github.com/asrtroh-netizen/shizuku/releases) · 截图：
@@ -64,10 +64,32 @@
 
 | 对外名称 | 包名 | 特权通道 | Release 文件名 |
 |---|---|---|---|
-| **OneIms · OneKuku** `2.3.1-onekuku` | `com.oneims.app` | 内嵌 OneBridge + 无线调试配对 | `OneIms-OneKuku-standalone-2.3.1.apk`（备注：独立激活） |
-| **OneIms · OneIms Lite** `2.3.1-onelink` | `com.oneims.onelink` | 官方 Shizuku | `OneIms-Lite-Shizuku-2.3.1.apk`（备注：Shizuku） |
+| **OneIms · OneKuku** `3.0.0-onekuku` | `com.oneims.app` | 内嵌 OneBridge + 无线调试配对 | `OneIms-OneKuku-standalone-3.0.0.apk`（备注：独立激活） |
+| **OneIms · OneIms Lite** `3.0.0-onelink` | `com.oneims.onelink` | 官方 Shizuku | `OneIms-Lite-Shizuku-3.0.0.apk`（备注：Shizuku） |
 
 > **双包同版号一起更新**；请只从本页 Release 链接下载，勿混装未知来源包。
+
+---
+
+## ✨ What's New · 3.0.0（稳定版）
+
+**本版主线：双卡高级选项真正按卡恢复；Lite 设备详情回首页底部；深色主题设备详情可读。**
+
+### 📲 双卡 · 高级选项
+
+* 「应用高级选项」按 **subscriptionId 分别持久化**，两张卡互不覆盖
+* 开机 / 守护重放会对 **每张有记录的卡** 各自写回（不再只恢复「最后一张」）
+* 升级后请对 **两张卡各点一次「应用高级选项」**，再冷启验证
+
+### 🏠 首页 / 设备详情
+
+* **OneIms Lite**：设备详情卡恢复到首页**最下方**
+* 设备详情弹窗 / 卡片字色跟系统深浅色主题走，避免深色模式下几乎看不见
+
+### 🔄 升级
+
+* 🟢 OneKuku：覆盖安装 `OneIms-OneKuku-standalone-3.0.0.apk`
+* 🔵 OneIms Lite：覆盖安装 `OneIms-Lite-Shizuku-3.0.0.apk`
 
 ---
 
