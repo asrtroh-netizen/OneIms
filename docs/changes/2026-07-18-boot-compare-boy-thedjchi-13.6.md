@@ -45,3 +45,8 @@
 2. 打开「开机时通过无线调试启动」类开关，手动成功启动一次并保持配对。
 3. 关机再开机（完整冷启动），解屏后看 Shizuku 是否自动起来。
 4. 若失败：解屏后立刻 `adb logcat -d | findstr /i "Shizuku WirelessBoot USER_PRESENT AdbStart"`。
+
+## V15.0.2
+
+������·��BootComplete/Starter/Worker/UserPresent/SelfStarter/AdbWirelessHelper/Manifest������ `424254b` ����죻UI ��Ϊ V15 Ƥ��
+
