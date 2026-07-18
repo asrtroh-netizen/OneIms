@@ -245,7 +245,7 @@ fun OneKukuWirelessStartCard(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.extraLarge,
-        color = ShizukuHomePalette.tileSurface,
+        color = ShizukuHomePalette.tileSurface(),
         tonalElevation = 1.dp,
         shadowElevation = 1.dp,
     ) {
@@ -261,13 +261,13 @@ fun OneKukuWirelessStartCard(
                     imageVector = Icons.Filled.PlayArrow,
                     contentDescription = null,
                     modifier = Modifier.size(28.dp),
-                    tint = ShizukuHomePalette.heroReadyFg,
+                    tint = ShizukuHomePalette.tileContent(),
                 )
                 Text(
                     text = stringResource(R.string.onekuku_home_wireless_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = ShizukuHomePalette.heroReadyFg,
+                    color = ShizukuHomePalette.tileContent(),
                 )
             }
             Row(
@@ -363,7 +363,7 @@ private fun QuickTile(
             .alpha(if (dimmed) 0.45f else 1f)
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
-        color = ShizukuHomePalette.tileSurface,
+        color = ShizukuHomePalette.tileSurface(),
         tonalElevation = 1.dp,
         shadowElevation = 1.dp,
     ) {
@@ -377,18 +377,18 @@ private fun QuickTile(
                 imageVector = icon,
                 contentDescription = null,
                 modifier = Modifier.size(24.dp),
-                tint = ShizukuHomePalette.heroReadyFg,
+                tint = ShizukuHomePalette.tileContent(),
             )
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = ShizukuHomePalette.heroReadyFg,
+                color = ShizukuHomePalette.tileContent(),
             )
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodySmall,
-                color = ShizukuHomePalette.heroReadyFg.copy(alpha = 0.78f),
+                color = ShizukuHomePalette.tileContent().copy(alpha = 0.78f),
             )
         }
     }
