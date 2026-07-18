@@ -4,18 +4,18 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
-val oneImsVersionName = "2.3.0"
+val oneImsVersionName = "3.0.0"
 
 android {
     namespace = "com.oneims.app"
-    // Android 16（API 36）。Android 17 / API 37 需先安�?platforms;android-37 后再升�?
+    // Android 16（API 36）。Android 17 / API 37 需先安装 platforms;android-37 后再升。
     compileSdk = 36
 
     defaultConfig {
         applicationId = "com.oneims.app"
-        minSdk = 31          // Tensor Pixel（Pixel 6 起）最�?Android 12
+        minSdk = 31          // Tensor Pixel（Pixel 6 起）最低 Android 12
         targetSdk = 36
-        versionCode = 68
+        versionCode = 70
         versionName = oneImsVersionName
     }
 
@@ -60,7 +60,7 @@ android {
         resources.excludes += "/META-INF/{AL2.0,LGPL2.1}"
     }
 
-    // HiddenApiBypass 会触�?Play 依赖元数据审查；本应用不走商店分发，直接关掉上报�?
+    // HiddenApiBypass 会触发 Play 依赖元数据审查；本应用不走商店分发，直接关掉上报。
     dependenciesInfo {
         includeInApk = false
         includeInBundle = false
@@ -68,7 +68,7 @@ android {
 }
 
 dependencies {
-    // OneKuku 线专用：OneBridge starter + 内嵌 ADB（OneLink 不引入，�?src/onelink 桩）
+    // OneKuku ????????OneBridge starter + ????? ADB??OneLink ??????????src/onelink ???
     "onekukuImplementation"(project(":bridge"))
     "onekukuImplementation"("com.github.MuntashirAkon:libadb-android:3.1.1")
     "onekukuImplementation"("org.conscrypt:conscrypt-android:2.5.3")
@@ -84,22 +84,22 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     debugImplementation("androidx.compose.ui:ui-tooling")
 
-    // OneLink 线专用：官方 Shizuku 客户端（onekuku 线不引入�?
+    // OneLink ????????????? Shizuku ???????onekuku ?????????
     "onelinkImplementation"("dev.rikka.shizuku:api:13.1.5")
     "onelinkImplementation"("dev.rikka.shizuku:provider:13.1.5")
 
-    // 访问 hidden API（绕�?Android 隐藏 API 反射限制�?.x 起明确覆�?Android 17�?
+    // ???? hidden API??????Android ?????? API ???????????.x ??????????Android 17??
     implementation("org.lsposed.hiddenapibypass:hiddenapibypass:6.1")
 
-    // 协程（IO 线程执行阻塞�?provisioning / 网络自检�?
+    // ?????IO ????????????????provisioning / ???????????
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
 
     testImplementation("junit:junit:4.13.2")
 }
 
 /**
- * 单线命名包：assemble{Flavor}Debug 后复制到仓库根，便于真机辨认�?
- * 默认不执行；需用户明确下令打包后再跑�?
+ * ????????????assemble{Flavor}Debug ??????????????????????????????
+ * ???????????????????????????????????????????
  */
 fun registerNamedFlavorApk(flavor: String, brand: String) {
     val cap = flavor.replaceFirstChar { it.uppercase() }
@@ -114,7 +114,7 @@ fun registerNamedFlavorApk(flavor: String, brand: String) {
         doLast {
             val src = sourceApk.get().asFile
             src.copyTo(namedApk.asFile, overwrite = true)
-            // Release 上传用名（无 -debug 后缀�?
+            // Release ???????????? -debug ??????
             val releaseApk = rootProject.layout.projectDirectory.file(
                 "OneIms-$brand-$oneImsVersionName.apk",
             )
@@ -124,11 +124,11 @@ fun registerNamedFlavorApk(flavor: String, brand: String) {
 }
 
 registerNamedFlavorApk("onekuku", "OneKuku-standalone")
-registerNamedFlavorApk("onelink", "OneLink-Shizuku")
+registerNamedFlavorApk("onelink", "Lite-Shizuku")
 
 /**
- * 双包生成入口（debug）。发版时 OneKuku + OneLink 必须一起打、一起上�?Release�?
- * �?scripts/publish-dual-readme-release.ps1
+ * ?????????????????debug????????????? OneKuku + OneLink ???????????????????Release???
+ * ??scripts/publish-dual-readme-release.ps1
  */
 tasks.register("packageDualDebugApks") {
     dependsOn("packageNamedOnekukuDebugApk", "packageNamedOnelinkDebugApk")
@@ -136,7 +136,7 @@ tasks.register("packageDualDebugApks") {
 }
 
 /**
- * 兼容旧任务名：默认打 OneKuku �?debug 命名包�?
+ * ???????????????????? OneKuku ??debug ??????????
  */
 tasks.register("packageNamedDebugApk") {
     dependsOn("packageNamedOnekukuDebugApk")
