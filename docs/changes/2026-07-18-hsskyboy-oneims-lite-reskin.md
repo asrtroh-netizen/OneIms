@@ -1,4 +1,4 @@
-# 2026-07-18 · HSSkyBoy/Shizuku 底 + OneIms Lite 皮
+# 2026-07-18 · HSSkyBoy/Shizuku 底 + 库内（thedjchi V15）皮
 
 工作目录：`E:\GQ\One\_forks\HSSkyBoy-Shizuku`（独立于 OneIMS 主仓；**不改** `thedjchi-Shizuku` 现有自启补丁）
 
@@ -7,17 +7,16 @@
 | 项 | 选择 | 原因 |
 |---|---|---|
 | 自启逻辑 | **原样保留 HSSkyBoy** | 现方案（thedjchi 对齐/补丁）仍有问题，停止继续改 |
-| UI/品牌 | OneIms Lite 皮 | 对齐 OneIMS `#0B57D0` / `#A9C7FF`、20dp 卡片 |
+| UI/品牌 | **库内皮 = thedjchi V15** | 三态/两态 Hero + 2×2 快捷格 + `#0B57D0`；显示名 `Shizuku` |
 | 包名 | 上游 `moe.shizuku.privileged.api` | 保持 Shizuku API 契约；与官版 Shizuku 互斥安装 |
 
 ## 换皮清单
 
-- `app_name` → `OneIms Lite`（en / zh-rCN / zh-rTW）
-- `colors.xml`：`notification` / `app_color_light` → `#0B57D0`
-- `materialThemeBuilder.primaryColor` → `#0B57D0`
-- Compose `ShizukuComposeTheme` light primary → `#0B57D0`
-- 卡片圆角 / 内边距 → 20dp；状态卡 `minHeight` 72dp
-- APK 输出名：`OneIms-Lite-HSSkyBoy-v{version}-{variant}.apk`
+- `app_name` → `Shizuku`（对齐库内皮，非 OneIms Lite 字样）
+- Hero 色：`hero_inactive_*` / `hero_ready_*`（来自 thedjchi）
+- Compose 首页：`LibrarySkinHome.kt`（Hero + 无线启动卡 + 2×2 Apps/Terminal/Root/PC ADB）
+- 主色 `#0B57D0` / `#A9C7FF`；卡片 20dp
+- APK 输出名：`OneIms-Lite-HSSkyBoy-v{version}-{variant}.apk`（文件名历史保留）
 
 ## 自启链路（未改逻辑）
 
