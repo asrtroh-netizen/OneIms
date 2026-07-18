@@ -34,6 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.oneims.app.R
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 
 /**
  * 独立版首页：对齐邻仓新作 Shizuku 的「两态状态卡 + 2×2 四小方块」。
@@ -284,6 +285,12 @@ fun OneKukuWirelessStartCard(
                 Button(
                     onClick = onStart,
                     enabled = startEnabled,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = ShizukuHomePalette.accent,
+                        contentColor = ShizukuHomePalette.onAccent,
+                        disabledContainerColor = ShizukuHomePalette.accent.copy(alpha = 0.38f),
+                        disabledContentColor = ShizukuHomePalette.onAccent.copy(alpha = 0.70f),
+                    ),
                 ) {
                     Text(stringResource(R.string.onekuku_home_wireless_start))
                 }
