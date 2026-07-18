@@ -25,6 +25,14 @@ object BridgeBinderHolder {
 
     fun onReceived(received: IBinder?) {
         val previous = binder
+        // 周期重投同一远端 binder 时不重复通知，避免 Guard 全量 reapply 导致发热。
+        // BinderProxy 可能每次投递是新包装，用 equals / asBinder 识别同一远端。
+        if (received != null && previous != null && previous.pingBinder() &&
+            (previous == received || previous.asBinder() == received.asBinder())
+        ) {
+            Log.d(TAG, "OneBridge binder resent (same remote); skip listeners")
+            return
+        }
         if (previous != null) {
             runCatching { previous.unlinkToDeath(death, 0) }
         }

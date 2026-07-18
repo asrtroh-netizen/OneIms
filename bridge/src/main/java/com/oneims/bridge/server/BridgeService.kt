@@ -13,7 +13,8 @@ import android.util.Log
  */
 object BridgeService {
     private const val TAG = "OneBridge"
-    private const val RESEND_INTERVAL_MS = 3_000L
+    /** 划掉 App 后靠周期重投拿回 binder；过密会触发客户端反复 reapply 发热。 */
+    private const val RESEND_INTERVAL_MS = 30_000L
 
     @JvmStatic
     fun main(args: Array<String>) {
