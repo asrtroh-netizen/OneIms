@@ -38,7 +38,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import com.oneims.app.R
 import com.oneims.app.core.ChannelLine
 import com.oneims.app.core.DeviceInfo
-import com.oneims.app.core.OneKukuEmbeddedAdbActivator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -64,84 +63,40 @@ fun HomeScreen(
 }
 
 /**
- * 独立版：抛开旧首页块，仅保留 OneKuku 品牌 + Shizuku 式状态卡 + 四小方块。
+ * 独立版首页：与 Lite 同结构 / 同 [StatusHero] 配色——
+ * 状态卡 → 快速开始 → 设备详情（底）；无「快速入口」四格与无线启动卡。
  */
 @Composable
 private fun OneKukuStandaloneHome(
     state: HomeUiState,
     actions: HomeActions,
 ) {
-    val context = LocalContext.current
     var openDialog by remember { mutableStateOf<HomeToolDialog?>(null) }
-    val channelReady = state.oneKukuState == OneKukuCardState.READY ||
-        state.oneKukuState == OneKukuCardState.SLEEPING
-
-    fun startChannel() {
-        when (state.oneKukuState) {
-            OneKukuCardState.INACTIVE -> {
-                if (OneKukuEmbeddedAdbActivator.hasPairedOnce(context)) {
-                    actions.onActivateOneKuku()
-                } else {
-                    openDialog = HomeToolDialog.WirelessGuide
-                }
-            }
-            OneKukuCardState.READY,
-            OneKukuCardState.SLEEPING,
-            -> openDialog = HomeToolDialog.AdbTip
-            OneKukuCardState.ACTIVATING -> Unit
-        }
-    }
 
     OneImsPage(
         title = stringResource(R.string.channel_display_name),
         subtitle = stringResource(R.string.onekuku_home_subtitle),
-        // 快速开始依赖选中 SIM；双卡时保留右上角选卡胶囊。
         sims = state.sims,
         selectedSubId = state.selectedSubId,
         onSelectSim = actions.onSelectSim,
         simSelectionEnabled = state.actionsEnabled,
     ) {
         item {
-            OneKukuShizukuStyleStatusHero(
+            StatusHero(
                 oneKukuState = state.oneKukuState,
-                detailOverride = state.oneKukuDetailOverride,
-                onClick = {
+                channelSleeping = state.oneKukuChannelSleeping,
+                onPrimaryAction = {
                     when (state.oneKukuState) {
+                        OneKukuCardState.INACTIVE -> actions.onActivateOneKuku()
                         OneKukuCardState.READY,
                         OneKukuCardState.SLEEPING,
-                        -> openDialog = HomeToolDialog.Status
-                        OneKukuCardState.INACTIVE -> startChannel()
-                        OneKukuCardState.ACTIVATING -> openDialog = HomeToolDialog.Status
+                        -> actions.onCheckOneKukuStatus()
+                        OneKukuCardState.ACTIVATING -> Unit
                     }
                 },
                 onOpenDeviceDetails = { openDialog = HomeToolDialog.DeviceDetails },
+                detailOverride = state.oneKukuDetailOverride,
             )
-        }
-
-        item {
-            OneKukuWirelessStartCard(
-                startEnabled = state.oneKukuState != OneKukuCardState.ACTIVATING,
-                onGuide = { openDialog = HomeToolDialog.WirelessGuide },
-                onPair = {
-                    actions.onBeginWirelessPairGuide()
-                    actions.onOpenWirelessDebugging()
-                },
-                onStart = { startChannel() },
-            )
-        }
-
-        item {
-            SectionBlock(title = stringResource(R.string.onekuku_home_quick_title)) {
-                Column(modifier = Modifier.padding(horizontal = 0.dp, vertical = 4.dp)) {
-                    OneKukuShizukuStyleQuickGrid(
-                        channelReady = channelReady,
-                        onApps = { openDialog = HomeToolDialog.Status },
-                        onTerminal = { openDialog = HomeToolDialog.TerminalTip },
-                        onRoot = { openDialog = HomeToolDialog.RootTip },
-                        onAdb = { startChannel() },
-                    )
-                }
-            }
         }
 
         item {
@@ -161,7 +116,7 @@ private fun OneKukuStandaloneHome(
                                 subtitle = stringResource(R.string.onekuku_action_save_config_sub),
                                 onClick = actions.onSaveCallConfig,
                                 enabled = state.actionsEnabled &&
-                                    channelReady &&
+                                    state.oneKukuState == OneKukuCardState.READY &&
                                     state.sims.isNotEmpty(),
                             ),
                             ActionSpec(
@@ -170,13 +125,31 @@ private fun OneKukuStandaloneHome(
                                 subtitle = stringResource(R.string.onekuku_action_restore_sub),
                                 onClick = actions.onRestoreCallConfig,
                                 enabled = state.actionsEnabled &&
-                                    channelReady &&
+                                    state.oneKukuState == OneKukuCardState.READY &&
                                     state.sims.isNotEmpty(),
                             ),
                         ),
                     )
                 }
             }
+        }
+
+        if (state.sims.isEmpty()) {
+            item {
+                SettingsActionRow(
+                    icon = Icons.Filled.AccountBox,
+                    title = stringResource(R.string.no_sim_hint),
+                    subtitle = stringResource(R.string.no_sim_detail),
+                    onClick = { openDialog = HomeToolDialog.Status },
+                    modifier = Modifier
+                        .clip(MaterialTheme.shapes.large)
+                        .background(MaterialTheme.colorScheme.surfaceContainerLow),
+                )
+            }
+        }
+
+        item {
+            DeviceDetailsCard(embedded = false)
         }
     }
 
