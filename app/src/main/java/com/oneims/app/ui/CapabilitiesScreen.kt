@@ -93,6 +93,17 @@ fun CapabilitiesScreen(
         onSelectSim = actions.onSelectSim,
         simSelectionEnabled = state.actionsEnabled,
     ) {
+        item {
+            CarrierRecommendCard(
+                sims = state.sims,
+                selectedSim = state.selectedSim,
+                actionsEnabled = state.recommendActionsEnabled,
+                applying = state.activeOperationLabel ==
+                    stringResource(R.string.apply_recommended),
+                onApplyRecommended = actions.onApplyRecommended,
+            )
+        }
+
         if (!state.prerequisitesMet) {
             item {
                 InlineNotice(

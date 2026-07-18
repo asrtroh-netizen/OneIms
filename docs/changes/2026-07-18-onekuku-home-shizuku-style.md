@@ -35,9 +35,16 @@ OneLink（Lite-Shizuku）仍走原 `StatusHero` + 运营商 + 保存/恢复 + �
 - 未嵌入邻仓 Shizuku APK 进程
 - 发热相关的 3s binder 重投未在本改动中处理
 
+## 后续摆位（同日）
+
+1. 四格下恢复「快速开始」（保存/恢复通话配置）
+2. 设备详情改回状态卡右上角胶囊 → 弹窗
+3. 「推荐一键开启」迁到功能页（Capabilities）最上侧；首页不再放
+
 ## 验证
 
 ```text
 ./gradlew :app:compileOnekukuDebugKotlin :app:compileOnelinkDebugKotlin
 # EXIT 0
 ```
+

@@ -1680,6 +1680,9 @@ private fun AppRoot(
                         sims = sims,
                         selectedSubId = selectedSubId,
                         selectedSim = selectedSim,
+                        recommendActionsEnabled = selectedSubId >= 0 &&
+                            shizukuGranted &&
+                            actionsAvailable,
                         volte = volte,
                         vowifi = vowifi,
                         vonr = vonr,
@@ -2144,7 +2147,7 @@ private fun AppRoot(
                     actions = DiagnosticsActions(
                         onSelectSim = { selectSim(it) },
                         onHealthCheck = {
-                            runOperation(context.getString(R.string.tool_health)) {
+                            withContext(Dispatchers.IO) {
                                 val result = SafetyGuard.healthCheck(context, selectedSubId)
                                 val health = context.getString(
                                     if (result.allHealthy) {
@@ -2161,20 +2164,17 @@ private fun AppRoot(
                             }
                         },
                         onCheckEpdg = {
-                            val sim = selectedSim
-                            if (sim == null) {
-                                publish(context.getString(R.string.please_select_sim))
-                            } else {
-                                runOperation(context.getString(R.string.tool_epdg)) {
-                                    describeEpdg(
-                                        context,
-                                        EpdgChecker.check(context, sim.mcc, sim.mnc),
-                                    )
-                                }
+                            withContext(Dispatchers.IO) {
+                                val sim = selectedSim
+                                    ?: return@withContext context.getString(R.string.please_select_sim)
+                                describeEpdg(
+                                    context,
+                                    EpdgChecker.check(context, sim.mcc, sim.mnc),
+                                )
                             }
                         },
                         onQueryIms = {
-                            runOperation(context.getString(R.string.tool_diag)) {
+                            withContext(Dispatchers.IO) {
                                 sims.joinToString("\n\n") { sim ->
                                     context.getString(
                                         R.string.ims_sim_header,
@@ -2190,7 +2190,7 @@ private fun AppRoot(
                             }
                         },
                         onDumpConfig = {
-                            runOperation(context.getString(R.string.tool_config)) {
+                            withContext(Dispatchers.IO) {
                                 ImsController.dumpCarrierConfig(context, selectedSubId)
                             }
                         },

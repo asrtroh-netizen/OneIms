@@ -102,12 +102,13 @@ data class HomeActions(
 /**
  * 「能力」页现已并入原「高级」的运营商显示/漫游开关（[advancedOptions]）与原「排障」修复工具中的
  * 重启 IMS/网络修复/TikTok 覆盖三项；身份覆盖、离线 APN 库仍在实验功能页。
- * 运营商推荐首卡已迁首页；本页从通话能力与 5G 起排。
+ * 运营商推荐一键开启在本页最上侧；其下为通话能力与 5G。
  */
 data class CapabilitiesUiState(
     val sims: List<SimInfo>,
     val selectedSubId: Int,
     val selectedSim: SimInfo?,
+    val recommendActionsEnabled: Boolean = false,
     val volte: Boolean,
     val vowifi: Boolean,
     val vonr: Boolean,
@@ -166,10 +167,11 @@ data class DiagnosticsUiState(
 
 data class DiagnosticsActions(
     val onSelectSim: (Int) -> Unit,
-    val onHealthCheck: () -> Unit,
-    val onCheckEpdg: () -> Unit,
-    val onQueryIms: () -> Unit,
-    val onDumpConfig: () -> Unit,
+    /** 只读查询，返回详情正文；由排障页弹窗展示，不写入日志。 */
+    val onHealthCheck: suspend () -> String,
+    val onCheckEpdg: suspend () -> String,
+    val onQueryIms: suspend () -> String,
+    val onDumpConfig: suspend () -> String,
     val onCopyLog: () -> Unit,
     val onClearLog: () -> Unit,
     val onReapply: () -> Unit,

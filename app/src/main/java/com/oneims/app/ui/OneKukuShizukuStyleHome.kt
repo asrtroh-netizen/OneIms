@@ -44,6 +44,7 @@ fun OneKukuShizukuStyleStatusHero(
     oneKukuState: OneKukuCardState,
     detailOverride: String?,
     onClick: () -> Unit,
+    onOpenDeviceDetails: (() -> Unit)? = null,
 ) {
     val hero = when (oneKukuState) {
         OneKukuCardState.READY,
@@ -153,6 +154,21 @@ fun OneKukuShizukuStyleStatusHero(
                             },
                             style = MaterialTheme.typography.bodySmall,
                             color = contentColor.copy(alpha = 0.78f),
+                        )
+                    }
+                }
+                if (onOpenDeviceDetails != null) {
+                    Surface(
+                        onClick = onOpenDeviceDetails,
+                        shape = RoundedCornerShape(percent = 50),
+                        color = contentColor.copy(alpha = 0.10f),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.home_device_details),
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = contentColor.copy(alpha = 0.88f),
+                            maxLines = 1,
                         )
                     }
                 }

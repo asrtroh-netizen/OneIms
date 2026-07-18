@@ -48,6 +48,7 @@ private enum class HomeToolDialog {
     TerminalTip,
     RootTip,
     AdbTip,
+    DeviceDetails,
 }
 
 @Composable
@@ -94,9 +95,11 @@ private fun OneKukuStandaloneHome(
     OneImsPage(
         title = stringResource(R.string.channel_display_name),
         subtitle = stringResource(R.string.onekuku_home_subtitle),
-        sims = emptyList(),
-        selectedSubId = -1,
-        onSelectSim = null,
+        // 快速开始依赖选中 SIM；双卡时保留右上角选卡胶囊。
+        sims = state.sims,
+        selectedSubId = state.selectedSubId,
+        onSelectSim = actions.onSelectSim,
+        simSelectionEnabled = state.actionsEnabled,
     ) {
         item {
             OneKukuShizukuStyleStatusHero(
@@ -111,6 +114,7 @@ private fun OneKukuStandaloneHome(
                         OneKukuCardState.ACTIVATING -> openDialog = HomeToolDialog.Status
                     }
                 },
+                onOpenDeviceDetails = { openDialog = HomeToolDialog.DeviceDetails },
             )
         }
 
@@ -123,6 +127,41 @@ private fun OneKukuStandaloneHome(
                         onTerminal = { openDialog = HomeToolDialog.TerminalTip },
                         onRoot = { openDialog = HomeToolDialog.RootTip },
                         onAdb = { startChannel() },
+                    )
+                }
+            }
+        }
+
+        item {
+            SectionBlock(
+                title = stringResource(R.string.home_quick_actions),
+                description = stringResource(R.string.home_quick_actions_sub),
+            ) {
+                Column(
+                    modifier = Modifier.padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    ActionGrid(
+                        listOf(
+                            ActionSpec(
+                                icon = Icons.Filled.Refresh,
+                                title = stringResource(R.string.onekuku_action_save_config),
+                                subtitle = stringResource(R.string.onekuku_action_save_config_sub),
+                                onClick = actions.onSaveCallConfig,
+                                enabled = state.actionsEnabled &&
+                                    channelReady &&
+                                    state.sims.isNotEmpty(),
+                            ),
+                            ActionSpec(
+                                icon = Icons.Filled.PlayArrow,
+                                title = stringResource(R.string.onekuku_action_restore),
+                                subtitle = stringResource(R.string.onekuku_action_restore_sub),
+                                onClick = actions.onRestoreCallConfig,
+                                enabled = state.actionsEnabled &&
+                                    channelReady &&
+                                    state.sims.isNotEmpty(),
+                            ),
+                        ),
                     )
                 }
             }
@@ -166,18 +205,8 @@ private fun OneLinkHome(
                         OneKukuCardState.ACTIVATING -> Unit
                     }
                 },
+                onOpenDeviceDetails = { openDialog = HomeToolDialog.DeviceDetails },
                 detailOverride = state.oneKukuDetailOverride,
-            )
-        }
-
-        item {
-            CarrierRecommendCard(
-                sims = state.sims,
-                selectedSim = state.selectedSim,
-                actionsEnabled = state.recommendActionsEnabled,
-                applying = state.activeOperationLabel ==
-                    stringResource(R.string.apply_recommended),
-                onApplyRecommended = actions.onApplyRecommended,
             )
         }
 
@@ -228,10 +257,6 @@ private fun OneLinkHome(
                         .background(MaterialTheme.colorScheme.surfaceContainerLow),
                 )
             }
-        }
-
-        item {
-            DeviceDetailsCard()
         }
     }
 
@@ -395,62 +420,92 @@ private fun OneKukuHomeDialogs(
             )
         }
 
+        HomeToolDialog.DeviceDetails -> {
+            AlertDialog(
+                onDismissRequest = onDismiss,
+                title = { Text(stringResource(R.string.home_device_details)) },
+                text = {
+                    Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                        DeviceDetailsCard(embedded = true)
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = onDismiss) {
+                        Text(stringResource(R.string.action_close))
+                    }
+                },
+            )
+        }
+
         null -> Unit
     }
 }
 
 @Composable
-private fun DeviceDetailsCard() {
+private fun DeviceDetailsCard(embedded: Boolean = false) {
     val context = LocalContext.current
     val snap = remember { DeviceInfo.snapshot(context) }
     val contentColor = Color(0xFF1A1B20)
 
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.extraLarge,
-        color = Color.White,
-        tonalElevation = 2.dp,
-        shadowElevation = 1.dp,
-    ) {
+    @Composable
+    fun Body() {
         Column(
-            modifier = Modifier.padding(24.dp),
+            modifier = Modifier.padding(if (embedded) 0.dp else 24.dp),
             verticalArrangement = Arrangement.spacedBy(18.dp),
         ) {
-            Row(
-                verticalAlignment = Alignment.Top,
-                horizontalArrangement = Arrangement.spacedBy(18.dp),
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Info,
-                    contentDescription = null,
-                    modifier = Modifier.size(38.dp),
-                    tint = contentColor,
-                )
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
+            if (!embedded) {
+                Row(
+                    verticalAlignment = Alignment.Top,
+                    horizontalArrangement = Arrangement.spacedBy(18.dp),
                 ) {
-                    Text(
-                        text = stringResource(R.string.home_device_details),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = contentColor.copy(alpha = 0.72f),
+                    Icon(
+                        imageVector = Icons.Filled.Info,
+                        contentDescription = null,
+                        modifier = Modifier.size(38.dp),
+                        tint = contentColor,
                     )
-                    Text(
-                        text = snap.modelTitle(),
-                        style = MaterialTheme.typography.titleLarge,
-                        color = contentColor,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                    Text(
-                        text = stringResource(
-                            R.string.home_device_version_line,
-                            snap.versionName,
-                            snap.versionCode,
-                        ),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = contentColor.copy(alpha = 0.72f),
-                    )
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.home_device_details),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = contentColor.copy(alpha = 0.72f),
+                        )
+                        Text(
+                            text = snap.modelTitle(),
+                            style = MaterialTheme.typography.titleLarge,
+                            color = contentColor,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        Text(
+                            text = stringResource(
+                                R.string.home_device_version_line,
+                                snap.versionName,
+                                snap.versionCode,
+                            ),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = contentColor.copy(alpha = 0.72f),
+                        )
+                    }
                 }
+            } else {
+                Text(
+                    text = snap.modelTitle(),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = contentColor,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Text(
+                    text = stringResource(
+                        R.string.home_device_version_line,
+                        snap.versionName,
+                        snap.versionCode,
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = contentColor.copy(alpha = 0.72f),
+                )
             }
 
             Row(
@@ -505,6 +560,20 @@ private fun DeviceDetailsCard() {
                     contentColor = contentColor,
                 )
             }
+        }
+    }
+
+    if (embedded) {
+        Body()
+    } else {
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.extraLarge,
+            color = Color.White,
+            tonalElevation = 2.dp,
+            shadowElevation = 1.dp,
+        ) {
+            Body()
         }
     }
 }
