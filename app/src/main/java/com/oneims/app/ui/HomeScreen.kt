@@ -270,6 +270,11 @@ private fun OneLinkHome(
                 )
             }
         }
+
+        // Lite：设备详情卡固定在首页最下方（不依赖弹窗）。
+        item {
+            DeviceDetailsCard(embedded = false)
+        }
     }
 
     OneKukuHomeDialogs(
@@ -457,7 +462,8 @@ private fun OneKukuHomeDialogs(
 private fun DeviceDetailsCard(embedded: Boolean = false) {
     val context = LocalContext.current
     val snap = remember { DeviceInfo.snapshot(context) }
-    val contentColor = Color(0xFF1A1B20)
+    // 跟主题走：弹窗/深色模式下硬编码深字会几乎看不见。
+    val contentColor = MaterialTheme.colorScheme.onSurface
 
     @Composable
     fun Body() {
@@ -581,7 +587,7 @@ private fun DeviceDetailsCard(embedded: Boolean = false) {
         Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = MaterialTheme.shapes.extraLarge,
-            color = Color.White,
+            color = MaterialTheme.colorScheme.surfaceContainerLow,
             tonalElevation = 2.dp,
             shadowElevation = 1.dp,
         ) {
