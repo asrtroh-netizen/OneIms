@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,6 +33,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.oneims.app.R
+import androidx.compose.material3.Button
 
 /**
  * 独立版首页：对齐邻仓新作 Shizuku 的「两态状态卡 + 2×2 四小方块」。
@@ -224,6 +226,67 @@ private fun TwoStageStrip(
                     color = stageColor,
                     maxLines = 1,
                 )
+            }
+        }
+    }
+}
+
+/**
+ * 对齐新作 Shizuku「无线调试启动」卡：标题 + 指南 / 配对 / 启动。
+ * 插在状态卡与四小方块之间。
+ */
+@Composable
+fun OneKukuWirelessStartCard(
+    startEnabled: Boolean,
+    onGuide: () -> Unit,
+    onPair: () -> Unit,
+    onStart: () -> Unit,
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.extraLarge,
+        color = Color.White,
+        tonalElevation = 1.dp,
+        shadowElevation = 1.dp,
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.PlayArrow,
+                    contentDescription = null,
+                    modifier = Modifier.size(28.dp),
+                    tint = Color(0xFF1A1B20),
+                )
+                Text(
+                    text = stringResource(R.string.onekuku_home_wireless_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF1A1B20),
+                )
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.End),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                OutlinedButton(onClick = onGuide) {
+                    Text(stringResource(R.string.onekuku_home_wireless_guide))
+                }
+                OutlinedButton(onClick = onPair) {
+                    Text(stringResource(R.string.onekuku_home_wireless_pair))
+                }
+                Button(
+                    onClick = onStart,
+                    enabled = startEnabled,
+                ) {
+                    Text(stringResource(R.string.onekuku_home_wireless_start))
+                }
             }
         }
     }

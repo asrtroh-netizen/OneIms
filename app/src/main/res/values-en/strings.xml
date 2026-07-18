@@ -430,6 +430,11 @@
     <string name="onekuku_home_tile_adb_sub">Wireless debugging start</string>
     <string name="onekuku_home_tile_adb_detail">Starts the OneKuku channel via wireless debugging. First run may need pairing.</string>
     <string name="onekuku_home_tile_adb_ready_tip">Channel is already running. Confirm to relaunch, or cancel to go back.</string>
+    <string name="onekuku_home_wireless_title">Wireless debugging start</string>
+    <string name="onekuku_home_wireless_guide">Step-by-step guide</string>
+    <string name="onekuku_home_wireless_pair">Pair</string>
+    <string name="onekuku_home_wireless_start">Start</string>
+
 
     <string name="home_ready_title">Device ready</string>
     <string name="home_setup_needed_title">One more step</string>

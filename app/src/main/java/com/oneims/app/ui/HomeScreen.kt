@@ -119,6 +119,18 @@ private fun OneKukuStandaloneHome(
         }
 
         item {
+            OneKukuWirelessStartCard(
+                startEnabled = state.oneKukuState != OneKukuCardState.ACTIVATING,
+                onGuide = { openDialog = HomeToolDialog.WirelessGuide },
+                onPair = {
+                    actions.onBeginWirelessPairGuide()
+                    actions.onOpenWirelessDebugging()
+                },
+                onStart = { startChannel() },
+            )
+        }
+
+        item {
             SectionBlock(title = stringResource(R.string.onekuku_home_quick_title)) {
                 Column(modifier = Modifier.padding(horizontal = 0.dp, vertical = 4.dp)) {
                     OneKukuShizukuStyleQuickGrid(

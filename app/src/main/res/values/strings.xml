@@ -430,6 +430,11 @@
     <string name="onekuku_home_tile_terminal_need_ready">请先启动 OneKuku 通道后再使用终端相关能力。</string>
     <string name="onekuku_home_tile_terminal_ready_tip">通道已就绪。独立版暂未内嵌终端页；如需 shell，请使用电脑 ADB 或外部终端工具。</string>
     <string name="onekuku_home_tile_adb_ready_tip">通道已在运行。可点确定重新拉起，或取消返回。</string>
+    <string name="onekuku_home_wireless_title">无线调试启动</string>
+    <string name="onekuku_home_wireless_guide">分步骤指南</string>
+    <string name="onekuku_home_wireless_pair">配对</string>
+    <string name="onekuku_home_wireless_start">启动</string>
+
     <string name="onekuku_home_tile_root">Root 启动</string>
     <string name="onekuku_home_tile_root_sub">需要 Root</string>
     <string name="onekuku_home_tile_root_detail">本机未检测到 Root。请使用无线调试或电脑 ADB 启动通道。</string>
