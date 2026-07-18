@@ -83,9 +83,9 @@
 
 ### 🌡️ 独立版发热（OneKuku）
 
-* 根因：内嵌通道周期重投 binder 时，客户端每次都触发全量配置重放
-* 修复：同一 binder 重投不再重复通知；守护 `BRIDGE_READY` 重放加冷却；通道重投间隔放宽
-* **OneIms Lite（Shizuku）** 本无该 3 秒风暴，发热问题主要针对独立激活包
+* 根因：内嵌通道曾用 **周期 sleep 重投 binder**，客户端每次 `sendBinder` 都触发全量配置重放
+* 修复（对齐 Shizuku）：去掉周期重投；改由 **UID/进程起来再投递**；Provider 已有 living binder 则忽略重复 `sendBinder`
+* **OneIms Lite（Shizuku）** 本无该风暴，发热问题主要针对独立激活包
 
 ### 🏠 首页 / 设备详情
 
