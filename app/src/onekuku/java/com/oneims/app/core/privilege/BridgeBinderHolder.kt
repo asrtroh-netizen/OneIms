@@ -7,6 +7,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 
 /**
  * 持有 OneBridge shell 进程投递来的 binder。
+ * 重复投递的去重在 [BridgeBinderProvider]（对齐 ShizukuProvider）。
  */
 object BridgeBinderHolder {
     private const val TAG = "OneBridgeClient"
@@ -25,12 +26,6 @@ object BridgeBinderHolder {
 
     fun onReceived(received: IBinder?) {
         val previous = binder
-        // 周期重投同一远端 binder 时不重复通知，避免 Guard 全量 reapply 导致发热。
-        // BinderProxy.equals 按远端句柄比较，可识别「新包装、同一远端」。
-        if (received != null && previous != null && previous.pingBinder() && previous == received) {
-            Log.d(TAG, "OneBridge binder resent (same remote); skip listeners")
-            return
-        }
         if (previous != null) {
             runCatching { previous.unlinkToDeath(death, 0) }
         }

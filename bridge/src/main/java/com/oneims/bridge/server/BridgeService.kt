@@ -7,14 +7,19 @@ import android.os.IBinder
 import android.os.IInterface
 import android.os.Looper
 import android.util.Log
+import java.util.concurrent.CopyOnWriteArrayList
 
 /**
  * app_process 入口：持有 [BridgeBinder] 并向 OneIMS Provider 投递。
+ *
+ * 投递模型对齐邻仓 Shizuku：
+ * - 启动时投递一次（失败可短重试，见 [ServiceStarter]）
+ * - **无**周期 sleep 重投（旧 3s 循环会打满客户端 reapply）
+ * - 客户端进程/UID 起来时再投一次（对齐 [BinderSender] 的 Process/UidObserver）
+ * - 客户端 Provider 侧若已有 living binder 则忽略（对齐 [ShizukuProvider.handleSendBinder]）
  */
 object BridgeService {
     private const val TAG = "OneBridge"
-    /** 划掉 App 后靠周期重投拿回 binder；过密会触发客户端反复 reapply 发热。 */
-    private const val RESEND_INTERVAL_MS = 30_000L
 
     @JvmStatic
     fun main(args: Array<String>) {
@@ -38,25 +43,153 @@ object BridgeService {
             }
         if (!trySend()) {
             Log.e(TAG, "binder NOT delivered to ${BridgeProtocol.CLIENT_PROVIDER_AUTHORITY}")
+            // 对齐 starter：短暂等待后再试一次（不 force-stop 用户 App）
+            runCatching { Thread.sleep(1_000L) }
+            if (!trySend()) {
+                Log.e(TAG, "binder retry still failed")
+            }
         }
-        // 对齐 Shizuku：App 被划掉后进程仍在；新 App 起来后靠周期重投拿回 binder。
-        Thread(
-            {
-                while (true) {
-                    try {
-                        Thread.sleep(RESEND_INTERVAL_MS)
-                    } catch (_: InterruptedException) {
-                        break
-                    }
-                    trySend()
-                }
-            },
-            "onebridge-resend",
-        ).apply {
-            isDaemon = true
-            start()
-        }
+        ClientBinderSender.register(onClientReady = { trySend() })
         Looper.loop()
+    }
+}
+
+/**
+ * 对齐 Shizuku [BinderSender]：客户端 UID/进程起来时再投递 binder，
+ * 代替「死循环 sleep 重投」。
+ */
+@SuppressLint("PrivateApi")
+object ClientBinderSender {
+    private const val TAG = "OneBridge"
+    private const val UID_OBSERVER_ACTIVE = 1 shl 0
+    private const val UID_OBSERVER_GONE = 1 shl 1
+    private const val UID_OBSERVER_IDLE = 1 shl 2
+    private const val UID_OBSERVER_CACHED = 1 shl 3
+
+    private val startedUids = CopyOnWriteArrayList<Int>()
+
+    fun register(onClientReady: () -> Unit) {
+        val am = activityManager() ?: run {
+            Log.w(TAG, "ActivityManager unavailable; skip BinderSender-style observers")
+            return
+        }
+        registerUidObserver(am, onClientReady)
+        registerProcessObserver(am, onClientReady)
+    }
+
+    private fun activityManager(): Any? = runCatching {
+        Class.forName("android.app.ActivityManager")
+            .getDeclaredMethod("getService")
+            .apply { isAccessible = true }
+            .invoke(null)
+    }.onFailure { Log.w(TAG, "get ActivityManager failed", it) }.getOrNull()
+
+    private fun packagesForUid(uid: Int): List<String> = runCatching {
+        val pm = Class.forName("android.app.ActivityThread")
+            .getDeclaredMethod("getPackageManager")
+            .invoke(null)
+        @Suppress("UNCHECKED_CAST")
+        val pkgs = pm.javaClass.methods
+            .first { it.name == "getPackagesForUid" && it.parameterTypes.size == 1 }
+            .invoke(pm, uid) as? Array<String>
+        pkgs?.toList().orEmpty()
+    }.getOrDefault(emptyList())
+
+    private fun isOneImsClient(uid: Int): Boolean =
+        packagesForUid(uid).any { it == BridgeProtocol.CLIENT_PACKAGE }
+
+    private fun onUidStarts(uid: Int, onClientReady: () -> Unit) {
+        if (!isOneImsClient(uid)) return
+        if (startedUids.contains(uid)) {
+            Log.v(TAG, "Uid $uid already starts")
+            return
+        }
+        startedUids.add(uid)
+        Log.i(TAG, "OneIMS uid=$uid starts; send binder")
+        onClientReady()
+    }
+
+    private fun onUidGone(uid: Int) {
+        startedUids.remove(uid)
+        Log.v(TAG, "Uid $uid gone")
+    }
+
+    private fun registerUidObserver(am: Any, onClientReady: () -> Unit) {
+        runCatching {
+            val stubClz = Class.forName("android.app.IUidObserver\$Stub")
+            val proxy = java.lang.reflect.Proxy.newProxyInstance(
+                stubClz.classLoader,
+                arrayOf(Class.forName("android.app.IUidObserver")),
+            ) { _, method, args ->
+                when (method.name) {
+                    "onUidActive" -> {
+                        val uid = args?.getOrNull(0) as? Int ?: return@newProxyInstance null
+                        onUidStarts(uid, onClientReady)
+                    }
+                    "onUidIdle" -> {
+                        val uid = args?.getOrNull(0) as? Int ?: return@newProxyInstance null
+                        onUidStarts(uid, onClientReady)
+                    }
+                    "onUidCachedChanged" -> {
+                        val uid = args?.getOrNull(0) as? Int ?: return@newProxyInstance null
+                        val cached = args.getOrNull(1) as? Boolean ?: true
+                        if (!cached) onUidStarts(uid, onClientReady)
+                    }
+                    "onUidGone" -> {
+                        val uid = args?.getOrNull(0) as? Int ?: return@newProxyInstance null
+                        onUidGone(uid)
+                    }
+                    "asBinder" -> Binder()
+                    else -> null
+                }
+            }
+            val which = UID_OBSERVER_ACTIVE or UID_OBSERVER_GONE or
+                UID_OBSERVER_IDLE or UID_OBSERVER_CACHED
+            val methods = am.javaClass.methods.filter { it.name == "registerUidObserver" }
+            var ok = false
+            for (m in methods.sortedByDescending { it.parameterTypes.size }) {
+                val types = m.parameterTypes
+                try {
+                    when (types.size) {
+                        4 -> m.invoke(am, proxy, which, -1, null)
+                        5 -> m.invoke(am, proxy, which, -1, null, null)
+                        else -> continue
+                    }
+                    ok = true
+                    Log.i(TAG, "registerUidObserver ok via ${m.toGenericString()}")
+                    break
+                } catch (t: Throwable) {
+                    Log.w(TAG, "registerUidObserver fail ${types.size}: ${t.message}")
+                }
+            }
+            if (!ok) Log.w(TAG, "registerUidObserver unavailable")
+        }.onFailure { Log.w(TAG, "registerUidObserver failed", it) }
+    }
+
+    private fun registerProcessObserver(am: Any, onClientReady: () -> Unit) {
+        runCatching {
+            val proxy = java.lang.reflect.Proxy.newProxyInstance(
+                Class.forName("android.app.IProcessObserver").classLoader,
+                arrayOf(Class.forName("android.app.IProcessObserver")),
+            ) { _, method, args ->
+                when (method.name) {
+                    "onForegroundActivitiesChanged" -> {
+                        val uid = args?.getOrNull(1) as? Int ?: return@newProxyInstance null
+                        val fg = args.getOrNull(2) as? Boolean ?: false
+                        if (fg) onUidStarts(uid, onClientReady)
+                    }
+                    "onProcessStateChanged" -> {
+                        val uid = args?.getOrNull(1) as? Int ?: return@newProxyInstance null
+                        onUidStarts(uid, onClientReady)
+                    }
+                    "asBinder" -> Binder()
+                    else -> null
+                }
+            }
+            val m = am.javaClass.methods.first { it.name == "registerProcessObserver" }
+            m.invoke(am, proxy)
+            Log.i(TAG, "registerProcessObserver ok")
+        }.onFailure { Log.w(TAG, "registerProcessObserver failed", it) }
     }
 }
 
@@ -205,7 +338,6 @@ object BinderDistributor {
     }.onFailure {
         Log.w(TAG, "AttributionSource.Builder failed", it)
     }.getOrNull()
-
 
     /** 占位 token，满足 getContentProviderExternal 非空要求。 */
     private val BinderToken = object : Binder() {}

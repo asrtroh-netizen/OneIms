@@ -10,6 +10,9 @@ import android.util.Log
 
 /**
  * 接收 OneBridge shell 进程投递的 binder。仅允许 shell(2000)/root(0) 调用。
+ *
+ * 对齐邻仓 [rikka.shizuku.ShizukuProvider#handleSendBinder]：
+ * 已有 living binder 时忽略重复 sendBinder，避免重投触发客户端全量 reapply。
  */
 class BridgeBinderProvider : ContentProvider() {
     override fun onCreate(): Boolean = true
@@ -21,6 +24,12 @@ class BridgeBinderProvider : ContentProvider() {
             return null
         }
         if (method != "sendBinder") return null
+
+        if (BridgeBinderHolder.get() != null) {
+            Log.d(TAG, "sendBinder is called when already a living binder")
+            return Bundle().apply { putBoolean("ok", true) }
+        }
+
         val binder = extras?.getBinder("binder")
         BridgeBinderHolder.onReceived(binder)
         return Bundle().apply { putBoolean("ok", binder != null) }

@@ -35,17 +35,8 @@ class GuardService : Service() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var loopJob: Job? = null
 
-    @Volatile
-    private var lastBridgeReadyReapplyAtMs: Long = 0L
-
     private val binderReceivedListener: () -> Unit = {
         scope.launch {
-            val now = System.currentTimeMillis()
-            // 同一 binder 的粘性/重投通知做冷却，避免独立版通道周期投递打满 CarrierConfig。
-            if (now - lastBridgeReadyReapplyAtMs < BRIDGE_READY_DEBOUNCE_MS) {
-                return@launch
-            }
-            lastBridgeReadyReapplyAtMs = now
             runCatching {
                 ReapplyManager.reapply(
                     applicationContext,
@@ -140,7 +131,6 @@ class GuardService : Service() {
         private const val CHANNEL = "oneims_guard"
         private const val NOTIF_ID = 1001
         private const val INTERVAL_MS = 120_000L // 巡检间隔 2 分钟
-        private const val BRIDGE_READY_DEBOUNCE_MS = 60_000L
 
         fun start(context: Context) {
             val i = Intent(context, GuardService::class.java)
