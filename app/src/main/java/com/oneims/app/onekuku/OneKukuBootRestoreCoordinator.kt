@@ -28,9 +28,13 @@ import com.oneims.app.core.OneKukuPrivilegeBridgeImpl
 import com.oneims.app.core.ReapplyManager
 import com.oneims.app.core.ReapplyTrigger
 import com.oneims.app.core.ShizukuSetupHelper
+import com.oneims.app.core.privilege.PrivilegeBridges
+import kotlin.coroutines.resume
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * 重启后自动检查/恢复编排（不关数据、不切卡、不飞行、不碰 radio、不恢复 APN）。
@@ -38,8 +42,10 @@ import kotlinx.coroutines.withContext
 object OneKukuBootRestoreCoordinator {
     private const val TAG = "OneIMS-OneKuku"
     private const val STABLE_WAIT_MS = 2_000L
-    /** SIM 已稳定后再短等，给 telephony/IMS 收口；5s 仍偏慢，压到 2.5s。 */
+    /** SIM 已稳定后再短等，给 telephony/IMS 收口。 */
     private const val POST_READY_DELAY_MS = 2_500L
+    /** OneLink：配置不依赖内嵌 ADB，SIM 稳定后少等一会。 */
+    private const val POST_READY_DELAY_SHIZUKU_MS = 800L
     private const val SIM_POLL_MS = 1_500L
     private const val SIM_WAIT_MAX_MS = 90_000L
     /**
@@ -47,8 +53,16 @@ object OneKukuBootRestoreCoordinator {
      * 60s 会把「激活中」钉很久；超时改回 WAITING_WIFI 由前台/下次编排再试。
      */
     private const val BOOT_WIFI_WAIT_MS = 20_000L
+    /** OneLink：Wi‑Fi 仅作 Shizuku 晚起兜底，勿先空等堵死 binder。 */
+    private const val BOOT_WIFI_WAIT_SHIZUKU_MS = 12_000L
     /** 直连失败后刚打开无线调试，短等端口起来即可，不必空等 8s。 */
     private const val POST_WIRELESS_ENABLE_MS = 2_500L
+    /**
+     * OneLink：先等 binder；失败后再等 Wi‑Fi + 第二段 binder。
+     * 旧逻辑先卡满 Wi‑Fi 再等 binder，Shizuku 已 Active 也会被拖慢。
+     */
+    private const val BOOT_BRIDGE_WAIT_EARLY_MS = 12_000L
+    private const val BOOT_BRIDGE_WAIT_AFTER_WIFI_MS = 12_000L
     private const val CHANNEL = "oneims_boot_restore"
     private const val NOTIF_ID = 1002
 
@@ -97,16 +111,18 @@ object OneKukuBootRestoreCoordinator {
 
         if (!waitUntilSimsStable(context)) {
             Log.i(TAG, "SIM not ready/stable; channel may already be ready")
-            // 通道已就绪但 SIM 未稳：仍标记休眠，避免首页一直未激活。
+            // 通道已就绪但 SIM 未稳：prefs 重放可能已跑过；不 markAttempted，
+            // 便于 Wi‑Fi / 打开 App 再 enqueue 把快照段跑完，避免本开机永久占位漏恢复。
             if (OneKukuManager.isReady()) {
-                OneKukuBootRestoreStore.markAttemptedThisBoot(context)
                 OneKukuBootRestoreStore.writeHint(context, OneKukuBootUiHint.READY_SLEEPING)
-                OneKukuSleepController.sleepIfEnabled(context)
+                sleepAfterBootConfig(context)
             }
             return
         }
 
-        delay(POST_READY_DELAY_MS)
+        delay(
+            if (ChannelLine.usesShizuku) POST_READY_DELAY_SHIZUKU_MS else POST_READY_DELAY_MS,
+        )
 
         // 延迟后再占一次「本开机」名额，避免过早标记导致永远不跑
         if (OneKukuBootRestoreStore.hasAttemptedThisBoot(context)) return
@@ -133,7 +149,7 @@ object OneKukuBootRestoreCoordinator {
         if (snapshots.isEmpty()) {
             OneKukuBootRestoreStore.setNoSnapshotNote(context, true)
             OneKukuBootRestoreStore.writeHint(context, OneKukuBootUiHint.NO_SNAPSHOT_SLEEPING)
-            OneKukuSleepController.sleepIfEnabled(context)
+            sleepAfterBootConfig(context)
             return
         }
         OneKukuBootRestoreStore.setNoSnapshotNote(context, false)
@@ -158,7 +174,7 @@ object OneKukuBootRestoreCoordinator {
         if (!needsRestore) {
             Log.i(TAG, "configs still valid, stay sleeping")
             OneKukuBootRestoreStore.writeHint(context, OneKukuBootUiHint.READY_SLEEPING)
-            OneKukuSleepController.sleepIfEnabled(context)
+            sleepAfterBootConfig(context)
             return
         }
 
@@ -200,18 +216,64 @@ object OneKukuBootRestoreCoordinator {
         when {
             anySuccess && !anyFailure -> {
                 OneKukuBootRestoreStore.writeHint(context, OneKukuBootUiHint.RESTORE_COMPLETE)
-                OneKukuSleepController.sleepIfEnabled(context)
+                sleepAfterBootConfig(context)
             }
             anySuccess -> {
                 OneKukuBootRestoreStore.writeHint(context, OneKukuBootUiHint.RESTORE_COMPLETE)
-                OneKukuSleepController.sleepIfEnabled(context)
+                sleepAfterBootConfig(context)
             }
             else -> {
                 OneKukuBootRestoreStore.writeHint(context, OneKukuBootUiHint.NEEDS_ACTIVATION)
                 notifyNeedsRestore(context)
-                OneKukuSleepController.sleepIfEnabled(context)
+                sleepAfterBootConfig(context)
             }
         }
+    }
+
+    /** 开机编排收尾：写过配置或确认仍有效后，一律进入休眠标签。 */
+    private fun sleepAfterBootConfig(context: Context) {
+        OneKukuSleepController.sleep(context)
+    }
+
+    /**
+     * 等特权桥 binder + 授权。用于 OneLink：旧网已连、Shizuku 稍晚自启的窗口。
+     */
+    private suspend fun awaitBridgeReady(timeoutMs: Long): Boolean {
+        if (OneKukuManager.isReady()) return true
+        val bridge = PrivilegeBridges.current
+        val ready = withTimeoutOrNull(timeoutMs) {
+            suspendCancellableCoroutine { cont ->
+                lateinit var listener: () -> Unit
+                listener = {
+                    if (OneKukuManager.isRunning() && !OneKukuManager.isGranted()) {
+                        OneKukuManager.requestActivation()
+                    }
+                    if (OneKukuManager.isReady() && cont.isActive) {
+                        bridge.removeBinderReceivedListener(listener)
+                        cont.resume(true)
+                    }
+                }
+                bridge.addBinderReceivedListener(listener, sticky = true)
+                cont.invokeOnCancellation {
+                    bridge.removeBinderReceivedListener(listener)
+                }
+                // sticky 可能已同步回调；再主动 wake 一次兜底。
+                OneKukuHiddenRunner.wake()
+                if (OneKukuManager.isRunning() && !OneKukuManager.isGranted()) {
+                    OneKukuManager.requestActivation()
+                }
+                if (OneKukuManager.isReady() && cont.isActive) {
+                    bridge.removeBinderReceivedListener(listener)
+                    cont.resume(true)
+                }
+            }
+        } == true
+        if (ready) return true
+        OneKukuHiddenRunner.wake()
+        if (OneKukuManager.isRunning() && !OneKukuManager.isGranted()) {
+            OneKukuManager.requestActivation()
+        }
+        return OneKukuManager.isReady()
     }
 
     fun isSnapshotEffective(
@@ -220,7 +282,7 @@ object OneKukuBootRestoreCoordinator {
         snapshot: OneKukuSnapshot,
     ): Boolean {
         val expected = PersistableBundle()
-        var hasExpected = false
+        var hasCarrierExpectation = false
         snapshot.entries
             .filter { it.configGroup == "ims" || it.configGroup == "nr5g" }
             .forEach { entry ->
@@ -228,25 +290,75 @@ object OneKukuBootRestoreCoordinator {
                     entry.configGroup == "ims" && entry.configKey == "volte" &&
                         entry.configValue.toBooleanStrictOrNull() == true -> {
                         expected.putBoolean(CarrierConfigKeys.VOLTE_AVAILABLE, true)
-                        hasExpected = true
+                        hasCarrierExpectation = true
                     }
                     entry.configGroup == "ims" && entry.configKey == "vowifi" &&
                         entry.configValue.toBooleanStrictOrNull() == true -> {
                         expected.putBoolean(CarrierConfigKeys.WFC_IMS_AVAILABLE, true)
-                        hasExpected = true
+                        hasCarrierExpectation = true
                     }
                     entry.configGroup == "nr5g" && entry.configKey == "enabled" &&
                         entry.configValue.toBooleanStrictOrNull() == true -> {
-                        hasExpected = true
+                        expected.putIntArray(
+                            CarrierConfigKeys.NR_AVAILABILITIES_INT_ARRAY,
+                            intArrayOf(1, 2),
+                        )
+                        hasCarrierExpectation = true
                     }
                 }
             }
-        if (!hasExpected) {
-            return CarrierConfigOverrideWriter.readConfigForSubId(context, subId, emptyList()) != null
+        if (hasCarrierExpectation && expected.keySet().isNotEmpty()) {
+            if (!CarrierConfigOverrideWriter.verifyOverride(context, subId, expected)) {
+                return false
+            }
         }
-        if (expected.keySet().isEmpty()) {
-            return true
+        // soft 组（identity / 信号名 / 高级等）多为 temporary 覆盖，冷开后常丢；
+        // 有 soft 条目则本开机需要走一次 RESTORE（markAttempted 防同轮循环）。
+        val softGroups = setOf(
+            "identity",
+            "signal",
+            "vowifi_name",
+            "advanced",
+            "extras",
+            "five_g_display",
+        )
+        val hasSoftRestore = snapshot.entries.any { entry ->
+            entry.configGroup in softGroups && entry.configValue.isNotBlank()
         }
+        if (hasSoftRestore) return false
+        // 无 soft、且无 carrier 期望（或 carrier 已校验通过）→ 视为仍有效
+        return true
+    }
+
+    /**
+     * 快照恢复末尾校验：仅在有 CarrierConfig 可校验期望时严格核对；
+     * soft-only 快照在写入步骤成功后视为通过，避免 verify 永假拖成 partial。
+     */
+    fun isSnapshotCarrierVerified(
+        context: Context,
+        subId: Int,
+        snapshot: OneKukuSnapshot,
+    ): Boolean {
+        val expected = PersistableBundle()
+        snapshot.entries
+            .filter { it.configGroup == "ims" || it.configGroup == "nr5g" }
+            .forEach { entry ->
+                when {
+                    entry.configGroup == "ims" && entry.configKey == "volte" &&
+                        entry.configValue.toBooleanStrictOrNull() == true ->
+                        expected.putBoolean(CarrierConfigKeys.VOLTE_AVAILABLE, true)
+                    entry.configGroup == "ims" && entry.configKey == "vowifi" &&
+                        entry.configValue.toBooleanStrictOrNull() == true ->
+                        expected.putBoolean(CarrierConfigKeys.WFC_IMS_AVAILABLE, true)
+                    entry.configGroup == "nr5g" && entry.configKey == "enabled" &&
+                        entry.configValue.toBooleanStrictOrNull() == true ->
+                        expected.putIntArray(
+                            CarrierConfigKeys.NR_AVAILABILITIES_INT_ARRAY,
+                            intArrayOf(1, 2),
+                        )
+                }
+            }
+        if (expected.keySet().isEmpty()) return true
         return CarrierConfigOverrideWriter.verifyOverride(context, subId, expected)
     }
 
@@ -303,10 +415,13 @@ object OneKukuBootRestoreCoordinator {
         }
     }
 
-    /** 通道已就绪时重放能力页配置（不再二次 ensure，避免重复激活）。 */
+    /**
+     * 通道已就绪时重放持久配置（核心 / 高级选项 / extras / 5G 显示 / 信号等）。
+     * 与 [ReapplyManager] 同一契约；无任何重放源才跳过。
+     */
     private suspend fun reapplyLastCapabilityProfileAssumingReady(context: Context) {
-        if (ConfigStore.lastApplied(context) == null) {
-            Log.i(TAG, "no lastApplied profile, skip capability reapply")
+        if (!ReapplyManager.hasPersistedReapplySource(context)) {
+            Log.i(TAG, "no persisted reapply source, skip capability reapply")
             return
         }
         runCatching {
@@ -337,17 +452,24 @@ object OneKukuBootRestoreCoordinator {
         }
 
         if (ChannelLine.usesShizuku) {
-            // OneLink：官方 Shizuku 常依赖旧网回来；短等 Wi‑Fi 后再认一次就绪。
-            val wifiOk = withContext(Dispatchers.IO) {
-                OneKukuAdbMdns.waitForWifiClient(context, BOOT_WIFI_WAIT_MS)
+            // OneLink：优先等 Shizuku binder，禁止「先卡满 Wi‑Fi」把已 Active 的窗口拖死。
+            if (awaitBridgeReady(BOOT_BRIDGE_WAIT_EARLY_MS)) {
+                Log.i(TAG, "boot onelink: bridge ready (early, before Wi‑Fi wait)")
+                return BootReady.READY
             }
-            Log.i(TAG, "boot onelink: wait Wi‑Fi ok=$wifiOk")
-            if (OneKukuManager.isReady()) return BootReady.READY
+            val wifiOk = withContext(Dispatchers.IO) {
+                OneKukuAdbMdns.waitForWifiClient(context, BOOT_WIFI_WAIT_SHIZUKU_MS)
+            }
+            Log.i(TAG, "boot onelink: wait Wi‑Fi ok=$wifiOk (fallback after binder miss)")
             val wakeAgain = OneKukuHiddenRunner.wake()
             if ((wakeAgain.success || OneKukuManager.isRunning()) && !OneKukuManager.isGranted()) {
                 OneKukuManager.requestActivation()
             }
             if (OneKukuManager.isReady()) return BootReady.READY
+            if (awaitBridgeReady(BOOT_BRIDGE_WAIT_AFTER_WIFI_MS)) {
+                Log.i(TAG, "boot onelink: bridge ready after Wi‑Fi")
+                return BootReady.READY
+            }
             if (!wifiOk) {
                 OneKukuBootRestoreStore.writeHint(context, OneKukuBootUiHint.WAITING_WIFI)
                 return BootReady.WAITING_WIFI

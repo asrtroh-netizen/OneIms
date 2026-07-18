@@ -50,7 +50,8 @@ object OneKukuAdbMdns {
         val deadline = System.currentTimeMillis() + timeoutMs
         while (System.currentTimeMillis() < deadline) {
             if (isWifiClientConnected(app)) return true
-            Thread.sleep(1_500L)
+            // 轮询收紧：开机恢复别在 1.5s 粒度上空转。
+            Thread.sleep(500L)
         }
         return isWifiClientConnected(app)
     }
