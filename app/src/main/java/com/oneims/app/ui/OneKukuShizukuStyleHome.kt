@@ -33,6 +33,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.oneims.app.R
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 
@@ -285,6 +286,7 @@ fun OneKukuWirelessStartCard(
                 Button(
                     onClick = onStart,
                     enabled = startEnabled,
+                    border = BorderStroke(1.dp, ShizukuHomePalette.onAccent().copy(alpha = 0.35f)),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = ShizukuHomePalette.accent(),
                         contentColor = ShizukuHomePalette.onAccent(),

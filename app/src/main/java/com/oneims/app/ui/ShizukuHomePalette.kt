@@ -7,13 +7,8 @@ import androidx.compose.ui.res.colorResource
 import com.oneims.app.R
 
 /**
- * 严格映射邻仓 Shizuku 本地资源（勿自造色值）。
- *
- * 真源：
- * - `.../values/colors.xml`（hero_* / app_color_*）
- * - `home_item_container.xml` → `?colorSurfaceContainerLow`
- * - `bg_action_tile.xml` → `?colorSurfaceContainerHigh`
- * - `themes.xml` → primary = app_color_light / app_color_dark（由 [Theme] 注入）
+ * 首页色板：hero 未激活仍用邻仓粉卡；**蓝色强调全部改为白**（启动钮 / 激活中卡）。
+ * 卡面 / 瓦片仍跟 Shizuku 的 surfaceContainerLow / High。
  */
 object ShizukuHomePalette {
     @Composable
@@ -22,11 +17,12 @@ object ShizukuHomePalette {
     @Composable
     fun heroInactiveFg(): Color = colorResource(R.color.shizuku_hero_inactive_fg)
 
+    /** 原 hero_activating 蓝卡 → 按需求改为白卡。 */
     @Composable
-    fun heroActivatingBg(): Color = colorResource(R.color.shizuku_hero_activating_bg)
+    fun heroActivatingBg(): Color = colorResource(R.color.shizuku_hero_ready_bg)
 
     @Composable
-    fun heroActivatingFg(): Color = colorResource(R.color.shizuku_hero_activating_fg)
+    fun heroActivatingFg(): Color = colorResource(R.color.shizuku_hero_ready_fg)
 
     @Composable
     fun heroReadyBg(): Color = colorResource(R.color.shizuku_hero_ready_bg)
@@ -34,18 +30,16 @@ object ShizukuHomePalette {
     @Composable
     fun heroReadyFg(): Color = colorResource(R.color.shizuku_hero_ready_fg)
 
-    /** 对应 themes 的 appColorPrimary（Theme.kt 已写入 colorScheme.primary）。 */
+    /** 原蓝「启动」→ 白底深字。 */
     @Composable
-    fun accent(): Color = MaterialTheme.colorScheme.primary
+    fun accent(): Color = Color.White
 
     @Composable
-    fun onAccent(): Color = MaterialTheme.colorScheme.onPrimary
+    fun onAccent(): Color = colorResource(R.color.shizuku_hero_ready_fg)
 
-    /** home_item_container */
     @Composable
     fun cardSurface(): Color = MaterialTheme.colorScheme.surfaceContainerLow
 
-    /** bg_action_tile */
     @Composable
     fun tileSurface(): Color = MaterialTheme.colorScheme.surfaceContainerHigh
 
