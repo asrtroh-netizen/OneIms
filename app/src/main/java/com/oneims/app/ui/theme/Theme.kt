@@ -45,20 +45,18 @@ object OneImsTokens {
  */
 
 /**
- * 主色对齐邻仓 Shizuku `colors.xml`：
- * - light `app_color_light` = #0B57D0
- * - dark `app_color_dark` = #A9C7FF
- * hero 容器色与同文件 hero_* 一致（供非首页组件复用）。
+ * 全局主色：原 Google Blue 全部改为白（用户要求「全局蓝换白」）。
+ * 未激活 hero 粉卡仍走 errorContainer，不属蓝色强调。
  */
 private val LightColors = lightColorScheme(
-    primary = Color(0xFF0B57D0),
-    onPrimary = Color.White,
-    primaryContainer = Color(0xFFD3E3FD),
-    onPrimaryContainer = Color(0xFF041E49),
+    primary = Color.White,
+    onPrimary = Color(0xFF1A1B20),
+    primaryContainer = Color(0xFFF0F0F4),
+    onPrimaryContainer = Color(0xFF1A1B20),
     secondary = Color(0xFF575E71),
-    secondaryContainer = Color(0xFFDBE2F9),
-    tertiary = Color(0xFF715573),
-    tertiaryContainer = Color(0xFFFBD7FC),
+    secondaryContainer = Color(0xFFE8E8EF),
+    tertiary = Color(0xFF5F5E62),
+    tertiaryContainer = Color(0xFFE8E8EF),
     background = Color(0xFFF9F9FF),
     onBackground = Color(0xFF1A1B20),
     surface = Color(0xFFF9F9FF),
@@ -73,14 +71,14 @@ private val LightColors = lightColorScheme(
 )
 
 private val DarkColors = darkColorScheme(
-    primary = Color(0xFFA9C7FF),
-    onPrimary = Color(0xFF003063),
-    primaryContainer = Color(0xFF00468B),
-    onPrimaryContainer = Color(0xFFD7E3FF),
-    secondary = Color(0xFFBFC6DC),
+    primary = Color.White,
+    onPrimary = Color(0xFF1A1B20),
+    primaryContainer = Color(0xFF2B2930),
+    onPrimaryContainer = Color(0xFFE2E2E9),
+    secondary = Color(0xFFC8C5D0),
     secondaryContainer = Color(0xFF3F4759),
-    tertiary = Color(0xFFDEBCDF),
-    tertiaryContainer = Color(0xFF583E5B),
+    tertiary = Color(0xFFC8C5D0),
+    tertiaryContainer = Color(0xFF48464C),
     background = Color(0xFF111318),
     onBackground = Color(0xFFE2E2E9),
     surface = Color(0xFF111318),

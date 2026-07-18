@@ -101,8 +101,9 @@ fun OneImsScaffold(
                 if (!useNavigationRail) {
                     // 悬浮圆角岛 Dock；选中高亮改为圆形，避免六项时胶囊指示器挤成一团。
                     val dockColors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = MaterialTheme.colorScheme.primary,
-                        selectedTextColor = MaterialTheme.colorScheme.primary,
+                        // primary 已全局为白：选中态用 onSurface，避免浅色底上白图标不可见
+                        selectedIconColor = MaterialTheme.colorScheme.onSurface,
+                        selectedTextColor = MaterialTheme.colorScheme.onSurface,
                         indicatorColor = Color.Transparent,
                         unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                         unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -139,7 +140,7 @@ fun OneImsScaffold(
                                                     .size(40.dp)
                                                     .background(
                                                         color = if (selected) {
-                                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)
+                                                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.14f)
                                                         } else {
                                                             Color.Transparent
                                                         },

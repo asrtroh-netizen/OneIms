@@ -7,8 +7,7 @@ import androidx.compose.ui.res.colorResource
 import com.oneims.app.R
 
 /**
- * 首页色板：hero 未激活仍用邻仓粉卡；**蓝色强调全部改为白**（启动钮 / 激活中卡）。
- * 卡面 / 瓦片仍跟 Shizuku 的 surfaceContainerLow / High。
+ * 首页色板：hero 粉/白来自邻仓资源；强调色跟全局 [Theme] primary（现已为白）。
  */
 object ShizukuHomePalette {
     @Composable
@@ -17,7 +16,6 @@ object ShizukuHomePalette {
     @Composable
     fun heroInactiveFg(): Color = colorResource(R.color.shizuku_hero_inactive_fg)
 
-    /** 原 hero_activating 蓝卡 → 按需求改为白卡。 */
     @Composable
     fun heroActivatingBg(): Color = colorResource(R.color.shizuku_hero_ready_bg)
 
@@ -30,12 +28,11 @@ object ShizukuHomePalette {
     @Composable
     fun heroReadyFg(): Color = colorResource(R.color.shizuku_hero_ready_fg)
 
-    /** 原蓝「启动」→ 白底深字。 */
     @Composable
-    fun accent(): Color = Color.White
+    fun accent(): Color = MaterialTheme.colorScheme.primary
 
     @Composable
-    fun onAccent(): Color = colorResource(R.color.shizuku_hero_ready_fg)
+    fun onAccent(): Color = MaterialTheme.colorScheme.onPrimary
 
     @Composable
     fun cardSurface(): Color = MaterialTheme.colorScheme.surfaceContainerLow
