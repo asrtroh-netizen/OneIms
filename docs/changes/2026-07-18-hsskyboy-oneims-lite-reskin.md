@@ -12,14 +12,15 @@
 
 ## 换皮清单（最新）
 
-- Hero：Active / Inactive 两态 + 阶段条
+- Hero：左侧状态图标 + Active/Inactive + 阶段连线（对齐库内皮 / OneKuku）
 - 无线调试卡：按钮顺序 **分步指南 · 配对 · 启动**
 - 2×2：应用管理 / 终端 / Root / 电脑 ADB（点击弹窗）
-- **2×2 下一行胶囊**：启动 / 语言 / 主题（点击弹窗；语言为 OneIMS 胶囊高亮样式）
-- 顶栏：**去掉 Settings / About**（运行中保留「停止」）
-- 自动化 Intent 卡 + 隐身说明卡
+- **启动整卡**：与无线调试同尺寸 chrome，点「设置」弹开机自启/无线自启/看门狗
+- **右上角小胶囊**：语言（高亮圆点）+ 主题（OneIMS 胶囊样式）
+- 顶栏：去掉 Settings / About；运行中保留「停止」
+- 自动化 / 隐身 / 了解更多（对齐库内皮卡片序列）
 - 主色 `#0B57D0` / `#A9C7FF`；卡片 20dp
-- APK 输出名：`Shizuku-v{version}-{variant}.apk`；交付副本 `E:\GQ\One\_forks\Shizuku.apk`
+- APK：`Shizuku-v{version}-{variant}.apk` → `E:\GQ\One\_forks\Shizuku.apk`
 
 ## 自启链路（未改逻辑）
 
