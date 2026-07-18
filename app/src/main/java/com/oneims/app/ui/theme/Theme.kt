@@ -44,11 +44,12 @@ object OneImsTokens {
  * 高对比主题下都能维持清晰的信息层级。
  */
 
+/** 与邻仓新作 Shizuku（thedjchi）亮色板对齐：主色 #0B57D0 + hero 三态色。 */
 private val LightColors = lightColorScheme(
     primary = Color(0xFF0B57D0),
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFD7E3FF),
-    onPrimaryContainer = Color(0xFF001B3F),
+    primaryContainer = Color(0xFFD3E3FD),
+    onPrimaryContainer = Color(0xFF041E49),
     secondary = Color(0xFF575E71),
     secondaryContainer = Color(0xFFDBE2F9),
     tertiary = Color(0xFF715573),
@@ -62,7 +63,8 @@ private val LightColors = lightColorScheme(
     outline = Color(0xFF74777F),
     outlineVariant = Color(0xFFC4C6D0),
     error = Color(0xFFBA1A1A),
-    errorContainer = Color(0xFFFFDAD6),
+    errorContainer = Color(0xFFF9DEDC),
+    onErrorContainer = Color(0xFF410E0B),
 )
 
 private val DarkColors = darkColorScheme(

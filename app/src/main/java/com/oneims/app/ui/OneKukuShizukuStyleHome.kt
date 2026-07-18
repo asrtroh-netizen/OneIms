@@ -56,14 +56,14 @@ fun OneKukuShizukuStyleStatusHero(
         OneKukuCardState.INACTIVE -> HeroVisual.INACTIVE
     }
     val containerColor = when (hero) {
-        HeroVisual.INACTIVE -> MaterialTheme.colorScheme.errorContainer
-        HeroVisual.ACTIVATING -> MaterialTheme.colorScheme.primaryContainer
-        HeroVisual.READY -> Color.White
+        HeroVisual.INACTIVE -> ShizukuHomePalette.heroInactiveBg
+        HeroVisual.ACTIVATING -> ShizukuHomePalette.heroActivatingBg
+        HeroVisual.READY -> ShizukuHomePalette.heroReadyBg
     }
     val contentColor = when (hero) {
-        HeroVisual.INACTIVE -> MaterialTheme.colorScheme.onErrorContainer
-        HeroVisual.ACTIVATING -> MaterialTheme.colorScheme.onPrimaryContainer
-        HeroVisual.READY -> Color(0xFF1A1B20)
+        HeroVisual.INACTIVE -> ShizukuHomePalette.heroInactiveFg
+        HeroVisual.ACTIVATING -> ShizukuHomePalette.heroActivatingFg
+        HeroVisual.READY -> ShizukuHomePalette.heroReadyFg
     }
     val title = when (hero) {
         HeroVisual.READY -> stringResource(R.string.channel_display_name)
@@ -245,7 +245,7 @@ fun OneKukuWirelessStartCard(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.extraLarge,
-        color = Color.White,
+        color = ShizukuHomePalette.tileSurface,
         tonalElevation = 1.dp,
         shadowElevation = 1.dp,
     ) {
@@ -261,13 +261,13 @@ fun OneKukuWirelessStartCard(
                     imageVector = Icons.Filled.PlayArrow,
                     contentDescription = null,
                     modifier = Modifier.size(28.dp),
-                    tint = Color(0xFF1A1B20),
+                    tint = ShizukuHomePalette.heroReadyFg,
                 )
                 Text(
                     text = stringResource(R.string.onekuku_home_wireless_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1A1B20),
+                    color = ShizukuHomePalette.heroReadyFg,
                 )
             }
             Row(
@@ -363,7 +363,7 @@ private fun QuickTile(
             .alpha(if (dimmed) 0.45f else 1f)
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
-        color = Color.White,
+        color = ShizukuHomePalette.tileSurface,
         tonalElevation = 1.dp,
         shadowElevation = 1.dp,
     ) {
@@ -377,18 +377,18 @@ private fun QuickTile(
                 imageVector = icon,
                 contentDescription = null,
                 modifier = Modifier.size(24.dp),
-                tint = Color(0xFF1A1B20),
+                tint = ShizukuHomePalette.heroReadyFg,
             )
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF1A1B20),
+                color = ShizukuHomePalette.heroReadyFg,
             )
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF1A1B20).copy(alpha = 0.78f),
+                color = ShizukuHomePalette.heroReadyFg.copy(alpha = 0.78f),
             )
         }
     }

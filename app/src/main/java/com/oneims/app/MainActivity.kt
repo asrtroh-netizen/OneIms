@@ -172,9 +172,10 @@ class MainActivity : ComponentActivity() {
                 )
             }
 
+            // 独立版首页/主色对齐邻仓新作 Shizuku：固定 Google Blue，不用壁纸动态取色。
             OneImsTheme(
                 darkTheme = darkTheme,
-                dynamicColor = dynamicColor,
+                dynamicColor = if (ChannelLine.usesEmbeddedBridge) false else dynamicColor,
             ) {
                 AppRoot(
                     themeMode = themeMode,
