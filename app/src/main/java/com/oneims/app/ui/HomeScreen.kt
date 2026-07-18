@@ -3,16 +3,18 @@ package com.oneims.app.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBox
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -21,22 +23,31 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import com.oneims.app.R
 import com.oneims.app.core.ChannelLine
+import com.oneims.app.core.DeviceInfo
 import com.oneims.app.core.OneKukuEmbeddedAdbActivator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 private enum class HomeToolDialog {
     Status,
-    DeviceInfo,
     WirelessGuide,
+    TerminalTip,
+    RootTip,
+    AdbTip,
 }
 
 @Composable
@@ -44,7 +55,94 @@ fun HomeScreen(
     state: HomeUiState,
     actions: HomeActions,
 ) {
+    if (!ChannelLine.usesShizuku) {
+        OneKukuStandaloneHome(state = state, actions = actions)
+    } else {
+        OneLinkHome(state = state, actions = actions)
+    }
+}
+
+/**
+ * 独立版：抛开旧首页块，仅保留 OneKuku 品牌 + Shizuku 式状态卡 + 四小方块。
+ */
+@Composable
+private fun OneKukuStandaloneHome(
+    state: HomeUiState,
+    actions: HomeActions,
+) {
     val context = LocalContext.current
+    var openDialog by remember { mutableStateOf<HomeToolDialog?>(null) }
+    val channelReady = state.oneKukuState == OneKukuCardState.READY ||
+        state.oneKukuState == OneKukuCardState.SLEEPING
+
+    fun startChannel() {
+        when (state.oneKukuState) {
+            OneKukuCardState.INACTIVE -> {
+                if (OneKukuEmbeddedAdbActivator.hasPairedOnce(context)) {
+                    actions.onActivateOneKuku()
+                } else {
+                    openDialog = HomeToolDialog.WirelessGuide
+                }
+            }
+            OneKukuCardState.READY,
+            OneKukuCardState.SLEEPING,
+            -> openDialog = HomeToolDialog.AdbTip
+            OneKukuCardState.ACTIVATING -> Unit
+        }
+    }
+
+    OneImsPage(
+        title = stringResource(R.string.channel_display_name),
+        subtitle = stringResource(R.string.onekuku_home_subtitle),
+        sims = emptyList(),
+        selectedSubId = -1,
+        onSelectSim = null,
+    ) {
+        item {
+            OneKukuShizukuStyleStatusHero(
+                oneKukuState = state.oneKukuState,
+                detailOverride = state.oneKukuDetailOverride,
+                onClick = {
+                    when (state.oneKukuState) {
+                        OneKukuCardState.READY,
+                        OneKukuCardState.SLEEPING,
+                        -> openDialog = HomeToolDialog.Status
+                        OneKukuCardState.INACTIVE -> startChannel()
+                        OneKukuCardState.ACTIVATING -> openDialog = HomeToolDialog.Status
+                    }
+                },
+            )
+        }
+
+        item {
+            SectionBlock(title = stringResource(R.string.onekuku_home_quick_title)) {
+                Column(modifier = Modifier.padding(horizontal = 0.dp, vertical = 4.dp)) {
+                    OneKukuShizukuStyleQuickGrid(
+                        channelReady = channelReady,
+                        onApps = { openDialog = HomeToolDialog.Status },
+                        onTerminal = { openDialog = HomeToolDialog.TerminalTip },
+                        onRoot = { openDialog = HomeToolDialog.RootTip },
+                        onAdb = { startChannel() },
+                    )
+                }
+            }
+        }
+    }
+
+    OneKukuHomeDialogs(
+        openDialog = openDialog,
+        onDismiss = { openDialog = null },
+        state = state,
+        actions = actions,
+    )
+}
+
+/** OneLink / Lite：保留原首页（状态卡 + 运营商 + 保存恢复 + 设备卡）。 */
+@Composable
+private fun OneLinkHome(
+    state: HomeUiState,
+    actions: HomeActions,
+) {
     var openDialog by remember { mutableStateOf<HomeToolDialog?>(null) }
 
     OneImsPage(
@@ -61,24 +159,13 @@ fun HomeScreen(
                 channelSleeping = state.oneKukuChannelSleeping,
                 onPrimaryAction = {
                     when (state.oneKukuState) {
-                        // OneLink：新 UI + 2.0.9 逻辑 → 直接开 Shizuku，不弹内嵌 ADB 三步说明。
-                        // OneKuku：已配对直连；从未配对才出无线调试说明 + 通知栏填码。
-                        OneKukuCardState.INACTIVE -> {
-                            if (ChannelLine.usesShizuku ||
-                                OneKukuEmbeddedAdbActivator.hasPairedOnce(context)
-                            ) {
-                                actions.onActivateOneKuku()
-                            } else {
-                                openDialog = HomeToolDialog.WirelessGuide
-                            }
-                        }
+                        OneKukuCardState.INACTIVE -> actions.onActivateOneKuku()
                         OneKukuCardState.READY,
                         OneKukuCardState.SLEEPING,
                         -> actions.onCheckOneKukuStatus()
                         OneKukuCardState.ACTIVATING -> Unit
                     }
                 },
-                onOpenDeviceDetails = { openDialog = HomeToolDialog.DeviceInfo },
                 detailOverride = state.oneKukuDetailOverride,
             )
         }
@@ -119,7 +206,6 @@ fun HomeScreen(
                                 title = stringResource(R.string.onekuku_action_restore),
                                 subtitle = stringResource(R.string.onekuku_action_restore_sub),
                                 onClick = actions.onRestoreCallConfig,
-                                // 与「保存」成对：同一通道就绪门禁，避免无快照时误触写回。
                                 enabled = state.actionsEnabled &&
                                     state.oneKukuState == OneKukuCardState.READY &&
                                     state.sims.isNotEmpty(),
@@ -143,16 +229,35 @@ fun HomeScreen(
                 )
             }
         }
+
+        item {
+            DeviceDetailsCard()
+        }
     }
 
+    OneKukuHomeDialogs(
+        openDialog = openDialog,
+        onDismiss = { openDialog = null },
+        state = state,
+        actions = actions,
+    )
+}
+
+@Composable
+private fun OneKukuHomeDialogs(
+    openDialog: HomeToolDialog?,
+    onDismiss: () -> Unit,
+    state: HomeUiState,
+    actions: HomeActions,
+) {
+    val context = LocalContext.current
     when (openDialog) {
         HomeToolDialog.WirelessGuide -> {
-            // 弹窗一出现就挂通知栏填码入口并切出「未激活」红态，别等确定后再干等 mDNS。
             LaunchedEffect(Unit) {
                 actions.onBeginWirelessPairGuide()
             }
             AlertDialog(
-                onDismissRequest = { openDialog = null },
+                onDismissRequest = onDismiss,
                 title = { Text(stringResource(R.string.home_adb_prep_title)) },
                 text = {
                     Text(
@@ -163,8 +268,7 @@ fun HomeScreen(
                 confirmButton = {
                     TextButton(
                         onClick = {
-                            openDialog = null
-                            // 通知已在弹窗出现时挂出；此处只继续激活，内部勿再并发抢开无线调试。
+                            onDismiss()
                             actions.onActivateOneKuku()
                         },
                     ) {
@@ -172,29 +276,8 @@ fun HomeScreen(
                     }
                 },
                 dismissButton = {
-                    TextButton(onClick = { openDialog = null }) {
+                    TextButton(onClick = onDismiss) {
                         Text(stringResource(R.string.action_cancel))
-                    }
-                },
-            )
-        }
-
-        HomeToolDialog.DeviceInfo -> {
-            AlertDialog(
-                onDismissRequest = { openDialog = null },
-                title = { Text(stringResource(R.string.home_device_details)) },
-                text = {
-                    Text(
-                        text = state.deviceInfo.ifBlank {
-                            stringResource(R.string.onekuku_snapshot_empty)
-                        },
-                        style = MaterialTheme.typography.bodySmall,
-                        fontFamily = FontFamily.Monospace,
-                    )
-                },
-                confirmButton = {
-                    TextButton(onClick = { openDialog = null }) {
-                        Text(stringResource(R.string.action_close))
                     }
                 },
             )
@@ -220,7 +303,7 @@ fun HomeScreen(
                 }
             }
             AlertDialog(
-                onDismissRequest = { openDialog = null },
+                onDismissRequest = onDismiss,
                 title = { Text(stringResource(R.string.onekuku_tool_status_title)) },
                 text = {
                     if (lines == null) {
@@ -247,13 +330,238 @@ fun HomeScreen(
                     }
                 },
                 confirmButton = {
-                    TextButton(onClick = { openDialog = null }) {
+                    TextButton(onClick = onDismiss) {
                         Text(stringResource(R.string.action_close))
                     }
                 },
             )
         }
 
+        HomeToolDialog.TerminalTip -> {
+            val channelReady = state.oneKukuState == OneKukuCardState.READY ||
+                state.oneKukuState == OneKukuCardState.SLEEPING
+            AlertDialog(
+                onDismissRequest = onDismiss,
+                title = { Text(stringResource(R.string.onekuku_home_tile_terminal)) },
+                text = {
+                    Text(
+                        stringResource(
+                            if (channelReady) R.string.onekuku_home_tile_terminal_ready_tip
+                            else R.string.onekuku_home_tile_terminal_need_ready,
+                        ),
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = onDismiss) {
+                        Text(stringResource(R.string.action_close))
+                    }
+                },
+            )
+        }
+
+        HomeToolDialog.RootTip -> {
+            AlertDialog(
+                onDismissRequest = onDismiss,
+                title = { Text(stringResource(R.string.onekuku_home_tile_root)) },
+                text = { Text(stringResource(R.string.onekuku_home_tile_root_detail)) },
+                confirmButton = {
+                    TextButton(onClick = onDismiss) {
+                        Text(stringResource(R.string.action_close))
+                    }
+                },
+            )
+        }
+
+        HomeToolDialog.AdbTip -> {
+            AlertDialog(
+                onDismissRequest = onDismiss,
+                title = { Text(stringResource(R.string.onekuku_home_tile_adb)) },
+                text = { Text(stringResource(R.string.onekuku_home_tile_adb_ready_tip)) },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            onDismiss()
+                            actions.onActivateOneKuku()
+                        },
+                    ) {
+                        Text(stringResource(R.string.onekuku_action_check))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = onDismiss) {
+                        Text(stringResource(R.string.action_cancel))
+                    }
+                },
+            )
+        }
+
         null -> Unit
+    }
+}
+
+@Composable
+private fun DeviceDetailsCard() {
+    val context = LocalContext.current
+    val snap = remember { DeviceInfo.snapshot(context) }
+    val contentColor = Color(0xFF1A1B20)
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.extraLarge,
+        color = Color.White,
+        tonalElevation = 2.dp,
+        shadowElevation = 1.dp,
+    ) {
+        Column(
+            modifier = Modifier.padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp),
+        ) {
+            Row(
+                verticalAlignment = Alignment.Top,
+                horizontalArrangement = Arrangement.spacedBy(18.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Info,
+                    contentDescription = null,
+                    modifier = Modifier.size(38.dp),
+                    tint = contentColor,
+                )
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.home_device_details),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = contentColor.copy(alpha = 0.72f),
+                    )
+                    Text(
+                        text = snap.modelTitle(),
+                        style = MaterialTheme.typography.titleLarge,
+                        color = contentColor,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Text(
+                        text = stringResource(
+                            R.string.home_device_version_line,
+                            snap.versionName,
+                            snap.versionCode,
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = contentColor.copy(alpha = 0.72f),
+                    )
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                DeviceInfoChip(
+                    label = stringResource(R.string.home_device_chip_android),
+                    value = "Android ${snap.androidRelease}",
+                    contentColor = contentColor,
+                    modifier = Modifier.weight(1f),
+                )
+                DeviceInfoChip(
+                    label = stringResource(R.string.home_device_chip_tensor),
+                    value = snap.tensorLabel,
+                    contentColor = contentColor,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                DeviceInfoChip(
+                    label = stringResource(R.string.home_device_chip_sim),
+                    value = snap.simCount.toString(),
+                    contentColor = contentColor,
+                    modifier = Modifier.weight(1f),
+                )
+                DeviceInfoChip(
+                    label = stringResource(R.string.home_device_chip_delegate),
+                    value = snap.delegateLabel,
+                    contentColor = contentColor,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                DeviceInfoMetaRow(
+                    label = stringResource(R.string.home_device_meta_codename),
+                    value = snap.device,
+                    contentColor = contentColor,
+                )
+                DeviceInfoMetaRow(
+                    label = stringResource(R.string.home_device_meta_patch),
+                    value = snap.securityPatch,
+                    contentColor = contentColor,
+                )
+                DeviceInfoMetaRow(
+                    label = stringResource(R.string.home_device_meta_strategy),
+                    value = snap.strategyLabel,
+                    contentColor = contentColor,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun DeviceInfoChip(
+    label: String,
+    value: String,
+    contentColor: Color,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(16.dp),
+        color = contentColor.copy(alpha = 0.06f),
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelMedium,
+                color = contentColor.copy(alpha = 0.62f),
+            )
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = contentColor,
+                maxLines = 2,
+            )
+        }
+    }
+}
+
+@Composable
+private fun DeviceInfoMetaRow(
+    label: String,
+    value: String,
+    contentColor: Color,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = contentColor.copy(alpha = 0.62f),
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium,
+            color = contentColor,
+        )
     }
 }

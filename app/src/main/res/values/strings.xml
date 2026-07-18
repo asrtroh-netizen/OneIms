@@ -413,6 +413,30 @@
     <string name="tab_settings">设置</string>
     <string name="tab_sponsor">支持作者</string>
     <string name="home_subtitle">安全、清晰地管理 Pixel IMS</string>
+    <!-- 独立版首页：对齐新作 Shizuku 状态卡 + 四小方块（品牌 OneKuku） -->
+    <string name="onekuku_home_subtitle">服务状态与快捷入口</string>
+    <string name="onekuku_home_quick_title">快捷入口</string>
+    <string name="onekuku_home_hero_eyebrow">服务</string>
+    <string name="onekuku_home_hero_title_inactive">未激活</string>
+    <string name="onekuku_home_hero_subtitle_inactive">OneKuku 通道未运行</string>
+    <string name="onekuku_home_hero_detail_inactive">请用下方「电脑 ADB」或无线调试启动。请保持 Wi‑Fi 连接。</string>
+    <string name="onekuku_home_hero_stage_inactive">未激活</string>
+    <string name="onekuku_home_hero_stage_ready">已就绪</string>
+    <string name="onekuku_home_tile_apps">应用管理</string>
+    <string name="onekuku_home_tile_apps_sub_waiting">请先启动通道</string>
+    <string name="onekuku_home_tile_apps_sub_ready">查看通道与授权状态</string>
+    <string name="onekuku_home_tile_terminal">终端</string>
+    <string name="onekuku_home_tile_terminal_sub">Shell 快捷入口</string>
+    <string name="onekuku_home_tile_terminal_need_ready">请先启动 OneKuku 通道后再使用终端相关能力。</string>
+    <string name="onekuku_home_tile_terminal_ready_tip">通道已就绪。独立版暂未内嵌终端页；如需 shell，请使用电脑 ADB 或外部终端工具。</string>
+    <string name="onekuku_home_tile_adb_ready_tip">通道已在运行。可点确定重新拉起，或取消返回。</string>
+    <string name="onekuku_home_tile_root">Root 启动</string>
+    <string name="onekuku_home_tile_root_sub">需要 Root</string>
+    <string name="onekuku_home_tile_root_detail">本机未检测到 Root。请使用无线调试或电脑 ADB 启动通道。</string>
+    <string name="onekuku_home_tile_adb">电脑 ADB</string>
+    <string name="onekuku_home_tile_adb_sub">无线调试启动</string>
+    <string name="onekuku_home_tile_adb_detail">将走无线调试启动 OneKuku 通道。首次可能需要配对。</string>
+
     <string name="home_ready_title">设备已就绪</string>
     <string name="home_setup_needed_title">还差一步即可使用</string>
     <string name="home_status_shizuku_off">请先激活 OneKuku</string>
