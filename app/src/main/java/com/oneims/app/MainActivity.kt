@@ -1366,6 +1366,7 @@ private fun AppRoot(
                         bootAutoCheck = oneKukuBootAutoCheck,
                         autoRestore = oneKukuAutoRestore,
                         autoSleep = oneKukuAutoSleep,
+                        rootBootStart = rootBootStart,
                         oneKukuDetailOverride = oneKukuDetailOverride,
                     ),
                     actions = HomeActions(
@@ -1648,6 +1649,19 @@ private fun AppRoot(
                                         R.string.onekuku_settings_sleep_on
                                     } else {
                                         R.string.onekuku_settings_sleep_off
+                                    },
+                                ),
+                            )
+                        },
+                        onRootBootStartChange = { enabled ->
+                            rootBootStart = enabled
+                            ConfigStore.setRootBootStart(context, enabled)
+                            publish(
+                                context.getString(
+                                    if (enabled) {
+                                        R.string.root_boot_on
+                                    } else {
+                                        R.string.root_boot_off
                                     },
                                 ),
                             )

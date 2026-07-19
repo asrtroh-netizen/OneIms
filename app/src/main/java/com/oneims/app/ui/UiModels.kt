@@ -69,6 +69,8 @@ data class HomeUiState(
     val bootAutoCheck: Boolean = true,
     val autoRestore: Boolean = true,
     val autoSleep: Boolean = false,
+    /** Root 开机拉起特权桥（与无线自启并列；无无线也能拉）。 */
+    val rootBootStart: Boolean = false,
     val oneKukuDetailOverride: String? = null,
 )
 
@@ -94,6 +96,7 @@ data class HomeActions(
     val onBootAutoCheckChange: (Boolean) -> Unit,
     val onAutoRestoreChange: (Boolean) -> Unit,
     val onAutoSleepChange: (Boolean) -> Unit,
+    val onRootBootStartChange: (Boolean) -> Unit = {},
     val onOpenWirelessDebugging: () -> Unit = {},
     val onOpenHotspot: () -> Unit = {},
     val onCopyAdbGuide: () -> Unit = {},

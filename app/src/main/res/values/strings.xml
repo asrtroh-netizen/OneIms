@@ -748,6 +748,8 @@
     <string name="root_persist_section_title">Root 增强</string>
     <string name="root_boot_title">Root 开机拉起通道</string>
     <string name="root_boot_sub">已 Root 时开机用 su 拉起本产品特权桥：OneIMS→OneBridge，Lite→已装的 Shizuku（免手点）。默认关；无 Root/未装桥则自动跳过</string>
+    <string name="root_boot_home_title">Root 开机自启</string>
+    <string name="root_boot_home_sub">和无线自启一样，只是没无线也能靠 Root 拉起通道</string>
     <string name="root_boot_on">已开启 Root 开机拉起</string>
     <string name="root_boot_off">已关闭 Root 开机拉起</string>
     <string name="root_persist_title">Root 持久化增强</string>

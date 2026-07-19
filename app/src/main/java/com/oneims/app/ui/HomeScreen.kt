@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -96,6 +97,13 @@ private fun OneKukuStandaloneHome(
                 },
                 onOpenDeviceDetails = { openDialog = HomeToolDialog.DeviceDetails },
                 detailOverride = state.oneKukuDetailOverride,
+            )
+        }
+
+        item {
+            RootBootHomeCard(
+                checked = state.rootBootStart,
+                onCheckedChange = actions.onRootBootStartChange,
             )
         }
 
@@ -196,6 +204,13 @@ private fun OneLinkHome(
         }
 
         item {
+            RootBootHomeCard(
+                checked = state.rootBootStart,
+                onCheckedChange = actions.onRootBootStartChange,
+            )
+        }
+
+        item {
             SectionBlock(
                 title = stringResource(R.string.home_quick_actions),
                 description = stringResource(R.string.home_quick_actions_sub),
@@ -256,6 +271,28 @@ private fun OneLinkHome(
         state = state,
         actions = actions,
     )
+}
+
+/** 首页 Root 开机自启框：与无线自启同级心智——有 Root、没无线也能拉起通道。 */
+@Composable
+private fun RootBootHomeCard(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        tonalElevation = 1.dp,
+    ) {
+        SettingsSwitchRow(
+            title = stringResource(R.string.root_boot_home_title),
+            subtitle = stringResource(R.string.root_boot_home_sub),
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            icon = Icons.Filled.Star,
+        )
+    }
 }
 
 @Composable

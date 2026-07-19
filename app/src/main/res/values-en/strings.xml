@@ -739,6 +739,8 @@
     <string name="root_persist_section_title">Root extras</string>
     <string name="root_boot_title">Root start on boot</string>
     <string name="root_boot_sub">On rooted devices, use su at boot to start this product\'s bridge: OneIMS→OneBridge, Lite→installed Shizuku (no tap). Off by default; skips if no root/bridge</string>
+    <string name="root_boot_home_title">Root start on boot</string>
+    <string name="root_boot_home_sub">Same idea as wireless auto-start — with Root it can start without Wi‑Fi</string>
     <string name="root_boot_on">Root start on boot enabled</string>
     <string name="root_boot_off">Root start on boot disabled</string>
     <string name="root_persist_title">Root persistence boost</string>
