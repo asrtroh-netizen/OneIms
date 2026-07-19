@@ -5,10 +5,10 @@ import android.util.Log
 import java.util.concurrent.TimeUnit
 
 /**
- * Root 开机旁路：开关开启时用 `su -c` 拉起特权通道。
+ * Root 开机旁路：开关开启时用 `su -c` 拉起**本产品对应**的特权桥。
  *
- * - OneKuku：执行 [OneKukuCoreComponent.bridgeBootShellCommand] 拉起 onebridge_server
- * - OneLink：不在本进程冒充 Shizuku Root 启动（由 Shizuku App 自己的开机 Root 开关负责）
+ * - OneIMS / OneKuku：拉起 `onebridge_server`（内嵌 OneBridge）
+ * - OneIMS Lite / OneLink：拉起已安装 Shizuku 的 `libshizuku.so`（对齐官方 Root 启动命令）
  *
  * 失败静默回落现有 Boot 重放 / 无线调试路径，不改非 Root 主逻辑。
  */
@@ -20,20 +20,25 @@ object RootBootStarter {
             Log.i(TAG, "root boot switch off; skip")
             return
         }
-        if (ChannelLine.usesShizuku) {
-            Log.i(TAG, "onelink: root boot is owned by Shizuku app; skip OneIMS su start")
-            return
-        }
-        val cmd = OneKukuCoreComponent.bridgeBootShellCommand(
-            packageName = context.packageName,
-            forceRestart = false,
-        )
-        if (cmd.isBlank()) {
-            Log.w(TAG, "empty bridge boot command")
+        val cmd = resolveBootCommand(context)
+        if (cmd.isNullOrBlank()) {
+            Log.w(TAG, "no root boot command for channel=${ChannelLine.id}")
             return
         }
         val ok = execSu(cmd)
-        Log.i(TAG, "su bridge boot ok=$ok")
+        Log.i(TAG, "su privilege boot channel=${ChannelLine.id} ok=$ok")
+    }
+
+    private fun resolveBootCommand(context: Context): String? {
+        return if (ChannelLine.usesEmbeddedBridge) {
+            val cmd = OneKukuCoreComponent.bridgeBootShellCommand(
+                packageName = context.packageName,
+                forceRestart = false,
+            )
+            cmd.takeIf { it.isNotBlank() }
+        } else {
+            ShizukuSetupHelper.buildShizukuRootStartCommand(context)
+        }
     }
 
     /**
@@ -51,7 +56,7 @@ object RootBootStarter {
                     .redirectErrorStream(true)
                     .start()
                 val output = process.inputStream.bufferedReader().use { it.readText() }
-                val finished = process.waitFor(20, TimeUnit.SECONDS)
+                val finished = process.waitFor(25, TimeUnit.SECONDS)
                 if (!finished) {
                     process.destroyForcibly()
                     Log.w(TAG, "su timed out via ${argv.first()}")
@@ -59,7 +64,9 @@ object RootBootStarter {
                 }
                 val code = process.exitValue()
                 val markerOk = output.contains(OneKukuCoreComponent.SHELL_BOOT_OK) ||
-                    output.contains("OneBridge_started")
+                    output.contains("OneBridge_started") ||
+                    output.contains("info: shizuku_started") ||
+                    output.contains("shizuku_starter")
                 Log.i(TAG, "su via=${argv.first()} code=$code markerOk=$markerOk out=${output.take(200)}")
                 code == 0 || markerOk
             }.getOrElse { error ->

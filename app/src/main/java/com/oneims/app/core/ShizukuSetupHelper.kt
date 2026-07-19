@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.provider.Settings
 import android.util.Log
+import java.io.File
 
 /**
  * OneKuku 通道「无 WiFi 也能准备」助手。
@@ -19,10 +20,40 @@ object ShizukuSetupHelper {
 
     private const val TAG = "OneIMS-WirelessDbg"
     private const val GLOBAL_ADB_WIFI = "adb_wifi_enabled"
-    private val SHIZUKU_MANAGER_PACKAGES = listOf(
+    val SHIZUKU_MANAGER_PACKAGES: List<String> = listOf(
         "moe.shizuku.privileged.api",
         "moe.shizuku.manager",
     )
+
+    /** 已安装的 Shizuku Manager 包名；未装返回 null。 */
+    fun resolveInstalledShizukuPackage(context: Context): String? {
+        val pm = context.packageManager
+        for (pkg in SHIZUKU_MANAGER_PACKAGES) {
+            val ok = runCatching {
+                pm.getApplicationInfo(pkg, 0)
+                true
+            }.getOrDefault(false)
+            if (ok) return pkg
+        }
+        return null
+    }
+
+    /**
+     * 对齐 Shizuku `Starter.internalCommand`：`libshizuku.so --apk=<sourceDir>`。
+     * 供 Lite Root 开机用 su 代拉，避免「有 Root 仍要手点激活」。
+     */
+    fun buildShizukuRootStartCommand(context: Context): String? {
+        val pkg = resolveInstalledShizukuPackage(context) ?: return null
+        val ai = runCatching {
+            context.packageManager.getApplicationInfo(pkg, 0)
+        }.getOrNull() ?: return null
+        val so = File(ai.nativeLibraryDir, "libshizuku.so")
+        if (!so.isFile) {
+            Log.w(TAG, "libshizuku.so missing under ${ai.nativeLibraryDir}")
+            return null
+        }
+        return "${so.absolutePath} --apk=${ai.sourceDir}"
+    }
 
     /**
      * 对齐 2.0.8 / 2.0.9：打开官方 Shizuku；未安装则跳应用市场。

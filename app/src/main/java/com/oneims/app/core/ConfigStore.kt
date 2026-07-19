@@ -666,7 +666,7 @@ object ConfigStore {
         prefs(context).edit().putBoolean(KEY_ROOT_PERSIST_ENHANCE, enabled).apply()
     }
 
-    /** Root 开机拉起 OneBridge（仅 OneKuku 线有实际动作）；默认关闭。 */
+    /** Root 开机拉起本产品特权桥（OneBridge 或 Shizuku）；默认关闭。 */
     fun isRootBootStart(context: Context): Boolean =
         prefs(context).getBoolean(KEY_ROOT_BOOT_START, false)
 
