@@ -84,12 +84,15 @@ object CarrierConfigOverrideWriter {
         }
         val modeHint = if (usedPersistent) "persistent" else "temporary"
         if (allOk) {
-            return Result(
-                success = true,
-                message = "ok · $target · $reason · $modeHint",
-                detail = detail,
-                targetLabel = target,
-                persistent = usedPersistent,
+            return RootPersistenceSupport.decorateResultMessage(
+                context,
+                Result(
+                    success = true,
+                    message = "ok · $target · $reason · $modeHint",
+                    detail = detail,
+                    targetLabel = target,
+                    persistent = usedPersistent,
+                ),
             )
         }
         val message = buildString {
@@ -99,12 +102,15 @@ object CarrierConfigOverrideWriter {
                 append(failures.joinToString("; "))
             }
         }
-        return Result(
-            success = false,
-            message = message,
-            detail = detail,
-            targetLabel = target,
-            persistent = usedPersistent,
+        return RootPersistenceSupport.decorateResultMessage(
+            context,
+            Result(
+                success = false,
+                message = message,
+                detail = detail,
+                targetLabel = target,
+                persistent = usedPersistent,
+            ),
         )
     }
 
@@ -126,19 +132,25 @@ object CarrierConfigOverrideWriter {
             return runCatching {
                 val persistent = overrideConfigBestEffort(context, subId, null)
                 val modeHint = if (persistent) "persistent" else "temporary"
-                Result(
-                    success = true,
-                    message = "cleared all · $target · $reason · $modeHint",
-                    targetLabel = target,
-                    persistent = persistent,
+                RootPersistenceSupport.decorateResultMessage(
+                    context,
+                    Result(
+                        success = true,
+                        message = "cleared all · $target · $reason · $modeHint",
+                        targetLabel = target,
+                        persistent = persistent,
+                    ),
                 )
             }.getOrElse {
                 rethrowIfWriteNeverStarted(it)
-                Result(
-                    success = false,
-                    message = "clear failed · $target · ${sanitizeOverrideError(it)}",
-                    targetLabel = target,
-                    persistent = false,
+                RootPersistenceSupport.decorateResultMessage(
+                    context,
+                    Result(
+                        success = false,
+                        message = "clear failed · $target · ${sanitizeOverrideError(it)}",
+                        targetLabel = target,
+                        persistent = false,
+                    ),
                 )
             }
         }

@@ -201,6 +201,10 @@ data class ExperimentalUiState(
     val activeSimCountryIso: String,
     val catalogEnabled: Boolean,
     val guardEnabled: Boolean,
+    /** Root 持久化增强开关；默认关。 */
+    val rootPersistEnhance: Boolean = false,
+    /** 只读状态摘要（通道 + 上次 persistent）。 */
+    val rootPersistStatusDetail: String = "",
     val fiveGDisplayConfig: SimpleFiveGDisplayConfig,
     val signalBarDisplayMode: ConfigStore.SignalBarDisplayMode,
     val nr5g: Boolean,
@@ -221,6 +225,7 @@ data class ExperimentalActions(
     val onClearSimCountryIso: () -> Unit,
     val onApplyTiktokFix: () -> Unit,
     val onGuardEnabledChange: (Boolean) -> Unit,
+    val onRootPersistEnhanceChange: (Boolean) -> Unit = {},
     val onOpenApnCatalog: () -> Unit,
     val onApplyExpertValue: (String, String) -> Unit,
     val onFiveGDisplayConfigChange: (SimpleFiveGDisplayConfig) -> Unit,

@@ -55,6 +55,7 @@ object OneClickDiagnosticsManager {
     private const val ID_HEALTH = "health"
     private const val ID_IMS_REGISTERED = "ims_registered"
     private const val ID_GUARD = "guard"
+    private const val ID_ROOT_PERSIST = "root_persist"
 
     /**
      * 逐项体检，全部只读，不改任何配置。subId 为 -1（未选卡）时后续依赖选卡的检查项
@@ -184,6 +185,21 @@ object OneClickDiagnosticsManager {
             status = if (guardEnabled) CheckStatus.PASS else CheckStatus.UNKNOWN,
             fixable = false,
             guidance = context.getString(R.string.diagnostic_check_guard_guidance),
+        )
+
+        val rootStatus = RootPersistenceSupport.readStatus(context)
+        items += DiagnosticCheckItem(
+            id = ID_ROOT_PERSIST,
+            title = context.getString(R.string.diagnostic_check_root_persist),
+            detail = RootPersistenceSupport.statusDetail(context),
+            status = when {
+                rootStatus.rootChannel && rootStatus.lastPersistent == true -> CheckStatus.PASS
+                rootStatus.rootChannel && rootStatus.lastPersistent == false -> CheckStatus.UNKNOWN
+                rootStatus.rootChannel -> CheckStatus.UNKNOWN
+                else -> CheckStatus.UNKNOWN
+            },
+            fixable = false,
+            guidance = context.getString(R.string.diagnostic_check_root_persist_guidance),
         )
 
         return items

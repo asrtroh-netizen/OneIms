@@ -77,6 +77,12 @@ object ConfigStore {
     private const val KEY_ONEKUKU_AUTO_RESTORE = "onekuku_auto_restore"
     /** 与守护解耦后的「开机自动检查」；无键时默认开，旧数据回退 guard。 */
     private const val KEY_ONEKUKU_BOOT_AUTO_CHECK = "onekuku_boot_auto_check"
+    /** Root 持久化增强开关；默认关，免 Root 路径零感知。 */
+    private const val KEY_ROOT_PERSIST_ENHANCE = "root_persist_enhance"
+    private const val KEY_LAST_OVERRIDE_PERSISTENT = "last_override_persistent"
+    private const val KEY_LAST_OVERRIDE_PERSIST_HAS = "last_override_persist_has"
+    private const val KEY_LAST_OVERRIDE_SUCCESS = "last_override_success"
+    private const val KEY_LAST_OVERRIDE_AT = "last_override_at"
 
     data class Applied(
         val subId: Int,
@@ -648,5 +654,42 @@ object ConfigStore {
 
     fun setOneKukuAutoRestore(context: Context, enabled: Boolean) {
         prefs(context).edit().putBoolean(KEY_ONEKUKU_AUTO_RESTORE, enabled).apply()
+    }
+
+    /** Root 用户旁路：是否启用持久化增强展示/文案；默认关闭。 */
+    fun isRootPersistEnhance(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_ROOT_PERSIST_ENHANCE, false)
+
+    fun setRootPersistEnhance(context: Context, enabled: Boolean) {
+        prefs(context).edit().putBoolean(KEY_ROOT_PERSIST_ENHANCE, enabled).apply()
+    }
+
+    data class OverridePersistMode(
+        val persistent: Boolean,
+        val success: Boolean,
+        val atMillis: Long,
+    )
+
+    fun lastOverridePersistMode(context: Context): OverridePersistMode? {
+        val p = prefs(context)
+        if (!p.getBoolean(KEY_LAST_OVERRIDE_PERSIST_HAS, false)) return null
+        return OverridePersistMode(
+            persistent = p.getBoolean(KEY_LAST_OVERRIDE_PERSISTENT, false),
+            success = p.getBoolean(KEY_LAST_OVERRIDE_SUCCESS, false),
+            atMillis = p.getLong(KEY_LAST_OVERRIDE_AT, 0L),
+        )
+    }
+
+    fun setLastOverridePersistMode(
+        context: Context,
+        persistent: Boolean,
+        success: Boolean,
+    ) {
+        prefs(context).edit()
+            .putBoolean(KEY_LAST_OVERRIDE_PERSIST_HAS, true)
+            .putBoolean(KEY_LAST_OVERRIDE_PERSISTENT, persistent)
+            .putBoolean(KEY_LAST_OVERRIDE_SUCCESS, success)
+            .putLong(KEY_LAST_OVERRIDE_AT, System.currentTimeMillis())
+            .apply()
     }
 }

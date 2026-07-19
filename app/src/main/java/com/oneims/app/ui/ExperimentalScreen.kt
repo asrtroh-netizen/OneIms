@@ -26,6 +26,8 @@ import androidx.compose.material.icons.filled.AccountBox
 
 import androidx.compose.material.icons.filled.Build
 
+import androidx.compose.material.icons.filled.Info
+
 import androidx.compose.material.icons.filled.Lock
 
 import androidx.compose.material.icons.filled.Refresh
@@ -715,6 +717,86 @@ fun ExperimentalScreen(
 
 
                     icon = Icons.Filled.Lock,
+
+
+
+                )
+
+
+
+            }
+
+
+
+        }
+
+
+
+        item {
+
+
+
+            SectionBlock(title = stringResource(R.string.root_persist_section_title)) {
+
+
+
+                SettingsSwitchRow(
+
+
+
+                    title = stringResource(R.string.root_persist_title),
+
+
+
+                    subtitle = stringResource(R.string.root_persist_sub),
+
+
+
+                    checked = state.rootPersistEnhance,
+
+
+
+                    onCheckedChange = actions.onRootPersistEnhanceChange,
+
+
+
+                    icon = Icons.Filled.Star,
+
+
+
+                )
+
+
+
+                GroupDivider()
+
+
+
+                SettingsActionRow(
+
+
+
+                    icon = Icons.Filled.Info,
+
+
+
+                    title = stringResource(R.string.root_persist_status_label),
+
+
+
+                    subtitle = state.rootPersistStatusDetail.ifBlank {
+
+
+
+                        stringResource(R.string.root_persist_last_unknown)
+
+
+
+                    },
+
+
+
+                    onClick = null,
 
 
 

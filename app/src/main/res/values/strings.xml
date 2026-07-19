@@ -745,6 +745,22 @@
     <string name="dynamic_color_sub">使用 Pixel 系统生成的 Material You 色板</string>
     <string name="guard_section_title">可靠性</string>
     <string name="guard_section_subtitle">在重启或 IMS 掉线后恢复上次配置</string>
+    <string name="root_persist_section_title">Root 增强</string>
+    <string name="root_persist_title">Root 持久化增强</string>
+    <string name="root_persist_sub">仅 Root 通道生效：记录并提示配置是否真正持久；默认关闭，不影响免 Root 主路径</string>
+    <string name="root_persist_status_label">当前状态</string>
+    <string name="root_persist_channel_yes">Root 通道已就绪</string>
+    <string name="root_persist_channel_no">当前非 Root 通道</string>
+    <string name="root_persist_last_unknown">尚无写入记录</string>
+    <string name="root_persist_last_persistent">上次覆盖为系统持久</string>
+    <string name="root_persist_last_temporary">上次覆盖为临时（重启可能丢失）</string>
+    <string name="root_persist_status_detail">%1$s · %2$s</string>
+    <string name="root_persist_msg_suffix_yes"> · Root持久=是</string>
+    <string name="root_persist_msg_suffix_no"> · Root持久=否（仍靠开机重放）</string>
+    <string name="root_persist_on">已开启 Root 持久化增强</string>
+    <string name="root_persist_off">已关闭 Root 持久化增强</string>
+    <string name="diagnostic_check_root_persist">Root / 配置持久</string>
+    <string name="diagnostic_check_root_persist_guidance">开启「实验功能 → Root 增强」后，写入结果会标注是否真正 persistent。非 Root 用户可忽略。</string>
     <string name="update_check_subtitle">从已配置的发布仓库获取新版本</string>
     <!-- 统一操作反馈与高风险确认 -->
     <string name="operation_already_running">已有操作正在进行，请稍候</string>

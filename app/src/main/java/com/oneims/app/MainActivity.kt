@@ -60,6 +60,7 @@ import com.oneims.app.core.PixelImsCompat
 import com.oneims.app.core.PixelImsOptions
 import com.oneims.app.core.ReapplyManager
 import com.oneims.app.core.ReapplyTrigger
+import com.oneims.app.core.RootPersistenceSupport
 import com.oneims.app.core.SafetyGuard
 import com.oneims.app.core.DataSimSwitchManagerImpl
 import com.oneims.app.core.DataSimSwitchResult
@@ -291,6 +292,9 @@ private fun AppRoot(
     var guardEnabled by remember {
         mutableStateOf(ConfigStore.isGuardEnabled(context))
     }
+    var rootPersistEnhance by remember {
+        mutableStateOf(ConfigStore.isRootPersistEnhance(context))
+    }
     var fiveGDisplayConfig by remember {
         mutableStateOf(ConfigStore.fiveGDisplayConfig(context))
     }
@@ -472,6 +476,11 @@ private fun AppRoot(
             if (running != shizukuRunning || granted != shizukuGranted) {
                 shizukuRunning = running
                 shizukuGranted = granted
+                if (running && granted && bootUiHint == OneKukuBootUiHint.NEEDS_ACTIVATION) {
+                    // 实时 binder 状态优先于一次失败留下的持久化提示。
+                    OneKukuBootRestoreStore.writeHint(context, OneKukuBootUiHint.READY_SLEEPING)
+                    bootUiHint = OneKukuBootUiHint.READY_SLEEPING
+                }
             }
         }
     }
@@ -1917,6 +1926,8 @@ private fun AppRoot(
                         activeSimCountryIso = activeSimCountryIso,
                         catalogEnabled = actionsAvailable,
                         guardEnabled = guardEnabled,
+                        rootPersistEnhance = rootPersistEnhance,
+                        rootPersistStatusDetail = RootPersistenceSupport.statusDetail(context),
                         fiveGDisplayConfig = fiveGDisplayConfig,
                         signalBarDisplayMode = signalBarDisplayMode,
                         nr5g = nr5g,
@@ -2058,6 +2069,19 @@ private fun AppRoot(
                                 GuardService.stop(context)
                                 publish(context.getString(R.string.guard_off))
                             }
+                        },
+                        onRootPersistEnhanceChange = { enabled ->
+                            rootPersistEnhance = enabled
+                            RootPersistenceSupport.setEnhanceEnabled(context, enabled)
+                            publish(
+                                context.getString(
+                                    if (enabled) {
+                                        R.string.root_persist_on
+                                    } else {
+                                        R.string.root_persist_off
+                                    },
+                                ),
+                            )
                         },
                         onOpenApnCatalog = { apnCatalogVisible = true },
                         onFiveGDisplayConfigChange = { config: SimpleFiveGDisplayConfig ->
