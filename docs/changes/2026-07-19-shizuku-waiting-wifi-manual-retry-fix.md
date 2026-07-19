@@ -95,3 +95,26 @@
 ### 未完成
 
 - 用户解锁后的自动激活 / 手点「重试」对比 log：**BLOCKED**（验收窗口内始终锁屏）
+
+---
+
+## 追加：r8 真机修复（2026-07-19 14:14）
+
+### 根因（三连）
+
+1. **后台 Toast NPE**：`enableWirelessADB` 在 Worker 线程 `Toast.makeText` → 无 Looper，settings 已写入后仍抛错，打断 `WirelessBootStartWorker`。
+2. **解锁门误用**：`KeyguardManager.isDeviceLocked` 在 Pixel Fold 上误判 → 卡「Waiting for unlock」并错过 `USER_PRESENT`。改为 `UserManager.isUserUnlocked`。
+3. **TLS 端口盲区**：Pixel 无线调试端口（如 35051）不在 `service.adb.tcp.port`；增加 `/proc/net/tcp*`（uid 2000 LISTEN）发现。
+
+### 制品
+
+- `E:\GQ\One\_forks\Shizuku.apk`（`shizuku-v13.6.1-RC2.r8.9435979-release.apk`）
+- commits：`9435979`、`5d0dacd`（HSSkyBoy-Shizuku-clean）
+
+### 验证
+
+| 场景 | 结果 |
+|---|---|
+| 覆盖安装 r8 | Success，`versionName=13.6.1-RC2.r8.9435979` |
+| 打开 App + 通知「重试」/ 广播重试 | **PASS**：`shizuku_server` 起来，`Watchdog observed Shizuku binder received` |
+| 冷启无操作 | **部分**：不再永久 Waiting；SelfStarter 会拉起；**binder 仍常需进 App/点重试**（TLS 端口冷启晚到 / 无头 mDNS 窗口） |
