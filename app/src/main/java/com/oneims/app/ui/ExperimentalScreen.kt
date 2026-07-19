@@ -744,6 +744,38 @@ fun ExperimentalScreen(
 
 
 
+                    title = stringResource(R.string.root_boot_title),
+
+
+
+                    subtitle = stringResource(R.string.root_boot_sub),
+
+
+
+                    checked = state.rootBootStart,
+
+
+
+                    onCheckedChange = actions.onRootBootStartChange,
+
+
+
+                    icon = Icons.Filled.Star,
+
+
+
+                )
+
+
+
+                GroupDivider()
+
+
+
+                SettingsSwitchRow(
+
+
+
                     title = stringResource(R.string.root_persist_title),
 
 

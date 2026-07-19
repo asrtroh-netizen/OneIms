@@ -79,6 +79,8 @@ object ConfigStore {
     private const val KEY_ONEKUKU_BOOT_AUTO_CHECK = "onekuku_boot_auto_check"
     /** Root 持久化增强开关；默认关，免 Root 路径零感知。 */
     private const val KEY_ROOT_PERSIST_ENHANCE = "root_persist_enhance"
+    /** Root 开机拉起 OneKuku/OneBridge；默认关。 */
+    private const val KEY_ROOT_BOOT_START = "root_boot_start"
     private const val KEY_LAST_OVERRIDE_PERSISTENT = "last_override_persistent"
     private const val KEY_LAST_OVERRIDE_PERSIST_HAS = "last_override_persist_has"
     private const val KEY_LAST_OVERRIDE_SUCCESS = "last_override_success"
@@ -662,6 +664,14 @@ object ConfigStore {
 
     fun setRootPersistEnhance(context: Context, enabled: Boolean) {
         prefs(context).edit().putBoolean(KEY_ROOT_PERSIST_ENHANCE, enabled).apply()
+    }
+
+    /** Root 开机拉起 OneBridge（仅 OneKuku 线有实际动作）；默认关闭。 */
+    fun isRootBootStart(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_ROOT_BOOT_START, false)
+
+    fun setRootBootStart(context: Context, enabled: Boolean) {
+        prefs(context).edit().putBoolean(KEY_ROOT_BOOT_START, enabled).apply()
     }
 
     data class OverridePersistMode(

@@ -295,6 +295,9 @@ private fun AppRoot(
     var rootPersistEnhance by remember {
         mutableStateOf(ConfigStore.isRootPersistEnhance(context))
     }
+    var rootBootStart by remember {
+        mutableStateOf(ConfigStore.isRootBootStart(context))
+    }
     var fiveGDisplayConfig by remember {
         mutableStateOf(ConfigStore.fiveGDisplayConfig(context))
     }
@@ -1927,6 +1930,7 @@ private fun AppRoot(
                         catalogEnabled = actionsAvailable,
                         guardEnabled = guardEnabled,
                         rootPersistEnhance = rootPersistEnhance,
+                        rootBootStart = rootBootStart,
                         rootPersistStatusDetail = RootPersistenceSupport.statusDetail(context),
                         fiveGDisplayConfig = fiveGDisplayConfig,
                         signalBarDisplayMode = signalBarDisplayMode,
@@ -2079,6 +2083,19 @@ private fun AppRoot(
                                         R.string.root_persist_on
                                     } else {
                                         R.string.root_persist_off
+                                    },
+                                ),
+                            )
+                        },
+                        onRootBootStartChange = { enabled ->
+                            rootBootStart = enabled
+                            ConfigStore.setRootBootStart(context, enabled)
+                            publish(
+                                context.getString(
+                                    if (enabled) {
+                                        R.string.root_boot_on
+                                    } else {
+                                        R.string.root_boot_off
                                     },
                                 ),
                             )

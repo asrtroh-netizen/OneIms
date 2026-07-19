@@ -203,6 +203,8 @@ data class ExperimentalUiState(
     val guardEnabled: Boolean,
     /** Root 持久化增强开关；默认关。 */
     val rootPersistEnhance: Boolean = false,
+    /** Root 开机拉起 OneBridge；默认关。 */
+    val rootBootStart: Boolean = false,
     /** 只读状态摘要（通道 + 上次 persistent）。 */
     val rootPersistStatusDetail: String = "",
     val fiveGDisplayConfig: SimpleFiveGDisplayConfig,
@@ -226,6 +228,7 @@ data class ExperimentalActions(
     val onApplyTiktokFix: () -> Unit,
     val onGuardEnabledChange: (Boolean) -> Unit,
     val onRootPersistEnhanceChange: (Boolean) -> Unit = {},
+    val onRootBootStartChange: (Boolean) -> Unit = {},
     val onOpenApnCatalog: () -> Unit,
     val onApplyExpertValue: (String, String) -> Unit,
     val onFiveGDisplayConfigChange: (SimpleFiveGDisplayConfig) -> Unit,

@@ -54,6 +54,9 @@ class BootReceiver : BroadcastReceiver() {
             Intent.ACTION_BOOT_COMPLETED -> {
                 val pending = goAsync()
                 try {
+                    // Root 旁路：先尝试 su 拉起 OneBridge，失败不影响后续重放。
+                    runCatching { RootBootStarter.maybeStartOnBoot(context) }
+                        .onFailure { Log.w(TAG, "root boot start failed: ${it.message}") }
                     if (ConfigStore.isGuardEnabled(context) ||
                         ConfigStore.lastApplied(context) != null
                     ) {

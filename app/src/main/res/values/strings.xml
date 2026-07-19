@@ -746,6 +746,10 @@
     <string name="guard_section_title">可靠性</string>
     <string name="guard_section_subtitle">在重启或 IMS 掉线后恢复上次配置</string>
     <string name="root_persist_section_title">Root 增强</string>
+    <string name="root_boot_title">Root 开机拉起通道</string>
+    <string name="root_boot_sub">已 Root 时开机用 su 拉起 OneKuku（OneBridge）。OneLink 请在 Shizuku 里开「开机启动（root）」。默认关</string>
+    <string name="root_boot_on">已开启 Root 开机拉起</string>
+    <string name="root_boot_off">已关闭 Root 开机拉起</string>
     <string name="root_persist_title">Root 持久化增强</string>
     <string name="root_persist_sub">仅 Root 通道生效：记录并提示配置是否真正持久；默认关闭，不影响免 Root 主路径</string>
     <string name="root_persist_status_label">当前状态</string>
