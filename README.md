@@ -14,16 +14,16 @@
 
 <br/>
 
-### ⬇️ 下载 APK（最新 · v3.0.1 · 请自选产品线）
+### ⬇️ 下载 APK（最新 · v3.0.2 · 请自选产品线）
 
 > **两个包功能相同（IMS/诊断/恢复），差别只在「特权通道怎么激活」——看下方选购指南，**只装其中一个**即可；进阶用户也可同机并存对比。
 
 | 推荐给… | 包 | 下载 |
 |---|---|---|
-| 🟢 **想少装 App、App 内一键配对** | **OneKuku（独立激活）** | [OneIms-OneKuku-standalone-3.0.1.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.0.1/OneIms-OneKuku-standalone-3.0.1.apk) |
-| 🔵 **已有 / 想用 Shizuku 轻壳** | **OneIms Lite（Shizuku）** | [OneIms-Lite-Shizuku-3.0.1.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.0.1/OneIms-Lite-Shizuku-3.0.1.apk) |
+| 🟢 **想少装 App、App 内一键配对** | **OneKuku（独立激活）** | [OneIms-OneKuku-standalone-3.0.2.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.0.2/OneIms-OneKuku-standalone-3.0.2.apk) |
+| 🔵 **已有 / 想用 Shizuku 轻壳** | **OneIms Lite（Shizuku）** | [OneIms-Lite-Shizuku-3.0.2.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.0.2/OneIms-Lite-Shizuku-3.0.2.apk) |
 
-[📦 全部 Release 资产](https://github.com/asrtroh-netizen/OneIms/releases/tag/v3.0.1)
+[📦 全部 Release 资产](https://github.com/asrtroh-netizen/OneIms/releases/tag/v3.0.2)
 
 > 💙 **友情推荐特权通道**：[asrtroh 修缮版 Shizuku V15.0](https://github.com/asrtroh-netizen/shizuku)（配对一次 · 旧 Wi‑Fi 自连 · 开机 FGS 内激活）  
 > 下载正式包：[Releases](https://github.com/asrtroh-netizen/shizuku/releases) · 截图：
@@ -64,10 +64,28 @@
 
 | 对外名称 | 包名 | 特权通道 | Release 文件名 |
 |---|---|---|---|
-| **OneIms · OneKuku** `3.0.1-onekuku` | `com.oneims.app` | 内嵌 OneBridge + 无线调试配对 | `OneIms-OneKuku-standalone-3.0.1.apk`（备注：独立激活） |
-| **OneIms · OneIms Lite** `3.0.1-onelink` | `com.oneims.onelink` | 官方 Shizuku | `OneIms-Lite-Shizuku-3.0.1.apk`（备注：Shizuku） |
+| **OneIms · OneKuku** `3.0.2-onekuku` | `com.oneims.app` | 内嵌 OneBridge + 无线调试配对 | `OneIms-OneKuku-standalone-3.0.2.apk`（备注：独立激活） |
+| **OneIms · OneIms Lite** `3.0.2-onelink` | `com.oneims.onelink` | 官方 Shizuku | `OneIms-Lite-Shizuku-3.0.2.apk`（备注：Shizuku） |
 
 > **双包同版号一起更新**；请只从本页 Release 链接下载，勿混装未知来源包。
+
+---
+
+## ✨ What's New · 3.0.2
+
+**本版主线：首页补回「一键恢复系统默认状态」应急回滚入口。**
+
+### 🧯 一键恢复系统默认
+
+* 首页「快速开始」新增危险色按钮 **一键恢复系统默认状态**
+* 确认后清空当前 SIM 由本应用写入的 CarrierConfig 覆盖与相关显示增强，恢复运营商系统默认
+* **不会删除**已保存的通话配置快照；仍可用「一键应用上次配置」写回
+* 前置：已选卡、通道已授权
+
+### 🔄 升级
+
+* 🟢 OneKuku：覆盖安装 `OneIms-OneKuku-standalone-3.0.2.apk`
+* 🔵 OneIms Lite：覆盖安装 `OneIms-Lite-Shizuku-3.0.2.apk`
 
 ---
 
