@@ -17,7 +17,7 @@
     <string name="action_refresh">Refresh</string>
     <string name="action_compat">Check</string>
     <string name="action_grant">Grant</string>
-    <string name="action_restore">Restore</string>
+    <string name="action_restore">Restore system defaults</string>
     <string name="no_sim_hint">No SIM found, tap "Refresh"</string>
     <string name="sim_chip">SIM%1$d %2$s</string>
     <string name="sim_tag_active">Active</string>
@@ -673,7 +673,7 @@
     <string name="action_refresh_sub">Reload permission and SIM status</string>
     <string name="action_compat_sub">Check device support</string>
     <string name="action_grant_sub">Allow OneIms to use system capabilities</string>
-    <string name="action_restore_sub">Clear overrides and restore defaults</string>
+    <string name="action_restore_sub">Clear CarrierConfig overrides and restore carrier defaults</string>
     <string name="no_sim_detail">Check phone permission and SIM status, then retry</string>
     <string name="shizuku_setup_subtitle">Pairing, wireless debugging, and PC-free startup</string>
     <string name="setup_open_shizuku_sub">Install the built-in channel, or start via wireless debugging + ADB</string>
@@ -775,8 +775,8 @@
     <string name="shizuku_already_granted_message">OneKuku is already activated</string>
     <string name="shizuku_permission_requested">Permission request sent</string>
     <string name="phone_permission_denied_message">Phone permission denied; SIM and IMS status cannot be read</string>
-    <string name="confirm_restore_title">Restore carrier defaults?</string>
-    <string name="confirm_restore_message">This clears temporary CarrierConfig overrides for the selected SIM. Use it to recover basic communications.</string>
+    <string name="confirm_restore_title">Restore system defaults?</string>
+    <string name="confirm_restore_message">This clears CarrierConfig overrides and related display enhancements written by this app for the selected SIM, restoring carrier system defaults. Use it as an emergency rollback if basic communications break. Saved calling-config snapshots are kept.</string>
     <string name="confirm_identity_title">Apply display identity override?</string>
     <string name="confirm_identity_message">Only display-layer values are changed. Restart or restore to revert them.</string>
     <string name="confirm_restore_identity_title">Restore the system carrier name?</string>

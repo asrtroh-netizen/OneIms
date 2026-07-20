@@ -91,6 +91,8 @@ data class HomeActions(
     val onApplyRecommended: () -> Unit = {},
     val onSaveCallConfig: () -> Unit = {},
     val onRestoreCallConfig: () -> Unit,
+    /** 清空 CarrierConfig 覆盖，恢复运营商系统默认（应急回滚，非快照重写）。 */
+    val onRestoreSystemDefaults: () -> Unit = {},
     val onCheckOneKukuStatus: () -> Unit,
     val onStatusCheck: () -> Unit,
     val onBootAutoCheckChange: (Boolean) -> Unit,

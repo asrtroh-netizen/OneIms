@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -136,6 +137,16 @@ private fun OneKukuStandaloneHome(
                                     state.oneKukuState == OneKukuCardState.READY &&
                                     state.sims.isNotEmpty(),
                             ),
+                            ActionSpec(
+                                icon = Icons.Filled.Warning,
+                                title = stringResource(R.string.action_restore),
+                                subtitle = stringResource(R.string.action_restore_sub),
+                                onClick = actions.onRestoreSystemDefaults,
+                                enabled = state.actionsEnabled &&
+                                    state.oneKukuState == OneKukuCardState.READY &&
+                                    state.sims.isNotEmpty(),
+                                danger = true,
+                            ),
                         ),
                     )
                 }
@@ -238,6 +249,16 @@ private fun OneLinkHome(
                                 enabled = state.actionsEnabled &&
                                     state.oneKukuState == OneKukuCardState.READY &&
                                     state.sims.isNotEmpty(),
+                            ),
+                            ActionSpec(
+                                icon = Icons.Filled.Warning,
+                                title = stringResource(R.string.action_restore),
+                                subtitle = stringResource(R.string.action_restore_sub),
+                                onClick = actions.onRestoreSystemDefaults,
+                                enabled = state.actionsEnabled &&
+                                    state.oneKukuState == OneKukuCardState.READY &&
+                                    state.sims.isNotEmpty(),
+                                danger = true,
                             ),
                         ),
                     )

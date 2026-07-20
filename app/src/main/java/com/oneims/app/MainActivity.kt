@@ -1540,6 +1540,28 @@ private fun AppRoot(
                                 }
                             }
                         },
+                        onRestoreSystemDefaults = {
+                            val targetSubId = selectedSubId
+                            when {
+                                busyLabel != null ->
+                                    publish(context.getString(R.string.operation_already_running))
+                                targetSubId < 0 ->
+                                    publish(context.getString(R.string.please_select_sim))
+                                !OneKukuManager.isGranted() ->
+                                    publish(
+                                        context.getString(R.string.shizuku_permission_required_message),
+                                    )
+                                else -> requestConfirmation(
+                                    title = context.getString(R.string.confirm_restore_title),
+                                    message = context.getString(R.string.confirm_restore_message),
+                                    confirmLabel = context.getString(R.string.action_restore),
+                                ) {
+                                    runOperation(context.getString(R.string.action_restore)) {
+                                        SafetyGuard.restoreDefaults(context, targetSubId).message
+                                    }
+                                }
+                            }
+                        },
                         onStatusCheck = {
                             if (busyLabel != null) {
                                 publish(context.getString(R.string.operation_already_running))

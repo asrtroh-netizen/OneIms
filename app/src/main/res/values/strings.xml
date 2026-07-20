@@ -18,7 +18,7 @@
     <string name="action_refresh">刷新</string>
     <string name="action_compat">体检</string>
     <string name="action_grant">授权</string>
-    <string name="action_restore">还原</string>
+    <string name="action_restore">一键恢复系统默认状态</string>
     <string name="no_sim_hint">未读到 SIM，点「刷新」</string>
     <string name="sim_chip">卡%1$d %2$s</string>
     <string name="sim_pill_label">卡%1$d %2$s</string>
@@ -680,7 +680,7 @@
     <string name="action_refresh_sub">重新读取权限与 SIM</string>
     <string name="action_compat_sub">检查设备支持程度</string>
     <string name="action_grant_sub">允许 OneIms 使用系统能力</string>
-    <string name="action_restore_sub">清空覆盖并恢复默认</string>
+    <string name="action_restore_sub">清空 CarrierConfig 覆盖，恢复运营商系统默认</string>
     <string name="no_sim_detail">确认电话权限和 SIM 状态后重试</string>
     <string name="shizuku_setup_subtitle">配对、无线调试与免电脑准备入口</string>
     <string name="setup_open_shizuku_sub">安装内置通道，或用无线调试 + ADB 拉起</string>
@@ -783,8 +783,8 @@
     <string name="shizuku_already_granted_message">OneKuku 已激活，无需重复操作</string>
     <string name="shizuku_permission_requested">授权请求已发送</string>
     <string name="phone_permission_denied_message">未授予电话权限，SIM 与 IMS 状态将无法读取</string>
-    <string name="confirm_restore_title">恢复运营商默认设置？</string>
-    <string name="confirm_restore_message">这会清空当前 SIM 的临时 CarrierConfig 覆盖。基本通信异常时可用它应急恢复。</string>
+    <string name="confirm_restore_title">恢复系统默认状态？</string>
+    <string name="confirm_restore_message">这会清空当前 SIM 由本应用写入的 CarrierConfig 覆盖与相关显示增强，恢复运营商系统默认。基本通信异常时可用它应急回滚；不会删除已保存的通话配置快照。</string>
     <string name="confirm_identity_title">应用身份显示覆盖？</string>
     <string name="confirm_identity_message">仅修改显示层信息，重启或执行还原后可恢复。</string>
     <string name="confirm_restore_identity_title">恢复系统运营商名称？</string>
