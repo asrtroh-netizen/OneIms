@@ -436,6 +436,9 @@ private fun AddAppDialog(
                     SourceChip("F-Droid", source == AppSource.FDROID, enabled = !busy) {
                         source = AppSource.FDROID
                     }
+                    SourceChip("One", source == AppSource.ONE_INDEX, enabled = !busy) {
+                        source = AppSource.ONE_INDEX
+                    }
                 }
                 OutlinedTextField(
                     value = input,
@@ -444,6 +447,7 @@ private fun AddAppDialog(
                         Text(
                             when (source) {
                                 AppSource.FDROID -> stringResource(R.string.updates_add_fdroid)
+                                AppSource.ONE_INDEX -> stringResource(R.string.updates_add_one_index)
                                 AppSource.GITLAB -> stringResource(R.string.updates_add_repo)
                                 AppSource.GITHUB -> stringResource(R.string.updates_add_repo)
                             },
@@ -453,16 +457,17 @@ private fun AddAppDialog(
                     enabled = !busy,
                     modifier = Modifier.fillMaxWidth(),
                 )
-                if (source == AppSource.GITLAB || source == AppSource.FDROID) {
+                if (source == AppSource.GITLAB || source == AppSource.FDROID || source == AppSource.ONE_INDEX) {
                     OutlinedTextField(
                         value = host,
                         onValueChange = { host = it },
                         label = {
                             Text(
-                                if (source == AppSource.GITLAB) {
-                                    stringResource(R.string.updates_add_gitlab_host)
-                                } else {
-                                    stringResource(R.string.updates_add_fdroid_host)
+                                when (source) {
+                                    AppSource.GITLAB -> stringResource(R.string.updates_add_gitlab_host)
+                                    AppSource.FDROID -> stringResource(R.string.updates_add_fdroid_host)
+                                    AppSource.ONE_INDEX -> stringResource(R.string.updates_add_one_index_url)
+                                    else -> stringResource(R.string.updates_add_gitlab_host)
                                 },
                             )
                         },

@@ -58,11 +58,13 @@
     <string name="meter_notice">测速核心改编自 Pixel Meter（Apache-2.0），详见 NOTICE。</string>
 
     <string name="updates_card_title">应用更新（超越 Obtainium）</string>
-    <string name="updates_card_sub">Shizuku 静默装 · GitHub/GitLab/F-Droid</string>
+    <string name="updates_card_sub">自有 One 索引 · 静默装 · 多源适配</string>
     <string name="updates_title">应用更新</string>
     <string name="updates_intro">OneTools 内置类 Obtainium 更新器：添加 GitHub 仓库、检查 Release、下载安装 APK。首发含 One 生态预设，可自行增删。</string>
-    <string name="updates_intro_better">比 Obtainium 更贴 One：设备 ABI 自动选包、可更新优先排序、添加前校验仓库、Release 说明、目录导入导出，下载后自动绑定包名；通道就绪时走 Shizuku 静默安装，并支持 GitHub / GitLab / F-Droid 源。</string>
-    <string name="updates_add_hint_multi">GitHub/GitLab：owner/repo 或完整 URL。F-Droid：包名或 fdroid:org.app。</string>
+    <string name="updates_intro_better">比 Obtainium 更贴 One：ABI 选包、版本状态、源校验、Release 说明、导入导出、自动包名；Shizuku 静默装；GitHub/GitLab/F-Droid 为公开协议适配器（自研实现）；另有可售卖的 One 自有索引协议 onetools.update.v1。</string>
+    <string name="updates_add_hint_multi">GitHub/GitLab：owner/repo 或 URL。F-Droid：包名。One：自有索引 one:https://.../one-update.json（可售卖私有目录）。</string>
+    <string name="updates_add_one_index">应用 id（索引内 apps[].id）</string>
+    <string name="updates_add_one_index_url">One 索引 URL（https://.../one-update.json）</string>
     <string name="updates_add_fdroid">F-Droid 包名</string>
     <string name="updates_add_gitlab_host">GitLab 主机（默认 gitlab.com）</string>
     <string name="updates_add_fdroid_host">F-Droid 仓库（默认 https://f-droid.org）</string>

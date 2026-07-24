@@ -4,4 +4,6 @@ enum class AppSource {
     GITHUB,
     GITLAB,
     FDROID,
+    /** Proprietary OneTools catalog index (sellable IP). */
+    ONE_INDEX,
 }

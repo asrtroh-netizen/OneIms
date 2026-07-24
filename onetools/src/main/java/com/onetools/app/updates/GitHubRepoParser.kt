@@ -18,6 +18,7 @@ object GitHubRepoParser {
         when (detected) {
             AppSource.FDROID -> parseFdroid(trimmed, titleOverride, packageName, hostOverride)
             AppSource.GITLAB -> parseGitlab(trimmed, titleOverride, packageName, hostOverride)
+            AppSource.ONE_INDEX -> parseOneIndex(trimmed, titleOverride, packageName, hostOverride)
             AppSource.GITHUB -> parseGithub(trimmed, titleOverride, packageName)
         }
     }
@@ -25,6 +26,9 @@ object GitHubRepoParser {
     private fun detectSource(raw: String, hint: AppSource): AppSource {
         val lower = raw.lowercase()
         return when {
+            lower.startsWith("one:") || lower.startsWith("onetools:") ||
+                lower.endsWith("one-update.json") || lower.contains("onetools.update") ->
+                AppSource.ONE_INDEX
             lower.startsWith("fdroid:") || lower.contains("f-droid.org") -> AppSource.FDROID
             lower.contains("gitlab.") || lower.contains("gitlab.com") -> AppSource.GITLAB
             lower.contains("github.com") -> AppSource.GITHUB
@@ -66,6 +70,35 @@ object GitHubRepoParser {
             note = "$host/$owner/$repo",
             source = AppSource.GITLAB,
             host = host,
+        )
+    }
+
+    private fun parseOneIndex(
+        raw: String,
+        titleOverride: String?,
+        packageName: String?,
+        hostOverride: String?,
+    ): TrackedApp {
+        val url = when {
+            !hostOverride.isNullOrBlank() -> hostOverride.trim()
+            raw.startsWith("one:", ignoreCase = true) -> raw.substringAfter(':').trim()
+            raw.startsWith("onetools:", ignoreCase = true) -> raw.substringAfter(':').trim()
+            else -> raw.trim()
+        }
+        require(url.startsWith("http", ignoreCase = true)) { "One Index 需要 https://.../xxx.json" }
+        val idHint = packageName?.takeIf { it.isNotBlank() }
+            ?: titleOverride?.takeIf { it.isNotBlank() }
+            ?: url.substringAfterLast('/').removeSuffix(".json")
+        return TrackedApp(
+            id = "one-$idHint".lowercase().replace(' ', '-'),
+            title = titleOverride?.takeIf { it.isNotBlank() } ?: idHint,
+            packageName = packageName?.takeIf { it.isNotBlank() },
+            githubOwner = "one-index",
+            githubRepo = idHint,
+            assetPrefer = listOf(".apk"),
+            note = "One Index · ${OneIndexClient.SCHEMA}",
+            source = AppSource.ONE_INDEX,
+            host = url,
         )
     }
 

@@ -69,12 +69,14 @@ object UpdateFetcher {
         AppSource.GITHUB -> GitHubReleaseClient.validateRepo(app.githubOwner, app.githubRepo)
         AppSource.GITLAB -> GitLabReleaseClient.validate(app)
         AppSource.FDROID -> FDroidReleaseClient.validate(app)
+        AppSource.ONE_INDEX -> OneIndexClient.validate(app)
     }
 
     fun latestAsset(app: TrackedApp, abis: List<String>): Result<ReleaseAsset> = when (app.source) {
         AppSource.GITHUB -> GitHubReleaseClient.latestAsset(app, abis)
         AppSource.GITLAB -> GitLabReleaseClient.latestAsset(app, abis)
         AppSource.FDROID -> FDroidReleaseClient.latestAsset(app, abis)
+        AppSource.ONE_INDEX -> OneIndexClient.latestAsset(app, abis)
     }
 
     fun downloadToFile(url: String, dest: java.io.File, onProgress: ((Long, Long) -> Unit)? = null) {

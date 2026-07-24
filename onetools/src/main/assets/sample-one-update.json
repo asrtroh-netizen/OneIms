@@ -1,0 +1,18 @@
+{
+  "schema": "onetools.update.v1",
+  "generatedAt": "2026-07-25T00:00:00Z",
+  "publisher": "One",
+  "apps": [
+    {
+      "id": "onetools",
+      "title": "OneTools",
+      "packageName": "com.onetools.app",
+      "versionName": "0.1.0-debug",
+      "versionCode": 1,
+      "apkUrl": "https://example.com/releases/onetools-debug.apk",
+      "apkName": "onetools-debug.apk",
+      "changelog": "示例条目：把 apkUrl 换成你们 CDN 真实地址即可上架售卖目录。",
+      "sha256": ""
+    }
+  ]
+}
