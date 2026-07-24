@@ -198,6 +198,19 @@ fun MeterScreen(onBack: () -> Unit) {
             ) { Text(stringResource(R.string.meter_overlay_settings)) }
         }
         item {
+            OutlinedButton(
+                onClick = {
+                    val uri = Uri.parse("https://speed.cloudflare.com/")
+                    val intent = Intent(Intent.ACTION_VIEW, uri).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    runCatching { context.startActivity(intent) }
+                        .onFailure {
+                            Toast.makeText(context, R.string.meter_speedtest_fail, Toast.LENGTH_SHORT).show()
+                        }
+                },
+                modifier = Modifier.fillMaxWidth(),
+            ) { Text(stringResource(R.string.meter_speedtest)) }
+        }
+        item {
             Text(
                 stringResource(R.string.meter_tile_hint),
                 style = MaterialTheme.typography.bodySmall,

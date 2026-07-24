@@ -122,4 +122,26 @@ object BlocklistFormat {
                 .put(JSONObject().put("mode", "tag").put("n", "可能骚扰").put("kind", "block")),
         )
         .toString(2)
+
+    fun export(rules: List<CallRule>): String {
+        val arr = JSONArray()
+        rules.forEach { r ->
+            val o = JSONObject()
+                .put("n", r.pattern)
+                .put("kind", r.kind.name.lowercase())
+                .put("tag", r.tag)
+            when (r.mode) {
+                CallMatchMode.PREFIX -> o.put("prefix", true)
+                CallMatchMode.TAG -> o.put("mode", "tag")
+                CallMatchMode.EXACT -> Unit
+            }
+            arr.put(o)
+        }
+        return JSONObject()
+            .put("schema", SCHEMA)
+            .put("version", 1)
+            .put("exportedAt", System.currentTimeMillis())
+            .put("numbers", arr)
+            .toString(2)
+    }
 }

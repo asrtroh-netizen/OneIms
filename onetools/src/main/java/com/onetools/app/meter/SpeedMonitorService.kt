@@ -64,7 +64,7 @@ class SpeedMonitorService : Service() {
         isRunning = true
         refreshPrefs()
         ensureChannel()
-        val notification = buildNotification(getString(R.string.meter_starting))
+        val notification = buildNotification(getString(R.string.meter_starting), 0, 0)
         if (Build.VERSION.SDK_INT >= 34) {
             startForeground(
                 NOTIFICATION_ID,
@@ -102,7 +102,7 @@ class SpeedMonitorService : Service() {
                 lastFormatted = text
                 if (prefs.notificationEnabled) {
                     val nm = getSystemService(NotificationManager::class.java)
-                    nm.notify(NOTIFICATION_ID, buildNotification(text))
+                    nm.notify(NOTIFICATION_ID, buildNotification(text, down, up))
                 }
                 applyOverlayState(text)
                 delay(1000)
@@ -140,7 +140,7 @@ class SpeedMonitorService : Service() {
         nm.createNotificationChannel(channel)
     }
 
-    private fun buildNotification(content: String): Notification {
+    private fun buildNotification(content: String, down: Long = 0, up: Long = 0): Notification {
         val open = PendingIntent.getActivity(
             this,
             0,
@@ -153,8 +153,11 @@ class SpeedMonitorService : Service() {
             Intent(this, SpeedMonitorService::class.java).setAction(ACTION_STOP),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
+        val icon = androidx.core.graphics.drawable.IconCompat.createWithBitmap(
+            MeterDynamicIcon.create(down, up, prefs.displayMode),
+        )
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_onetools)
+            .setSmallIcon(icon)
             .setContentTitle(getString(R.string.meter_notification_title))
             .setContentText(content)
             .setOngoing(true)

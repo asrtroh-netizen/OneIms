@@ -39,6 +39,9 @@ interface CallRuleDao {
     @Query("SELECT COUNT(*) FROM call_rules")
     suspend fun count(): Int
 
+    @Query("DELETE FROM call_rules")
+    suspend fun clearAll()
+
     @Query(
         "SELECT * FROM call_rules WHERE mode = 'TAG' AND tag = :tag OR (mode = 'TAG' AND pattern = :tag)",
     )

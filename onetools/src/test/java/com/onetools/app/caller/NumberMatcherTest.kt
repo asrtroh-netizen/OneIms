@@ -56,10 +56,14 @@ class NumberMatcherTest {
     }
 
     @Test
-    fun parseBlocklistSchema() {
-        val rules = BlocklistFormat.parse(BlocklistFormat.sampleJson())
-        assertTrue(rules.isNotEmpty())
-        assertTrue(rules.any { it.mode == CallMatchMode.PREFIX && it.pattern == "400" })
-        assertTrue(rules.any { it.mode == CallMatchMode.TAG })
+    fun exportRoundTrip() {
+        val rules = listOf(
+            CallRule("1", "400", CallRuleKind.BLOCK, CallMatchMode.PREFIX, "骚扰"),
+            CallRule("2", "骚扰", CallRuleKind.BLOCK, CallMatchMode.TAG),
+        )
+        val json = BlocklistFormat.export(rules)
+        val parsed = BlocklistFormat.parse(json)
+        assertTrue(parsed.any { it.mode == CallMatchMode.PREFIX })
+        assertTrue(parsed.any { it.mode == CallMatchMode.TAG })
     }
 }

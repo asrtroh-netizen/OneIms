@@ -95,6 +95,57 @@ fun CallerScreen(
         }
     }
 
+    val exportLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json"),
+    ) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        scope.launch {
+            runCatching {
+                val json = store.exportJson()
+                withContext(Dispatchers.IO) {
+                    context.contentResolver.openOutputStream(uri)?.use { out ->
+                        out.write(json.toByteArray(Charsets.UTF_8))
+                    } ?: error("openOutputStream failed")
+                }
+                status = context.getString(R.string.caller_backup_ok)
+            }.onFailure { status = it.message ?: "backup failed" }
+        }
+    }
+
+    val importFileLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument(),
+    ) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        scope.launch {
+            runCatching {
+                val body = withContext(Dispatchers.IO) {
+                    context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
+                        ?: error("read failed")
+                }
+                val parsed = BlocklistFormat.parse(body)
+                store.mergeImport(parsed)
+                status = context.getString(R.string.caller_batch_ok, parsed.size)
+            }.onFailure { status = it.message ?: "import file failed" }
+        }
+    }
+
+    val restoreLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument(),
+    ) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        scope.launch {
+            runCatching {
+                val body = withContext(Dispatchers.IO) {
+                    context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
+                        ?: error("read failed")
+                }
+                val parsed = BlocklistFormat.parse(body)
+                store.replaceAll(parsed)
+                status = context.getString(R.string.caller_restore_ok, parsed.size)
+            }.onFailure { status = it.message ?: "restore failed" }
+        }
+    }
+
     fun requestScreeningRole() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
             status = context.getString(R.string.caller_role_need_q)
@@ -349,7 +400,7 @@ fun CallerScreen(
                                     val parsed = BlocklistFormat.parse(body)
                                     store.mergeImport(parsed)
                                     importText = body.take(2000)
-                                    status = context.getString(R.string.caller_imported, parsed.size)
+                                    status = context.getString(R.string.caller_batch_ok, parsed.size)
                                 }.onFailure { status = it.message ?: "parse failed" }
                             }.onFailure {
                                 status = context.getString(R.string.caller_fetch_fail, it.message ?: "")
@@ -358,7 +409,28 @@ fun CallerScreen(
                     },
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Text(stringResource(R.string.caller_fetch_cdn))
+                    Text(stringResource(R.string.caller_batch_cdn))
+                }
+            }
+            item {
+                OutlinedButton(
+                    onClick = { importFileLauncher.launch(arrayOf("application/json", "text/*", "*/*")) },
+                    modifier = Modifier.fillMaxWidth(),
+                ) { Text(stringResource(R.string.caller_batch_file)) }
+            }
+            item {
+                Text(stringResource(R.string.caller_backup_title), style = MaterialTheme.typography.titleMedium)
+            }
+            item {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                    Button(
+                        onClick = { exportLauncher.launch("onecaller-backup.json") },
+                        modifier = Modifier.weight(1f),
+                    ) { Text(stringResource(R.string.caller_backup)) }
+                    OutlinedButton(
+                        onClick = { restoreLauncher.launch(arrayOf("application/json", "text/*", "*/*")) },
+                        modifier = Modifier.weight(1f),
+                    ) { Text(stringResource(R.string.caller_restore)) }
                 }
             }
             item {

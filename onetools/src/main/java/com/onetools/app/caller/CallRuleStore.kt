@@ -60,6 +60,16 @@ class CallRuleStore(private val context: Context) {
         notifyDirectory()
     }
 
+    /** Full replace used by backup restore. */
+    suspend fun replaceAll(imported: List<CallRule>) {
+        ensureMigrated()
+        dao.clearAll()
+        dao.upsertAll(imported.map { it.toEntity() })
+        notifyDirectory()
+    }
+
+    suspend fun exportJson(): String = BlocklistFormat.export(snapshot())
+
     suspend fun count(): Int {
         ensureMigrated()
         return dao.count()
