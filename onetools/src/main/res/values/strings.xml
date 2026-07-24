@@ -85,6 +85,11 @@
     <string name="meter_style_text">字号 %1$d sp</string>
     <string name="meter_style_corner">圆角 %1$d dp</string>
     <string name="meter_style_alpha">不透明度 %1$d%%</string>
+    <string name="meter_style_pad_h">水平边距 %1$d dp</string>
+    <string name="meter_style_pad_v">垂直边距 %1$d dp</string>
+    <string name="meter_interval_title">采样间隔</string>
+    <string name="meter_interval_ms">%1$d ms</string>
+    <string name="meter_overlay_gestures">拖动可换位并自动记住；双击悬浮窗可临时关闭（需再开开关）。</string>
 
     <string name="updates_card_title">应用更新（超越 Obtainium）</string>
     <string name="updates_card_sub">自有 One 索引 · 静默装 · 多源适配</string>

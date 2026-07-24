@@ -79,7 +79,14 @@ class SpeedMonitorService : Service() {
             val cm = getSystemService(ConnectivityManager::class.java)
             sampler = PhysicalSpeedSampler(cm).also { it.start() }
         }
-        if (overlay == null) overlay = MeterOverlayController(this)
+        if (overlay == null) {
+            overlay = MeterOverlayController(this) {
+                // Double-tap: hide overlay until user re-enables in settings / tile.
+                runBlocking { MeterSettings(applicationContext).setOverlayEnabled(false) }
+                refreshPrefs()
+                applyOverlayState(lastFormatted)
+            }
+        }
         applyOverlayState(getString(R.string.meter_starting))
 
         job?.cancel()
@@ -105,7 +112,7 @@ class SpeedMonitorService : Service() {
                     nm.notify(NOTIFICATION_ID, buildNotification(text, down, up))
                 }
                 applyOverlayState(text)
-                delay(1000)
+                delay(prefs.sampleIntervalMs)
             }
         }
     }

@@ -305,6 +305,65 @@ fun MeterScreen(onBack: () -> Unit) {
             )
         }
         item {
+            Text(stringResource(R.string.meter_style_pad_h, prefs.overlayPadHDp.toInt()))
+            Slider(
+                value = prefs.overlayPadHDp,
+                onValueChange = { v ->
+                    scope.launch {
+                        settings.setOverlayPadding(v, prefs.overlayPadVDp)
+                        applyAndRestartPrefs()
+                    }
+                },
+                valueRange = 8f..28f,
+            )
+        }
+        item {
+            Text(stringResource(R.string.meter_style_pad_v, prefs.overlayPadVDp.toInt()))
+            Slider(
+                value = prefs.overlayPadVDp,
+                onValueChange = { v ->
+                    scope.launch {
+                        settings.setOverlayPadding(prefs.overlayPadHDp, v)
+                        applyAndRestartPrefs()
+                    }
+                },
+                valueRange = 6f..20f,
+            )
+        }
+        item {
+            Text(stringResource(R.string.meter_interval_title), style = MaterialTheme.typography.titleMedium)
+        }
+        item {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                listOf(500L, 1000L, 2000L).forEach { ms ->
+                    val label = stringResource(R.string.meter_interval_ms, ms.toInt())
+                    val selected = prefs.sampleIntervalMs == ms
+                    if (selected) {
+                        Button(onClick = {}, modifier = Modifier.weight(1f)) {
+                            Text(label, style = MaterialTheme.typography.labelSmall)
+                        }
+                    } else {
+                        OutlinedButton(
+                            onClick = {
+                                scope.launch {
+                                    settings.setSampleIntervalMs(ms)
+                                    applyAndRestartPrefs()
+                                }
+                            },
+                            modifier = Modifier.weight(1f),
+                        ) { Text(label, style = MaterialTheme.typography.labelSmall) }
+                    }
+                }
+            }
+        }
+        item {
+            Text(
+                stringResource(R.string.meter_overlay_gestures),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        item {
             OutlinedButton(
                 onClick = {
                     val uri = Uri.parse("https://speed.cloudflare.com/")

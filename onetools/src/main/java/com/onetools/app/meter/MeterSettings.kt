@@ -4,11 +4,16 @@ import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.floatPreferencesKey
+import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 private val Context.meterStore by preferencesDataStore("one_meter_settings")
 
@@ -44,6 +49,9 @@ data class MeterPrefsSnapshot(
     val overlayAlpha: Float = 0.88f,
     val overlayPadHDp: Float = 14f,
     val overlayPadVDp: Float = 10f,
+    val sampleIntervalMs: Long = 1000L,
+    val overlayX: Int = 48,
+    val overlayY: Int = 180,
 )
 
 class MeterSettings(private val context: Context) {
@@ -58,6 +66,9 @@ class MeterSettings(private val context: Context) {
     private val alphaKey = floatPreferencesKey("overlay_alpha")
     private val padHKey = floatPreferencesKey("overlay_pad_h")
     private val padVKey = floatPreferencesKey("overlay_pad_v")
+    private val intervalKey = longPreferencesKey("sample_interval_ms")
+    private val overlayXKey = intPreferencesKey("overlay_x")
+    private val overlayYKey = intPreferencesKey("overlay_y")
 
     val snapshotFlow: Flow<MeterPrefsSnapshot> = context.meterStore.data.map { p ->
         MeterPrefsSnapshot(
@@ -78,6 +89,9 @@ class MeterSettings(private val context: Context) {
             overlayAlpha = (p[alphaKey] ?: 0.88f).coerceIn(0.35f, 1f),
             overlayPadHDp = p[padHKey] ?: 14f,
             overlayPadVDp = p[padVKey] ?: 10f,
+            sampleIntervalMs = (p[intervalKey] ?: 1000L).coerceIn(500L, 3000L),
+            overlayX = p[overlayXKey] ?: 48,
+            overlayY = p[overlayYKey] ?: 180,
         )
     }
 
@@ -123,6 +137,19 @@ class MeterSettings(private val context: Context) {
         context.meterStore.edit {
             it[padHKey] = hDp.coerceIn(8f, 28f)
             it[padVKey] = vDp.coerceIn(6f, 20f)
+        }
+    }
+
+    suspend fun setSampleIntervalMs(ms: Long) {
+        context.meterStore.edit { it[intervalKey] = ms.coerceIn(500L, 3000L) }
+    }
+
+    fun saveOverlayPositionAsync(x: Int, y: Int) {
+        CoroutineScope(Dispatchers.IO).launch {
+            context.meterStore.edit {
+                it[overlayXKey] = x
+                it[overlayYKey] = y
+            }
         }
     }
 }

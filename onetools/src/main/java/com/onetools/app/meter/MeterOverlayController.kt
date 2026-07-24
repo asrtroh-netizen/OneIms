@@ -6,6 +6,7 @@ import android.graphics.PixelFormat
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Build
+import android.os.SystemClock
 import android.provider.Settings
 import android.util.TypedValue
 import android.view.Gravity
@@ -14,13 +15,17 @@ import android.view.WindowManager
 import android.widget.TextView
 
 /**
- * Draggable overlay HUD with themeable glass styles — aimed to look sharper than a flat chip.
+ * Draggable overlay HUD with themeable glass styles + position memory + double-tap hide.
  */
-class MeterOverlayController(private val context: Context) {
+class MeterOverlayController(
+    private val context: Context,
+    private val onDoubleTapHide: () -> Unit = {},
+) {
     private val wm = context.getSystemService(WindowManager::class.java)
+    private val settings = MeterSettings(context.applicationContext)
     private var view: TextView? = null
     private var params: WindowManager.LayoutParams? = null
-    private var lastStyle: MeterPrefsSnapshot? = null
+    private var lastTapAt = 0L
 
     fun canDraw(): Boolean = Settings.canDrawOverlays(context)
 
@@ -42,6 +47,7 @@ class MeterOverlayController(private val context: Context) {
         var downY = 0f
         var startX = 0
         var startY = 0
+        var moved = false
         tv.setOnTouchListener { v, e ->
             val lp = params ?: return@setOnTouchListener false
             when (e.action) {
@@ -50,12 +56,30 @@ class MeterOverlayController(private val context: Context) {
                     downY = e.rawY
                     startX = lp.x
                     startY = lp.y
+                    moved = false
                     true
                 }
                 MotionEvent.ACTION_MOVE -> {
-                    lp.x = startX + (e.rawX - downX).toInt()
-                    lp.y = startY + (e.rawY - downY).toInt()
+                    val dx = e.rawX - downX
+                    val dy = e.rawY - downY
+                    if (dx * dx + dy * dy > 36f) moved = true
+                    lp.x = startX + dx.toInt()
+                    lp.y = startY + dy.toInt()
                     runCatching { wm.updateViewLayout(v, lp) }
+                    true
+                }
+                MotionEvent.ACTION_UP -> {
+                    if (!moved) {
+                        val now = SystemClock.uptimeMillis()
+                        if (now - lastTapAt < 320L) {
+                            onDoubleTapHide()
+                            lastTapAt = 0L
+                        } else {
+                            lastTapAt = now
+                        }
+                    } else {
+                        settings.saveOverlayPositionAsync(lp.x, lp.y)
+                    }
                     true
                 }
                 else -> false
@@ -76,8 +100,8 @@ class MeterOverlayController(private val context: Context) {
             PixelFormat.TRANSLUCENT,
         ).apply {
             gravity = Gravity.TOP or Gravity.START
-            x = 48
-            y = 180
+            x = style.overlayX
+            y = style.overlayY
         }
         runCatching {
             wm.addView(tv, lp)
@@ -89,7 +113,6 @@ class MeterOverlayController(private val context: Context) {
 
     fun applyStyle(style: MeterPrefsSnapshot) {
         val tv = view ?: return
-        lastStyle = style
         val density = context.resources.displayMetrics.density
         val padH = (style.overlayPadHDp * density).toInt()
         val padV = (style.overlayPadVDp * density).toInt()
@@ -105,6 +128,9 @@ class MeterOverlayController(private val context: Context) {
             setStroke((1.2f * density).toInt().coerceAtLeast(1), stroke)
         }
         tv.background = gd
+        params?.let { lp ->
+            // Keep current drag position if already shown; only seed from prefs on first add.
+        }
     }
 
     fun update(text: String) {
@@ -116,7 +142,6 @@ class MeterOverlayController(private val context: Context) {
         runCatching { wm.removeView(v) }
         view = null
         params = null
-        lastStyle = null
     }
 
     private fun dp(v: Float): Float = v * context.resources.displayMetrics.density
