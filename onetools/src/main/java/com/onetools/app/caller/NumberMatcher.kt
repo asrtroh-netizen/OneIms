@@ -5,7 +5,7 @@ import org.json.JSONObject
 
 enum class CallRuleKind { BLOCK, ALLOW }
 
-enum class CallMatchMode { EXACT, PREFIX }
+enum class CallMatchMode { EXACT, PREFIX, TAG }
 
 data class CallRule(
     val id: String,
@@ -15,30 +15,61 @@ data class CallRule(
     val tag: String = "",
 )
 
+data class LookupResult(
+    val decision: NumberMatcher.Decision,
+    val matchedRules: List<CallRule>,
+    val tags: List<String>,
+)
+
 object NumberMatcher {
     fun digits(raw: String?): String =
         raw.orEmpty().filter { it.isDigit() }
 
+    /** Structural match for EXACT/PREFIX. TAG rules are handled in [decide]/[lookup]. */
     fun matches(rule: CallRule, incomingDigits: String): Boolean {
+        if (rule.mode == CallMatchMode.TAG) return false
         if (incomingDigits.isEmpty() || rule.pattern.isEmpty()) return false
         val p = digits(rule.pattern)
         if (p.isEmpty()) return false
         return when (rule.mode) {
             CallMatchMode.EXACT -> incomingDigits == p || incomingDigits.endsWith(p)
-            // Prefix only: startsWith (avoid "contains" false positives like matching "00" anywhere).
             CallMatchMode.PREFIX -> incomingDigits.startsWith(p)
+            CallMatchMode.TAG -> false
         }
     }
 
-    /** ALLOW wins over BLOCK when both match. */
-    fun decide(rules: List<CallRule>, number: String?): Decision {
+    /**
+     * TAG rule: pattern is a tag name; hits if any EXACT/PREFIX member with that tag matches the number.
+     * ALLOW wins over BLOCK.
+     */
+    fun lookup(rules: List<CallRule>, number: String?): LookupResult {
         val d = digits(number)
-        if (d.isEmpty()) return Decision.ALLOW_UNKNOWN
-        val hits = rules.filter { matches(it, d) }
-        if (hits.any { it.kind == CallRuleKind.ALLOW }) return Decision.ALLOW_LIST
-        if (hits.any { it.kind == CallRuleKind.BLOCK }) return Decision.BLOCK
-        return Decision.ALLOW_UNKNOWN
+        if (d.isEmpty()) {
+            return LookupResult(Decision.ALLOW_UNKNOWN, emptyList(), emptyList())
+        }
+        val structural = rules.filter { it.mode != CallMatchMode.TAG }
+        val tagRules = rules.filter { it.mode == CallMatchMode.TAG }
+        val directHits = structural.filter { matches(it, d) }
+        val tagHits = tagRules.filter { tagRule ->
+            val tagName = tagRule.pattern.ifBlank { tagRule.tag }
+            if (tagName.isBlank()) return@filter false
+            structural.any { member ->
+                member.tag == tagName && matches(member, d)
+            }
+        }
+        val hits = directHits + tagHits
+        val tags = (directHits.map { it.tag } + tagHits.map { it.pattern })
+            .filter { it.isNotBlank() }
+            .distinct()
+        val decision = when {
+            hits.any { it.kind == CallRuleKind.ALLOW } -> Decision.ALLOW_LIST
+            hits.any { it.kind == CallRuleKind.BLOCK } -> Decision.BLOCK
+            else -> Decision.ALLOW_UNKNOWN
+        }
+        return LookupResult(decision, hits, tags)
     }
+
+    fun decide(rules: List<CallRule>, number: String?): Decision = lookup(rules, number).decision
 
     enum class Decision { ALLOW_UNKNOWN, ALLOW_LIST, BLOCK }
 }
@@ -53,21 +84,28 @@ object BlocklistFormat {
         return buildList {
             for (i in 0 until arr.length()) {
                 val o = arr.getJSONObject(i)
+                val modeStr = o.optString("mode").lowercase()
+                val isTag = modeStr == "tag" || o.optBoolean("tagRule", false)
                 val n = o.optString("n").ifBlank { o.optString("number") }
+                    .ifBlank { o.optString("tag") }
                 if (n.isBlank()) continue
-                val prefix = o.optBoolean("prefix", false) ||
-                    o.optString("mode").equals("prefix", true)
+                val prefix = o.optBoolean("prefix", false) || modeStr == "prefix"
                 val kind = when (o.optString("kind", "block").lowercase()) {
                     "allow", "white" -> CallRuleKind.ALLOW
                     else -> CallRuleKind.BLOCK
+                }
+                val mode = when {
+                    isTag -> CallMatchMode.TAG
+                    prefix -> CallMatchMode.PREFIX
+                    else -> CallMatchMode.EXACT
                 }
                 add(
                     CallRule(
                         id = "imp-$n-$i",
                         pattern = n,
                         kind = kind,
-                        mode = if (prefix) CallMatchMode.PREFIX else CallMatchMode.EXACT,
-                        tag = o.optString("tag", ""),
+                        mode = mode,
+                        tag = o.optString("tag", if (isTag) n else ""),
                     ),
                 )
             }
@@ -76,8 +114,12 @@ object BlocklistFormat {
 
     fun sampleJson(): String = JSONObject()
         .put("schema", SCHEMA)
-        .put("numbers", JSONArray()
-            .put(JSONObject().put("n", "400").put("prefix", true).put("tag", "可能骚扰"))
-            .put(JSONObject().put("n", "106").put("prefix", true).put("kind", "block")))
+        .put(
+            "numbers",
+            JSONArray()
+                .put(JSONObject().put("n", "400").put("prefix", true).put("tag", "可能骚扰"))
+                .put(JSONObject().put("n", "106").put("prefix", true).put("kind", "block"))
+                .put(JSONObject().put("mode", "tag").put("n", "可能骚扰").put("kind", "block")),
+        )
         .toString(2)
 }

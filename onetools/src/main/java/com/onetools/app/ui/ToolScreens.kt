@@ -7,13 +7,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -25,7 +23,6 @@ import androidx.compose.ui.unit.dp
 import com.onetools.app.R
 import com.onetools.app.battery.BatteryReader
 import com.onetools.app.battery.BatterySnapshot
-import com.onetools.app.meter.SpeedMonitorService
 import kotlinx.coroutines.delay
 import androidx.compose.runtime.LaunchedEffect
 
@@ -81,57 +78,6 @@ fun BatteryScreen(onBack: () -> Unit) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-        }
-    }
-}
-
-@Composable
-fun MeterScreen(onBack: () -> Unit) {
-    val context = LocalContext.current
-    var running by remember { mutableStateOf(false) }
-    DisposableEffect(Unit) {
-        onDispose { }
-    }
-    ToolScaffold(
-        title = stringResource(R.string.meter_title),
-        onBack = onBack,
-    ) {
-        item {
-            Text(
-                stringResource(R.string.meter_desc),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        item {
-            if (running) {
-                Button(
-                    onClick = {
-                        SpeedMonitorService.stop(context)
-                        running = false
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text(stringResource(R.string.meter_stop))
-                }
-            } else {
-                Button(
-                    onClick = {
-                        SpeedMonitorService.start(context)
-                        running = true
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text(stringResource(R.string.meter_start))
-                }
-            }
-        }
-        item {
-            Text(
-                stringResource(R.string.meter_notice),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
         }
     }
 }

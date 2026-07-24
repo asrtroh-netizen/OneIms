@@ -67,7 +67,11 @@ fun CallerScreen(
 
     var number by remember { mutableStateOf("") }
     var asPrefix by remember { mutableStateOf(false) }
+    var asTag by remember { mutableStateOf(false) }
     var asAllow by remember { mutableStateOf(false) }
+    var ruleTag by remember { mutableStateOf("") }
+    var lookupNumber by remember { mutableStateOf("") }
+    var lookupResult by remember { mutableStateOf("") }
     var importText by remember { mutableStateOf("") }
     var status by remember { mutableStateOf("") }
 
@@ -191,9 +195,36 @@ fun CallerScreen(
                 )
             }
             item {
+                OutlinedTextField(
+                    value = ruleTag,
+                    onValueChange = { ruleTag = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text(stringResource(R.string.caller_tag_hint)) },
+                    singleLine = true,
+                )
+            }
+            item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = asPrefix, onCheckedChange = { asPrefix = it })
+                    Checkbox(
+                        checked = asPrefix,
+                        onCheckedChange = {
+                            asPrefix = it
+                            if (it) asTag = false
+                        },
+                    )
                     Text(stringResource(R.string.caller_prefix))
+                }
+            }
+            item {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(
+                        checked = asTag,
+                        onCheckedChange = {
+                            asTag = it
+                            if (it) asPrefix = false
+                        },
+                    )
+                    Text(stringResource(R.string.caller_tag_mode))
                 }
             }
             item {
@@ -205,8 +236,12 @@ fun CallerScreen(
             item {
                 Button(
                     onClick = {
-                        val digits = NumberMatcher.digits(number)
-                        if (digits.isEmpty()) {
+                        val pattern = if (asTag) {
+                            ruleTag.ifBlank { number }.trim()
+                        } else {
+                            NumberMatcher.digits(number)
+                        }
+                        if (pattern.isEmpty()) {
                             Toast.makeText(context, R.string.caller_number_invalid, Toast.LENGTH_SHORT).show()
                             return@Button
                         }
@@ -214,9 +249,14 @@ fun CallerScreen(
                             store.upsert(
                                 CallRule(
                                     id = UUID.randomUUID().toString(),
-                                    pattern = digits,
+                                    pattern = pattern,
                                     kind = if (asAllow) CallRuleKind.ALLOW else CallRuleKind.BLOCK,
-                                    mode = if (asPrefix) CallMatchMode.PREFIX else CallMatchMode.EXACT,
+                                    mode = when {
+                                        asTag -> CallMatchMode.TAG
+                                        asPrefix -> CallMatchMode.PREFIX
+                                        else -> CallMatchMode.EXACT
+                                    },
+                                    tag = ruleTag,
                                 ),
                             )
                             number = ""
@@ -226,6 +266,40 @@ fun CallerScreen(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(stringResource(R.string.caller_add))
+                }
+            }
+            item {
+                Text(stringResource(R.string.caller_lookup_title), style = MaterialTheme.typography.titleMedium)
+            }
+            item {
+                OutlinedTextField(
+                    value = lookupNumber,
+                    onValueChange = { lookupNumber = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text(stringResource(R.string.caller_lookup_hint)) },
+                    singleLine = true,
+                )
+            }
+            item {
+                Button(
+                    onClick = {
+                        scope.launch {
+                            val r = store.lookup(lookupNumber)
+                            lookupResult = buildString {
+                                append(r.decision.name)
+                                if (r.tags.isNotEmpty()) append(" · tags=").append(r.tags.joinToString(","))
+                                if (r.matchedRules.isNotEmpty()) {
+                                    append(" · hits=").append(r.matchedRules.size)
+                                }
+                            }
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                ) { Text(stringResource(R.string.caller_lookup)) }
+            }
+            if (lookupResult.isNotBlank()) {
+                item {
+                    Text(lookupResult, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
                 }
             }
             item {

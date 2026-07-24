@@ -21,16 +21,20 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 /**
- * Foreground notification showing live up/down rates (Pixel Meter–style display).
+ * Foreground notification + optional overlay showing live rates.
+ * Display modes inspired by Pixel Meter (Apache-2.0); implementation is first-party.
  */
 class SpeedMonitorService : Service() {
     private val scope = CoroutineScope(Dispatchers.Default)
     private var job: Job? = null
     private var sampler: PhysicalSpeedSampler? = null
+    private var overlay: MeterOverlayController? = null
     private var lastRx = -1L
     private var lastTx = -1L
+    private var prefs = MeterPrefsSnapshot()
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -40,12 +44,25 @@ class SpeedMonitorService : Service() {
                 stopSelf()
                 return START_NOT_STICKY
             }
+            ACTION_APPLY_PREFS -> {
+                refreshPrefs()
+                applyOverlayState(lastFormatted)
+                return START_STICKY
+            }
             else -> startMonitoring()
         }
         return START_STICKY
     }
 
+    private var lastFormatted: String = ""
+
+    private fun refreshPrefs() {
+        prefs = runBlocking { MeterSettings(applicationContext).snapshot() }
+    }
+
     private fun startMonitoring() {
+        isRunning = true
+        refreshPrefs()
         ensureChannel()
         val notification = buildNotification(getString(R.string.meter_starting))
         if (Build.VERSION.SDK_INT >= 34) {
@@ -62,9 +79,13 @@ class SpeedMonitorService : Service() {
             val cm = getSystemService(ConnectivityManager::class.java)
             sampler = PhysicalSpeedSampler(cm).also { it.start() }
         }
+        if (overlay == null) overlay = MeterOverlayController(this)
+        applyOverlayState(getString(R.string.meter_starting))
+
         job?.cancel()
         job = scope.launch {
             while (isActive) {
+                refreshPrefs()
                 val totals = sampler?.readTotals() ?: PhysicalSpeedSampler.TrafficTotals(0, 0)
                 val down: Long
                 val up: Long
@@ -77,22 +98,35 @@ class SpeedMonitorService : Service() {
                 }
                 lastRx = totals.rxBytes
                 lastTx = totals.txBytes
-                val text = getString(
-                    R.string.meter_notification_body,
-                    SpeedFormat.formatRate(down),
-                    SpeedFormat.formatRate(up),
-                )
-                val nm = getSystemService(NotificationManager::class.java)
-                nm.notify(NOTIFICATION_ID, buildNotification(text))
+                val text = MeterRateFormatter.format(prefs, down, up)
+                lastFormatted = text
+                if (prefs.notificationEnabled) {
+                    val nm = getSystemService(NotificationManager::class.java)
+                    nm.notify(NOTIFICATION_ID, buildNotification(text))
+                }
+                applyOverlayState(text)
                 delay(1000)
             }
         }
     }
 
+    private fun applyOverlayState(text: String) {
+        val o = overlay ?: return
+        if (prefs.overlayEnabled && o.canDraw()) {
+            o.show(text)
+            o.update(text)
+        } else {
+            o.hide()
+        }
+    }
+
     override fun onDestroy() {
+        isRunning = false
         job?.cancel()
         sampler?.stop()
         sampler = null
+        overlay?.hide()
+        overlay = null
         super.onDestroy()
     }
 
@@ -134,6 +168,11 @@ class SpeedMonitorService : Service() {
         const val CHANNEL_ID = "onetools_meter"
         const val NOTIFICATION_ID = 42
         const val ACTION_STOP = "com.onetools.app.meter.STOP"
+        const val ACTION_APPLY_PREFS = "com.onetools.app.meter.APPLY_PREFS"
+
+        @Volatile
+        var isRunning: Boolean = false
+            private set
 
         fun start(context: Context) {
             ContextCompat.startForegroundService(

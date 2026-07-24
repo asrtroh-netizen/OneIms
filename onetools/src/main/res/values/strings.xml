@@ -46,16 +46,31 @@
     <string name="battery_notice">实现参考 Battery Info（Apache-2.0）能力集合，源码为干净室；详见 NOTICE。</string>
 
     <string name="meter_card_title">网速监测</string>
-    <string name="meter_card_sub">Pixel Meter 思路 · 过滤 VPN 虚接口</string>
+    <string name="meter_card_sub">悬浮窗 · 通知模式 · QS Tile · 过滤 VPN</string>
     <string name="meter_title">网速监测</string>
-    <string name="meter_desc">在通知栏显示实时上下行速率。统计仅累计 Wi‑Fi / 蜂窝 / 以太网，忽略 VPN，避免翻倍。</string>
+    <string name="meter_desc">通知栏 / 悬浮窗显示实时上下行。统计仅累计 Wi‑Fi / 蜂窝 / 以太网，忽略 VPN。可从系统快捷设置添加 Tile。</string>
     <string name="meter_start">开始监测</string>
     <string name="meter_stop">停止</string>
     <string name="meter_starting">正在采样…</string>
     <string name="meter_channel_name">网速监测</string>
     <string name="meter_notification_title">OneTools 网速</string>
     <string name="meter_notification_body">↓ %1$s · ↑ %2$s</string>
-    <string name="meter_notice">测速核心改编自 Pixel Meter（Apache-2.0），详见 NOTICE。</string>
+    <string name="meter_notice">测速核心与显示模式对标 Pixel Meter（Apache-2.0），实现为自研改编，详见 NOTICE。</string>
+    <string name="meter_mode_title">通知/悬浮显示模式</string>
+    <string name="meter_mode_both">上下</string>
+    <string name="meter_mode_total">合计</string>
+    <string name="meter_mode_down">下行</string>
+    <string name="meter_mode_up">上行</string>
+    <string name="meter_prefix_hint">自定义前缀（可选）</string>
+    <string name="meter_save_prefix">保存前缀</string>
+    <string name="meter_saved">已保存</string>
+    <string name="meter_notif_enable">通知栏显示</string>
+    <string name="meter_overlay_enable">悬浮窗显示</string>
+    <string name="meter_overlay_need_perm">需要「显示在其他应用上层」权限</string>
+    <string name="meter_overlay_settings">打开悬浮窗权限设置</string>
+    <string name="meter_tile_notif">One 网速</string>
+    <string name="meter_tile_overlay">One 悬浮网速</string>
+    <string name="meter_tile_hint">可在系统「快捷设置」编辑面板中添加「One 网速 / One 悬浮网速」开关。</string>
 
     <string name="updates_card_title">应用更新（超越 Obtainium）</string>
     <string name="updates_card_sub">自有 One 索引 · 静默装 · 多源适配</string>
@@ -159,7 +174,12 @@
     <string name="caller_number_hint">号码或前缀数字</string>
     <string name="caller_number_invalid">请输入有效数字</string>
     <string name="caller_prefix">前缀匹配</string>
+    <string name="caller_tag_mode">标签规则（按 tag 命中成员号）</string>
+    <string name="caller_tag_hint">标签（成员号填写 / 标签规则填写标签名）</string>
     <string name="caller_allow">白名单（优先于黑名单）</string>
+    <string name="caller_lookup_title">手动查号</string>
+    <string name="caller_lookup_hint">输入号码试查</string>
+    <string name="caller_lookup">查号</string>
     <string name="caller_add">添加</string>
     <string name="caller_added">已添加规则</string>
     <string name="caller_import_title">导入 onetools.blocklist.v1</string>

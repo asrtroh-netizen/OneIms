@@ -112,9 +112,10 @@ class OneCallerDirectoryProvider : ContentProvider() {
         val rules = runBlocking { CallRuleStore(ctx).snapshot() }
         val digits = NumberMatcher.digits(rawNumber)
         if (digits.isEmpty()) return null
-        val hits = rules.filter { NumberMatcher.matches(it, digits) }
-        val chosen = hits.firstOrNull { it.kind == CallRuleKind.ALLOW }
-            ?: hits.firstOrNull { it.kind == CallRuleKind.BLOCK }
+        val result = NumberMatcher.lookup(rules, digits)
+        if (result.decision == NumberMatcher.Decision.ALLOW_UNKNOWN) return null
+        val chosen = result.matchedRules.firstOrNull { it.kind == CallRuleKind.ALLOW }
+            ?: result.matchedRules.firstOrNull { it.kind == CallRuleKind.BLOCK }
             ?: return null
         val tag = chosen.tag.ifBlank {
             when (chosen.kind) {

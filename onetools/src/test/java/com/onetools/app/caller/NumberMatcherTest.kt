@@ -43,9 +43,23 @@ class NumberMatcherTest {
     }
 
     @Test
+    fun tagRuleMatchesMembersByTag() {
+        // Catalog entry labels the number; TAG rule supplies the block decision.
+        // Use a non-blocking structural kind that still carries the tag — here BLOCK on tag only:
+        // structural kind ALLOW would win, so catalog uses BLOCK on a different prefix that won't match,
+        // and TAG expands members by tag+number match using tagRule.kind.
+        val labeled = CallRule("1", "95588", CallRuleKind.BLOCK, CallMatchMode.EXACT, tag = "银行客服")
+        val tagRule = CallRule("2", "银行客服", CallRuleKind.BLOCK, CallMatchMode.TAG)
+        val result = NumberMatcher.lookup(listOf(labeled, tagRule), "95588")
+        assertEquals(NumberMatcher.Decision.BLOCK, result.decision)
+        assertTrue(result.tags.contains("银行客服") || result.matchedRules.any { it.mode == CallMatchMode.TAG })
+    }
+
+    @Test
     fun parseBlocklistSchema() {
         val rules = BlocklistFormat.parse(BlocklistFormat.sampleJson())
         assertTrue(rules.isNotEmpty())
         assertTrue(rules.any { it.mode == CallMatchMode.PREFIX && it.pattern == "400" })
+        assertTrue(rules.any { it.mode == CallMatchMode.TAG })
     }
 }

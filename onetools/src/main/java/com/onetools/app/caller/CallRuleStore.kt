@@ -1,55 +1,87 @@
 package com.onetools.app.caller
 
 import android.content.Context
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import androidx.room.Room
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.json.JSONObject
 
 private val Context.callerRulesStore by preferencesDataStore("one_caller_rules")
 
 class CallRuleStore(private val context: Context) {
-    private val key = stringSetPreferencesKey("rules_json")
+    private val legacyKey = stringSetPreferencesKey("rules_json")
+    private val migratedKey = booleanPreferencesKey("room_migrated_v1")
+    private val mutex = Mutex()
 
-    val rules: Flow<List<CallRule>> = context.callerRulesStore.data.map { prefs ->
-        prefs[key].orEmpty().mapNotNull { decode(it) }
+    private val db: CallerDatabase by lazy {
+        Room.databaseBuilder(
+            context.applicationContext,
+            CallerDatabase::class.java,
+            "onecaller.db",
+        ).fallbackToDestructiveMigration().build()
     }
 
-    suspend fun snapshot(): List<CallRule> = rules.first()
+    private val dao get() = db.callRuleDao()
+
+    val rules: Flow<List<CallRule>> = flow {
+        ensureMigrated()
+        emitAll(dao.observeAll().map { list -> list.map { it.toModel() } })
+    }
+
+    suspend fun snapshot(): List<CallRule> {
+        ensureMigrated()
+        return dao.all().map { it.toModel() }
+    }
 
     suspend fun upsert(rule: CallRule) {
-        context.callerRulesStore.edit { prefs ->
-            val cur = prefs[key].orEmpty().mapNotNull { decode(it) }.toMutableList()
-            cur.removeAll { it.id == rule.id || (it.pattern == rule.pattern && it.mode == rule.mode) }
-            cur.add(rule)
-            prefs[key] = cur.map { encode(it) }.toSet()
-        }
+        ensureMigrated()
+        dao.upsert(rule.toEntity())
         notifyDirectory()
     }
 
     suspend fun remove(id: String) {
-        context.callerRulesStore.edit { prefs ->
-            val cur = prefs[key].orEmpty().mapNotNull { decode(it) }.toMutableList()
-            cur.removeAll { it.id == id }
-            prefs[key] = cur.map { encode(it) }.toSet()
-        }
+        ensureMigrated()
+        dao.delete(id)
         notifyDirectory()
     }
 
     suspend fun mergeImport(imported: List<CallRule>) {
-        context.callerRulesStore.edit { prefs ->
-            val byKey = prefs[key].orEmpty().mapNotNull { decode(it) }
-                .associateBy { "${it.kind}:${it.mode}:${NumberMatcher.digits(it.pattern)}" }
-                .toMutableMap()
-            imported.forEach { r ->
-                byKey["${r.kind}:${r.mode}:${NumberMatcher.digits(r.pattern)}"] = r
-            }
-            prefs[key] = byKey.values.map { encode(it) }.toSet()
-        }
+        ensureMigrated()
+        dao.upsertAll(imported.map { it.toEntity() })
         notifyDirectory()
+    }
+
+    suspend fun count(): Int {
+        ensureMigrated()
+        return dao.count()
+    }
+
+    suspend fun lookup(number: String?): LookupResult {
+        return NumberMatcher.lookup(snapshot(), number)
+    }
+
+    private suspend fun ensureMigrated() {
+        mutex.withLock {
+            val prefs = context.callerRulesStore.data.first()
+            if (prefs[migratedKey] == true) return@withLock
+            val legacy = prefs[legacyKey].orEmpty().mapNotNull { decodeLegacy(it) }
+            if (legacy.isNotEmpty()) {
+                dao.upsertAll(legacy.map { it.toEntity() })
+            }
+            context.callerRulesStore.edit { mutable ->
+                mutable[migratedKey] = true
+                mutable.remove(legacyKey)
+            }
+        }
     }
 
     private fun notifyDirectory() {
@@ -58,15 +90,7 @@ class CallRuleStore(private val context: Context) {
         }
     }
 
-    private fun encode(r: CallRule): String = JSONObject()
-        .put("id", r.id)
-        .put("pattern", r.pattern)
-        .put("kind", r.kind.name)
-        .put("mode", r.mode.name)
-        .put("tag", r.tag)
-        .toString()
-
-    private fun decode(raw: String): CallRule? = runCatching {
+    private fun decodeLegacy(raw: String): CallRule? = runCatching {
         val o = JSONObject(raw)
         CallRule(
             id = o.getString("id"),
