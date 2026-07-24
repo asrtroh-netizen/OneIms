@@ -57,11 +57,11 @@
     <string name="meter_notification_body">↓ %1$s · ↑ %2$s</string>
     <string name="meter_notice">测速核心改编自 Pixel Meter（Apache-2.0），详见 NOTICE。</string>
 
-    <string name="updates_card_title">更新中心 / Obtainium</string>
-    <string name="updates_card_sub">内置 GitHub 更新 · 一键安装官方 Obtainium（GPL 独立程序）</string>
-    <string name="updates_title">更新中心</string>
-    <string name="updates_intro">内置更新中心可检查 GitHub Release 并下载安装 APK。Obtainium 以官方发布包形式内置获取，不合并其 Flutter 源码。</string>
-    <string name="updates_gpl_notice">Obtainium 为 GPL-3.0 软件：源码 https://github.com/ImranR98/Obtainium 。本应用仅分发其官方 APK 并提供源码链接，Kotlin 自研代码与之保持进程/许可隔离。</string>
+    <string name="updates_card_title">One 自主更新</string>
+    <string name="updates_card_sub">自研更新器 · 直连 GitHub Release · 不依赖 Obtainium</string>
+    <string name="updates_title">One 自主更新</string>
+    <string name="updates_intro">OneTools 自研更新中心：检查 One 生态 GitHub Release，下载并安装 APK。不捆绑、不依赖第三方更新器。</string>
+    <string name="updates_gpl_notice">已移除 Obtainium 主路径；如需通用多源更新器请另行安装，与本中心无关。</string>
     <string name="updates_check">检查最新版</string>
     <string name="updates_download_install">下载并安装</string>
     <string name="updates_open">打开应用</string>

@@ -17,13 +17,8 @@
   `BatteryManager` / `ACTION_BATTERY_CHANGED` public APIs — not a copy of
   Battery Info source files.
 
-## Obtainium (bundled install path)
+## Obtainium
 
-- Project: https://github.com/ImranR98/Obtainium
-- License: GNU GPL-3.0
-- Use in OneTools: the Update Center can download the **official Obtainium APK**
-  from GitHub Releases and hand it to the system package installer.
-  Obtainium remains a **separate program**; its Flutter source is **not** merged
-  into OneTools. Source offer: the GitHub repository URL above.
-  Redistributing the Obtainium APK does not place OneTools Kotlin sources under GPL,
-  provided Obtainium stays a separate work (arm's-length Intent/install).
+- Previously considered for in-app updates.
+- **Not used** in the autonomous One update center (user decision: 自主更新器).
+- No Obtainium APK redistribution from this module path.
