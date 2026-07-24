@@ -124,4 +124,17 @@
     <string name="updates_downloaded">已下载 %1$s，请确认安装</string>
     <string name="updates_bound_package">已自动绑定包名 %1$s，请确认安装</string>
     <string name="updates_need_install_perm">需要允许「安装未知应用」权限</string>
+    <string name="recorder_card_title">通话录音（自研）</string>
+    <string name="recorder_card_sub">干净室 · Shizuku UserService · shell 音频源</string>
+    <string name="recorder_title">通话录音</string>
+    <string name="recorder_intro">OneTools 自研干净室录音：经 Shizuku 在 shell UID 下打开 VOICE_* 音频源。不包含 BCR/ShizuCall 等 GPL 源码。OEM 差异大，请先短通话自测。</string>
+    <string name="recorder_shizuku_ok">Shizuku 已就绪 · 可启动 UserService 录音</string>
+    <string name="recorder_shizuku_need">请先在首页激活 Shizuku 通道</string>
+    <string name="recorder_legal">我确认已了解并遵守当地通话录音法律（含对方知情同意等要求），自愿使用本功能。</string>
+    <string name="recorder_need_legal">请先勾选法律确认</string>
+    <string name="recorder_auto">通话接通后自动开录 / 挂断停录</string>
+    <string name="recorder_start">立即开始录音</string>
+    <string name="recorder_stop">停止并保存</string>
+    <string name="recorder_started">已开始（见状态行音频源）</string>
+    <string name="recorder_list_title">已保存录音</string>
 </resources>

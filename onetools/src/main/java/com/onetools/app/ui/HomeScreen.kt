@@ -27,6 +27,7 @@ fun HomeScreen(
     onOpenBattery: () -> Unit,
     onOpenMeter: () -> Unit,
     onOpenUpdates: () -> Unit,
+    onOpenRecorder: () -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier
@@ -75,6 +76,14 @@ fun HomeScreen(
                 title = stringResource(R.string.meter_card_title),
                 subtitle = stringResource(R.string.meter_card_sub),
                 onClick = onOpenMeter,
+            )
+        }
+
+        item {
+            InfoCard(
+                title = stringResource(R.string.recorder_card_title),
+                subtitle = stringResource(R.string.recorder_card_sub),
+                onClick = onOpenRecorder,
             )
         }
 

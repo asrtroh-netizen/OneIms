@@ -27,11 +27,12 @@ import com.onetools.app.channel.ShizukuChannel
 import com.onetools.app.ui.BatteryScreen
 import com.onetools.app.ui.HomeScreen
 import com.onetools.app.ui.MeterScreen
+import com.onetools.app.ui.RecorderScreen
 import com.onetools.app.ui.UpdatesScreen
 import com.onetools.app.ui.theme.OneToolsTheme
 import kotlinx.coroutines.delay
 
-private enum class AppRoute { Home, Battery, Meter, Updates }
+private enum class AppRoute { Home, Battery, Meter, Updates, Recorder }
 
 class MainActivity : ComponentActivity() {
     private var serviceReady by mutableStateOf(false)
@@ -117,10 +118,12 @@ class MainActivity : ComponentActivity() {
                             onOpenBattery = { route = AppRoute.Battery },
                             onOpenMeter = { route = AppRoute.Meter },
                             onOpenUpdates = { route = AppRoute.Updates },
+                            onOpenRecorder = { route = AppRoute.Recorder },
                         )
                         AppRoute.Battery -> BatteryScreen(onBack = { route = AppRoute.Home })
                         AppRoute.Meter -> MeterScreen(onBack = { route = AppRoute.Home })
                         AppRoute.Updates -> UpdatesScreen(onBack = { route = AppRoute.Home })
+                        AppRoute.Recorder -> RecorderScreen(onBack = { route = AppRoute.Home })
                     }
                 }
             }
