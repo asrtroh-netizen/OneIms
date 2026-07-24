@@ -25,6 +25,7 @@ import com.onetools.app.channel.ChannelCardPolicy
 import com.onetools.app.channel.ChannelCardState
 import com.onetools.app.channel.ShizukuChannel
 import com.onetools.app.ui.BatteryScreen
+import com.onetools.app.ui.CallerScreen
 import com.onetools.app.ui.HomeScreen
 import com.onetools.app.ui.MeterScreen
 import com.onetools.app.ui.RecorderScreen
@@ -33,7 +34,7 @@ import com.onetools.app.ui.UpdatesScreen
 import com.onetools.app.ui.theme.OneToolsTheme
 import kotlinx.coroutines.delay
 
-private enum class AppRoute { Home, Battery, Meter, Updates, Recorder, Telo }
+private enum class AppRoute { Home, Battery, Meter, Updates, Recorder, Caller, Telo }
 
 class MainActivity : ComponentActivity() {
     private var serviceReady by mutableStateOf(false)
@@ -120,12 +121,18 @@ class MainActivity : ComponentActivity() {
                             onOpenMeter = { route = AppRoute.Meter },
                             onOpenUpdates = { route = AppRoute.Updates },
                             onOpenRecorder = { route = AppRoute.Recorder },
+                            onOpenCaller = { route = AppRoute.Caller },
                             onOpenTelo = { route = AppRoute.Telo },
                         )
                         AppRoute.Battery -> BatteryScreen(onBack = { route = AppRoute.Home })
                         AppRoute.Meter -> MeterScreen(onBack = { route = AppRoute.Home })
                         AppRoute.Updates -> UpdatesScreen(onBack = { route = AppRoute.Home })
                         AppRoute.Recorder -> RecorderScreen(onBack = { route = AppRoute.Home })
+                        AppRoute.Caller -> CallerScreen(
+                            onBack = { route = AppRoute.Home },
+                            onOpenRecorder = { route = AppRoute.Recorder },
+                            onOpenTelo = { route = AppRoute.Telo },
+                        )
                         AppRoute.Telo -> TeloScreen(
                             onBack = { route = AppRoute.Home },
                             onOpenUpdates = { route = AppRoute.Updates },

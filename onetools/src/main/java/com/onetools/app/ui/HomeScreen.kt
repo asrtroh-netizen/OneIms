@@ -28,6 +28,7 @@ fun HomeScreen(
     onOpenMeter: () -> Unit,
     onOpenUpdates: () -> Unit,
     onOpenRecorder: () -> Unit,
+    onOpenCaller: () -> Unit,
     onOpenTelo: () -> Unit,
 ) {
     LazyColumn(
@@ -82,9 +83,9 @@ fun HomeScreen(
 
         item {
             InfoCard(
-                title = stringResource(R.string.telo_card_title),
-                subtitle = stringResource(R.string.telo_card_sub),
-                onClick = onOpenTelo,
+                title = stringResource(R.string.caller_card_title),
+                subtitle = stringResource(R.string.caller_card_sub),
+                onClick = onOpenCaller,
             )
         }
 
@@ -93,6 +94,14 @@ fun HomeScreen(
                 title = stringResource(R.string.recorder_card_title),
                 subtitle = stringResource(R.string.recorder_card_sub),
                 onClick = onOpenRecorder,
+            )
+        }
+
+        item {
+            InfoCard(
+                title = stringResource(R.string.telo_card_title),
+                subtitle = stringResource(R.string.telo_card_sub),
+                onClick = onOpenTelo,
             )
         }
 

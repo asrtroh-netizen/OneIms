@@ -1,0 +1,8 @@
+{
+  "schema": "onetools.blocklist.v1",
+  "version": 1,
+  "numbers": [
+    { "n": "400", "prefix": true, "tag": "可能骚扰", "kind": "block" },
+    { "n": "106", "prefix": true, "tag": "短信通道", "kind": "block" }
+  ]
+}
