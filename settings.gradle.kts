@@ -25,3 +25,4 @@ dependencyResolutionManagement {
 rootProject.name = "OneIms"
 include(":app")
 include(":bridge")
+include(":onetools")

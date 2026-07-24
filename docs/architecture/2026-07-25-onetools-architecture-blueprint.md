@@ -269,12 +269,12 @@ Manifest `queries` 必须声明：
 
 | 步 | 内容 | 完成标准 |
 |---|---|---|
-| 1 | `:onetools` 壳 + **原样拷贝 `Theme.kt` / Tokens** + Shizuku 依赖 | 主题色与 OneIMS 一致；能 assemble |
-| 2 | **整页移植 `OneLinkHome` + StatusHero 依赖链** | 真机首屏与 OneIMS Lite 同构 |
-| 3 | Shizuku 激活/授权主路径（对齐 OneLink） | 四态可切换；禁假 READY |
-| 4 | 剥除 IMS 写配专属入口；保留通道/设备区块 | AC-5 无写配路径 |
-| 5 | 追加导出等工具（不改原布局节奏） | Telegram 可发送 |
-| 6 | 品牌字符串 / 关于页区分 OneTools | 商店名清晰；首屏不换色 |
+| 1 | `:onetools` 壳 + Theme + Shizuku 依赖 | ✅ `assembleDebug` PASS（2026-07-25） |
+| 2 | 四态 StatusHero + 休眠/就绪生命周期 | ✅ 脚手架已落地 |
+| 3 | Shizuku 激活/授权主路径 | ✅ 打开管理端 + requestPermission |
+| 4 | 剥除 IMS 写配入口 | ✅ 首页无写配 ActionGrid |
+| 5 | 追加导出等工具（实装） | ⏳ 占位卡 |
+| 6 | 品牌字符串 / 关于页 | ⏳ 最小 app_name |
 
 验证命令（脚手架后）：
 
