@@ -90,14 +90,27 @@ class PhysicalSpeedSampler(
 }
 
 object SpeedFormat {
-    fun formatRate(bytesPerSec: Long): String {
-        if (bytesPerSec < 0) return "0 B/s"
-        val kb = bytesPerSec / 1024.0
-        val mb = kb / 1024.0
-        return when {
-            mb >= 1 -> String.format("%.1f MB/s", mb)
-            kb >= 1 -> String.format("%.0f KB/s", kb)
-            else -> "$bytesPerSec B/s"
+    fun formatRate(
+        bytesPerSec: Long,
+        unit: MeterRateUnit = MeterRateUnit.BYTES_PER_SEC,
+    ): String {
+        if (bytesPerSec < 0) {
+            return if (unit == MeterRateUnit.BITS_PER_SEC) "0 bit/s" else "0 B/s"
+        }
+        val value = if (unit == MeterRateUnit.BITS_PER_SEC) bytesPerSec * 8.0 else bytesPerSec.toDouble()
+        val k = value / 1024.0
+        val m = k / 1024.0
+        return when (unit) {
+            MeterRateUnit.BITS_PER_SEC -> when {
+                m >= 1 -> String.format("%.1f Mbit/s", m)
+                k >= 1 -> String.format("%.0f Kbit/s", k)
+                else -> String.format("%.0f bit/s", value)
+            }
+            MeterRateUnit.BYTES_PER_SEC -> when {
+                m >= 1 -> String.format("%.1f MB/s", m)
+                k >= 1 -> String.format("%.0f KB/s", k)
+                else -> "${bytesPerSec} B/s"
+            }
         }
     }
 }

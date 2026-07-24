@@ -38,6 +38,7 @@ import com.onetools.app.R
 import com.onetools.app.meter.MeterDisplayMode
 import com.onetools.app.meter.MeterOverlayController
 import com.onetools.app.meter.MeterOverlayTheme
+import com.onetools.app.meter.MeterRateUnit
 import com.onetools.app.meter.MeterSettings
 import com.onetools.app.meter.MeterSpeedOrder
 import com.onetools.app.meter.SpeedMonitorService
@@ -154,6 +155,32 @@ fun MeterScreen(onBack: () -> Unit) {
             }
         }
         item {
+            Text(stringResource(R.string.meter_unit_title), style = MaterialTheme.typography.titleMedium)
+        }
+        item {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                listOf(
+                    MeterRateUnit.BYTES_PER_SEC to stringResource(R.string.meter_unit_bytes),
+                    MeterRateUnit.BITS_PER_SEC to stringResource(R.string.meter_unit_bits),
+                ).forEach { (unit, label) ->
+                    val selected = prefs.rateUnit == unit
+                    if (selected) {
+                        Button(onClick = {}, modifier = Modifier.weight(1f)) { Text(label) }
+                    } else {
+                        OutlinedButton(
+                            onClick = {
+                                scope.launch {
+                                    settings.setRateUnit(unit)
+                                    applyAndRestartPrefs()
+                                }
+                            },
+                            modifier = Modifier.weight(1f),
+                        ) { Text(label) }
+                    }
+                }
+            }
+        }
+        item {
             OutlinedTextField(
                 value = prefixDraft,
                 onValueChange = { prefixDraft = it },
@@ -240,9 +267,9 @@ fun MeterScreen(onBack: () -> Unit) {
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
                 MeterOverlayTheme.entries.forEach { theme ->
                     val label = when (theme) {
-                        MeterOverlayTheme.INK -> stringResource(R.string.meter_theme_ink)
-                        MeterOverlayTheme.GLASS -> stringResource(R.string.meter_theme_glass)
-                        MeterOverlayTheme.LIME -> stringResource(R.string.meter_theme_lime)
+                        MeterOverlayTheme.ONE_DARK -> stringResource(R.string.meter_theme_one_dark)
+                        MeterOverlayTheme.ONE_MIST -> stringResource(R.string.meter_theme_one_mist)
+                        MeterOverlayTheme.ONE_WHITE -> stringResource(R.string.meter_theme_one_white)
                         MeterOverlayTheme.SLATE -> stringResource(R.string.meter_theme_slate)
                     }
                     val selected = prefs.overlayTheme == theme

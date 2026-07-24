@@ -31,22 +31,32 @@ enum class MeterSpeedOrder {
 }
 
 enum class MeterOverlayTheme {
-    INK,
-    GLASS,
-    LIME,
+    /** One 深空底 #111318 + 白字 — 家族默认 */
+    ONE_DARK,
+    /** One 浅雾底 #F9F9FF */
+    ONE_MIST,
+    /** 深底 + 白 primary 描边高亮 */
+    ONE_WHITE,
+    /** 岩灰备选 */
     SLATE,
+}
+
+enum class MeterRateUnit {
+    BYTES_PER_SEC,
+    BITS_PER_SEC,
 }
 
 data class MeterPrefsSnapshot(
     val displayMode: MeterDisplayMode = MeterDisplayMode.BOTH,
     val speedOrder: MeterSpeedOrder = MeterSpeedOrder.DOWN_THEN_UP,
+    val rateUnit: MeterRateUnit = MeterRateUnit.BYTES_PER_SEC,
     val prefix: String = "",
     val overlayEnabled: Boolean = false,
     val notificationEnabled: Boolean = true,
-    val overlayTheme: MeterOverlayTheme = MeterOverlayTheme.INK,
+    val overlayTheme: MeterOverlayTheme = MeterOverlayTheme.ONE_DARK,
     val overlayTextSp: Float = 14f,
-    val overlayCornerDp: Float = 18f,
-    val overlayAlpha: Float = 0.88f,
+    val overlayCornerDp: Float = 20f,
+    val overlayAlpha: Float = 0.92f,
     val overlayPadHDp: Float = 14f,
     val overlayPadVDp: Float = 10f,
     val sampleIntervalMs: Long = 1000L,
@@ -57,6 +67,7 @@ data class MeterPrefsSnapshot(
 class MeterSettings(private val context: Context) {
     private val modeKey = stringPreferencesKey("display_mode")
     private val orderKey = stringPreferencesKey("speed_order")
+    private val unitKey = stringPreferencesKey("rate_unit")
     private val prefixKey = stringPreferencesKey("prefix")
     private val overlayKey = booleanPreferencesKey("overlay")
     private val notifKey = booleanPreferencesKey("notification")
@@ -78,15 +89,23 @@ class MeterSettings(private val context: Context) {
             speedOrder = runCatching {
                 MeterSpeedOrder.valueOf(p[orderKey] ?: MeterSpeedOrder.DOWN_THEN_UP.name)
             }.getOrDefault(MeterSpeedOrder.DOWN_THEN_UP),
+            rateUnit = runCatching {
+                MeterRateUnit.valueOf(p[unitKey] ?: MeterRateUnit.BYTES_PER_SEC.name)
+            }.getOrDefault(MeterRateUnit.BYTES_PER_SEC),
             prefix = p[prefixKey].orEmpty(),
             overlayEnabled = p[overlayKey] ?: false,
             notificationEnabled = p[notifKey] ?: true,
             overlayTheme = runCatching {
-                MeterOverlayTheme.valueOf(p[themeKey] ?: MeterOverlayTheme.INK.name)
-            }.getOrDefault(MeterOverlayTheme.INK),
+                when (val raw = p[themeKey]) {
+                    "INK", null -> MeterOverlayTheme.ONE_DARK
+                    "GLASS" -> MeterOverlayTheme.ONE_MIST
+                    "LIME" -> MeterOverlayTheme.ONE_WHITE
+                    else -> MeterOverlayTheme.valueOf(raw)
+                }
+            }.getOrDefault(MeterOverlayTheme.ONE_DARK),
             overlayTextSp = p[textSpKey] ?: 14f,
-            overlayCornerDp = p[cornerKey] ?: 18f,
-            overlayAlpha = (p[alphaKey] ?: 0.88f).coerceIn(0.35f, 1f),
+            overlayCornerDp = p[cornerKey] ?: 20f,
+            overlayAlpha = (p[alphaKey] ?: 0.92f).coerceIn(0.35f, 1f),
             overlayPadHDp = p[padHKey] ?: 14f,
             overlayPadVDp = p[padVKey] ?: 10f,
             sampleIntervalMs = (p[intervalKey] ?: 1000L).coerceIn(500L, 3000L),
@@ -103,6 +122,10 @@ class MeterSettings(private val context: Context) {
 
     suspend fun setSpeedOrder(order: MeterSpeedOrder) {
         context.meterStore.edit { it[orderKey] = order.name }
+    }
+
+    suspend fun setRateUnit(unit: MeterRateUnit) {
+        context.meterStore.edit { it[unitKey] = unit.name }
     }
 
     suspend fun setPrefix(prefix: String) {
@@ -156,14 +179,14 @@ class MeterSettings(private val context: Context) {
 
 object MeterRateFormatter {
     fun format(prefs: MeterPrefsSnapshot, down: Long, up: Long): String {
-        val downPart = "↓ ${SpeedFormat.formatRate(down)}"
-        val upPart = "↑ ${SpeedFormat.formatRate(up)}"
+        val downPart = "↓ ${SpeedFormat.formatRate(down, prefs.rateUnit)}"
+        val upPart = "↑ ${SpeedFormat.formatRate(up, prefs.rateUnit)}"
         val body = when (prefs.displayMode) {
             MeterDisplayMode.BOTH -> when (prefs.speedOrder) {
                 MeterSpeedOrder.DOWN_THEN_UP -> "$downPart · $upPart"
                 MeterSpeedOrder.UP_THEN_DOWN -> "$upPart · $downPart"
             }
-            MeterDisplayMode.TOTAL -> SpeedFormat.formatRate(down + up)
+            MeterDisplayMode.TOTAL -> SpeedFormat.formatRate(down + up, prefs.rateUnit)
             MeterDisplayMode.DOWN -> downPart
             MeterDisplayMode.UP -> upPart
         }

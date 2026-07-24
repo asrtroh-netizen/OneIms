@@ -151,23 +151,23 @@ class MeterOverlayController(
     private fun colors(theme: MeterOverlayTheme, alpha: Float): Tone {
         val a = (alpha * 255).toInt().coerceIn(90, 255)
         return when (theme) {
-            MeterOverlayTheme.INK -> Tone(
-                Color.argb(a, 18, 18, 22),
-                Color.argb(a, 32, 30, 38),
-                Color.argb(255, 245, 245, 247),
-                Color.argb((a * 0.45f).toInt(), 255, 255, 255),
+            MeterOverlayTheme.ONE_DARK -> Tone(
+                Color.argb(a, 0x11, 0x13, 0x18),
+                Color.argb(a, 0x1A, 0x1B, 0x20),
+                Color.argb(255, 0xE2, 0xE2, 0xE9),
+                Color.argb((a * 0.55f).toInt(), 255, 255, 255),
             )
-            MeterOverlayTheme.GLASS -> Tone(
-                Color.argb(a, 248, 248, 252),
-                Color.argb(a, 230, 230, 238),
-                Color.argb(255, 28, 28, 32),
-                Color.argb((a * 0.35f).toInt(), 20, 20, 28),
+            MeterOverlayTheme.ONE_MIST -> Tone(
+                Color.argb(a, 0xF9, 0xF9, 0xFF),
+                Color.argb(a, 0xF0, 0xF0, 0xF4),
+                Color.argb(255, 0x1A, 0x1B, 0x20),
+                Color.argb((a * 0.35f).toInt(), 0x74, 0x77, 0x7F),
             )
-            MeterOverlayTheme.LIME -> Tone(
-                Color.argb(a, 16, 24, 18),
-                Color.argb(a, 28, 42, 30),
-                Color.argb(255, 196, 255, 120),
-                Color.argb((a * 0.5f).toInt(), 196, 255, 120),
+            MeterOverlayTheme.ONE_WHITE -> Tone(
+                Color.argb(a, 0x11, 0x13, 0x18),
+                Color.argb(a, 0x2B, 0x29, 0x30),
+                Color.WHITE,
+                Color.argb((a * 0.7f).toInt(), 255, 255, 255),
             )
             MeterOverlayTheme.SLATE -> Tone(
                 Color.argb(a, 55, 62, 72),

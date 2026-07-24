@@ -64,6 +64,9 @@
     <string name="meter_order_title">上下行显示顺序</string>
     <string name="meter_order_down_up">先下行 · 后上行</string>
     <string name="meter_order_up_down">先上行 · 后下行</string>
+    <string name="meter_unit_title">速率单位</string>
+    <string name="meter_unit_bytes">B/s · KB/s · MB/s</string>
+    <string name="meter_unit_bits">bit/s · Kbit/s · Mbit/s</string>
     <string name="meter_prefix_hint">自定义前缀（可选）</string>
     <string name="meter_save_prefix">保存前缀</string>
     <string name="meter_saved">已保存</string>
@@ -77,10 +80,10 @@
     <string name="meter_speedtest">打开 Cloudflare 测速</string>
     <string name="meter_speedtest_fail">无法打开测速页</string>
     <string name="meter_style_title">悬浮窗样式</string>
-    <string name="meter_style_sub">渐变玻璃、描边与字距；可调字号/圆角/透明度，目标比扁平灰块更精致。</string>
-    <string name="meter_theme_ink">墨黑</string>
-    <string name="meter_theme_glass">璃白</string>
-    <string name="meter_theme_lime">青柠</string>
+    <string name="meter_style_sub">配色对齐 One 家族（深空/浅雾/白高亮）；圆角默认 20dp 与卡片一致。</string>
+    <string name="meter_theme_one_dark">One深</string>
+    <string name="meter_theme_one_mist">One雾</string>
+    <string name="meter_theme_one_white">One白</string>
     <string name="meter_theme_slate">岩灰</string>
     <string name="meter_style_text">字号 %1$d sp</string>
     <string name="meter_style_corner">圆角 %1$d dp</string>

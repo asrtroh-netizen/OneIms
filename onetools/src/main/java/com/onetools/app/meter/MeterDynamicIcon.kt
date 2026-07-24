@@ -21,8 +21,8 @@ object MeterDynamicIcon {
         val size = 96
         val bmp = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bmp)
-        val bg = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.argb(255, 28, 27, 31) }
-        canvas.drawRoundRect(0f, 0f, size.toFloat(), size.toFloat(), 18f, 18f, bg)
+        val bg = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.argb(255, 0x11, 0x13, 0x18) }
+        canvas.drawRoundRect(0f, 0f, size.toFloat(), size.toFloat(), 20f, 20f, bg)
         val text = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.WHITE
             textAlign = Paint.Align.CENTER
