@@ -20,5 +20,6 @@
 .tmp_batteryinfo/
 __pycache__/
 *.pyc
+onetools/scripts/one-index-dev-private.pem
 .vscode/
 *.log

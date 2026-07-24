@@ -2,17 +2,54 @@
   "schema": "onetools.update.v1",
   "generatedAt": "2026-07-25T00:00:00Z",
   "publisher": "One",
+  "auth": "none",
   "apps": [
+    {
+      "id": "oneims-onekuku",
+      "title": "OneIms · OneKuku",
+      "packageName": "com.oneims.app",
+      "versionName": "0.0.0-cdn",
+      "versionCode": 1,
+      "apkUrl": "https://cdn.oneims.app/releases/OneIms-OneKuku.apk",
+      "apkName": "OneIms-OneKuku.apk",
+      "changelog": "Host real APK on your CDN; client verifies ECDSA signature.",
+      "sha256": ""
+    },
+    {
+      "id": "oneims-lite",
+      "title": "OneIms · Lite",
+      "packageName": "com.oneims.onelink",
+      "versionName": "0.0.0-cdn",
+      "versionCode": 1,
+      "apkUrl": "https://cdn.oneims.app/releases/OneIms-Lite.apk",
+      "apkName": "OneIms-Lite.apk",
+      "changelog": "Lite / Shizuku line placeholder.",
+      "sha256": ""
+    },
+    {
+      "id": "shizuku-asrtroh",
+      "title": "Shizuku (asrtroh)",
+      "packageName": "moe.shizuku.privileged.api",
+      "versionName": "0.0.0-cdn",
+      "versionCode": 1,
+      "apkUrl": "https://cdn.oneims.app/releases/shizuku.apk",
+      "apkName": "shizuku.apk",
+      "changelog": "Channel dependency placeholder.",
+      "sha256": ""
+    },
     {
       "id": "onetools",
       "title": "OneTools",
       "packageName": "com.onetools.app",
       "versionName": "0.1.0-debug",
       "versionCode": 1,
-      "apkUrl": "https://example.com/releases/onetools-debug.apk",
+      "apkUrl": "https://cdn.oneims.app/releases/onetools-debug.apk",
       "apkName": "onetools-debug.apk",
-      "changelog": "示例条目：把 apkUrl 换成你们 CDN 真实地址即可上架售卖目录。",
+      "changelog": "Replace apkUrl with real CDN asset before shipping.",
       "sha256": ""
     }
-  ]
+  ],
+  "keyId": "one-cdn-2026",
+  "sigAlg": "SHA256withECDSA",
+  "signature": "MEUCIQCdH4JI3xh9vaTAqWdiA6U48fd+paFfToXn15HTeLR/3gIgBIi0eNYt/P2G26Lhyanzub1nQE1HIOx7B9tiPHL7OlI="
 }

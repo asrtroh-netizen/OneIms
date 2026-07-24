@@ -75,6 +75,15 @@
     <string name="updates_download_silent">下载并静默安装</string>
     <string name="updates_download_silent_update">下载并静默更新</string>
     <string name="updates_abi_hint">本机优先 ABI：%1$s</string>
+    <string name="updates_cdn_hint">One CDN 索引：%1$s</string>
+    <string name="updates_token_set">设置会员 Token</string>
+    <string name="updates_token_edit">编辑会员 Token</string>
+    <string name="updates_token_title">会员私有索引</string>
+    <string name="updates_token_hint">访问 auth=bearer 的 One Index 时，会带 Authorization: Bearer &lt;token&gt;。</string>
+    <string name="updates_token_label">Bearer Token</string>
+    <string name="updates_token_save">保存</string>
+    <string name="updates_token_saved">会员 Token 已保存</string>
+    <string name="updates_token_cleared">会员 Token 已清除</string>
     <string name="updates_gpl_notice">本模块为自研实现，不包含 Obtainium 源码。</string>
     <string name="updates_add">添加应用源</string>
     <string name="updates_add_title">添加 GitHub 应用</string>

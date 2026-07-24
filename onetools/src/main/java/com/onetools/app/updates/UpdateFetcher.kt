@@ -7,19 +7,32 @@ import java.net.URL
 import java.net.URLEncoder
 
 object HttpDownloads {
-    fun get(url: String, accept: String = "application/json"): String {
+    fun get(
+        url: String,
+        accept: String = "application/json",
+        bearerToken: String? = null,
+    ): String {
         val conn = (URL(url).openConnection() as HttpURLConnection).apply {
             connectTimeout = 15_000
             readTimeout = 30_000
             setRequestProperty("User-Agent", "OneTools-UpdateCenter")
             setRequestProperty("Accept", accept)
+            val token = bearerToken?.trim().orEmpty()
+            if (token.isNotEmpty()) {
+                setRequestProperty("Authorization", "Bearer $token")
+            }
         }
         return try {
             val code = conn.responseCode
             val stream = if (code in 200..299) conn.inputStream else conn.errorStream
             val text = stream?.bufferedReader()?.readText().orEmpty()
-            require(code in 200..299) { "HTTP $code: ${text.take(140)}" }
-            text
+            when (code) {
+                401, 403 -> error("私有索引需要有效会员 Token (HTTP $code)")
+                else -> {
+                    require(code in 200..299) { "HTTP $code: ${text.take(140)}" }
+                    text
+                }
+            }
         } finally {
             conn.disconnect()
         }
@@ -65,18 +78,27 @@ object HttpDownloads {
 }
 
 object UpdateFetcher {
-    fun validate(app: TrackedApp): Result<Unit> = when (app.source) {
+    fun validate(
+        app: TrackedApp,
+        context: android.content.Context? = null,
+        bearerToken: String? = null,
+    ): Result<Unit> = when (app.source) {
         AppSource.GITHUB -> GitHubReleaseClient.validateRepo(app.githubOwner, app.githubRepo)
         AppSource.GITLAB -> GitLabReleaseClient.validate(app)
         AppSource.FDROID -> FDroidReleaseClient.validate(app)
-        AppSource.ONE_INDEX -> OneIndexClient.validate(app)
+        AppSource.ONE_INDEX -> OneIndexClient.validate(app, context, bearerToken)
     }
 
-    fun latestAsset(app: TrackedApp, abis: List<String>): Result<ReleaseAsset> = when (app.source) {
+    fun latestAsset(
+        app: TrackedApp,
+        abis: List<String>,
+        context: android.content.Context? = null,
+        bearerToken: String? = null,
+    ): Result<ReleaseAsset> = when (app.source) {
         AppSource.GITHUB -> GitHubReleaseClient.latestAsset(app, abis)
         AppSource.GITLAB -> GitLabReleaseClient.latestAsset(app, abis)
         AppSource.FDROID -> FDroidReleaseClient.latestAsset(app, abis)
-        AppSource.ONE_INDEX -> OneIndexClient.latestAsset(app, abis)
+        AppSource.ONE_INDEX -> OneIndexClient.latestAsset(app, abis, context, bearerToken)
     }
 
     fun downloadToFile(url: String, dest: java.io.File, onProgress: ((Long, Long) -> Unit)? = null) {

@@ -38,6 +38,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.onetools.app.R
+import com.onetools.app.updates.MembershipTokenStore
 import com.onetools.app.updates.ApkInstaller
 import com.onetools.app.updates.AppSource
 import com.onetools.app.updates.CatalogExport
@@ -51,6 +52,7 @@ import com.onetools.app.updates.UpdateFetcher
 import com.onetools.app.updates.VersionCompare
 import com.onetools.app.updates.withPackageName
 import com.onetools.app.channel.ShizukuChannel
+import com.onetools.app.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -60,7 +62,9 @@ fun UpdatesScreen(onBack: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val repo = remember { UpdateCatalogRepository(context.applicationContext) }
+    val tokenStore = remember { MembershipTokenStore(context.applicationContext) }
     val apps by repo.apps.collectAsState(initial = emptyList())
+    val memberToken by tokenStore.tokenFlow.collectAsState(initial = "")
     val abis = remember { Build.SUPPORTED_ABIS.toList() }
 
     var busyId by remember { mutableStateOf<String?>(null) }
@@ -69,6 +73,7 @@ fun UpdatesScreen(onBack: () -> Unit) {
     val latestById = remember { mutableStateMapOf<String, ReleaseAsset>() }
     var showAdd by remember { mutableStateOf(false) }
     var showImport by remember { mutableStateOf(false) }
+    var showToken by remember { mutableStateOf(false) }
     var notesFor by remember { mutableStateOf<ReleaseAsset?>(null) }
     var adding by remember { mutableStateOf(false) }
 
@@ -122,10 +127,26 @@ fun UpdatesScreen(onBack: () -> Unit) {
                 }
             }
             item {
+                Text(
+                    stringResource(R.string.updates_cdn_hint, BuildConfig.ONE_CDN_INDEX_URL),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
+            item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
+                    OutlinedButton(
+                        onClick = { showToken = true },
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Text(
+                            if (memberToken.isBlank()) stringResource(R.string.updates_token_set)
+                            else stringResource(R.string.updates_token_edit),
+                        )
+                    }
                     OutlinedButton(
                         onClick = {
                             val json = CatalogExport.toJson(apps)
@@ -136,12 +157,14 @@ fun UpdatesScreen(onBack: () -> Unit) {
                         modifier = Modifier.weight(1f),
                         enabled = apps.isNotEmpty(),
                     ) { Text(stringResource(R.string.updates_export)) }
-                    OutlinedButton(
-                        onClick = { showImport = true },
-                        modifier = Modifier.weight(1f),
-                        enabled = busyId == null,
-                    ) { Text(stringResource(R.string.updates_import)) }
                 }
+            }
+            item {
+                OutlinedButton(
+                    onClick = { showImport = true },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = busyId == null,
+                ) { Text(stringResource(R.string.updates_import)) }
             }
             item {
                 OutlinedButton(
@@ -153,7 +176,12 @@ fun UpdatesScreen(onBack: () -> Unit) {
                             for (app in apps) {
                                 busyId = app.id
                                 val result = withContext(Dispatchers.IO) {
-                                    UpdateFetcher.latestAsset(app, abis)
+                                    UpdateFetcher.latestAsset(
+                                        app,
+                                        abis,
+                                        context.applicationContext,
+                                        memberToken,
+                                    )
                                 }
                                 result.onSuccess { asset ->
                                     latestById[app.id] = asset
@@ -211,7 +239,12 @@ fun UpdatesScreen(onBack: () -> Unit) {
                             busyId = app.id
                             banner = context.getString(R.string.updates_checking, app.title)
                             val result = withContext(Dispatchers.IO) {
-                                UpdateFetcher.latestAsset(app, abis)
+                                UpdateFetcher.latestAsset(
+                                    app,
+                                    abis,
+                                    context.applicationContext,
+                                    memberToken,
+                                )
                             }
                             result.onSuccess {
                                 latestById[app.id] = it
@@ -250,7 +283,12 @@ fun UpdatesScreen(onBack: () -> Unit) {
                             try {
                                 val asset = latestById[app.id]
                                     ?: withContext(Dispatchers.IO) {
-                                        UpdateFetcher.latestAsset(app, abis).getOrThrow()
+                                        UpdateFetcher.latestAsset(
+                                            app,
+                                            abis,
+                                            context.applicationContext,
+                                            memberToken,
+                                        ).getOrThrow()
                                     }.also { latestById[app.id] = it }
                                 val file = ApkInstaller.cacheApkFile(
                                     context,
@@ -333,7 +371,9 @@ fun UpdatesScreen(onBack: () -> Unit) {
                         return@launch
                     }
                     val base = parsed.getOrThrow()
-                    val valid = withContext(Dispatchers.IO) { UpdateFetcher.validate(base) }
+                    val valid = withContext(Dispatchers.IO) {
+                        UpdateFetcher.validate(base, context.applicationContext, memberToken)
+                    }
                     valid.onFailure {
                         Toast.makeText(context, it.message ?: "validate failed", Toast.LENGTH_LONG).show()
                         adding = false
@@ -343,6 +383,23 @@ fun UpdatesScreen(onBack: () -> Unit) {
                     showAdd = false
                     adding = false
                     banner = context.getString(R.string.updates_added, base.title)
+                }
+            },
+        )
+    }
+
+    if (showToken) {
+        TokenDialog(
+            initial = memberToken,
+            onDismiss = { showToken = false },
+            onSave = { value ->
+                scope.launch {
+                    tokenStore.setToken(value)
+                    showToken = false
+                    banner = context.getString(
+                        if (value.isBlank()) R.string.updates_token_cleared
+                        else R.string.updates_token_saved,
+                    )
                 }
             },
         )
@@ -523,6 +580,44 @@ private fun SourceChip(label: String, selected: Boolean, enabled: Boolean, onCli
     } else {
         OutlinedButton(onClick = onClick, enabled = enabled) { Text(label) }
     }
+}
+
+@Composable
+private fun TokenDialog(
+    initial: String,
+    onDismiss: () -> Unit,
+    onSave: (String) -> Unit,
+) {
+    var value by remember { mutableStateOf(initial) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.updates_token_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    stringResource(R.string.updates_token_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                OutlinedTextField(
+                    value = value,
+                    onValueChange = { value = it },
+                    label = { Text(stringResource(R.string.updates_token_label)) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onSave(value) }) {
+                Text(stringResource(R.string.updates_token_save))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.updates_cancel))
+            }
+        },
+    )
 }
 
 @Composable

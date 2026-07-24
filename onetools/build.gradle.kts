@@ -14,6 +14,13 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "0.1.0-scaffold"
+        // Replace with your real CDN when assets are uploaded.
+        buildConfigField(
+            "String",
+            "ONE_CDN_INDEX_URL",
+            "\"https://cdn.oneims.app/onetools/one-update.json\"",
+        )
+        buildConfigField("boolean", "ONE_INDEX_REQUIRE_SIGNATURE", "true")
     }
 
     buildTypes {

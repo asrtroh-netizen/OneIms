@@ -1,49 +1,57 @@
 package com.onetools.app.updates
 
+import com.onetools.app.BuildConfig
+
 /**
- * Preset sources for first launch (Obtainium-like starter list).
+ * Preset sources — One 生态默认挂自有 CDN One Index（可签名 / 可会员 Token）。
  */
 object TrackedApps {
+    private val cdn: String get() = BuildConfig.ONE_CDN_INDEX_URL
+
     val presets: List<TrackedApp> = listOf(
         TrackedApp(
-            id = "oneims-onekuku",
+            id = "one-oneims-onekuku",
             title = "OneIms · OneKuku",
             packageName = "com.oneims.app",
-            githubOwner = "asrtroh-netizen",
-            githubRepo = "OneIms",
-            assetPrefer = listOf("OneIms-OneKuku-standalone", "OneIms-OneKuku", ".apk"),
-            note = "预设 · 独立激活线",
-            source = AppSource.GITHUB,
+            githubOwner = "one-index",
+            githubRepo = "oneims-onekuku",
+            assetPrefer = listOf(".apk"),
+            note = "One CDN · 独立激活线",
+            source = AppSource.ONE_INDEX,
+            host = cdn,
         ),
         TrackedApp(
-            id = "oneims-lite",
+            id = "one-oneims-lite",
             title = "OneIms · Lite",
             packageName = "com.oneims.onelink",
-            githubOwner = "asrtroh-netizen",
-            githubRepo = "OneIms",
-            assetPrefer = listOf("OneIms-Lite-Shizuku", "OneIms-OneLink", ".apk"),
-            note = "预设 · Shizuku 线",
-            source = AppSource.GITHUB,
+            githubOwner = "one-index",
+            githubRepo = "oneims-lite",
+            assetPrefer = listOf(".apk"),
+            note = "One CDN · Shizuku 线",
+            source = AppSource.ONE_INDEX,
+            host = cdn,
         ),
         TrackedApp(
-            id = "shizuku-asrtroh",
+            id = "one-shizuku-asrtroh",
             title = "Shizuku（asrtroh）",
             packageName = "moe.shizuku.privileged.api",
-            githubOwner = "asrtroh-netizen",
-            githubRepo = "shizuku",
+            githubOwner = "one-index",
+            githubRepo = "shizuku-asrtroh",
             assetPrefer = listOf(".apk"),
-            note = "预设 · 通道依赖",
-            source = AppSource.GITHUB,
+            note = "One CDN · 通道依赖",
+            source = AppSource.ONE_INDEX,
+            host = cdn,
         ),
         TrackedApp(
-            id = "onetools",
+            id = "one-onetools",
             title = "OneTools",
             packageName = "com.onetools.app",
-            githubOwner = "asrtroh-netizen",
-            githubRepo = "OneIms",
-            assetPrefer = listOf("OneTools", "onetools", ".apk"),
-            note = "预设 · 本应用（需 Release 挂资产）",
-            source = AppSource.GITHUB,
+            githubOwner = "one-index",
+            githubRepo = "onetools",
+            assetPrefer = listOf(".apk"),
+            note = "One CDN · 本应用",
+            source = AppSource.ONE_INDEX,
+            host = cdn,
         ),
     )
 }
