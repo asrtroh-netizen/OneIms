@@ -9,6 +9,7 @@
 .cxx
 /app/build/
 /bridge/build/
+/onetools/build/
 *.apk
 !app/src/main/assets/oneims-bridge.apk
 .cursor/

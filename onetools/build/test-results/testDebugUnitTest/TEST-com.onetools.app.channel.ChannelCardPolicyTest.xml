@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.onetools.app.channel.ChannelCardPolicyTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-07-24T17:49:37" hostname="HALO" time="0.003">
-  <properties/>
-  <testcase name="enum_hasExactlyFourStates" classname="com.onetools.app.channel.ChannelCardPolicyTest" time="0.002"/>
-  <testcase name="resolve_mapsFourStates" classname="com.onetools.app.channel.ChannelCardPolicyTest" time="0.001"/>
-  <system-out><![CDATA[]]></system-out>
-  <system-err><![CDATA[]]></system-err>
-</testsuite>
