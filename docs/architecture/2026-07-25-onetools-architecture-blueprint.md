@@ -1,17 +1,17 @@
 # OneTools 架构蓝图 · 方案 A（姊妹工具 App）
 
-> 状态：**已拍板可执行**（v0.2 · 纠偏）  
+> 状态：**已拍板可执行**（v0.3 · UI 复用纠偏）  
 > 日期：2026-07-25  
 > 视角：资深全栈架构师  
 > 产品规格：`docs/product/2026-07-24-onetools-initiation.md`  
 > 拍板：定位 **方案 A** · 独立 Android App · 与 OneIMS 解耦  
-> **纠偏（2026-07-25）**：首页继承 OneIMS **四态通道框**；特权通道 **必须 Shizuku**（覆盖 v0.1「普通权限」默认）
+> **纠偏（2026-07-25）**：① 首页四态 + **必须 Shizuku** ② **配色与 OneIMS 一致** ③ **第一页 UI 直接拉 OneIMS（OneLink/Shizuku 线）**
 
 ---
 
 ## 0. 一句话
 
-**OneTools** = One 生态下的 **姊妹配套工具 App**：首页以 **Shizuku 四态通道框**为总控，其下挂设备摘要 / 导出等工具；**不写运营商配置、不替代 OneIMS**，但 **必须能借助 Shizuku 获得特权通道**（体验对齐 OneIms Lite / OneLink 线）。
+**OneTools** = One 生态姊妹工具 App：首页 **直接复用 OneIMS（Shizuku/OneLink 线）第一页 UI + 同一套配色 token**，通道走 Shizuku 四态总控；其下可挂工具能力。**不写运营商配置**；视觉与首屏不另起炉灶。
 
 ---
 
@@ -21,8 +21,9 @@
 
 | ID | 能力 | 模块归属 |
 |---|---|---|
-| F0 | **首页四态通道总控卡**（未激活→激活中→就绪↔休眠）+ Shizuku 激活/授权 | `channel` / `ui` |
-| F1 | 独立应用壳 + 首页（四态框置顶） | `ui` / `app` |
+| F0 | **首页 UI = 直接移植 OneIMS OneLinkHome**（四态 StatusHero + 同结构区块） | `ui` ← 源 `HomeScreen.OneLinkHome` |
+| F0b | **配色 = OneIMS Theme / Tokens 原样**（含 primary 白、动态色开关语义） | `ui/theme` ← 源 `Theme.kt` |
+| F1 | 独立应用壳（包名 OneTools）+ 文案品牌替换处最小化 | `ui` / `app` |
 | F2 | 设备摘要卡（只读、可复制） | `device` |
 | F3 | 通道助手：跳转官方/修缮版 Shizuku、授权引导、失败降级说明 | `channel` |
 | F4 | 一键导出诊断文本（本地；含通道四态快照） | `export` |
@@ -82,10 +83,11 @@ onetools/
 |---|---|---|
 | 对外名 | OneIms（OneKuku / Lite） | **OneTools** |
 | applicationId | `com.oneims.app` / `com.oneims.onelink` | **`com.onetools.app`** |
-| 职责 | IMS 配置 · 诊断 · 修复 | 配套工具 + **Shizuku 通道总控** · 摘要 · 导出 |
-| 特权通道 | OneKuku=OneBridge / Lite=Shizuku | **Shizuku（硬需求）** · 体验锚点对齐 OneLink |
-| 首页锚点 | 四态通道卡 | **同一套四态语义**（见 §7） |
-| 图标/色板 | 既有 | **必须区分**（防商店混淆） |
+| 职责 | IMS 配置 · 诊断 · 修复 | 首屏同构工具壳 + Shizuku 通道 · 摘要 · 导出 |
+| 特权通道 | OneKuku=OneBridge / Lite=Shizuku | **Shizuku** · 对齐 OneLink |
+| 首页 UI | `HomeScreen`（OneKuku / OneLink 分支） | **直接拉 OneLinkHome**（见 §7） |
+| 配色 | `Theme.kt` · `OneImsTokens` · primary 白 | **同一套，禁止另起色板** |
+| 图标/商店名 | OneIms | 商店名 **OneTools**；**首屏视觉不强制换肤**（用户要求一致） |
 
 副标题建议（商店短描述）：「OneIMS 配套工具 · 设备摘要与取证导出」。
 
@@ -95,15 +97,19 @@ onetools/
 
 | 层 | 选型 | 理由 | 不选 |
 |---|---|---|---|
-| 语言/UI | Kotlin + Jetpack Compose | 与 OneIMS 作者栈一致，降低心智切换 | 新建 Flutter/RN 双栈 |
-| 最低 SDK | 对齐 OneIMS（Pixel 主战场；以 `app` 现网 `minSdk` 为准，脚手架时抄齐） | 避免「姊妹 App 装不上」 | 盲目抬高 minSdk |
-| 架构风格 | 单 Activity + Navigation Compose；轻量 `ViewModel` + 单向数据流 | MVP 功能面窄，拒绝 Clean 七层 | 过早 Domain/UseCase 爆炸 |
-| DI | 可先手写工厂；模块 >3 再引入 Hilt | YAGNI | 首日 Hilt+多模块 |
-| 存储 | DataStore 仅存用户偏好（主题/上次导出路径提示）；**无账号云库** | 本地优先 | Room/云同步 |
-| 网络 | MVP **默认无网络客户端** | 降隐私与商店审查面 | 首版 Retrofit |
-| 特权 | **Shizuku**（`rikka.shizuku` api/provider，版本对齐 OneLink 现网） | 用户硬需求；体验锚点 = OneIms Lite | 内嵌 OneBridge / `:bridge` |
-| 四态 UI | 语义复用 `OneKukuCardState` 四态；组件可抽共享或受控复制 | 用户要求「继承之前产品的四态框」 | 另造五态/进度叙事 |
-| 测试 | 项目若禁自动化测则标 NOT RUN；优先契约样例 + 真机手测清单 | 服从仓库惯例 | 为空测造框架 |
+| 语言/UI | Kotlin + Jetpack Compose | 与 OneIMS 一致 | 另栈 |
+| 最低 SDK | 对齐 OneIMS 现网 `minSdk` | 姊妹 App 可同机安装 | 盲目抬高 |
+| 架构风格 | 单 Activity + Navigation；轻量 VM | MVP 够用 | Clean 七层 |
+| DI | 先手写；复杂再 Hilt | YAGNI | 首日重 DI |
+| 存储 | DataStore 偏好；无云库 | 本地优先 | Room/云同步 |
+| 网络 | MVP 默认无网络客户端 | 降审查面 | 首版 Retrofit |
+| 主题 | **原样复用** `OneImsTheme` + `OneImsTokens` | 「配色跟之前的保持一致」 | 新品牌色板 |
+| 主色事实 | `primary = Color.White`（`2026-07-18-global-primary-white`） | 与现网一致 | 擅自恢复 Google Blue |
+| 动态色 | 与 OneIMS 相同开关语义 | 行为一致 | 静默强制开关 |
+| 首屏组件 | **移植 `OneLinkHome` + `StatusHero` 等依赖** | 「第一页 UI 直接拉 OneIMS」 | 重画 / 只抄语义不抄布局 |
+| 特权 | Shizuku api/provider（对齐 OneLink） | 硬需求 | OneBridge / `:bridge` |
+| 四态 | Policy + UI 一并带走 | 与首屏移植一致 | 另造进度叙事 |
+| 测试 | 服从仓库惯例；优先真机四态手测 | — | 空测框架 |
 
 ---
 
@@ -145,14 +151,19 @@ channel ──► policy            (未装 Shizuku / 未授权降级)
 
 收敛策略建议直接移植 `OneKukuCardPolicy.resolve(serviceReady, isExecuting, channelSleeping)` 语义，避免「看起来像四态、规则却漂移」。
 
-**复用策略（二选一，脚手架前拍板实现路径）**：
+**复用策略（首屏 · 用户已拍板「直接拉过来」）**：
 
-| 路径 | 做法 | 取舍 |
+| 路径 | 做法 | 结论 |
 |---|---|---|
-| **R1 受控复制** | `:onetools` 内复制 Policy + StatusHero 并改包名 | MVP 快；需单测锁四态，防漂移 |
-| **R2 抽共享 module** | 新建 `:channel-ui` 供 `:app`(onelink) 与 `:onetools` 共用 | 长期干净；触及 OneIMS 重构，成本更高 |
+| **R0 整页移植** | 以 `HomeScreen.kt` 的 **`OneLinkHome`** 为真源，连同 `StatusHero` / `OneImsPage` / 相关 string·drawable·palette **拷入 `:onetools` 并改包名**；去掉 IMS 写配专属入口 | **本期默认** |
+| R1 只复制 Policy | 仅四态枚举 | 不足（用户要整页 UI） |
+| R2 抽 `:channel-ui` / `:ui-common` | 供 `:app` 与 `:onetools` 共享 Theme+Home | 可选二期；现保护 OneIMS 冻结主线 |
 
-**本期默认 R1**（保护 OneIMS 冻结主线）；若你明确要求共享抽取再升 R2。
+证据锚点：
+
+- 配色：`app/.../ui/theme/Theme.kt` · `OneImsTokens` · primary 白变更文档  
+- 首页分支：`HomeScreen` → Shizuku 线走 `OneLinkHome`（`ChannelLine.usesShizuku`）  
+- 四态：`OneKukuCardState` / `OneKukuCardPolicy` · `StatusHero` in `OneImsComponents.kt`
 
 ---
 
@@ -201,16 +212,20 @@ Manifest `queries` 必须声明：
 
 ---
 
-## 7. 信息架构（首页预算 · 纠偏后）
+## 7. 信息架构（首页 · v0.3）
 
-首页一屏（继承 OneIMS 心智）：
+**第一页 = OneIMS OneLink 首页结构原样**，不是「品牌英雄 + 导出 CTA」另构图。
 
-1. **四态通道总控卡**（置顶 · 主交互）— 未激活 / 激活中 / 就绪 / 休眠  
-2. 品牌条：**OneTools** + 一句「OneIMS 配套工具」  
-3. 次级工具区（就绪/休眠时强调）：**导出诊断摘要** · 设备摘要  
-4. 关系说明 / 隐私入口（不占首屏英雄位）
+典型区块顺序（以现网 `OneLinkHome` 为准，移植时按源码排，不凭记忆重排）：
 
-不做仪表盘、不做指标墙；**禁止**把导出 CTA 压过四态框。
+1. 顶栏 / SIM 选择（若 OneLink 有）  
+2. **StatusHero 四态通道卡**  
+3. 快速开始 / 设备详情等 OneLink 既有区块  
+4. OneTools 增量工具（导出等）——**仅在不破坏原布局的前提下追加**，默认放原首页已有工具区之后  
+
+文案替换：`channel_display_name` / 副标题等改为 OneTools 品牌字符串；**颜色、圆角、间距、英雄卡视觉不得改。**
+
+品牌防混淆：靠 **应用名 / 商店列表 / 关于页**，不靠首屏换色。
 
 ---
 
@@ -254,12 +269,12 @@ Manifest `queries` 必须声明：
 
 | 步 | 内容 | 完成标准 |
 |---|---|---|
-| 1 | `:onetools` Gradle 壳 + Shizuku 依赖 + Manifest Provider | `assembleDebug` 出 APK |
-| 2 | 四态 Policy + StatusHero（R1 复制）+ 首页置顶 | 真机四态可切换；退后台→休眠 |
-| 3 | Shizuku 激活/授权主路径（对齐 OneLink 体验） | 未装/未授权有明确引导 |
-| 4 | `DeviceSnapshot` + 摘要卡（四态下方） | 可读可复制 |
-| 5 | Export Markdown（含 `channelCardState`）+ Share | Telegram 可发送 |
-| 6 | 关系说明 + 隐私页 + `queries` | 文案过关；AC-5 无写配路径 |
+| 1 | `:onetools` 壳 + **原样拷贝 `Theme.kt` / Tokens** + Shizuku 依赖 | 主题色与 OneIMS 一致；能 assemble |
+| 2 | **整页移植 `OneLinkHome` + StatusHero 依赖链** | 真机首屏与 OneIMS Lite 同构 |
+| 3 | Shizuku 激活/授权主路径（对齐 OneLink） | 四态可切换；禁假 READY |
+| 4 | 剥除 IMS 写配专属入口；保留通道/设备区块 | AC-5 无写配路径 |
+| 5 | 追加导出等工具（不改原布局节奏） | Telegram 可发送 |
+| 6 | 品牌字符串 / 关于页区分 OneTools | 商店名清晰；首屏不换色 |
 
 验证命令（脚手架后）：
 
@@ -287,11 +302,11 @@ Manifest `queries` 必须声明：
 
 | 维度 | 结论 |
 |---|---|
-| 🎯 表层需求 | OneTools 首页继承四态框，且必须借助 Shizuku |
-| 💡 深层意图 | 工具产品仍要「通道总控」心智，与 OneIMS/Lite 一致，降低学习成本 |
-| 📎 必须处理 | 覆盖「普通权限」默认；四态契约；Shizuku 依赖与引导；Out 仍禁写配 |
-| 🚀 查缺补漏 | 未装 Shizuku、授权拒绝、退后台休眠、假 READY、四态漂移 |
-| ✨ 顺手优化 | 导出 schema 增加 `channelCardState` / `shizukuInstalled` |
-| 🧠 头脑风暴 | R1 复制 vs R2 抽 `:channel-ui` — 默认 R1 |
-| 💩 屎山规避 | 不引入 `:bridge`；不在 OneTools 复制写配引擎 |
-| ⚠️ 注意事项 | 用户口头覆盖 §8 决策台账第 6 条；OneIMS 主线冻结勿误伤 |
+| 🎯 表层需求 | 配色与 OneIMS 一致；第一页 UI 直接拉 OneIMS（OneLink） |
+| 💡 深层意图 | 降低学习成本，One 生态同脸；OneTools 差在工具能力与包名 |
+| 📎 必须处理 | Theme 原样 · OneLinkHome 整页移植 · Shizuku · 剥写配 |
+| 🚀 查缺补漏 | 移植遗漏依赖、string 资源、假 READY、写配入口残留 |
+| ✨ 顺手优化 | 导出 schema 已含四态字段 |
+| 🧠 头脑风暴 | R0 整页移植（默认）/ R2 共享 module（二期） |
+| 💩 屎山规避 | 不另起色板；不重画首页；不引入 `:bridge` |
+| ⚠️ 注意事项 | 首屏同构会提高品牌混淆风险——用商店名/关于页区分 |
