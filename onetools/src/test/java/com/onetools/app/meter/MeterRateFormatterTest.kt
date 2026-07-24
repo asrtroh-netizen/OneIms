@@ -26,3 +26,13 @@ class MeterRateFormatterTest {
                 512 * 1024,
             ),
         )
+        assertEquals(
+            "One " + SpeedFormat.formatRate(1_048_576 + 1024),
+            MeterRateFormatter.format(
+                base.copy(displayMode = MeterDisplayMode.TOTAL),
+                1_048_576,
+                1024,
+            ),
+        )
+    }
+}
