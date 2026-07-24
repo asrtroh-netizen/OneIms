@@ -58,10 +58,20 @@
     <string name="meter_notice">测速核心改编自 Pixel Meter（Apache-2.0），详见 NOTICE。</string>
 
     <string name="updates_card_title">应用更新（超越 Obtainium）</string>
-    <string name="updates_card_sub">ABI 优选 · 版本状态 · 源校验 · 目录导入导出</string>
+    <string name="updates_card_sub">Shizuku 静默装 · GitHub/GitLab/F-Droid</string>
     <string name="updates_title">应用更新</string>
     <string name="updates_intro">OneTools 内置类 Obtainium 更新器：添加 GitHub 仓库、检查 Release、下载安装 APK。首发含 One 生态预设，可自行增删。</string>
-    <string name="updates_intro_better">比 Obtainium 更贴 One：设备 ABI 自动选包、可更新优先排序、添加前校验仓库、Release 说明、目录导入导出，下载后自动绑定包名。</string>
+    <string name="updates_intro_better">比 Obtainium 更贴 One：设备 ABI 自动选包、可更新优先排序、添加前校验仓库、Release 说明、目录导入导出，下载后自动绑定包名；通道就绪时走 Shizuku 静默安装，并支持 GitHub / GitLab / F-Droid 源。</string>
+    <string name="updates_add_hint_multi">GitHub/GitLab：owner/repo 或完整 URL。F-Droid：包名或 fdroid:org.app。</string>
+    <string name="updates_add_fdroid">F-Droid 包名</string>
+    <string name="updates_add_gitlab_host">GitLab 主机（默认 gitlab.com）</string>
+    <string name="updates_add_fdroid_host">F-Droid 仓库（默认 https://f-droid.org）</string>
+    <string name="updates_silent_ready">Shizuku 已就绪 · 安装将优先静默</string>
+    <string name="updates_silent_need_channel">Shizuku 未就绪 · 将回退系统安装确认</string>
+    <string name="updates_silent_ok">Shizuku 静默安装成功</string>
+    <string name="updates_silent_fallback">静默安装失败（%1$s），已回退系统安装</string>
+    <string name="updates_download_silent">下载并静默安装</string>
+    <string name="updates_download_silent_update">下载并静默更新</string>
     <string name="updates_abi_hint">本机优先 ABI：%1$s</string>
     <string name="updates_gpl_notice">本模块为自研实现，不包含 Obtainium 源码。</string>
     <string name="updates_add">添加应用源</string>

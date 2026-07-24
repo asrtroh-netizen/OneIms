@@ -39,15 +39,18 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.onetools.app.R
 import com.onetools.app.updates.ApkInstaller
+import com.onetools.app.updates.AppSource
 import com.onetools.app.updates.CatalogExport
-import com.onetools.app.updates.GitHubReleaseClient
 import com.onetools.app.updates.GitHubRepoParser
 import com.onetools.app.updates.InstalledVersions
 import com.onetools.app.updates.ReleaseAsset
+import com.onetools.app.updates.ShizukuApkInstaller
 import com.onetools.app.updates.TrackedApp
 import com.onetools.app.updates.UpdateCatalogRepository
+import com.onetools.app.updates.UpdateFetcher
 import com.onetools.app.updates.VersionCompare
 import com.onetools.app.updates.withPackageName
+import com.onetools.app.channel.ShizukuChannel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -150,7 +153,7 @@ fun UpdatesScreen(onBack: () -> Unit) {
                             for (app in apps) {
                                 busyId = app.id
                                 val result = withContext(Dispatchers.IO) {
-                                    GitHubReleaseClient.latestAsset(app, abis)
+                                    UpdateFetcher.latestAsset(app, abis)
                                 }
                                 result.onSuccess { asset ->
                                     latestById[app.id] = asset
@@ -208,7 +211,7 @@ fun UpdatesScreen(onBack: () -> Unit) {
                             busyId = app.id
                             banner = context.getString(R.string.updates_checking, app.title)
                             val result = withContext(Dispatchers.IO) {
-                                GitHubReleaseClient.latestAsset(app, abis)
+                                UpdateFetcher.latestAsset(app, abis)
                             }
                             result.onSuccess {
                                 latestById[app.id] = it
@@ -231,7 +234,8 @@ fun UpdatesScreen(onBack: () -> Unit) {
                     },
                     onNotes = { latest?.let { notesFor = it } },
                     onInstall = {
-                        if (!ApkInstaller.canRequestPackageInstalls(context)) {
+                        val canSilent = ShizukuApkInstaller.isAvailable()
+                        if (!canSilent && !ApkInstaller.canRequestPackageInstalls(context)) {
                             Toast.makeText(
                                 context,
                                 context.getString(R.string.updates_need_install_perm),
@@ -246,14 +250,14 @@ fun UpdatesScreen(onBack: () -> Unit) {
                             try {
                                 val asset = latestById[app.id]
                                     ?: withContext(Dispatchers.IO) {
-                                        GitHubReleaseClient.latestAsset(app, abis).getOrThrow()
+                                        UpdateFetcher.latestAsset(app, abis).getOrThrow()
                                     }.also { latestById[app.id] = it }
                                 val file = ApkInstaller.cacheApkFile(
                                     context,
                                     "${app.id}-${asset.tag}-${asset.name}",
                                 )
                                 withContext(Dispatchers.IO) {
-                                    GitHubReleaseClient.downloadToFile(asset.downloadUrl, file) { d, t ->
+                                    UpdateFetcher.downloadToFile(asset.downloadUrl, file) { d, t ->
                                         progress = d to t
                                     }
                                 }
@@ -267,7 +271,24 @@ fun UpdatesScreen(onBack: () -> Unit) {
                                 } else {
                                     banner = context.getString(R.string.updates_downloaded, file.name)
                                 }
-                                ApkInstaller.installApk(context, file)
+                                val silentOk = ShizukuApkInstaller.isAvailable()
+                                if (silentOk) {
+                                    val silent = withContext(Dispatchers.IO) {
+                                        ShizukuApkInstaller.install(context, file)
+                                    }
+                                    silent.onSuccess {
+                                        banner = context.getString(R.string.updates_silent_ok)
+                                        Toast.makeText(context, banner, Toast.LENGTH_SHORT).show()
+                                    }.onFailure { err ->
+                                        banner = context.getString(
+                                            R.string.updates_silent_fallback,
+                                            err.message ?: "error",
+                                        )
+                                        ApkInstaller.installApk(context, file)
+                                    }
+                                } else {
+                                    ApkInstaller.installApk(context, file)
+                                }
                             } catch (e: Exception) {
                                 banner = e.message ?: "download failed"
                                 Toast.makeText(context, banner, Toast.LENGTH_LONG).show()
@@ -294,22 +315,25 @@ fun UpdatesScreen(onBack: () -> Unit) {
     if (showAdd) {
         AddAppDialog(
             busy = adding,
+            shizukuReady = ShizukuChannel.isServiceReady(),
             onDismiss = { if (!adding) showAdd = false },
-            onConfirm = { input, title, packageName ->
+            onConfirm = { input, title, packageName, source, host ->
                 scope.launch {
                     adding = true
-                    val parsed = GitHubRepoParser.parse(input, title)
+                    val parsed = GitHubRepoParser.parse(
+                        raw = input,
+                        titleOverride = title,
+                        sourceHint = source,
+                        packageName = packageName,
+                        hostOverride = host,
+                    )
                     parsed.onFailure {
                         Toast.makeText(context, it.message ?: "invalid", Toast.LENGTH_LONG).show()
                         adding = false
                         return@launch
                     }
-                    val base = parsed.getOrThrow().let { app ->
-                        if (packageName.isBlank()) app else app.withPackageName(packageName.trim())
-                    }
-                    val valid = withContext(Dispatchers.IO) {
-                        GitHubReleaseClient.validateRepo(base.githubOwner, base.githubRepo)
-                    }
+                    val base = parsed.getOrThrow()
+                    val valid = withContext(Dispatchers.IO) { UpdateFetcher.validate(base) }
                     valid.onFailure {
                         Toast.makeText(context, it.message ?: "validate failed", Toast.LENGTH_LONG).show()
                         adding = false
@@ -378,29 +402,75 @@ private fun stateLabel(context: Context, state: VersionCompare.UpdateState): Str
 @Composable
 private fun AddAppDialog(
     busy: Boolean,
+    shizukuReady: Boolean,
     onDismiss: () -> Unit,
-    onConfirm: (input: String, title: String, packageName: String) -> Unit,
+    onConfirm: (input: String, title: String, packageName: String, source: AppSource, host: String) -> Unit,
 ) {
     var input by remember { mutableStateOf("") }
     var title by remember { mutableStateOf("") }
     var packageName by remember { mutableStateOf("") }
+    var host by remember { mutableStateOf("") }
+    var source by remember { mutableStateOf(AppSource.GITHUB) }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.updates_add_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
-                    stringResource(R.string.updates_add_hint),
+                    stringResource(R.string.updates_add_hint_multi),
                     style = MaterialTheme.typography.bodySmall,
                 )
+                Text(
+                    if (shizukuReady) stringResource(R.string.updates_silent_ready)
+                    else stringResource(R.string.updates_silent_need_channel),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SourceChip("GitHub", source == AppSource.GITHUB, enabled = !busy) {
+                        source = AppSource.GITHUB
+                    }
+                    SourceChip("GitLab", source == AppSource.GITLAB, enabled = !busy) {
+                        source = AppSource.GITLAB
+                    }
+                    SourceChip("F-Droid", source == AppSource.FDROID, enabled = !busy) {
+                        source = AppSource.FDROID
+                    }
+                }
                 OutlinedTextField(
                     value = input,
                     onValueChange = { input = it },
-                    label = { Text(stringResource(R.string.updates_add_repo)) },
+                    label = {
+                        Text(
+                            when (source) {
+                                AppSource.FDROID -> stringResource(R.string.updates_add_fdroid)
+                                AppSource.GITLAB -> stringResource(R.string.updates_add_repo)
+                                AppSource.GITHUB -> stringResource(R.string.updates_add_repo)
+                            },
+                        )
+                    },
                     singleLine = true,
                     enabled = !busy,
                     modifier = Modifier.fillMaxWidth(),
                 )
+                if (source == AppSource.GITLAB || source == AppSource.FDROID) {
+                    OutlinedTextField(
+                        value = host,
+                        onValueChange = { host = it },
+                        label = {
+                            Text(
+                                if (source == AppSource.GITLAB) {
+                                    stringResource(R.string.updates_add_gitlab_host)
+                                } else {
+                                    stringResource(R.string.updates_add_fdroid_host)
+                                },
+                            )
+                        },
+                        singleLine = true,
+                        enabled = !busy,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
                 OutlinedTextField(
                     value = title,
                     onValueChange = { title = it },
@@ -427,7 +497,7 @@ private fun AddAppDialog(
         },
         confirmButton = {
             TextButton(
-                onClick = { onConfirm(input, title, packageName) },
+                onClick = { onConfirm(input, title, packageName, source, host) },
                 enabled = !busy && input.isNotBlank(),
             ) {
                 Text(stringResource(R.string.updates_add_confirm))
@@ -439,6 +509,15 @@ private fun AddAppDialog(
             }
         },
     )
+}
+
+@Composable
+private fun SourceChip(label: String, selected: Boolean, enabled: Boolean, onClick: () -> Unit) {
+    if (selected) {
+        Button(onClick = onClick, enabled = enabled) { Text(label) }
+    } else {
+        OutlinedButton(onClick = onClick, enabled = enabled) { Text(label) }
+    }
 }
 
 @Composable
@@ -508,7 +587,11 @@ private fun UpdateAppCard(
                 }
             }
             Text(
-                app.note.ifBlank { "github.com/${app.githubOwner}/${app.githubRepo}" },
+                buildString {
+                    append(app.source.name)
+                    append(" · ")
+                    append(app.note.ifBlank { "github.com/${app.githubOwner}/${app.githubRepo}" })
+                },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -555,10 +638,15 @@ private fun UpdateAppCard(
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(
-                    if (state == VersionCompare.UpdateState.UPDATE_AVAILABLE) {
-                        stringResource(R.string.updates_download_update)
-                    } else {
-                        stringResource(R.string.updates_download_install)
+                    when {
+                        ShizukuApkInstaller.isAvailable() &&
+                            state == VersionCompare.UpdateState.UPDATE_AVAILABLE ->
+                            stringResource(R.string.updates_download_silent_update)
+                        ShizukuApkInstaller.isAvailable() ->
+                            stringResource(R.string.updates_download_silent)
+                        state == VersionCompare.UpdateState.UPDATE_AVAILABLE ->
+                            stringResource(R.string.updates_download_update)
+                        else -> stringResource(R.string.updates_download_install)
                     },
                 )
             }

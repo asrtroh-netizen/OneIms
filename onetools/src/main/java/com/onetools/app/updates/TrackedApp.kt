@@ -13,6 +13,7 @@ object TrackedApps {
             githubRepo = "OneIms",
             assetPrefer = listOf("OneIms-OneKuku-standalone", "OneIms-OneKuku", ".apk"),
             note = "预设 · 独立激活线",
+            source = AppSource.GITHUB,
         ),
         TrackedApp(
             id = "oneims-lite",
@@ -22,6 +23,7 @@ object TrackedApps {
             githubRepo = "OneIms",
             assetPrefer = listOf("OneIms-Lite-Shizuku", "OneIms-OneLink", ".apk"),
             note = "预设 · Shizuku 线",
+            source = AppSource.GITHUB,
         ),
         TrackedApp(
             id = "shizuku-asrtroh",
@@ -31,6 +33,7 @@ object TrackedApps {
             githubRepo = "shizuku",
             assetPrefer = listOf(".apk"),
             note = "预设 · 通道依赖",
+            source = AppSource.GITHUB,
         ),
         TrackedApp(
             id = "onetools",
@@ -40,6 +43,7 @@ object TrackedApps {
             githubRepo = "OneIms",
             assetPrefer = listOf("OneTools", "onetools", ".apk"),
             note = "预设 · 本应用（需 Release 挂资产）",
+            source = AppSource.GITHUB,
         ),
     )
 }
@@ -52,6 +56,8 @@ data class TrackedApp(
     val githubRepo: String,
     val assetPrefer: List<String>,
     val note: String,
+    val source: AppSource = AppSource.GITHUB,
+    val host: String? = null,
 )
 
 object InstalledVersions {

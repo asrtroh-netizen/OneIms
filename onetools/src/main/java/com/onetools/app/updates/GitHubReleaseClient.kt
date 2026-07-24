@@ -2,8 +2,6 @@ package com.onetools.app.updates
 
 import org.json.JSONArray
 import org.json.JSONObject
-import java.net.HttpURLConnection
-import java.net.URL
 
 data class ReleaseAsset(
     val tag: String,
@@ -16,14 +14,13 @@ data class ReleaseAsset(
 
 object GitHubReleaseClient {
     fun validateRepo(owner: String, repo: String): Result<Unit> = runCatching {
-        val api = "https://api.github.com/repos/$owner/$repo"
-        val code = httpStatus(api)
+        val code = HttpDownloads.status("https://api.github.com/repos/$owner/$repo")
         require(code == 200) { "GitHub 仓库不可用 (HTTP $code)" }
     }
 
     fun latestAsset(app: TrackedApp, abis: List<String>): Result<ReleaseAsset> = runCatching {
         val api = "https://api.github.com/repos/${app.githubOwner}/${app.githubRepo}/releases/latest"
-        val body = httpGet(api)
+        val body = HttpDownloads.get(api, accept = "application/vnd.github+json")
         val json = JSONObject(body)
         val tag = json.optString("tag_name", "?")
         val notes = json.optString("body", "").orEmpty()
@@ -51,63 +48,6 @@ object GitHubReleaseClient {
         require(candidates.isNotEmpty()) { "No APK asset in $tag" }
         ApkAssetPicker.pick(candidates, app.assetPrefer, abis)
     }
-
-    fun downloadToFile(url: String, dest: java.io.File, onProgress: ((Long, Long) -> Unit)? = null) {
-        val conn = (URL(url).openConnection() as HttpURLConnection).apply {
-            connectTimeout = 20_000
-            readTimeout = 60_000
-            instanceFollowRedirects = true
-            setRequestProperty("User-Agent", "OneTools-UpdateCenter")
-            setRequestProperty("Accept", "application/octet-stream")
-        }
-        conn.inputStream.use { input ->
-            dest.outputStream().use { output ->
-                val buffer = ByteArray(64 * 1024)
-                var read: Int
-                var done = 0L
-                val total = conn.contentLengthLong
-                while (input.read(buffer).also { read = it } >= 0) {
-                    output.write(buffer, 0, read)
-                    done += read
-                    onProgress?.invoke(done, total)
-                }
-            }
-        }
-        conn.disconnect()
-    }
-
-    private fun httpGet(url: String): String {
-        val conn = (URL(url).openConnection() as HttpURLConnection).apply {
-            connectTimeout = 15_000
-            readTimeout = 30_000
-            setRequestProperty("User-Agent", "OneTools-UpdateCenter")
-            setRequestProperty("Accept", "application/vnd.github+json")
-        }
-        return try {
-            val code = conn.responseCode
-            val stream = if (code in 200..299) conn.inputStream else conn.errorStream
-            val text = stream?.bufferedReader()?.readText().orEmpty()
-            require(code in 200..299) { "GitHub HTTP $code: ${text.take(120)}" }
-            text
-        } finally {
-            conn.disconnect()
-        }
-    }
-
-    private fun httpStatus(url: String): Int {
-        val conn = (URL(url).openConnection() as HttpURLConnection).apply {
-            requestMethod = "GET"
-            connectTimeout = 12_000
-            readTimeout = 12_000
-            setRequestProperty("User-Agent", "OneTools-UpdateCenter")
-            setRequestProperty("Accept", "application/vnd.github+json")
-        }
-        return try {
-            conn.responseCode
-        } finally {
-            conn.disconnect()
-        }
-    }
 }
 
 object CatalogExport {
@@ -122,7 +62,9 @@ object CatalogExport {
                     .put("owner", app.githubOwner)
                     .put("repo", app.githubRepo)
                     .put("prefer", JSONArray(app.assetPrefer))
-                    .put("note", app.note),
+                    .put("note", app.note)
+                    .put("source", app.source.name)
+                    .put("host", app.host),
             )
         }
         return arr.toString(2)
@@ -142,14 +84,18 @@ object CatalogExport {
                 add(
                     TrackedApp(
                         id = o.optString("id").ifBlank {
-                            "gh-${o.getString("owner")}-${o.getString("repo")}".lowercase()
+                            "src-${o.optString("owner")}-${o.optString("repo")}".lowercase()
                         },
-                        title = o.optString("title").ifBlank { o.getString("repo") },
+                        title = o.optString("title").ifBlank { o.optString("repo") },
                         packageName = o.optString("packageName").takeIf { it.isNotBlank() && it != "null" },
-                        githubOwner = o.getString("owner"),
-                        githubRepo = o.getString("repo"),
+                        githubOwner = o.optString("owner"),
+                        githubRepo = o.optString("repo").ifBlank { o.optString("packageName") },
                         assetPrefer = list,
                         note = o.optString("note", "imported"),
+                        source = runCatching {
+                            AppSource.valueOf(o.optString("source", AppSource.GITHUB.name))
+                        }.getOrDefault(AppSource.GITHUB),
+                        host = o.optString("host").takeIf { it.isNotBlank() && it != "null" },
                     ),
                 )
             }

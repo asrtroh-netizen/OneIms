@@ -81,6 +81,8 @@ class UpdateCatalogRepository(private val context: Context) {
             .put("repo", app.githubRepo)
             .put("prefer", JSONArray(app.assetPrefer))
             .put("note", app.note)
+            .put("source", app.source.name)
+            .put("host", app.host)
             .toString()
     }
 
@@ -104,6 +106,14 @@ class UpdateCatalogRepository(private val context: Context) {
             githubRepo = o.getString("repo"),
             assetPrefer = list,
             note = o.optString("note", ""),
+            source = runCatching {
+                AppSource.valueOf(o.optString("source", AppSource.GITHUB.name))
+            }.getOrDefault(AppSource.GITHUB),
+            host = if (o.has("host") && !o.isNull("host")) {
+                o.getString("host").takeIf { it.isNotBlank() }
+            } else {
+                null
+            },
         )
     }.getOrNull()
 }
