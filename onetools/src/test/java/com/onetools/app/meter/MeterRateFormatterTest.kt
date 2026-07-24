@@ -16,12 +16,13 @@ class MeterRateFormatterTest {
             ),
         )
         assertEquals(
-            "One " + SpeedFormat.formatRate(1_048_576 + 1024),
+            "One ↑ 512 KB/s · ↓ 1.0 MB/s",
             MeterRateFormatter.format(
-                base.copy(displayMode = MeterDisplayMode.TOTAL),
+                base.copy(
+                    displayMode = MeterDisplayMode.BOTH,
+                    speedOrder = MeterSpeedOrder.UP_THEN_DOWN,
+                ),
                 1_048_576,
-                1024,
+                512 * 1024,
             ),
         )
-    }
-}

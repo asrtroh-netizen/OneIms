@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.floatPreferencesKey
-import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
@@ -20,15 +19,22 @@ enum class MeterDisplayMode {
     UP,
 }
 
+/** Order of up/down segments when mode is BOTH. */
+enum class MeterSpeedOrder {
+    DOWN_THEN_UP,
+    UP_THEN_DOWN,
+}
+
 enum class MeterOverlayTheme {
-    INK, // deep ink glass — default, beats flat gray
-    GLASS, // brighter frosted
-    LIME, // high-contrast lime on ink (not purple)
-    SLATE, // soft slate
+    INK,
+    GLASS,
+    LIME,
+    SLATE,
 }
 
 data class MeterPrefsSnapshot(
     val displayMode: MeterDisplayMode = MeterDisplayMode.BOTH,
+    val speedOrder: MeterSpeedOrder = MeterSpeedOrder.DOWN_THEN_UP,
     val prefix: String = "",
     val overlayEnabled: Boolean = false,
     val notificationEnabled: Boolean = true,
@@ -42,6 +48,7 @@ data class MeterPrefsSnapshot(
 
 class MeterSettings(private val context: Context) {
     private val modeKey = stringPreferencesKey("display_mode")
+    private val orderKey = stringPreferencesKey("speed_order")
     private val prefixKey = stringPreferencesKey("prefix")
     private val overlayKey = booleanPreferencesKey("overlay")
     private val notifKey = booleanPreferencesKey("notification")
@@ -57,6 +64,9 @@ class MeterSettings(private val context: Context) {
             displayMode = runCatching {
                 MeterDisplayMode.valueOf(p[modeKey] ?: MeterDisplayMode.BOTH.name)
             }.getOrDefault(MeterDisplayMode.BOTH),
+            speedOrder = runCatching {
+                MeterSpeedOrder.valueOf(p[orderKey] ?: MeterSpeedOrder.DOWN_THEN_UP.name)
+            }.getOrDefault(MeterSpeedOrder.DOWN_THEN_UP),
             prefix = p[prefixKey].orEmpty(),
             overlayEnabled = p[overlayKey] ?: false,
             notificationEnabled = p[notifKey] ?: true,
@@ -75,6 +85,10 @@ class MeterSettings(private val context: Context) {
 
     suspend fun setDisplayMode(mode: MeterDisplayMode) {
         context.meterStore.edit { it[modeKey] = mode.name }
+    }
+
+    suspend fun setSpeedOrder(order: MeterSpeedOrder) {
+        context.meterStore.edit { it[orderKey] = order.name }
     }
 
     suspend fun setPrefix(prefix: String) {
@@ -115,15 +129,16 @@ class MeterSettings(private val context: Context) {
 
 object MeterRateFormatter {
     fun format(prefs: MeterPrefsSnapshot, down: Long, up: Long): String {
+        val downPart = "↓ ${SpeedFormat.formatRate(down)}"
+        val upPart = "↑ ${SpeedFormat.formatRate(up)}"
         val body = when (prefs.displayMode) {
-            MeterDisplayMode.BOTH ->
-                "↓ ${SpeedFormat.formatRate(down)} · ↑ ${SpeedFormat.formatRate(up)}"
-            MeterDisplayMode.TOTAL ->
-                SpeedFormat.formatRate(down + up)
-            MeterDisplayMode.DOWN ->
-                "↓ ${SpeedFormat.formatRate(down)}"
-            MeterDisplayMode.UP ->
-                "↑ ${SpeedFormat.formatRate(up)}"
+            MeterDisplayMode.BOTH -> when (prefs.speedOrder) {
+                MeterSpeedOrder.DOWN_THEN_UP -> "$downPart · $upPart"
+                MeterSpeedOrder.UP_THEN_DOWN -> "$upPart · $downPart"
+            }
+            MeterDisplayMode.TOTAL -> SpeedFormat.formatRate(down + up)
+            MeterDisplayMode.DOWN -> downPart
+            MeterDisplayMode.UP -> upPart
         }
         val prefix = prefs.prefix.trim()
         return if (prefix.isEmpty()) body else "$prefix $body"

@@ -39,6 +39,7 @@ import com.onetools.app.meter.MeterDisplayMode
 import com.onetools.app.meter.MeterOverlayController
 import com.onetools.app.meter.MeterOverlayTheme
 import com.onetools.app.meter.MeterSettings
+import com.onetools.app.meter.MeterSpeedOrder
 import com.onetools.app.meter.SpeedMonitorService
 import kotlinx.coroutines.launch
 
@@ -122,6 +123,32 @@ fun MeterScreen(onBack: () -> Unit) {
                             },
                             modifier = Modifier.weight(1f),
                         ) { Text(label, style = MaterialTheme.typography.labelSmall) }
+                    }
+                }
+            }
+        }
+        item {
+            Text(stringResource(R.string.meter_order_title), style = MaterialTheme.typography.titleMedium)
+        }
+        item {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                listOf(
+                    MeterSpeedOrder.DOWN_THEN_UP to stringResource(R.string.meter_order_down_up),
+                    MeterSpeedOrder.UP_THEN_DOWN to stringResource(R.string.meter_order_up_down),
+                ).forEach { (order, label) ->
+                    val selected = prefs.speedOrder == order
+                    if (selected) {
+                        Button(onClick = {}, modifier = Modifier.weight(1f)) { Text(label) }
+                    } else {
+                        OutlinedButton(
+                            onClick = {
+                                scope.launch {
+                                    settings.setSpeedOrder(order)
+                                    applyAndRestartPrefs()
+                                }
+                            },
+                            modifier = Modifier.weight(1f),
+                        ) { Text(label) }
                     }
                 }
             }

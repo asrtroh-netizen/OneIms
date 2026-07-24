@@ -61,6 +61,9 @@
     <string name="meter_mode_total">合计</string>
     <string name="meter_mode_down">下行</string>
     <string name="meter_mode_up">上行</string>
+    <string name="meter_order_title">上下行显示顺序</string>
+    <string name="meter_order_down_up">先下行 · 后上行</string>
+    <string name="meter_order_up_down">先上行 · 后下行</string>
     <string name="meter_prefix_hint">自定义前缀（可选）</string>
     <string name="meter_save_prefix">保存前缀</string>
     <string name="meter_saved">已保存</string>
