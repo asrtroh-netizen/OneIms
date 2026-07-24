@@ -68,6 +68,10 @@ class ShellRecorderClient(private val context: Context) {
         svc.activeSourceName().ifBlank { "unknown" }
     }
 
+    fun probeSources(): Result<String> = runCatching {
+        bind().getOrThrow().probeSources()
+    }
+
     fun stop(): Result<Unit> = runCatching {
         service.get()?.stopRecording()
         Unit

@@ -127,7 +127,7 @@
     <string name="recorder_card_title">通话录音（自研）</string>
     <string name="recorder_card_sub">干净室 · Shizuku UserService · shell 音频源</string>
     <string name="recorder_title">通话录音</string>
-    <string name="recorder_intro">OneTools 自研干净室录音：经 Shizuku 在 shell UID 下打开 VOICE_* 音频源。不包含 BCR/ShizuCall 等 GPL 源码。OEM 差异大，请先短通话自测。</string>
+    <string name="recorder_intro">OneTools 自研干净室录音：Shizuku UserService 优先双声道 UPLINK+DOWNLINK，失败再沿 OEM 阶梯回退。不包含 GPL 录音源码。</string>
     <string name="recorder_shizuku_ok">Shizuku 已就绪 · 可启动 UserService 录音</string>
     <string name="recorder_shizuku_need">请先在首页激活 Shizuku 通道</string>
     <string name="recorder_legal">我确认已了解并遵守当地通话录音法律（含对方知情同意等要求），自愿使用本功能。</string>
@@ -135,8 +135,13 @@
     <string name="recorder_auto">通话接通后自动开录 / 挂断停录</string>
     <string name="recorder_start">立即开始录音</string>
     <string name="recorder_stop">停止并保存</string>
-    <string name="recorder_started">已开始（见状态行音频源）</string>
+    <string name="recorder_started">已开始（见状态行音频源；理想为 STEREO_UPLINK+DOWNLINK）</string>
     <string name="recorder_list_title">已保存录音</string>
+    <string name="recorder_play">播放</string>
+    <string name="recorder_share">分享</string>
+    <string name="recorder_delete">删除</string>
+    <string name="recorder_probe">探测 OEM 音频源矩阵</string>
+    <string name="recorder_probe_result">探测：%1$s</string>
     <string name="telo_card_title">Pixel Telo</string>
     <string name="telo_card_sub">来电识别 / 骚扰拦截 · Apache-2.0 外置集成</string>
     <string name="telo_title">Pixel Telo</string>

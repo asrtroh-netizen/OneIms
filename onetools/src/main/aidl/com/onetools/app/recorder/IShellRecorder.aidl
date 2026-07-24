@@ -8,4 +8,6 @@ interface IShellRecorder {
     boolean isRecording();
     String lastError();
     String activeSourceName();
+    /** Probe which MediaRecorder.AudioSource values initialize under shell UID. */
+    String probeSources();
 }

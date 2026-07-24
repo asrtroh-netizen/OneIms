@@ -67,6 +67,8 @@ class CallRecorderController(private val context: Context) {
         lastStatus = if (f != null) "已保存 ${f.name}" else "已停止"
     }
 
+    fun probeOemMatrix(): Result<String> = client.probeSources()
+
     fun dispose() {
         stopMonitoring()
         client.unbind()

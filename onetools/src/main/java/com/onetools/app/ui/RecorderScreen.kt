@@ -37,6 +37,7 @@ import com.onetools.app.R
 import com.onetools.app.channel.ShizukuChannel
 import com.onetools.app.recorder.CallRecorderController
 import com.onetools.app.recorder.RecorderConsent
+import com.onetools.app.recorder.RecordingPlayer
 import com.onetools.app.recorder.RecordingStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -52,6 +53,7 @@ fun RecorderScreen(onBack: () -> Unit) {
     var status by remember { mutableStateOf(controller.lastStatus) }
     var files by remember { mutableStateOf(RecordingStore.list(context)) }
     var checkLegal by remember { mutableStateOf(consented) }
+    var probe by remember { mutableStateOf<String?>(null) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions(),
@@ -60,7 +62,10 @@ fun RecorderScreen(onBack: () -> Unit) {
     }
 
     DisposableEffect(Unit) {
-        onDispose { controller.dispose() }
+        onDispose {
+            RecordingPlayer.stop()
+            controller.dispose()
+        }
     }
 
     fun refresh() {
@@ -187,7 +192,30 @@ fun RecorderScreen(onBack: () -> Unit) {
                 ) { Text(stringResource(R.string.recorder_stop)) }
             }
             item {
+                OutlinedButton(
+                    onClick = {
+                        if (!ShizukuChannel.isServiceReady()) {
+                            Toast.makeText(context, R.string.recorder_shizuku_need, Toast.LENGTH_SHORT).show()
+                            return@OutlinedButton
+                        }
+                        scope.launch {
+                            val r = withContext(Dispatchers.IO) { controller.probeOemMatrix() }
+                            probe = r.getOrElse { "probe fail: ${it.message}" }
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                ) { Text(stringResource(R.string.recorder_probe)) }
+            }
+            item {
                 Text(status, style = MaterialTheme.typography.bodySmall)
+            }
+            probe?.let { p ->
+                item {
+                    Text(
+                        stringResource(R.string.recorder_probe_result, p),
+                        style = MaterialTheme.typography.labelSmall,
+                    )
+                }
             }
             item {
                 Text(
@@ -196,11 +224,39 @@ fun RecorderScreen(onBack: () -> Unit) {
                 )
             }
             items(files, key = { it.absolutePath }) { f ->
-                Text(
-                    "${f.name} · ${f.length() / 1024} KB",
-                    style = MaterialTheme.typography.bodySmall,
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                )
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Text(
+                        "${f.name} · ${f.length() / 1024} KB",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        TextButton(
+                            onClick = {
+                                RecordingPlayer.play(context, f).onFailure {
+                                    Toast.makeText(context, it.message ?: "play fail", Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                        ) { Text(stringResource(R.string.recorder_play)) }
+                        TextButton(
+                            onClick = {
+                                runCatching { RecordingPlayer.share(context, f) }
+                                    .onFailure {
+                                        Toast.makeText(context, it.message ?: "share fail", Toast.LENGTH_SHORT).show()
+                                    }
+                            },
+                        ) { Text(stringResource(R.string.recorder_share)) }
+                        TextButton(
+                            onClick = {
+                                RecordingPlayer.stop()
+                                f.delete()
+                                refresh()
+                            },
+                        ) { Text(stringResource(R.string.recorder_delete)) }
+                    }
+                }
             }
         }
     }
