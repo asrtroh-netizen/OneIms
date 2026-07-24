@@ -327,11 +327,13 @@ fun CallerScreen(
 
 private fun blocklistUrls(): List<String> {
     val primary = BuildConfig.ONE_BLOCKLIST_URL
+    val releaseMirror =
+        "https://github.com/asrtroh-netizen/OneBlock/releases/download/onetools-cdn-assets/one-blocklist.json"
     val cdn = BuildConfig.ONE_CDN_INDEX_URL.let { index ->
         if (index.contains("one-update.json")) index.replace("one-update.json", "one-blocklist.json")
         else "https://cdn.oneims.app/onetools/one-blocklist.json"
     }
-    return listOf(primary, cdn).distinct()
+    return listOf(primary, releaseMirror, cdn).distinct()
 }
 
 private fun fetchBlocklist(url: String): String {

@@ -42,10 +42,23 @@ $tmp = Join-Path $env:TEMP "oneblock-put-blocklist.json"
 gh api -X PUT "repos/$Repo/contents/$PathInRepo" --input $tmp | Out-Null
 
 $raw = "https://raw.githubusercontent.com/$Repo/main/$PathInRepo"
-Write-Host "OK OneBlock: $raw"
+Write-Host "OK OneBlock raw: $raw"
 
 $assetCopy = Join-Path $root "onetools\src\main\assets\sample-one-blocklist.json"
 Copy-Item $JsonPath $assetCopy -Force
+
+# Also keep a Release asset mirror on OneBlock (not OneIms).
+$tag = "onetools-cdn-assets"
+$tmpAsset = Join-Path $env:TEMP "one-blocklist-release.json"
+Copy-Item $JsonPath $tmpAsset -Force
+$ErrorActionPreference = "Continue"
+gh release view $tag --repo $Repo 2>$null | Out-Null
+if ($LASTEXITCODE -ne 0) {
+    gh release create $tag --repo $Repo --title "OneTools phone blocklist assets" --notes "Mirror of phone/one-blocklist.json"
+}
+gh release upload $tag $tmpAsset --repo $Repo --clobber
+$ErrorActionPreference = "Stop"
+Write-Host "OK OneBlock release: https://github.com/$Repo/releases/download/$tag/one-blocklist.json"
 
 if ($env:ONE_CDN_PUT_URL) {
     Write-Host "PUT to CDN via ONE_CDN_PUT_URL..."
