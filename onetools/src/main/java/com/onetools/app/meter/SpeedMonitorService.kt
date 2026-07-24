@@ -49,6 +49,25 @@ class SpeedMonitorService : Service() {
                 applyOverlayState(lastFormatted)
                 return START_STICKY
             }
+            ACTION_DOCK_OEM -> {
+                refreshPrefs()
+                if (overlay == null) {
+                    overlay = MeterOverlayController(this) {
+                        runBlocking { MeterSettings(applicationContext).setOverlayEnabled(false) }
+                        refreshPrefs()
+                        applyOverlayState(lastFormatted)
+                    }
+                }
+                runBlocking {
+                    val (x, y) = MeterOverlayController.oemSlotXy(this@SpeedMonitorService)
+                    MeterSettings(applicationContext).setOverlayPosition(x, y)
+                    MeterSettings(applicationContext).setOverlayEnabled(true)
+                }
+                refreshPrefs()
+                applyOverlayState(lastFormatted.ifEmpty { getString(R.string.meter_starting) })
+                overlay?.moveToOemStatusSlot()
+                return START_STICKY
+            }
             else -> startMonitoring()
         }
         return START_STICKY
@@ -160,15 +179,41 @@ class SpeedMonitorService : Service() {
             Intent(this, SpeedMonitorService::class.java).setAction(ACTION_STOP),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
-        val icon = androidx.core.graphics.drawable.IconCompat.createWithBitmap(
-            MeterDynamicIcon.create(down, up, prefs.displayMode),
-        )
+        val iconBitmap = MeterDynamicIcon.create(down, up, prefs.displayMode)
+        val icon = androidx.core.graphics.drawable.IconCompat.createWithBitmap(iconBitmap)
+        val chip = MeterChipFormat.format(prefs, down, up)
+        // Android 16+ (API 36): status-bar chip via promoted ongoing + shortCriticalText.
+        if (Build.VERSION.SDK_INT >= 36 && prefs.statusBarChipEnabled) {
+            val nm = getSystemService(NotificationManager::class.java)
+            val allowPromoted = nm?.canPostPromotedNotifications() == true
+            val platform = Notification.Builder(this, CHANNEL_ID)
+                .setSmallIcon(android.graphics.drawable.Icon.createWithBitmap(iconBitmap))
+                .setContentTitle(getString(R.string.meter_notification_title))
+                .setContentText(content)
+                .setSubText(chip)
+                .setOngoing(true)
+                .setOnlyAlertOnce(true)
+                .setShowWhen(false)
+                .setCategory(Notification.CATEGORY_STATUS)
+                .setContentIntent(open)
+                .addAction(
+                    Notification.Action.Builder(null, getString(R.string.meter_stop), stop).build(),
+                )
+                .setShortCriticalText(chip)
+            if (allowPromoted) {
+                platform.setFlag(Notification.FLAG_PROMOTED_ONGOING, true)
+            }
+            return platform.build()
+        }
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(icon)
             .setContentTitle(getString(R.string.meter_notification_title))
             .setContentText(content)
+            .setSubText(chip)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
+            .setShowWhen(false)
+            .setCategory(NotificationCompat.CATEGORY_STATUS)
             .setContentIntent(open)
             .addAction(0, getString(R.string.meter_stop), stop)
             .build()
@@ -179,6 +224,7 @@ class SpeedMonitorService : Service() {
         const val NOTIFICATION_ID = 42
         const val ACTION_STOP = "com.onetools.app.meter.STOP"
         const val ACTION_APPLY_PREFS = "com.onetools.app.meter.APPLY_PREFS"
+        const val ACTION_DOCK_OEM = "com.onetools.app.meter.DOCK_OEM"
 
         @Volatile
         var isRunning: Boolean = false

@@ -46,9 +46,15 @@
     <string name="battery_notice">实现参考 Battery Info（Apache-2.0）能力集合，源码为干净室；详见 NOTICE。</string>
 
     <string name="meter_card_title">网速监测</string>
-    <string name="meter_card_sub">实时速率 · 应用流量 · 悬浮窗 · QS Tile</string>
+    <string name="meter_card_sub">状态栏芯片 · 实时速率 · 悬浮窗 · QS Tile</string>
     <string name="meter_title">网速监测</string>
-    <string name="meter_desc">通知栏 / 悬浮窗显示实时上下行（物理链路，忽略 VPN）。另可查看按应用累计流量（对标 GlassWire 能力，clean-room）。可从系统快捷设置添加 Tile。</string>
+    <string name="meter_desc">对标各 OEM 系统状态栏网速：Android 16+ 可用通知状态栏 chip；低版本用贴顶悬浮逼近。物理链路采样忽略 VPN。可从系统快捷设置添加 Tile。</string>
+    <string name="meter_oem_title">OEM 状态栏对标</string>
+    <string name="meter_oem_sub">厂商把网速画进 SystemUI；第三方用 Live Update 芯片（需 Android 16+ 且系统提升通知）+ 贴顶悬浮兜底。</string>
+    <string name="meter_chip_enable">状态栏芯片（Android 16+）</string>
+    <string name="meter_oem_dock">悬浮窗贴到 OEM 位（右上）</string>
+    <string name="meter_oem_dock_need_overlay">请先开启悬浮窗并授予「显示在其他应用上层」</string>
+    <string name="meter_oem_docked">已贴到右上近似状态栏位置</string>
     <string name="meter_apps_title">应用流量</string>
     <string name="meter_apps_sub">按应用累计用量（本地统计，不上传）。需「使用情况访问」权限。</string>
     <string name="meter_apps_need_perm">需要「使用情况访问权限」才能读取按应用流量</string>

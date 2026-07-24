@@ -144,7 +144,41 @@ class MeterOverlayController(
         params = null
     }
 
+    /**
+     * Approximate OEM status-bar net-speed slot: top-right, near system icons.
+     * Third-party apps cannot draw inside SystemUI; this is the closest overlay dock.
+     */
+    fun moveToOemStatusSlot() {
+        val (x, y) = oemSlotXy(context)
+        val lp = params
+        if (lp != null && view != null) {
+            lp.gravity = Gravity.TOP or Gravity.START
+            lp.x = x
+            lp.y = y
+            runCatching { wm.updateViewLayout(view, lp) }
+        }
+        settings.saveOverlayPositionAsync(x, y)
+    }
+
     private fun dp(v: Float): Float = v * context.resources.displayMetrics.density
+
+    companion object {
+        fun oemSlotXy(context: Context): Pair<Int, Int> {
+            val dm = context.resources.displayMetrics
+            val density = dm.density
+            val approxChipWidth = (72f * density).toInt()
+            val margin = (6f * density).toInt()
+            val resId = context.resources.getIdentifier("status_bar_height", "dimen", "android")
+            val statusBar = if (resId > 0) {
+                context.resources.getDimensionPixelSize(resId)
+            } else {
+                (24f * density).toInt()
+            }
+            val x = (dm.widthPixels - approxChipWidth - margin).coerceAtLeast(0)
+            val y = (statusBar - (2f * density).toInt()).coerceAtLeast(0)
+            return x to y
+        }
+    }
 
     private data class Tone(val top: Int, val bottom: Int, val fg: Int, val stroke: Int)
 

@@ -53,6 +53,8 @@ data class MeterPrefsSnapshot(
     val prefix: String = "",
     val overlayEnabled: Boolean = false,
     val notificationEnabled: Boolean = true,
+    /** Android 16+ status-bar chip via promoted ongoing notification (OEM-like). */
+    val statusBarChipEnabled: Boolean = true,
     val overlayTheme: MeterOverlayTheme = MeterOverlayTheme.ONE_DARK,
     val overlayTextSp: Float = 14f,
     val overlayCornerDp: Float = 20f,
@@ -71,6 +73,7 @@ class MeterSettings(private val context: Context) {
     private val prefixKey = stringPreferencesKey("prefix")
     private val overlayKey = booleanPreferencesKey("overlay")
     private val notifKey = booleanPreferencesKey("notification")
+    private val chipKey = booleanPreferencesKey("status_bar_chip")
     private val themeKey = stringPreferencesKey("overlay_theme")
     private val textSpKey = floatPreferencesKey("overlay_text_sp")
     private val cornerKey = floatPreferencesKey("overlay_corner_dp")
@@ -95,6 +98,7 @@ class MeterSettings(private val context: Context) {
             prefix = p[prefixKey].orEmpty(),
             overlayEnabled = p[overlayKey] ?: false,
             notificationEnabled = p[notifKey] ?: true,
+            statusBarChipEnabled = p[chipKey] ?: true,
             overlayTheme = runCatching {
                 when (val raw = p[themeKey]) {
                     "INK", null -> MeterOverlayTheme.ONE_DARK
@@ -138,6 +142,17 @@ class MeterSettings(private val context: Context) {
 
     suspend fun setNotificationEnabled(enabled: Boolean) {
         context.meterStore.edit { it[notifKey] = enabled }
+    }
+
+    suspend fun setStatusBarChipEnabled(enabled: Boolean) {
+        context.meterStore.edit { it[chipKey] = enabled }
+    }
+
+    suspend fun setOverlayPosition(x: Int, y: Int) {
+        context.meterStore.edit {
+            it[overlayXKey] = x
+            it[overlayYKey] = y
+        }
     }
 
     suspend fun setOverlayTheme(theme: MeterOverlayTheme) {
