@@ -46,9 +46,24 @@
     <string name="battery_notice">实现参考 Battery Info（Apache-2.0）能力集合，源码为干净室；详见 NOTICE。</string>
 
     <string name="meter_card_title">网速监测</string>
-    <string name="meter_card_sub">悬浮窗 · 通知模式 · QS Tile · 过滤 VPN</string>
+    <string name="meter_card_sub">实时速率 · 应用流量 · 悬浮窗 · QS Tile</string>
     <string name="meter_title">网速监测</string>
-    <string name="meter_desc">通知栏 / 悬浮窗显示实时上下行。统计仅累计 Wi‑Fi / 蜂窝 / 以太网，忽略 VPN。可从系统快捷设置添加 Tile。</string>
+    <string name="meter_desc">通知栏 / 悬浮窗显示实时上下行（物理链路，忽略 VPN）。另可查看按应用累计流量（对标 GlassWire 能力，clean-room）。可从系统快捷设置添加 Tile。</string>
+    <string name="meter_apps_title">应用流量</string>
+    <string name="meter_apps_sub">按应用累计用量（本地统计，不上传）。需「使用情况访问」权限。</string>
+    <string name="meter_apps_need_perm">需要「使用情况访问权限」才能读取按应用流量</string>
+    <string name="meter_apps_open_perm">打开使用情况访问设置</string>
+    <string name="meter_apps_refresh">刷新列表</string>
+    <string name="meter_apps_empty">该时段暂无应用流量数据</string>
+    <string name="meter_apps_error">读取失败：%1$s</string>
+    <string name="meter_apps_period_today">今日</string>
+    <string name="meter_apps_period_7d">近 7 日</string>
+    <string name="meter_apps_period_30d">近 30 日</string>
+    <string name="meter_apps_net_all">全部</string>
+    <string name="meter_apps_net_wifi">Wi‑Fi</string>
+    <string name="meter_apps_net_mobile">移动数据</string>
+    <string name="meter_apps_row">↓ %1$s · ↑ %2$s · 合计 %3$s</string>
+    <string name="meter_apps_notice">应用流量为自研 clean-room（系统 NetworkStats），不复制任何闭源网速/防火墙应用代码。防火墙（VPN 拦截）留待与 One 代理栈协同，避免双 VPN 互抢。</string>
     <string name="meter_start">开始监测</string>
     <string name="meter_stop">停止</string>
     <string name="meter_starting">正在采样…</string>

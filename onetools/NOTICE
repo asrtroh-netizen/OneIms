@@ -13,3 +13,12 @@
 - OneTools Meter: physical-interface sampling adapted from Pixel Meter's approach;
   notification display modes, floating overlay, and QS tiles implemented first-party
   for feature parity (see `MeterSettings` / `MeterOverlayController` / tile services).
+
+## GlassWire (app-traffic capability target — clean-room only)
+
+- Product: https://www.glasswire.com/glasswire-for-android/
+- License: proprietary (not Apache). OneTools does **not** include GlassWire source,
+  assets, or trademarks.
+- OneTools implements first-party per-app usage via Android `NetworkStatsManager`
+  + Usage Access (`AppTrafficReader` / `UsageAccess`). Firewall / VPN-based blocking
+  is intentionally deferred to avoid fighting One's existing proxy stack.

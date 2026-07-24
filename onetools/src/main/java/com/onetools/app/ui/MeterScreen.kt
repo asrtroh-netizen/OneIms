@@ -23,8 +23,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -34,7 +36,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import com.onetools.app.R
+import com.onetools.app.meter.AppTrafficReader
+import com.onetools.app.meter.AppTrafficRow
 import com.onetools.app.meter.MeterDisplayMode
 import com.onetools.app.meter.MeterOverlayController
 import com.onetools.app.meter.MeterOverlayTheme
@@ -42,7 +49,13 @@ import com.onetools.app.meter.MeterRateUnit
 import com.onetools.app.meter.MeterSettings
 import com.onetools.app.meter.MeterSpeedOrder
 import com.onetools.app.meter.SpeedMonitorService
+import com.onetools.app.meter.TrafficNetwork
+import com.onetools.app.meter.TrafficPeriod
+import com.onetools.app.meter.TrafficVolumeFormat
+import com.onetools.app.meter.UsageAccess
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun MeterScreen(onBack: () -> Unit) {
@@ -54,6 +67,39 @@ fun MeterScreen(onBack: () -> Unit) {
     )
     var running by remember { mutableStateOf(SpeedMonitorService.isRunning) }
     var prefixDraft by remember(prefs.prefix) { mutableStateOf(prefs.prefix) }
+    var trafficPeriod by remember { mutableStateOf(TrafficPeriod.TODAY) }
+    var trafficNetwork by remember { mutableStateOf(TrafficNetwork.ALL) }
+    var hasUsageAccess by remember { mutableStateOf(UsageAccess.hasPermission(context)) }
+    var trafficRows by remember { mutableStateOf<List<AppTrafficRow>>(emptyList()) }
+    var trafficError by remember { mutableStateOf<String?>(null) }
+    var trafficLoading by remember { mutableStateOf(false) }
+    var trafficTick by remember { mutableIntStateOf(0) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val trafficReader = remember { AppTrafficReader(context.applicationContext) }
+
+    LaunchedEffect(lifecycleOwner) {
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            hasUsageAccess = UsageAccess.hasPermission(context)
+            trafficTick++
+        }
+    }
+
+    LaunchedEffect(hasUsageAccess, trafficPeriod, trafficNetwork, trafficTick) {
+        if (!hasUsageAccess) {
+            trafficRows = emptyList()
+            trafficError = null
+            trafficLoading = false
+            return@LaunchedEffect
+        }
+        trafficLoading = true
+        trafficError = null
+        val result = withContext(Dispatchers.IO) {
+            runCatching { trafficReader.load(trafficPeriod, trafficNetwork) }
+        }
+        trafficLoading = false
+        result.onSuccess { trafficRows = it }
+            .onFailure { trafficError = it.message ?: it.javaClass.simpleName }
+    }
 
     DisposableEffect(Unit) {
         onDispose { }
@@ -94,6 +140,130 @@ fun MeterScreen(onBack: () -> Unit) {
                     },
                     modifier = Modifier.fillMaxWidth(),
                 ) { Text(stringResource(R.string.meter_start)) }
+            }
+        }
+        item {
+            Text(stringResource(R.string.meter_apps_title), style = MaterialTheme.typography.titleMedium)
+        }
+        item {
+            Text(
+                stringResource(R.string.meter_apps_sub),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        if (!hasUsageAccess) {
+            item {
+                Text(
+                    stringResource(R.string.meter_apps_need_perm),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
+            item {
+                Button(
+                    onClick = { UsageAccess.openSettings(context) },
+                    modifier = Modifier.fillMaxWidth(),
+                ) { Text(stringResource(R.string.meter_apps_open_perm)) }
+            }
+        } else {
+            item {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                    listOf(
+                        TrafficPeriod.TODAY to R.string.meter_apps_period_today,
+                        TrafficPeriod.DAYS_7 to R.string.meter_apps_period_7d,
+                        TrafficPeriod.DAYS_30 to R.string.meter_apps_period_30d,
+                    ).forEach { (period, labelRes) ->
+                        val selected = trafficPeriod == period
+                        val label = stringResource(labelRes)
+                        if (selected) {
+                            Button(onClick = {}, modifier = Modifier.weight(1f)) {
+                                Text(label, style = MaterialTheme.typography.labelSmall)
+                            }
+                        } else {
+                            OutlinedButton(
+                                onClick = { trafficPeriod = period },
+                                modifier = Modifier.weight(1f),
+                            ) { Text(label, style = MaterialTheme.typography.labelSmall) }
+                        }
+                    }
+                }
+            }
+            item {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                    listOf(
+                        TrafficNetwork.ALL to R.string.meter_apps_net_all,
+                        TrafficNetwork.WIFI to R.string.meter_apps_net_wifi,
+                        TrafficNetwork.MOBILE to R.string.meter_apps_net_mobile,
+                    ).forEach { (net, labelRes) ->
+                        val selected = trafficNetwork == net
+                        val label = stringResource(labelRes)
+                        if (selected) {
+                            Button(onClick = {}, modifier = Modifier.weight(1f)) {
+                                Text(label, style = MaterialTheme.typography.labelSmall)
+                            }
+                        } else {
+                            OutlinedButton(
+                                onClick = { trafficNetwork = net },
+                                modifier = Modifier.weight(1f),
+                            ) { Text(label, style = MaterialTheme.typography.labelSmall) }
+                        }
+                    }
+                }
+            }
+            item {
+                OutlinedButton(
+                    onClick = { trafficTick++ },
+                    modifier = Modifier.fillMaxWidth(),
+                ) { Text(stringResource(R.string.meter_apps_refresh)) }
+            }
+            when {
+                trafficLoading -> item {
+                    Text(stringResource(R.string.meter_starting), style = MaterialTheme.typography.bodyMedium)
+                }
+                trafficError != null -> item {
+                    Text(
+                        stringResource(R.string.meter_apps_error, trafficError!!),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+                trafficRows.isEmpty() -> item {
+                    Text(
+                        stringResource(R.string.meter_apps_empty),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                else -> {
+                    items(trafficRows.size) { index ->
+                        val row = trafficRows[index]
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            Text(row.label, style = MaterialTheme.typography.titleSmall)
+                            Text(
+                                row.packageName,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            Text(
+                                stringResource(
+                                    R.string.meter_apps_row,
+                                    TrafficVolumeFormat.formatBytes(row.rxBytes),
+                                    TrafficVolumeFormat.formatBytes(row.txBytes),
+                                    TrafficVolumeFormat.formatBytes(row.totalBytes),
+                                ),
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                        }
+                    }
+                }
+            }
+            item {
+                Text(
+                    stringResource(R.string.meter_apps_notice),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
         item {
