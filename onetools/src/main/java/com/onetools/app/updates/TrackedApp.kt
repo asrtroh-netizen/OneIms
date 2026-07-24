@@ -62,3 +62,6 @@ object InstalledVersions {
         }.getOrNull()
     }
 }
+
+fun TrackedApp.withPackageName(pkg: String?): TrackedApp =
+    if (pkg.isNullOrBlank() || pkg == packageName) this else copy(packageName = pkg)

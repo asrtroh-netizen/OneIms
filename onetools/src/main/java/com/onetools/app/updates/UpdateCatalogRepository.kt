@@ -54,6 +54,24 @@ class UpdateCatalogRepository(private val context: Context) {
         }
     }
 
+    suspend fun update(app: TrackedApp) = add(app)
+
+    suspend fun replaceAll(apps: List<TrackedApp>) {
+        context.updateCatalogStore.edit { prefs ->
+            prefs[key] = apps.map { encode(it) }.toSet()
+        }
+    }
+
+    suspend fun mergeAll(apps: List<TrackedApp>) {
+        context.updateCatalogStore.edit { prefs ->
+            val cur = prefs[key]?.mapNotNull { decode(it) }?.toMutableList()
+                ?: TrackedApps.presets.toMutableList()
+            val byId = cur.associateBy { it.id }.toMutableMap()
+            apps.forEach { byId[it.id] = it }
+            prefs[key] = byId.values.map { encode(it) }.toSet()
+        }
+    }
+
     private fun encode(app: TrackedApp): String {
         return JSONObject()
             .put("id", app.id)

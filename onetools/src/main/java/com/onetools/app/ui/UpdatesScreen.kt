@@ -1,5 +1,9 @@
 package com.onetools.app.ui
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.os.Build
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -31,15 +35,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.onetools.app.R
 import com.onetools.app.updates.ApkInstaller
+import com.onetools.app.updates.CatalogExport
 import com.onetools.app.updates.GitHubReleaseClient
 import com.onetools.app.updates.GitHubRepoParser
 import com.onetools.app.updates.InstalledVersions
 import com.onetools.app.updates.ReleaseAsset
 import com.onetools.app.updates.TrackedApp
 import com.onetools.app.updates.UpdateCatalogRepository
+import com.onetools.app.updates.VersionCompare
+import com.onetools.app.updates.withPackageName
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -50,14 +58,33 @@ fun UpdatesScreen(onBack: () -> Unit) {
     val scope = rememberCoroutineScope()
     val repo = remember { UpdateCatalogRepository(context.applicationContext) }
     val apps by repo.apps.collectAsState(initial = emptyList())
+    val abis = remember { Build.SUPPORTED_ABIS.toList() }
 
     var busyId by remember { mutableStateOf<String?>(null) }
     var progress by remember { mutableStateOf<Pair<Long, Long>?>(null) }
     var banner by remember { mutableStateOf<String?>(null) }
     val latestById = remember { mutableStateMapOf<String, ReleaseAsset>() }
     var showAdd by remember { mutableStateOf(false) }
+    var showImport by remember { mutableStateOf(false) }
+    var notesFor by remember { mutableStateOf<ReleaseAsset?>(null) }
+    var adding by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) { repo.ensureSeeded() }
+
+    val sortedApps = remember(apps, latestById.toMap()) {
+        apps.sortedWith(
+            compareBy<TrackedApp> { app ->
+                val installed = InstalledVersions.versionName(context, app.packageName)
+                val latest = latestById[app.id]?.tag
+                when (VersionCompare.state(installed, latest)) {
+                    VersionCompare.UpdateState.UPDATE_AVAILABLE -> 0
+                    VersionCompare.UpdateState.NOT_INSTALLED -> 1
+                    VersionCompare.UpdateState.UNKNOWN -> 2
+                    VersionCompare.UpdateState.UP_TO_DATE -> 3
+                }
+            }.thenBy { it.title.lowercase() },
+        )
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
         TextButton(onClick = onBack) { Text("← ${stringResource(R.string.updates_title)}") }
@@ -70,18 +97,47 @@ fun UpdatesScreen(onBack: () -> Unit) {
         ) {
             item {
                 Text(
-                    stringResource(R.string.updates_intro),
+                    stringResource(R.string.updates_intro_better),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            item {
+                Text(
+                    stringResource(R.string.updates_abi_hint, abis.firstOrNull() ?: "unknown"),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
                 )
             }
             item {
                 Button(
                     onClick = { showAdd = true },
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = busyId == null,
+                    enabled = busyId == null && !adding,
                 ) {
                     Text(stringResource(R.string.updates_add))
+                }
+            }
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    OutlinedButton(
+                        onClick = {
+                            val json = CatalogExport.toJson(apps)
+                            val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                            cm.setPrimaryClip(ClipData.newPlainText("onetools-catalog", json))
+                            Toast.makeText(context, R.string.updates_exported, Toast.LENGTH_SHORT).show()
+                        },
+                        modifier = Modifier.weight(1f),
+                        enabled = apps.isNotEmpty(),
+                    ) { Text(stringResource(R.string.updates_export)) }
+                    OutlinedButton(
+                        onClick = { showImport = true },
+                        modifier = Modifier.weight(1f),
+                        enabled = busyId == null,
+                    ) { Text(stringResource(R.string.updates_import)) }
                 }
             }
             item {
@@ -89,16 +145,26 @@ fun UpdatesScreen(onBack: () -> Unit) {
                     onClick = {
                         scope.launch {
                             banner = context.getString(R.string.updates_checking_all)
+                            var ok = 0
+                            var updates = 0
                             for (app in apps) {
                                 busyId = app.id
                                 val result = withContext(Dispatchers.IO) {
-                                    GitHubReleaseClient.latestAsset(app)
+                                    GitHubReleaseClient.latestAsset(app, abis)
                                 }
-                                result.onSuccess { latestById[app.id] = it }
-                                    .onFailure { /* continue */ }
+                                result.onSuccess { asset ->
+                                    latestById[app.id] = asset
+                                    ok++
+                                    val installed = InstalledVersions.versionName(context, app.packageName)
+                                    if (VersionCompare.state(installed, asset.tag) ==
+                                        VersionCompare.UpdateState.UPDATE_AVAILABLE
+                                    ) {
+                                        updates++
+                                    }
+                                }
                             }
                             busyId = null
-                            banner = context.getString(R.string.updates_check_all_done, apps.size)
+                            banner = context.getString(R.string.updates_check_all_summary, ok, updates)
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
@@ -111,10 +177,12 @@ fun UpdatesScreen(onBack: () -> Unit) {
                 item {
                     val (done, total) = progress!!
                     LinearProgressIndicator(
-                        progress = if (total > 0) {
-                            (done.toFloat() / total.toFloat()).coerceIn(0f, 1f)
-                        } else {
-                            0f
+                        progress = {
+                            if (total > 0) {
+                                (done.toFloat() / total.toFloat()).coerceIn(0f, 1f)
+                            } else {
+                                0f
+                            }
                         },
                         modifier = Modifier.fillMaxWidth(),
                     )
@@ -123,30 +191,37 @@ fun UpdatesScreen(onBack: () -> Unit) {
             banner?.let { msg ->
                 item { Text(msg, style = MaterialTheme.typography.bodySmall) }
             }
-            items(apps, key = { it.id }) { app ->
+            items(sortedApps, key = { it.id }) { app ->
                 val installedVer = InstalledVersions.versionName(context, app.packageName)
                 val latest = latestById[app.id]
+                val state = VersionCompare.state(installedVer, latest?.tag)
                 UpdateAppCard(
                     app = app,
                     installed = ApkInstaller.isInstalled(context, app.packageName),
                     installedVersion = installedVer,
                     latest = latest,
+                    state = state,
                     busy = busyId == app.id,
-                    enabled = busyId == null,
+                    enabled = busyId == null && !adding,
                     onCheck = {
                         scope.launch {
                             busyId = app.id
                             banner = context.getString(R.string.updates_checking, app.title)
                             val result = withContext(Dispatchers.IO) {
-                                GitHubReleaseClient.latestAsset(app)
+                                GitHubReleaseClient.latestAsset(app, abis)
                             }
                             result.onSuccess {
                                 latestById[app.id] = it
+                                val st = VersionCompare.state(
+                                    InstalledVersions.versionName(context, app.packageName),
+                                    it.tag,
+                                )
                                 banner = context.getString(
-                                    R.string.updates_found,
+                                    R.string.updates_found_state,
                                     app.title,
                                     it.tag,
                                     it.name,
+                                    stateLabel(context, st),
                                 )
                             }.onFailure {
                                 banner = "${app.title}: ${it.message ?: "error"}"
@@ -154,6 +229,7 @@ fun UpdatesScreen(onBack: () -> Unit) {
                             busyId = null
                         }
                     },
+                    onNotes = { latest?.let { notesFor = it } },
                     onInstall = {
                         if (!ApkInstaller.canRequestPackageInstalls(context)) {
                             Toast.makeText(
@@ -170,7 +246,7 @@ fun UpdatesScreen(onBack: () -> Unit) {
                             try {
                                 val asset = latestById[app.id]
                                     ?: withContext(Dispatchers.IO) {
-                                        GitHubReleaseClient.latestAsset(app).getOrThrow()
+                                        GitHubReleaseClient.latestAsset(app, abis).getOrThrow()
                                     }.also { latestById[app.id] = it }
                                 val file = ApkInstaller.cacheApkFile(
                                     context,
@@ -181,7 +257,16 @@ fun UpdatesScreen(onBack: () -> Unit) {
                                         progress = d to t
                                     }
                                 }
-                                banner = context.getString(R.string.updates_downloaded, file.name)
+                                val detected = ApkInstaller.packageNameFromApk(context, file)
+                                if (!detected.isNullOrBlank() && detected != app.packageName) {
+                                    repo.update(app.withPackageName(detected))
+                                    banner = context.getString(
+                                        R.string.updates_bound_package,
+                                        detected,
+                                    )
+                                } else {
+                                    banner = context.getString(R.string.updates_downloaded, file.name)
+                                }
                                 ApkInstaller.installApk(context, file)
                             } catch (e: Exception) {
                                 banner = e.message ?: "download failed"
@@ -208,30 +293,97 @@ fun UpdatesScreen(onBack: () -> Unit) {
 
     if (showAdd) {
         AddAppDialog(
-            onDismiss = { showAdd = false },
-            onConfirm = { input, title ->
-                val parsed = GitHubRepoParser.parse(input, title)
-                parsed.onSuccess { app ->
-                    scope.launch {
-                        repo.add(app)
-                        showAdd = false
-                        banner = context.getString(R.string.updates_added, app.title)
+            busy = adding,
+            onDismiss = { if (!adding) showAdd = false },
+            onConfirm = { input, title, packageName ->
+                scope.launch {
+                    adding = true
+                    val parsed = GitHubRepoParser.parse(input, title)
+                    parsed.onFailure {
+                        Toast.makeText(context, it.message ?: "invalid", Toast.LENGTH_LONG).show()
+                        adding = false
+                        return@launch
                     }
-                }.onFailure {
-                    Toast.makeText(context, it.message ?: "invalid", Toast.LENGTH_LONG).show()
+                    val base = parsed.getOrThrow().let { app ->
+                        if (packageName.isBlank()) app else app.withPackageName(packageName.trim())
+                    }
+                    val valid = withContext(Dispatchers.IO) {
+                        GitHubReleaseClient.validateRepo(base.githubOwner, base.githubRepo)
+                    }
+                    valid.onFailure {
+                        Toast.makeText(context, it.message ?: "validate failed", Toast.LENGTH_LONG).show()
+                        adding = false
+                        return@launch
+                    }
+                    repo.add(base)
+                    showAdd = false
+                    adding = false
+                    banner = context.getString(R.string.updates_added, base.title)
+                }
+            },
+        )
+    }
+
+    if (showImport) {
+        ImportDialog(
+            onDismiss = { showImport = false },
+            onMerge = { raw ->
+                runCatching { CatalogExport.fromJson(raw) }
+                    .onSuccess { list ->
+                        scope.launch {
+                            repo.mergeAll(list)
+                            showImport = false
+                            banner = context.getString(R.string.updates_imported, list.size)
+                        }
+                    }
+                    .onFailure {
+                        Toast.makeText(context, it.message ?: "bad json", Toast.LENGTH_LONG).show()
+                    }
+            },
+        )
+    }
+
+    notesFor?.let { asset ->
+        AlertDialog(
+            onDismissRequest = { notesFor = null },
+            title = { Text("${asset.tag} · ${asset.name}") },
+            text = {
+                Text(
+                    asset.body.ifBlank { stringResource(R.string.updates_no_notes) },
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { notesFor = null }) {
+                    Text(stringResource(R.string.updates_cancel))
                 }
             },
         )
     }
 }
 
+private fun stateLabel(context: Context, state: VersionCompare.UpdateState): String {
+    return when (state) {
+        VersionCompare.UpdateState.UPDATE_AVAILABLE ->
+            context.getString(R.string.updates_state_available)
+        VersionCompare.UpdateState.UP_TO_DATE ->
+            context.getString(R.string.updates_state_latest)
+        VersionCompare.UpdateState.NOT_INSTALLED ->
+            context.getString(R.string.updates_not_installed)
+        VersionCompare.UpdateState.UNKNOWN ->
+            context.getString(R.string.updates_state_unknown)
+    }
+}
+
 @Composable
 private fun AddAppDialog(
+    busy: Boolean,
     onDismiss: () -> Unit,
-    onConfirm: (input: String, title: String) -> Unit,
+    onConfirm: (input: String, title: String, packageName: String) -> Unit,
 ) {
     var input by remember { mutableStateOf("") }
     var title by remember { mutableStateOf("") }
+    var packageName by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.updates_add_title)) },
@@ -246,6 +398,7 @@ private fun AddAppDialog(
                     onValueChange = { input = it },
                     label = { Text(stringResource(R.string.updates_add_repo)) },
                     singleLine = true,
+                    enabled = !busy,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 OutlinedTextField(
@@ -253,13 +406,62 @@ private fun AddAppDialog(
                     onValueChange = { title = it },
                     label = { Text(stringResource(R.string.updates_add_name)) },
                     singleLine = true,
+                    enabled = !busy,
                     modifier = Modifier.fillMaxWidth(),
                 )
+                OutlinedTextField(
+                    value = packageName,
+                    onValueChange = { packageName = it },
+                    label = { Text(stringResource(R.string.updates_add_package)) },
+                    singleLine = true,
+                    enabled = !busy,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                if (busy) {
+                    Text(
+                        stringResource(R.string.updates_validating),
+                        style = MaterialTheme.typography.labelMedium,
+                    )
+                }
             }
         },
         confirmButton = {
-            TextButton(onClick = { onConfirm(input, title) }) {
+            TextButton(
+                onClick = { onConfirm(input, title, packageName) },
+                enabled = !busy && input.isNotBlank(),
+            ) {
                 Text(stringResource(R.string.updates_add_confirm))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss, enabled = !busy) {
+                Text(stringResource(R.string.updates_cancel))
+            }
+        },
+    )
+}
+
+@Composable
+private fun ImportDialog(
+    onDismiss: () -> Unit,
+    onMerge: (String) -> Unit,
+) {
+    var raw by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.updates_import_title)) },
+        text = {
+            OutlinedTextField(
+                value = raw,
+                onValueChange = { raw = it },
+                label = { Text(stringResource(R.string.updates_import_hint)) },
+                modifier = Modifier.fillMaxWidth(),
+                minLines = 6,
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = { onMerge(raw) }, enabled = raw.isNotBlank()) {
+                Text(stringResource(R.string.updates_import_confirm))
             }
         },
         dismissButton = {
@@ -276,13 +478,20 @@ private fun UpdateAppCard(
     installed: Boolean,
     installedVersion: String?,
     latest: ReleaseAsset?,
+    state: VersionCompare.UpdateState,
     busy: Boolean,
     enabled: Boolean,
     onCheck: () -> Unit,
+    onNotes: () -> Unit,
     onInstall: () -> Unit,
     onOpen: () -> Unit,
     onRemove: () -> Unit,
 ) {
+    val statusColor = when (state) {
+        VersionCompare.UpdateState.UPDATE_AVAILABLE -> MaterialTheme.colorScheme.tertiary
+        VersionCompare.UpdateState.UP_TO_DATE -> MaterialTheme.colorScheme.primary
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.extraLarge,
@@ -303,12 +512,16 @@ private fun UpdateAppCard(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            if (!app.packageName.isNullOrBlank()) {
+                Text(
+                    app.packageName,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
             Text(
                 buildString {
-                    append(
-                        if (installed) stringResource(R.string.updates_installed)
-                        else stringResource(R.string.updates_not_installed),
-                    )
+                    append(stateLabel(LocalContext.current, state))
                     if (!installedVersion.isNullOrBlank()) {
                         append(" · v")
                         append(installedVersion)
@@ -316,20 +529,39 @@ private fun UpdateAppCard(
                     if (latest != null) {
                         append(" → ")
                         append(latest.tag)
+                        append(" · ")
+                        append(latest.name)
                     }
                 },
                 style = MaterialTheme.typography.labelMedium,
+                color = statusColor,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
             )
             OutlinedButton(
                 onClick = onCheck,
                 enabled = enabled && !busy,
                 modifier = Modifier.fillMaxWidth(),
             ) { Text(stringResource(R.string.updates_check)) }
+            if (latest != null && latest.body.isNotBlank()) {
+                TextButton(
+                    onClick = onNotes,
+                    enabled = enabled && !busy,
+                ) { Text(stringResource(R.string.updates_notes)) }
+            }
             Button(
                 onClick = onInstall,
                 enabled = enabled && !busy,
                 modifier = Modifier.fillMaxWidth(),
-            ) { Text(stringResource(R.string.updates_download_install)) }
+            ) {
+                Text(
+                    if (state == VersionCompare.UpdateState.UPDATE_AVAILABLE) {
+                        stringResource(R.string.updates_download_update)
+                    } else {
+                        stringResource(R.string.updates_download_install)
+                    },
+                )
+            }
             if (installed) {
                 OutlinedButton(
                     onClick = onOpen,
