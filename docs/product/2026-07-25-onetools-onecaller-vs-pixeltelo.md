@@ -24,7 +24,7 @@
 - 从 URL / 粘贴导入 `onetools.blocklist.v1`
 - 首页「来电拦截（自研）」主入口；Pixel Telo 降为可选对照
 - **Directory Provider**（`phone_lookup` / `directories`）拨号器标签
-- 拦截库发布：GitHub Release 镜像 + CDN 凭据到位后 PUT
+- 拦截库发布：默认挂 **OneBlock** 仓 `phone/one-blocklist.json`；CDN PUT 可选
 
 ## 明确非本轮 / 后续
 

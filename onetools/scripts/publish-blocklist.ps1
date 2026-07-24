@@ -1,8 +1,8 @@
-# Publish one-blocklist.json to GitHub release mirror (+ optional CDN PUT).
+# Publish one-blocklist.json into asrtroh-netizen/OneBlock (phone/)
 param(
     [string]$JsonPath = "",
-    [string]$Tag = "onetools-cdn-assets",
-    [string]$Repo = "asrtroh-netizen/OneIms"
+    [string]$Repo = "asrtroh-netizen/OneBlock",
+    [string]$PathInRepo = "phone/one-blocklist.json"
 )
 
 $ErrorActionPreference = "Stop"
@@ -20,28 +20,32 @@ if (Test-Path $sign) {
     python $sign sign $JsonPath
 }
 
-$assetDir = Join-Path $env:TEMP "onetools-cdn-assets"
-New-Item -ItemType Directory -Force -Path $assetDir | Out-Null
-$asset = Join-Path $assetDir "one-blocklist.json"
-Copy-Item $JsonPath $asset -Force
+$bytes = [IO.File]::ReadAllBytes($JsonPath)
+$b64 = [Convert]::ToBase64String($bytes)
 
-Write-Host "Ensuring release $Tag ..."
-$releaseOk = $false
+$sha = $null
 try {
-    gh release view $Tag --repo $Repo | Out-Null
-    $releaseOk = $true
+    $sha = gh api "repos/$Repo/contents/$PathInRepo" --jq .sha 2>$null
 } catch {
-    $releaseOk = $false
-}
-if (-not $releaseOk) {
-    gh release create $Tag --repo $Repo --title "OneTools CDN assets" --notes "Mirror for one-blocklist.json until cdn.oneims.app credentials are wired."
+    $sha = $null
 }
 
-Write-Host "Uploading asset..."
-gh release upload $Tag $asset --repo $Repo --clobber
+$obj = [ordered]@{
+    message = "chore: update OneTools phone blocklist"
+    content = $b64
+    branch = "main"
+}
+if ($sha) { $obj.sha = $sha }
 
-$mirror = "https://github.com/$Repo/releases/download/$Tag/one-blocklist.json"
-Write-Host "OK mirror: $mirror"
+$tmp = Join-Path $env:TEMP "oneblock-put-blocklist.json"
+[IO.File]::WriteAllText($tmp, ($obj | ConvertTo-Json -Compress), [Text.UTF8Encoding]::new($false))
+gh api -X PUT "repos/$Repo/contents/$PathInRepo" --input $tmp | Out-Null
+
+$raw = "https://raw.githubusercontent.com/$Repo/main/$PathInRepo"
+Write-Host "OK OneBlock: $raw"
+
+$assetCopy = Join-Path $root "onetools\src\main\assets\sample-one-blocklist.json"
+Copy-Item $JsonPath $assetCopy -Force
 
 if ($env:ONE_CDN_PUT_URL) {
     Write-Host "PUT to CDN via ONE_CDN_PUT_URL..."
@@ -49,8 +53,8 @@ if ($env:ONE_CDN_PUT_URL) {
     if ($env:ONE_CDN_PUT_TOKEN) {
         $headers["Authorization"] = "Bearer $($env:ONE_CDN_PUT_TOKEN)"
     }
-    Invoke-RestMethod -Method Put -Uri $env:ONE_CDN_PUT_URL -InFile $asset -ContentType "application/json" -Headers $headers
+    Invoke-RestMethod -Method Put -Uri $env:ONE_CDN_PUT_URL -InFile $JsonPath -ContentType "application/json" -Headers $headers
     Write-Host "OK CDN PUT"
 } else {
-    Write-Host "SKIP real CDN: set ONE_CDN_PUT_URL (+ optional ONE_CDN_PUT_TOKEN) to push cdn.oneims.app"
+    Write-Host "SKIP real CDN: set ONE_CDN_PUT_URL to also push cdn.oneims.app"
 }
