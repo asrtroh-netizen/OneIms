@@ -18,6 +18,7 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -36,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import com.onetools.app.R
 import com.onetools.app.meter.MeterDisplayMode
 import com.onetools.app.meter.MeterOverlayController
+import com.onetools.app.meter.MeterOverlayTheme
 import com.onetools.app.meter.MeterSettings
 import com.onetools.app.meter.SpeedMonitorService
 import kotlinx.coroutines.launch
@@ -196,6 +198,84 @@ fun MeterScreen(onBack: () -> Unit) {
                 },
                 modifier = Modifier.fillMaxWidth(),
             ) { Text(stringResource(R.string.meter_overlay_settings)) }
+        }
+        item {
+            Text(stringResource(R.string.meter_style_title), style = MaterialTheme.typography.titleMedium)
+        }
+        item {
+            Text(
+                stringResource(R.string.meter_style_sub),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        item {
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+                MeterOverlayTheme.entries.forEach { theme ->
+                    val label = when (theme) {
+                        MeterOverlayTheme.INK -> stringResource(R.string.meter_theme_ink)
+                        MeterOverlayTheme.GLASS -> stringResource(R.string.meter_theme_glass)
+                        MeterOverlayTheme.LIME -> stringResource(R.string.meter_theme_lime)
+                        MeterOverlayTheme.SLATE -> stringResource(R.string.meter_theme_slate)
+                    }
+                    val selected = prefs.overlayTheme == theme
+                    if (selected) {
+                        Button(
+                            onClick = {},
+                            modifier = Modifier.weight(1f),
+                        ) { Text(label, style = MaterialTheme.typography.labelSmall) }
+                    } else {
+                        OutlinedButton(
+                            onClick = {
+                                scope.launch {
+                                    settings.setOverlayTheme(theme)
+                                    applyAndRestartPrefs()
+                                }
+                            },
+                            modifier = Modifier.weight(1f),
+                        ) { Text(label, style = MaterialTheme.typography.labelSmall) }
+                    }
+                }
+            }
+        }
+        item {
+            Text(stringResource(R.string.meter_style_text, prefs.overlayTextSp.toInt()))
+            Slider(
+                value = prefs.overlayTextSp,
+                onValueChange = { v ->
+                    scope.launch {
+                        settings.setOverlayTextSp(v)
+                        applyAndRestartPrefs()
+                    }
+                },
+                valueRange = 10f..22f,
+            )
+        }
+        item {
+            Text(stringResource(R.string.meter_style_corner, prefs.overlayCornerDp.toInt()))
+            Slider(
+                value = prefs.overlayCornerDp,
+                onValueChange = { v ->
+                    scope.launch {
+                        settings.setOverlayCornerDp(v)
+                        applyAndRestartPrefs()
+                    }
+                },
+                valueRange = 4f..28f,
+            )
+        }
+        item {
+            Text(stringResource(R.string.meter_style_alpha, (prefs.overlayAlpha * 100).toInt()))
+            Slider(
+                value = prefs.overlayAlpha,
+                onValueChange = { v ->
+                    scope.launch {
+                        settings.setOverlayAlpha(v)
+                        applyAndRestartPrefs()
+                    }
+                },
+                valueRange = 0.35f..1f,
+            )
         }
         item {
             OutlinedButton(

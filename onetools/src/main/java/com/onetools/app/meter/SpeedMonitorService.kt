@@ -113,7 +113,7 @@ class SpeedMonitorService : Service() {
     private fun applyOverlayState(text: String) {
         val o = overlay ?: return
         if (prefs.overlayEnabled && o.canDraw()) {
-            o.show(text)
+            o.show(text, prefs)
             o.update(text)
         } else {
             o.hide()
