@@ -23,9 +23,12 @@
 - 本地黑/白名单（精确 / 前缀）
 - 从 URL / 粘贴导入 `onetools.blocklist.v1`
 - 首页「来电拦截（自研）」主入口；Pixel Telo 降为可选对照
+- **Directory Provider**（`phone_lookup` / `directories`）拨号器标签
+- 拦截库发布：GitHub Release 镜像 + CDN 凭据到位后 PUT
 
-## 明确非本轮
+## 明确非本轮 / 后续
 
-- 完整 Contacts Directory Provider
-- 38 万条骚扰库本体（由你 CDN 提供）
+- 完整 Contacts 搜索 UI / 头像同步
+- 38 万条骚扰库本体（由你 CDN/对象存储提供）
 - 网络实时查号第三方 API
+- `cdn.oneims.app` 真传（需 `ONE_CDN_PUT_URL`）

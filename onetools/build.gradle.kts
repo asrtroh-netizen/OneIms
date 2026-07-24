@@ -20,6 +20,12 @@ android {
             "ONE_CDN_INDEX_URL",
             "\"https://cdn.oneims.app/onetools/one-update.json\"",
         )
+        // Primary: GitHub release mirror until R2/cdn.oneims.app credentials are available.
+        buildConfigField(
+            "String",
+            "ONE_BLOCKLIST_URL",
+            "\"https://github.com/asrtroh-netizen/OneIms/releases/download/onetools-cdn-assets/one-blocklist.json\"",
+        )
         buildConfigField("boolean", "ONE_INDEX_REQUIRE_SIGNATURE", "true")
     }
 

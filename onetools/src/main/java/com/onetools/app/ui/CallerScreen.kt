@@ -1,13 +1,16 @@
 package com.onetools.app.ui
 
+import android.Manifest
 import android.app.Activity
 import android.app.role.RoleManager
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -78,6 +81,16 @@ fun CallerScreen(
         }
     }
 
+    val callLogLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        status = if (granted) {
+            "通话记录权限已授予 · Directory 可参与查号"
+        } else {
+            context.getString(R.string.caller_need_call_log)
+        }
+    }
+
     fun requestScreeningRole() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
             status = context.getString(R.string.caller_role_need_q)
@@ -140,6 +153,24 @@ fun CallerScreen(
             item {
                 OutlinedButton(onClick = { openDefaultApps() }, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.caller_open_defaults))
+                }
+            }
+            item {
+                OutlinedButton(
+                    onClick = {
+                        val granted = ContextCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.READ_CALL_LOG,
+                        ) == PackageManager.PERMISSION_GRANTED
+                        if (granted) {
+                            status = "通话记录权限已具备"
+                        } else {
+                            callLogLauncher.launch(Manifest.permission.READ_CALL_LOG)
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(stringResource(R.string.caller_need_call_log))
                 }
             }
             if (status.isNotBlank()) {
@@ -237,7 +268,7 @@ fun CallerScreen(
                         scope.launch {
                             status = context.getString(R.string.caller_fetching)
                             val result = withContext(Dispatchers.IO) {
-                                runCatching { fetchBlocklist(defaultBlocklistUrl()) }
+                                runCatching { fetchBlocklist() }
                             }
                             result.onSuccess { body ->
                                 runCatching {
@@ -294,13 +325,13 @@ fun CallerScreen(
     }
 }
 
-private fun defaultBlocklistUrl(): String {
-    val index = BuildConfig.ONE_CDN_INDEX_URL
-    return if (index.contains("one-update.json")) {
-        index.replace("one-update.json", "one-blocklist.json")
-    } else {
-        "https://cdn.oneims.app/onetools/one-blocklist.json"
+private fun blocklistUrls(): List<String> {
+    val primary = BuildConfig.ONE_BLOCKLIST_URL
+    val cdn = BuildConfig.ONE_CDN_INDEX_URL.let { index ->
+        if (index.contains("one-update.json")) index.replace("one-update.json", "one-blocklist.json")
+        else "https://cdn.oneims.app/onetools/one-blocklist.json"
     }
+    return listOf(primary, cdn).distinct()
 }
 
 private fun fetchBlocklist(url: String): String {
@@ -319,4 +350,16 @@ private fun fetchBlocklist(url: String): String {
     } finally {
         conn.disconnect()
     }
+}
+
+private fun fetchBlocklist(): String {
+    var last: Throwable? = null
+    for (url in blocklistUrls()) {
+        try {
+            return fetchBlocklist(url)
+        } catch (t: Throwable) {
+            last = t
+        }
+    }
+    throw last ?: IllegalStateException("no blocklist URL")
 }

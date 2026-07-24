@@ -27,6 +27,7 @@ class CallRuleStore(private val context: Context) {
             cur.add(rule)
             prefs[key] = cur.map { encode(it) }.toSet()
         }
+        notifyDirectory()
     }
 
     suspend fun remove(id: String) {
@@ -35,6 +36,7 @@ class CallRuleStore(private val context: Context) {
             cur.removeAll { it.id == id }
             prefs[key] = cur.map { encode(it) }.toSet()
         }
+        notifyDirectory()
     }
 
     suspend fun mergeImport(imported: List<CallRule>) {
@@ -46,6 +48,13 @@ class CallRuleStore(private val context: Context) {
                 byKey["${r.kind}:${r.mode}:${NumberMatcher.digits(r.pattern)}"] = r
             }
             prefs[key] = byKey.values.map { encode(it) }.toSet()
+        }
+        notifyDirectory()
+    }
+
+    private fun notifyDirectory() {
+        runCatching {
+            OneCallerDirectoryProvider.notifyChanged(context.applicationContext.contentResolver)
         }
     }
 
