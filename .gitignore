@@ -16,6 +16,8 @@
 .kotlin/
 .recovery_extract/
 .tmp_apk_cmp/
+.tmp_pixelmeter/
+.tmp_batteryinfo/
 __pycache__/
 *.pyc
 .vscode/

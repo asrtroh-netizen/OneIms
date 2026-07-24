@@ -1,5 +1,6 @@
 package com.onetools.app.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -19,13 +20,12 @@ import androidx.compose.ui.unit.dp
 import com.onetools.app.R
 import com.onetools.app.channel.ChannelCardState
 
-/**
- * 对齐 OneIMS OneLink 首页节奏：顶栏 → 四态 StatusHero → 工具区（无写配入口）。
- */
 @Composable
 fun HomeScreen(
     channelState: ChannelCardState,
     onActivateOrCheck: () -> Unit,
+    onOpenBattery: () -> Unit,
+    onOpenMeter: () -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier
@@ -63,8 +63,17 @@ fun HomeScreen(
 
         item {
             InfoCard(
-                title = stringResource(R.string.device_card_title),
-                subtitle = stringResource(R.string.device_card_sub),
+                title = stringResource(R.string.battery_card_title),
+                subtitle = stringResource(R.string.battery_card_sub),
+                onClick = onOpenBattery,
+            )
+        }
+
+        item {
+            InfoCard(
+                title = stringResource(R.string.meter_card_title),
+                subtitle = stringResource(R.string.meter_card_sub),
+                onClick = onOpenMeter,
             )
         }
 
@@ -87,9 +96,15 @@ fun HomeScreen(
 }
 
 @Composable
-private fun InfoCard(title: String, subtitle: String) {
+private fun InfoCard(
+    title: String,
+    subtitle: String,
+    onClick: (() -> Unit)? = null,
+) {
     Surface(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
         shape = MaterialTheme.shapes.extraLarge,
         color = MaterialTheme.colorScheme.surfaceContainerLow,
         tonalElevation = 1.dp,
