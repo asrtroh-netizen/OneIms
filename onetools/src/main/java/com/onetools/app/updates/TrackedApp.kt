@@ -53,6 +53,16 @@ object TrackedApps {
             source = AppSource.ONE_INDEX,
             host = cdn,
         ),
+        TrackedApp(
+            id = "gh-pixeltelo",
+            title = "Pixel Telo",
+            packageName = "vip.mystery0.pixel.telo",
+            githubOwner = "Pixel-Tailor-CN",
+            githubRepo = "PixelTelo",
+            assetPrefer = listOf("PixelTelo", ".apk"),
+            note = "GitHub · 来电识别/拦截（Apache-2.0，外置安装）",
+            source = AppSource.GITHUB,
+        ),
     )
 }
 

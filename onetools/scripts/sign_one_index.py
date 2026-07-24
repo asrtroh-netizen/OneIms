@@ -20,10 +20,11 @@ except ImportError:
 ROOT = Path(__file__).resolve().parents[1]
 PRIV = Path(__file__).resolve().parent / "one-index-dev-private.pem"
 KEYS_JSON = ROOT / "src" / "main" / "assets" / "one-index-keys.json"
-KEY_ID = "one-cdn-2026"
+# Bump when rotating; old public keys remain in one-index-keys.json for overlap.
+KEY_ID = "one-cdn-2026r2"
 
 
-def gen_keys() -> None:
+def gen_keys(rotate: bool = False) -> None:
     key = ec.generate_private_key(ec.SECP256R1())
     priv = key.private_bytes(
         serialization.Encoding.PEM,
@@ -35,12 +36,13 @@ def gen_keys() -> None:
         serialization.PublicFormat.SubjectPublicKeyInfo,
     )
     PRIV.write_bytes(priv)
-    KEYS_JSON.write_text(
-        json.dumps({KEY_ID: base64.b64encode(pub).decode()}, indent=2) + "\n",
-        encoding="utf-8",
-    )
-    print(f"wrote {PRIV}")
-    print(f"wrote {KEYS_JSON}")
+    existing: dict = {}
+    if rotate and KEYS_JSON.exists():
+        existing = json.loads(KEYS_JSON.read_text(encoding="utf-8"))
+    existing[KEY_ID] = base64.b64encode(pub).decode()
+    KEYS_JSON.write_text(json.dumps(existing, indent=2) + "\n", encoding="utf-8")
+    print(f"wrote {PRIV} keyId={KEY_ID}")
+    print(f"wrote {KEYS_JSON} keys={list(existing)}")
 
 
 def canonical_bytes(doc: dict) -> bytes:
@@ -50,24 +52,29 @@ def canonical_bytes(doc: dict) -> bytes:
 
 def sign_file(path: Path) -> None:
     if not PRIV.exists():
-        gen_keys()
+        gen_keys(rotate=True)
     key = serialization.load_pem_private_key(PRIV.read_bytes(), password=None)
     doc = json.loads(path.read_text(encoding="utf-8"))
+    # Drop previous signature fields before resigning.
+    for k in ("signature", "sigAlg", "keyId"):
+        doc.pop(k, None)
     sig = key.sign(canonical_bytes(doc), ec.ECDSA(hashes.SHA256()))
     doc["keyId"] = KEY_ID
     doc["sigAlg"] = "SHA256withECDSA"
     doc["signature"] = base64.b64encode(sig).decode()
     path.write_text(json.dumps(doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(f"signed {path}")
+    print(f"signed {path} with {KEY_ID}")
 
 
 def main() -> None:
     p = argparse.ArgumentParser()
-    p.add_argument("cmd", choices=["gen-keys", "sign"])
+    p.add_argument("cmd", choices=["gen-keys", "rotate-keys", "sign"])
     p.add_argument("index", nargs="?", type=Path)
     args = p.parse_args()
     if args.cmd == "gen-keys":
-        gen_keys()
+        gen_keys(rotate=False)
+    elif args.cmd == "rotate-keys":
+        gen_keys(rotate=True)
     else:
         if not args.index:
             raise SystemExit("sign needs index path")

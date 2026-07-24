@@ -18,6 +18,8 @@
         <package android:name="moe.shizuku.manager" />
         <package android:name="com.oneims.app" />
         <package android:name="com.oneims.onelink" />
+        <package android:name="vip.mystery0.pixel.telo" />
+        <package android:name="vip.mystery0.pixel.telo.debug" />
     </queries>
 
     <application

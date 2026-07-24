@@ -49,7 +49,7 @@
       "sha256": ""
     }
   ],
-  "keyId": "one-cdn-2026",
+  "keyId": "one-cdn-2026r2",
   "sigAlg": "SHA256withECDSA",
-  "signature": "MEUCIQCdH4JI3xh9vaTAqWdiA6U48fd+paFfToXn15HTeLR/3gIgBIi0eNYt/P2G26Lhyanzub1nQE1HIOx7B9tiPHL7OlI="
+  "signature": "MEUCID7XukLwdpiJ+s3NhHyD1TOWjv3w8ivC4TUnHzUWdQhIAiEAw4oEQVtrG9QUrpd1GqqsMQW+3AeSk/KNUempa+nZcjY="
 }

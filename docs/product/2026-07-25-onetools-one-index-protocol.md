@@ -18,6 +18,17 @@
    - presets 全部 `AppSource.ONE_INDEX`  
    - 样例索引：`assets/sample-one-update.json`（已签名，上线前替换真实 APK URL 并重新 sign）
 
+## 密钥轮换
+
+```bash
+python onetools/scripts/sign_one_index.py rotate-keys
+python onetools/scripts/sign_one_index.py sign path/to/one-update.json
+```
+
+- 新 `keyId`（当前：`one-cdn-2026r2`）写入 `assets/one-index-keys.json`
+- **保留旧公钥**一段时间，便于 CDN 与 App 版本交叉过渡
+- 私钥仅本地：`onetools/scripts/one-index-dev-private.pem`（gitignore）
+
 ## CDN 上线清单
 
 1. 上传 `one-update.json`（先 `python sign_one_index.py sign path`）  

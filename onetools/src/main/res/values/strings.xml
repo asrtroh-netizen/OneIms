@@ -137,4 +137,18 @@
     <string name="recorder_stop">停止并保存</string>
     <string name="recorder_started">已开始（见状态行音频源）</string>
     <string name="recorder_list_title">已保存录音</string>
+    <string name="telo_card_title">Pixel Telo</string>
+    <string name="telo_card_sub">来电识别 / 骚扰拦截 · Apache-2.0 外置集成</string>
+    <string name="telo_title">Pixel Telo</string>
+    <string name="telo_intro">Pixel Telo 是专为 Pixel / 类原生的来电识别与拦截工具（Apache-2.0）。OneTools 以外置方式集成：安装、打开，并引导你在系统里设为默认来电识别/骚扰拦截应用。不合并其拨号器源码。</string>
+    <string name="telo_installed">已安装</string>
+    <string name="telo_not_installed">未安装</string>
+    <string name="telo_open">打开 Pixel Telo</string>
+    <string name="telo_open_fail">无法打开 Pixel Telo</string>
+    <string name="telo_set_default">打开系统默认应用设置</string>
+    <string name="telo_settings_fail">无法打开默认应用设置</string>
+    <string name="telo_install">从 GitHub 下载安装</string>
+    <string name="telo_via_updates">去更新中心管理</string>
+    <string name="telo_github">打开 GitHub 仓库</string>
+    <string name="telo_notice">版权归 Pixel Telo 作者；详见 NOTICE。安装后请在系统设置中将其设为「来电显示与骚扰电话拦截」应用。</string>
 </resources>

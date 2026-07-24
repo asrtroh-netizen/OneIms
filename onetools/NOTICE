@@ -22,3 +22,11 @@
 - Previously considered for in-app updates.
 - **Not used** in the autonomous One update center (user decision: 自主更新器).
 - No Obtainium APK redistribution from this module path.
+
+## Pixel Telo (external integration)
+
+- Project: https://github.com/Pixel-Tailor-CN/PixelTelo
+- License: Apache License 2.0
+- Use in OneTools: install/open companion card only (`TeloScreen`); does **not**
+  embed CallScreeningService or Directory Provider source from Pixel Telo.
+  Users set it as the system default Caller ID / spam app themselves.
