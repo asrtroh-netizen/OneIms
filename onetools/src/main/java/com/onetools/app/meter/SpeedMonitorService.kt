@@ -180,9 +180,7 @@ class SpeedMonitorService : Service() {
     }
 
     /**
-     * Notification shape mirrors Pixel Meter [NotificationHelper.buildNotificationFromState]:
-     * fixed title, contentText = ↓/↑ lines, SECRET visibility, either Live Update chip
-     * (static ic + shortCriticalText) or bitmap smallIcon (value over unit).
+     * Bitmap smallIcon only (value over unit). Live Update / status-bar chip removed by product.
      */
     private fun buildNotification(content: String, down: Long = 0, up: Long = 0): Notification {
         val open = PendingIntent.getActivity(
@@ -194,24 +192,6 @@ class SpeedMonitorService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
         val contentText = content.ifBlank { getString(R.string.meter_starting) }
-        val useLiveUpdate = Build.VERSION.SDK_INT >= 36 && prefs.statusBarChipEnabled
-        if (useLiveUpdate) {
-            // Pixel Meter live-update branch (platform APIs; androidx may lag).
-            val live = MeterChipFormat.format(prefs, down, up)
-            // Pixel Meter: static ic_speed + shortCriticalText total + promoted ongoing.
-            val platform = Notification.Builder(this, CHANNEL_ID)
-                .setOngoing(true)
-                .setOnlyAlertOnce(true)
-                .setContentIntent(open)
-                .setVisibility(Notification.VISIBILITY_SECRET)
-                .setShowWhen(false)
-                .setContentTitle(getString(R.string.meter_notification_title))
-                .setContentText(contentText)
-                .setSmallIcon(R.drawable.ic_meter_speed)
-                .setShortCriticalText(live)
-                .setFlag(Notification.FLAG_PROMOTED_ONGOING, true)
-            return platform.build()
-        }
         val density = resources.displayMetrics.density
         val silhouette = MeterDynamicIcon.createSilhouette(
             down,
@@ -236,7 +216,7 @@ class SpeedMonitorService : Service() {
     }
 
     companion object {
-        const val CHANNEL_ID = "onetools_meter_speed_v2"
+        const val CHANNEL_ID = "onetools_meter_speed_v3"
         const val NOTIFICATION_ID = 42
         const val ACTION_STOP = "com.onetools.app.meter.STOP"
         const val ACTION_APPLY_PREFS = "com.onetools.app.meter.APPLY_PREFS"

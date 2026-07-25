@@ -256,27 +256,6 @@ fun MeterScreen(
             )
         }
         item {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Checkbox(
-                    checked = prefs.statusBarChipEnabled,
-                    onCheckedChange = {
-                        scope.launch {
-                            settings.setStatusBarChipEnabled(it)
-                            if (it && !prefs.notificationEnabled) {
-                                settings.setNotificationEnabled(true)
-                            }
-                            if (it && !SpeedMonitorService.isRunning) {
-                                SpeedMonitorService.start(context)
-                                running = true
-                            }
-                            applyAndRestartPrefs()
-                        }
-                    },
-                )
-                Text(stringResource(R.string.meter_chip_enable))
-            }
-        }
-        item {
             OutlinedButton(
                 onClick = {
                     scope.launch {
