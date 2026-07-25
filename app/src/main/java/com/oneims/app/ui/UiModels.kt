@@ -71,6 +71,8 @@ data class HomeUiState(
     val autoSleep: Boolean = false,
     /** Root 开机拉起特权桥（与无线自启并列；无无线也能拉）。 */
     val rootBootStart: Boolean = false,
+    /** SDK 沙盒持久写旁路；默认关。 */
+    val sandboxPersistBypass: Boolean = false,
     val oneKukuDetailOverride: String? = null,
 )
 
@@ -99,6 +101,7 @@ data class HomeActions(
     val onAutoRestoreChange: (Boolean) -> Unit,
     val onAutoSleepChange: (Boolean) -> Unit,
     val onRootBootStartChange: (Boolean) -> Unit = {},
+    val onSandboxPersistBypassChange: (Boolean) -> Unit = {},
     val onOpenWirelessDebugging: () -> Unit = {},
     val onOpenHotspot: () -> Unit = {},
     val onCopyAdbGuide: () -> Unit = {},
@@ -212,8 +215,6 @@ data class ExperimentalUiState(
     val rootBootStart: Boolean = false,
     /** 强制临时 CarrierConfig 写入；默认关。 */
     val forceTemporaryOverride: Boolean = false,
-    /** SDK 沙盒持久写旁路；默认关。 */
-    val sandboxPersistBypass: Boolean = false,
     /** 只读状态摘要（通道 + 上次 persistent）。 */
     val rootPersistStatusDetail: String = "",
     val fiveGDisplayConfig: SimpleFiveGDisplayConfig,
@@ -239,7 +240,6 @@ data class ExperimentalActions(
     val onRootPersistEnhanceChange: (Boolean) -> Unit = {},
     val onRootBootStartChange: (Boolean) -> Unit = {},
     val onForceTemporaryOverrideChange: (Boolean) -> Unit = {},
-    val onSandboxPersistBypassChange: (Boolean) -> Unit = {},
     val onOpenApnCatalog: () -> Unit,
     val onApplyExpertValue: (String, String) -> Unit,
     val onFiveGDisplayConfigChange: (SimpleFiveGDisplayConfig) -> Unit,

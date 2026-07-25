@@ -880,35 +880,7 @@ fun ExperimentalScreen(
 
 
 
-                GroupDivider()
 
-
-
-                SettingsSwitchRow(
-
-
-
-                    title = stringResource(R.string.sandbox_persist_title),
-
-
-
-                    subtitle = stringResource(R.string.sandbox_persist_sub),
-
-
-
-                    checked = state.sandboxPersistBypass,
-
-
-
-                    onCheckedChange = actions.onSandboxPersistBypassChange,
-
-
-
-                    icon = Icons.Filled.Star,
-
-
-
-                )
 
 
 

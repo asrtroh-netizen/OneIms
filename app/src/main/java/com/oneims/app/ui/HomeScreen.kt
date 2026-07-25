@@ -109,6 +109,13 @@ private fun OneKukuStandaloneHome(
         }
 
         item {
+            SandboxPersistHomeCard(
+                checked = state.sandboxPersistBypass,
+                onCheckedChange = actions.onSandboxPersistBypassChange,
+            )
+        }
+
+        item {
             SectionBlock(
                 title = stringResource(R.string.home_quick_actions),
                 description = stringResource(R.string.home_quick_actions_sub),
@@ -222,6 +229,13 @@ private fun OneLinkHome(
         }
 
         item {
+            SandboxPersistHomeCard(
+                checked = state.sandboxPersistBypass,
+                onCheckedChange = actions.onSandboxPersistBypassChange,
+            )
+        }
+
+        item {
             SectionBlock(
                 title = stringResource(R.string.home_quick_actions),
                 description = stringResource(R.string.home_quick_actions_sub),
@@ -312,6 +326,28 @@ private fun RootBootHomeCard(
             checked = checked,
             onCheckedChange = onCheckedChange,
             icon = Icons.Filled.Star,
+        )
+    }
+}
+
+/** 首页沙盒持久旁路：与 Root 自启同级一块开关，默认关。 */
+@Composable
+private fun SandboxPersistHomeCard(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        tonalElevation = 1.dp,
+    ) {
+        SettingsSwitchRow(
+            title = stringResource(R.string.sandbox_persist_title),
+            subtitle = stringResource(R.string.sandbox_persist_home_sub),
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            icon = Icons.Filled.Info,
         )
     }
 }

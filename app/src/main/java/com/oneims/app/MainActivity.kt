@@ -1400,6 +1400,7 @@ private fun AppRoot(
                         autoRestore = oneKukuAutoRestore,
                         autoSleep = oneKukuAutoSleep,
                         rootBootStart = rootBootStart,
+                        sandboxPersistBypass = sandboxPersistBypass,
                         oneKukuDetailOverride = oneKukuDetailOverride,
                     ),
                     actions = HomeActions(
@@ -1721,6 +1722,19 @@ private fun AppRoot(
                                 ),
                             )
                         },
+                        onSandboxPersistBypassChange = { enabled ->
+                            sandboxPersistBypass = enabled
+                            SandboxPersistSupport.setEnabled(context, enabled)
+                            publish(
+                                context.getString(
+                                    if (enabled) {
+                                        R.string.sandbox_persist_on
+                                    } else {
+                                        R.string.sandbox_persist_off
+                                    },
+                                ),
+                            )
+                        },
                         onOpenWirelessDebugging = {
                             publish(
                                 context.getString(
@@ -2001,7 +2015,6 @@ private fun AppRoot(
                         rootPersistEnhance = rootPersistEnhance,
                         rootBootStart = rootBootStart,
                         forceTemporaryOverride = forceTemporaryOverride,
-                        sandboxPersistBypass = sandboxPersistBypass,
                         rootPersistStatusDetail = RootPersistenceSupport.statusDetail(context),
                         fiveGDisplayConfig = fiveGDisplayConfig,
                         signalBarDisplayMode = signalBarDisplayMode,
@@ -2180,19 +2193,6 @@ private fun AppRoot(
                                         R.string.force_temporary_on
                                     } else {
                                         R.string.force_temporary_off
-                                    },
-                                ),
-                            )
-                        },
-                        onSandboxPersistBypassChange = { enabled ->
-                            sandboxPersistBypass = enabled
-                            SandboxPersistSupport.setEnabled(context, enabled)
-                            publish(
-                                context.getString(
-                                    if (enabled) {
-                                        R.string.sandbox_persist_on
-                                    } else {
-                                        R.string.sandbox_persist_off
                                     },
                                 ),
                             )

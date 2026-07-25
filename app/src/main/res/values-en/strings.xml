@@ -765,6 +765,7 @@
     <string name="force_temporary_off">Force temporary writes disabled</string>
     <string name="sandbox_persist_title">Sandbox persist bypass</string>
     <string name="sandbox_persist_sub">Nangong 3.1-style: when the platform probe still allows it, try true persistence via SDK Sandbox Instrumentation. Off by default; falls back automatically; force-temporary wins if both are on</string>
+    <string name="sandbox_persist_home_sub">When the platform still allows it, try true persistence via SDK sandbox. Off by default; auto fallback; ignored if force-temporary is on</string>
     <string name="sandbox_persist_on">Sandbox persist bypass enabled</string>
     <string name="sandbox_persist_off">Sandbox persist bypass disabled</string>
     <string name="diagnostic_check_platform_persistent">Platform persistence probe</string>
