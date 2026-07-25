@@ -54,8 +54,7 @@ data class MeterPrefsSnapshot(
     val overlayEnabled: Boolean = false,
     val notificationEnabled: Boolean = true,
     /** Android 16+ status-bar chip via promoted ongoing notification (OEM-like). */
-    /** Deprecated: Live Update chip removed; kept for DataStore read compat. */
-    val statusBarChipEnabled: Boolean = false,
+    val statusBarChipEnabled: Boolean = true,
     val overlayTheme: MeterOverlayTheme = MeterOverlayTheme.ONE_DARK,
     val overlayTextSp: Float = 14f,
     val overlayCornerDp: Float = 20f,
@@ -99,7 +98,7 @@ class MeterSettings(private val context: Context) {
             prefix = p[prefixKey].orEmpty(),
             overlayEnabled = p[overlayKey] ?: false,
             notificationEnabled = p[notifKey] ?: true,
-            statusBarChipEnabled = false,
+            statusBarChipEnabled = p[chipKey] ?: true,
             overlayTheme = runCatching {
                 when (val raw = p[themeKey]) {
                     "INK", null -> MeterOverlayTheme.ONE_DARK

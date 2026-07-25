@@ -180,7 +180,8 @@ class SpeedMonitorService : Service() {
     }
 
     /**
-     * Bitmap smallIcon only (value over unit). Live Update / status-bar chip removed by product.
+     * Pixel Meter path: Live Update chip (ic + shortCriticalText) on API 36+ when enabled;
+     * else bitmap value/unit smallIcon.
      */
     private fun buildNotification(content: String, down: Long = 0, up: Long = 0): Notification {
         val open = PendingIntent.getActivity(
@@ -192,6 +193,22 @@ class SpeedMonitorService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
         val contentText = content.ifBlank { getString(R.string.meter_starting) }
+        val useChip = Build.VERSION.SDK_INT >= 36 && prefs.statusBarChipEnabled
+        if (useChip) {
+            val live = MeterChipFormat.format(prefs, down, up)
+            return Notification.Builder(this, CHANNEL_ID)
+                .setOngoing(true)
+                .setOnlyAlertOnce(true)
+                .setContentIntent(open)
+                .setVisibility(Notification.VISIBILITY_SECRET)
+                .setShowWhen(false)
+                .setContentTitle(getString(R.string.meter_notification_title))
+                .setContentText(contentText)
+                .setSmallIcon(R.drawable.ic_meter_speed)
+                .setShortCriticalText(live)
+                .setFlag(Notification.FLAG_PROMOTED_ONGOING, true)
+                .build()
+        }
         val density = resources.displayMetrics.density
         val silhouette = MeterDynamicIcon.createSilhouette(
             down,
@@ -216,7 +233,7 @@ class SpeedMonitorService : Service() {
     }
 
     companion object {
-        const val CHANNEL_ID = "onetools_meter_speed_v4"
+        const val CHANNEL_ID = "onetools_meter_speed_v5"
         const val NOTIFICATION_ID = 42
         const val ACTION_STOP = "com.onetools.app.meter.STOP"
         const val ACTION_APPLY_PREFS = "com.onetools.app.meter.APPLY_PREFS"
