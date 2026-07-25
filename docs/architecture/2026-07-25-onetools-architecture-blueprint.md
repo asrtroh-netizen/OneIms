@@ -30,7 +30,7 @@
 | F5 | 与 OneIMS 关系说明页 | `ui` |
 | F6 | 隐私边界声明 | `ui` / `policy` |
 | F7 | **来电归属 + 骚扰拦截**（CallScreening / 本地规则 / Directory；干净室自研） | `caller` |
-| F8 | **网速监测**（类 Pixel Meter：通知/悬浮 + 分应用流量） | `meter` |
+| F8 | **网速监测**（类 Pixel Meter：通知/悬浮 + **OEM 贴顶对标** + 分应用流量） | `meter` |
 
 ### Out（架构硬墙 · 禁止落入代码路径）
 
@@ -38,9 +38,9 @@
 - **内嵌 OneBridge / 自研无线调试配对栈**（OneTools 走 Shizuku，不复制 OneKuku 重通道）
 - 会员支付闭环、插件市场、Root 提权实现、iOS
 - **应用内 Pixel Telo / 外置 Telo 对照入口**（fork 已删；不合并 Telo 源码）
-- **Meter 过重对标路径**：GlassWire/OEM SystemUI 逼近、套餐限额告警等不做；保留类 Pixel Meter 悬浮/通知 + 分应用流量
+- **Meter 不做**：GlassWire 防火墙、套餐限额告警等；**OEM 贴顶 / 状态栏芯片对标要保留**（用户 2026-07-25 明确保留）
 
-**产品纠偏（2026-07-25 晚）**：OneTools = **轻度配套小工具**；Caller = 归属 + 拦截（干净室）；Meter = 类 Pixel Meter + 分应用流量。
+**产品纠偏（2026-07-25 晚）**：OneTools = **轻度配套小工具**；Caller = 归属 + 拦截（干净室）；Meter = 类 Pixel Meter + OEM 贴顶对标 + 分应用流量。
 
 **守卫规则**：不得 `implementation(project(":bridge"))`；不得复制 OneIMS 写配 Service；**允许且必须**接入 `dev.rikka.shizuku:api/provider`（对齐 OneLink）。
 

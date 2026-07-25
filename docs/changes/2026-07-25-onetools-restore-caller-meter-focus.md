@@ -11,8 +11,8 @@
 
 - 恢复 `caller/`、`CallerScreen`、Room/KSP、CallScreening Manifest 与相关单测
 - 首页恢复「来电归属与拦截」入口；去掉应用内 Telo 按钮
-- Meter 页已去掉 OEM dock UI；文案改为「类 Pixel Meter · 悬浮/通知 · 分应用流量」
-- 架构蓝图 In/Out 同步（F7/F8；Telo 对照仍 Out）
+- Meter：类 Pixel Meter + 分应用流量；**OEM 贴顶 / 状态栏芯片对标保留**（设置页入口已恢复）
+- 架构蓝图 In/Out 同步（F7/F8；Telo 对照仍 Out；OEM 贴顶 In）
 
 ## 验证
 

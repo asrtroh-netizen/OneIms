@@ -139,11 +139,11 @@
 
     <string name="meter_card_title">网速监测</string>
 
-    <string name="meter_card_sub">类 Pixel Meter · 悬浮/通知 · 分应用流量</string>
+    <string name="meter_card_sub">类 Pixel Meter · 悬浮/通知 · OEM贴顶 · 分应用流量</string>
 
     <string name="meter_title">网速监测</string>
 
-    <string name="meter_desc">类 Pixel Meter：通知栏 / 悬浮窗显示实时上下行；物理链路采样忽略 VPN。另附分应用流量（需使用情况访问）。可从系统快捷设置添加 Tile。</string>
+    <string name="meter_desc">类 Pixel Meter：通知栏 / 悬浮窗显示实时上下行；可一键贴顶逼近 OEM 状态栏网速位（Android 16+ 另有状态栏芯片）。物理链路采样忽略 VPN。另附分应用流量。可从快捷设置添加 Tile。</string>
 
     <string name="meter_oem_title">OEM 状态栏对标</string>
 
