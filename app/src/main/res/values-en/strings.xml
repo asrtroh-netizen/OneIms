@@ -763,11 +763,11 @@
     <string name="force_temporary_sub">Skip persistent=true and write temporary overrides only. Off by default. May reduce denials on newer builds; reboot still needs reapply</string>
     <string name="force_temporary_on">Force temporary writes enabled</string>
     <string name="force_temporary_off">Force temporary writes disabled</string>
-    <string name="sandbox_persist_title">Keep settings after reboot</string>
-    <string name="sandbox_persist_sub">When on, try to keep call-related settings after reboot. If the phone won’t allow it, we fall back automatically. Recommended on.</string>
-    <string name="sandbox_persist_home_sub">On by default: keep settings after reboot when possible, without reconnecting wireless each time. If not, we’ll reapply after wireless is back.</string>
-    <string name="sandbox_persist_on">Keep-settings-after-reboot is on</string>
-    <string name="sandbox_persist_off">Keep-settings-after-reboot is off</string>
+    <string name="sandbox_persist_title">Persistent VoLTE/NR</string>
+    <string name="sandbox_persist_sub"></string>
+    <string name="sandbox_persist_home_sub"></string>
+    <string name="sandbox_persist_on">Persistent VoLTE/NR on</string>
+    <string name="sandbox_persist_off">Persistent VoLTE/NR off</string>
     <string name="diagnostic_check_platform_persistent">Platform persistence probe</string>
     <string name="diagnostic_check_platform_persistent_guidance">Checks whether CarrierConfigLoader exposes isSystemApp / sandbox gates. If the probe fails or says the platform is tightened, rely on boot reapply, or enable Experimental → Force temporary writes.</string>
     <string name="diagnostic_platform_persistent_allowed">Platform may still allow persistent attempts</string>

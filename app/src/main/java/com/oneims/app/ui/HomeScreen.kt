@@ -330,7 +330,7 @@ private fun RootBootHomeCard(
     }
 }
 
-/** 首页沙盒持久旁路：与 Root 自启同级一块开关，默认关。 */
+/** 首页「持久性VoLTE/NR」：与 Root 自启同级一块开关，默认开。 */
 @Composable
 private fun SandboxPersistHomeCard(
     checked: Boolean,
