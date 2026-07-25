@@ -28,3 +28,15 @@
 - `python analyze_lines.py` → `quality: PASS`，10 条，span 约 2.9k–5.5k px
 - `powershell -File run_trace.ps1` → AfterFX exit 0
 - `ae_apply_result.txt` → `OK / TRACE_LINES created with 10 editable open paths`
+
+## 追加：长线稿图（2026-07-26）
+
+按客户截图下半「白底黑细线」风格，新增：
+
+| 文件 | 作用 |
+|---|---|
+| `make_lineart.py` | 脊线 NMS + 主轮廓边缘 → 白底黑线长图 |
+| `lineart_long.png` | 全尺寸线稿（8268×2953） |
+| `lineart_long_preview.png` | 预览缩略图 |
+
+验证：`python make_lineart.py` → 写出上述 PNG；coverage≈0.07（细线、非实心填充）。
