@@ -2,7 +2,6 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
-    id("com.google.devtools.ksp")
 }
 
 android {
@@ -14,18 +13,12 @@ android {
         minSdk = 31
         targetSdk = 36
         versionCode = 1
-        versionName = "0.1.0-scaffold"
+        versionName = "0.1.0-lite"
         // Replace with your real CDN when assets are uploaded.
         buildConfigField(
             "String",
             "ONE_CDN_INDEX_URL",
             "\"https://cdn.oneims.app/onetools/one-update.json\"",
-        )
-        // Primary: OneBlock repo phone list (raw). CDN remains fallback.
-        buildConfigField(
-            "String",
-            "ONE_BLOCKLIST_URL",
-            "\"https://raw.githubusercontent.com/asrtroh-netizen/OneBlock/main/phone/one-blocklist.json\"",
         )
         buildConfigField("boolean", "ONE_INDEX_REQUIRE_SIGNATURE", "true")
     }
@@ -81,11 +74,6 @@ dependencies {
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
     implementation("androidx.datastore:datastore-preferences:1.1.1")
-
-    val room = "2.6.1"
-    implementation("androidx.room:room-runtime:$room")
-    implementation("androidx.room:room-ktx:$room")
-    ksp("androidx.room:room-compiler:$room")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.json:json:20240303")

@@ -5,28 +5,18 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <uses-permission android:name="moe.shizuku.manager.permission.API_V23" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-    <uses-permission android:name="android.permission.READ_CALL_LOG" />
-    <uses-permission android:name="android.permission.WRITE_CONTACTS" />
-    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
-    <!-- Required for NetworkStatsManager per-UID queries (user must grant Usage Access). -->
-    <uses-permission
-        android:name="android.permission.PACKAGE_USAGE_STATS"
-        tools:ignore="ProtectedPermissions" />
 
     <queries>
         <package android:name="moe.shizuku.privileged.api" />
         <package android:name="moe.shizuku.manager" />
         <package android:name="com.oneims.app" />
         <package android:name="com.oneims.onelink" />
-        <package android:name="vip.mystery0.pixel.telo" />
-        <package android:name="vip.mystery0.pixel.telo.debug" />
     </queries>
 
     <application
@@ -46,58 +36,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <service
-            android:name=".meter.SpeedMonitorService"
-            android:exported="false"
-            android:foregroundServiceType="specialUse">
-            <property
-                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="network_speed_monitor" />
-        </service>
-
-        <service
-            android:name=".meter.MeterNotificationTileService"
-            android:exported="true"
-            android:icon="@drawable/ic_launcher_onetools"
-            android:label="@string/meter_tile_notif"
-            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
-            <intent-filter>
-                <action android:name="android.service.quicksettings.action.QS_TILE" />
-            </intent-filter>
-        </service>
-
-        <service
-            android:name=".meter.MeterOverlayTileService"
-            android:exported="true"
-            android:icon="@drawable/ic_launcher_onetools"
-            android:label="@string/meter_tile_overlay"
-            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
-            <intent-filter>
-                <action android:name="android.service.quicksettings.action.QS_TILE" />
-            </intent-filter>
-        </service>
-
-        <service
-            android:name=".caller.OneCallScreeningService"
-            android:exported="true"
-            android:permission="android.permission.BIND_SCREENING_SERVICE">
-            <intent-filter>
-                <action android:name="android.telecom.CallScreeningService" />
-            </intent-filter>
-        </service>
-
-        <provider
-            android:name=".caller.OneCallerDirectoryProvider"
-            android:authorities="@string/caller_directory_authority"
-            android:exported="true"
-            android:readPermission="android.permission.BIND_DIRECTORY_SEARCH"
-            android:writePermission="android.permission.BIND_DIRECTORY_SEARCH"
-            tools:ignore="ExportedContentProvider">
-            <meta-data
-                android:name="android.content.ContactDirectory"
-                android:value="true" />
-        </provider>
 
         <provider
             android:name="androidx.core.content.FileProvider"

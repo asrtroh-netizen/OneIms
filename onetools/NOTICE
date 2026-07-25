@@ -1,24 +1,14 @@
 # Third-party notices for OneTools
 
-## OneCaller (first-party)
+## Battery Info (capability reference — clean-room)
 
-- Clean-room CallScreeningService + Room block/allow rules + tag match +
-  `onetools.blocklist.v1` import. Public Android Telecom APIs only; not derived
-  from Pixel Telo source.
+- Capability set referenced for the read-only battery screen.
+- License: Apache License 2.0 (typical for Battery Info–style FOSS apps).
+- OneTools battery reader is first-party clean-room code; see `battery/BatteryReader.kt`.
 
-## Pixel Meter (network speed — feature parity target)
+## Obtainium / GlassWire / Pixel Meter / Pixel Telo / OneCaller
 
-- Project: https://github.com/Mystery00/PixelMeter
-- License: Apache License 2.0
-- OneTools Meter: physical-interface sampling adapted from Pixel Meter's approach;
-  notification display modes, floating overlay, and QS tiles implemented first-party
-  for feature parity (see `MeterSettings` / `MeterOverlayController` / tile services).
-
-## GlassWire (app-traffic capability target — clean-room only)
-
-- Product: https://www.glasswire.com/glasswire-for-android/
-- License: proprietary (not Apache). OneTools does **not** include GlassWire source,
-  assets, or trademarks.
-- OneTools implements first-party per-app usage via Android `NetworkStatsManager`
-  + Usage Access (`AppTrafficReader` / `UsageAccess`). Firewall / VPN-based blocking
-  is intentionally deferred to avoid fighting One's existing proxy stack.
+- **Out of product scope** (2026-07-25 subtraction): OneTools no longer ships
+  call lookup / CallScreening, Meter speed overlay, or in-app Telo screening UI.
+- Update center remains first-party (does not embed Obtainium source).
+- Do not reintroduce GPL Obtainium source into `:onetools`.

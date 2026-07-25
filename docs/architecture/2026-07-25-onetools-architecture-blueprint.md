@@ -35,6 +35,10 @@
 - CarrierConfig / VoLTE / VoWiFi / VoNR **写入**（仍归 OneIMS）
 - **内嵌 OneBridge / 自研无线调试配对栈**（OneTools 走 Shizuku，不复制 OneKuku 重通道）
 - 会员支付闭环、插件市场、Root 提权实现、iOS
+- **查号 / 来电拦截 / CallScreening / 号码库 / 应用内 Telo 筛查 UI**（2026-07-25 减法拍板）
+- **Meter 重功能**：状态栏芯片、悬浮网速、QS Tile、分应用流量、套餐限额、GlassWire/Pixel Meter 对标学习路径（同日拍板）
+
+**产品纠偏**：OneTools = **轻度配套小工具**，不为工具箱膨胀而堆能力。
 
 **守卫规则**：不得 `implementation(project(":bridge"))`；不得复制 OneIMS 写配 Service；**允许且必须**接入 `dev.rikka.shizuku:api/provider`（对齐 OneLink）。
 

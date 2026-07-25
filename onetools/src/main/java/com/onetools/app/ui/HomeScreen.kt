@@ -25,11 +25,9 @@ fun HomeScreen(
     channelState: ChannelCardState,
     onActivateOrCheck: () -> Unit,
     onOpenBattery: () -> Unit,
-    onOpenMeter: () -> Unit,
     onOpenUpdates: () -> Unit,
     onOpenRecorder: () -> Unit,
-    onOpenCaller: () -> Unit,
-    onOpenTelo: () -> Unit,
+    onExportDiag: () -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier
@@ -75,33 +73,9 @@ fun HomeScreen(
 
         item {
             InfoCard(
-                title = stringResource(R.string.meter_card_title),
-                subtitle = stringResource(R.string.meter_card_sub),
-                onClick = onOpenMeter,
-            )
-        }
-
-        item {
-            InfoCard(
-                title = stringResource(R.string.caller_card_title),
-                subtitle = stringResource(R.string.caller_card_sub),
-                onClick = onOpenCaller,
-            )
-        }
-
-        item {
-            InfoCard(
                 title = stringResource(R.string.recorder_card_title),
                 subtitle = stringResource(R.string.recorder_card_sub),
                 onClick = onOpenRecorder,
-            )
-        }
-
-        item {
-            InfoCard(
-                title = stringResource(R.string.telo_card_title),
-                subtitle = stringResource(R.string.telo_card_sub),
-                onClick = onOpenTelo,
             )
         }
 
@@ -117,6 +91,7 @@ fun HomeScreen(
             InfoCard(
                 title = stringResource(R.string.export_card_title),
                 subtitle = stringResource(R.string.export_card_sub),
+                onClick = onExportDiag,
             )
         }
 
