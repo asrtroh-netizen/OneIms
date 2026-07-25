@@ -386,64 +386,6 @@ fun MeterScreen(onBack: () -> Unit) {
             }
         }
         item {
-            Text(stringResource(R.string.meter_oem_title), style = MaterialTheme.typography.titleMedium)
-        }
-        item {
-            Text(
-                stringResource(R.string.meter_oem_sub),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        item {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Checkbox(
-                    checked = prefs.statusBarChipEnabled,
-                    onCheckedChange = {
-                        scope.launch {
-                            settings.setStatusBarChipEnabled(it)
-                            if (it && !prefs.notificationEnabled) {
-                                settings.setNotificationEnabled(true)
-                            }
-                            if (it && !SpeedMonitorService.isRunning) {
-                                SpeedMonitorService.start(context)
-                                running = true
-                            }
-                            applyAndRestartPrefs()
-                        }
-                    },
-                )
-                Text(stringResource(R.string.meter_chip_enable))
-            }
-        }
-        item {
-            OutlinedButton(
-                onClick = {
-                    scope.launch {
-                        if (!MeterOverlayController(context).canDraw()) {
-                            Toast.makeText(context, R.string.meter_oem_dock_need_overlay, Toast.LENGTH_LONG).show()
-                            val intent = Intent(
-                                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                                Uri.parse("package:${context.packageName}"),
-                            )
-                            context.startActivity(intent)
-                            return@launch
-                        }
-                        if (!SpeedMonitorService.isRunning) {
-                            SpeedMonitorService.start(context)
-                            running = true
-                        }
-                        context.startService(
-                            Intent(context, SpeedMonitorService::class.java)
-                                .setAction(SpeedMonitorService.ACTION_DOCK_OEM),
-                        )
-                        Toast.makeText(context, R.string.meter_oem_docked, Toast.LENGTH_SHORT).show()
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-            ) { Text(stringResource(R.string.meter_oem_dock)) }
-        }
-        item {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Checkbox(
                     checked = prefs.overlayEnabled,

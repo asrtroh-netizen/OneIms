@@ -26,6 +26,7 @@ fun HomeScreen(
     onActivateOrCheck: () -> Unit,
     onOpenBattery: () -> Unit,
     onOpenMeter: () -> Unit,
+    onOpenCaller: () -> Unit,
     onOpenUpdates: () -> Unit,
     onOpenRecorder: () -> Unit,
     onExportDiag: () -> Unit,
@@ -77,6 +78,14 @@ fun HomeScreen(
                 title = stringResource(R.string.meter_card_title),
                 subtitle = stringResource(R.string.meter_card_sub),
                 onClick = onOpenMeter,
+            )
+        }
+
+        item {
+            InfoCard(
+                title = stringResource(R.string.caller_card_title),
+                subtitle = stringResource(R.string.caller_card_sub),
+                onClick = onOpenCaller,
             )
         }
 

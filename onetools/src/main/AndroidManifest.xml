@@ -12,6 +12,8 @@
     <uses-permission android:name="moe.shizuku.manager.permission.API_V23" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.READ_CALL_LOG" />
+    <uses-permission android:name="android.permission.WRITE_CONTACTS" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <!-- Required for NetworkStatsManager per-UID queries (user must grant Usage Access). -->
     <uses-permission
@@ -73,6 +75,27 @@
                 <action android:name="android.service.quicksettings.action.QS_TILE" />
             </intent-filter>
         </service>
+
+        <service
+            android:name=".caller.OneCallScreeningService"
+            android:exported="true"
+            android:permission="android.permission.BIND_SCREENING_SERVICE">
+            <intent-filter>
+                <action android:name="android.telecom.CallScreeningService" />
+            </intent-filter>
+        </service>
+
+        <provider
+            android:name=".caller.OneCallerDirectoryProvider"
+            android:authorities="@string/caller_directory_authority"
+            android:exported="true"
+            android:readPermission="android.permission.BIND_DIRECTORY_SEARCH"
+            android:writePermission="android.permission.BIND_DIRECTORY_SEARCH"
+            tools:ignore="ExportedContentProvider">
+            <meta-data
+                android:name="android.content.ContactDirectory"
+                android:value="true" />
+        </provider>
 
         <provider
             android:name="androidx.core.content.FileProvider"

@@ -38,7 +38,7 @@
     <string name="export_share_subject">OneTools 诊断摘要</string>
     <string name="export_share_chooser">分享诊断摘要</string>
     <string name="export_share_fail">无法打开分享面板</string>
-    <string name="relation_note">OneTools 是 OneIMS 的轻度配套小工具，不替代写配；不提供查号；保留轻量网速悬浮与分应用流量。</string>
+    <string name="relation_note">OneTools 是 OneIMS 的轻度配套小工具，不替代写配；来电归属+骚扰拦截；网速对标 Pixel Meter + 分应用流量。</string>
     <string name="toast_open_shizuku_fail">未找到 Shizuku，请先安装官方或修缮版</string>
     <string name="toast_status_ok">通道状态已刷新</string>
 
@@ -139,11 +139,11 @@
 
     <string name="meter_card_title">网速监测</string>
 
-    <string name="meter_card_sub">悬浮窗网速 · 分应用流量 · 可选通知/Tile</string>
+    <string name="meter_card_sub">类 Pixel Meter · 悬浮/通知 · 分应用流量</string>
 
     <string name="meter_title">网速监测</string>
 
-    <string name="meter_desc">对标各 OEM 系统状态栏网速：Android 16+ 可用通知状态栏 chip；低版本用贴顶悬浮逼近。物理链路采样忽略 VPN。可从系统快捷设置添加 Tile。</string>
+    <string name="meter_desc">类 Pixel Meter：通知栏 / 悬浮窗显示实时上下行；物理链路采样忽略 VPN。另附分应用流量（需使用情况访问）。可从系统快捷设置添加 Tile。</string>
 
     <string name="meter_oem_title">OEM 状态栏对标</string>
 
@@ -275,4 +275,104 @@
 
     <string name="meter_overlay_gestures">拖动可换位并自动记住；双击悬浮窗可临时关闭（需再开开关）。</string>
 
+
+    <string name="caller_card_title">来电归属与拦截</string>
+
+    <string name="caller_card_sub">归属标签 · 骚扰拦截 · 本地规则</string>
+
+    <string name="caller_title">来电归属与拦截</string>
+
+    <string name="caller_intro">干净室自研：系统 CallScreeningService + 本地规则。支持来电归属标签与骚扰拦截；设为默认「来电显示与骚扰拦截」后生效。</string>
+
+    <string name="caller_gap_note">可导入拦截库、导出/备份规则；与通话录音页联动。拨号器 Directory 标签依赖通话记录权限。</string>
+
+    <string name="caller_set_default">申请设为默认来电拦截应用</string>
+
+    <string name="caller_open_defaults">打开系统默认应用设置</string>
+
+    <string name="caller_settings_fail">无法打开默认应用设置</string>
+
+    <string name="caller_role_granted">已设为默认来电拦截</string>
+
+    <string name="caller_role_denied">未授予默认角色，可到系统设置手动选择 OneTools</string>
+
+    <string name="caller_role_held">当前已是默认来电拦截应用</string>
+
+    <string name="caller_role_need_q">需要 Android 10+</string>
+
+    <string name="caller_role_unavailable">本机不提供来电拦截角色</string>
+
+    <string name="caller_add_title">添加规则</string>
+
+    <string name="caller_number_hint">号码或前缀数字</string>
+
+    <string name="caller_number_invalid">请输入有效数字</string>
+
+    <string name="caller_prefix">前缀匹配</string>
+
+    <string name="caller_tag_mode">标签规则（按 tag 命中成员号）</string>
+
+    <string name="caller_tag_hint">标签（成员号填写 / 标签规则填写标签名）</string>
+
+    <string name="caller_allow">白名单（优先于黑名单）</string>
+
+    <string name="caller_lookup_title">手动查号</string>
+
+    <string name="caller_lookup_hint">输入号码试查</string>
+
+    <string name="caller_lookup">查号</string>
+
+    <string name="caller_add">添加</string>
+
+    <string name="caller_added">已添加规则</string>
+
+    <string name="caller_import_title">导入 onetools.blocklist.v1</string>
+
+    <string name="caller_import_hint">粘贴 JSON</string>
+
+    <string name="caller_sample">填入样例</string>
+
+    <string name="caller_import">导入合并</string>
+
+    <string name="caller_imported">已合并 %1$d 条</string>
+
+    <string name="caller_fetch_cdn">从 One CDN 拉取拦截库</string>
+
+    <string name="caller_batch_cdn">批量灌库 · 拉取 OneBlock/CDN</string>
+
+    <string name="caller_batch_file">批量灌库 · 选择 JSON 文件</string>
+
+    <string name="caller_batch_ok">已灌入/合并 %1$d 条</string>
+
+    <string name="caller_backup_title">备份与恢复</string>
+
+    <string name="caller_backup">导出备份</string>
+
+    <string name="caller_restore">恢复（覆盖）</string>
+
+    <string name="caller_backup_ok">备份已写出</string>
+
+    <string name="caller_restore_ok">已恢复 %1$d 条（覆盖本地）</string>
+
+    <string name="caller_fetching">正在拉取…</string>
+
+    <string name="caller_fetch_fail">拉取失败：%1$s</string>
+
+    <string name="caller_rules_title">本地规则（%1$d）</string>
+
+    <string name="caller_remove">删除</string>
+
+    <string name="caller_open_recorder">打开通话录音</string>
+
+    <string name="caller_directory_authority">com.onetools.app.caller.directory</string>
+
+    <string name="caller_directory_display">OneCaller</string>
+
+    <string name="caller_label_allow">白名单</string>
+
+    <string name="caller_label_block">拦截名单</string>
+
+    <string name="caller_label_spam_fmt">骚扰 · %1$s</string>
+
+    <string name="caller_need_call_log">需要通话记录权限，系统才会转发号码查询到 OneCaller 目录</string>
 </resources>
