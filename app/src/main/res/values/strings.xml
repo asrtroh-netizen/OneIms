@@ -767,6 +767,20 @@
     <string name="root_persist_off">已关闭 Root 持久化增强</string>
     <string name="diagnostic_check_root_persist">Root / 配置持久</string>
     <string name="diagnostic_check_root_persist_guidance">开启「实验功能 → Root 增强」后，写入结果会标注是否真正 persistent。非 Root 用户可忽略。</string>
+    <string name="force_temporary_section_title">写入策略</string>
+    <string name="force_temporary_title">强制临时写入</string>
+    <string name="force_temporary_sub">跳过 persistent=true，直接写临时覆盖；默认关。部分新系统可减少拒写；重启仍靠开机重放</string>
+    <string name="force_temporary_on">已开启强制临时写入</string>
+    <string name="force_temporary_off">已关闭强制临时写入</string>
+    <string name="diagnostic_check_platform_persistent">系统持久能力探测</string>
+    <string name="diagnostic_check_platform_persistent_guidance">对照 phone 进程 CarrierConfigLoader 是否存在 isSystemApp / 沙盒校验。探测失败或显示「平台已收紧」时，请依赖开机重放，或开启「实验功能 → 强制临时写入」。</string>
+    <string name="diagnostic_platform_persistent_allowed">平台仍可能允许尝试系统持久</string>
+    <string name="diagnostic_platform_persistent_blocked">平台已收紧：非 system 持久大概率被拒</string>
+    <string name="diagnostic_platform_persistent_unknown">无法完成平台持久探测</string>
+    <string name="diagnostic_platform_persistent_signals">isSystemApp=%1$s secureOverride=%2$s sandboxUid=%3$s</string>
+    <string name="diagnostic_platform_persistent_error">原因 %1$s</string>
+    <string name="diagnostic_force_temporary_on">强制临时=开</string>
+    <string name="diagnostic_force_temporary_off">强制临时=关</string>
     <string name="update_check_subtitle">从已配置的发布仓库获取新版本</string>
     <!-- 统一操作反馈与高风险确认 -->
     <string name="operation_already_running">已有操作正在进行，请稍候</string>
@@ -1040,6 +1054,47 @@
     <string name="sponsor_save_failed">保存失败，请重试或截图保存</string>
     <string name="sponsor_close_preview">关闭</string>
     <string name="sponsor_voluntary_notice">支持完全自愿，不影响 OneIMS 的任何功能使用。</string>
+
+    <string name="membership_title">OneIMS 会员</string>
+    <string name="membership_subtitle">终身买断 · 核心通话能力始终免费</string>
+    <string name="membership_back_hint">返回设置</string>
+    <string name="membership_core_free_notice">VoLTE / VoWiFi / 诊断 / 恢复系统默认等核心能力不设付费墙。</string>
+    <string name="membership_pick_plan_title">选择方案</string>
+    <string name="membership_pick_plan_sub">均为一次性终身授权，无年付</string>
+    <string name="membership_plus_name">基础会员 Plus</string>
+    <string name="membership_plus_price">¥29.9 终身</string>
+    <string name="membership_plus_b1">去除赞助页</string>
+    <string name="membership_plus_b2">Android 大版本优先跟进</string>
+    <string name="membership_plus_b3">会员标识</string>
+    <string name="membership_pro_name">增值会员 Pro</string>
+    <string name="membership_pro_price">¥69.9 终身</string>
+    <string name="membership_pro_b1">含 Plus 全部权益</string>
+    <string name="membership_pro_b2">6 项独家功能</string>
+    <string name="membership_pro_b3">独家定制 ×3</string>
+    <string name="membership_pro_b4">专属铭牌</string>
+    <string name="membership_recommended">推荐</string>
+    <string name="membership_includes_title">本档包含</string>
+    <string name="membership_includes_plus_sub">去打扰，跟上系统更新</string>
+    <string name="membership_includes_pro_sub">身份感 + 独家能力 + 定制额度</string>
+    <string name="membership_feat_no_sponsor">去除底栏赞助页打扰</string>
+    <string name="membership_feat_android_follow">跟随 Android 大版本优先适配说明</string>
+    <string name="membership_feat_member_badge">会员标识</string>
+    <string name="membership_feat_all_plus">包含 Plus 全部权益</string>
+    <string name="membership_feat_exclusive_six">身份覆盖 · 信号格 · 国家码 · 掉线守护 · 专家编辑 · 配置出行包</string>
+    <string name="membership_feat_custom_three">独家功能定制工单 ×3</string>
+    <string name="membership_feat_nameplate">专属铭牌（设置页 / 可选首页徽章）</string>
+    <string name="membership_cta_plus">开通 Plus · ¥29.9</string>
+    <string name="membership_cta_pro">开通 Pro · ¥69.9</string>
+    <string name="membership_restore">恢复购买</string>
+    <string name="membership_later">以后再说</string>
+    <string name="membership_payment_pending_note">支付核销通道接好前，按钮仅作界面预览，不会产生扣款。</string>
+    <string name="membership_purchase_pending">支付通道即将接入，权益方案已就绪</string>
+    <string name="membership_restore_pending">恢复购买即将接入</string>
+    <string name="membership_settings_section">会员</string>
+    <string name="membership_settings_section_sub">终身买断方案预览</string>
+    <string name="membership_settings_entry">OneIMS 会员</string>
+    <string name="membership_settings_entry_sub">Plus ¥29.9 · Pro ¥69.9（终身）</string>
+    <string name="membership_settings_entry_badge">预览</string>
     <string name="settings_tools_title">工具与支持</string>
     <string name="settings_tools_subtitle">控制中心快捷入口</string>
     <string name="settings_sponsor_title">支持作者</string>

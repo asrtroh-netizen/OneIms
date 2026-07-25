@@ -246,6 +246,16 @@ object CarrierConfigOverrideWriter {
         subId: Int,
         bundle: PersistableBundle?,
     ): Boolean {
+        if (ConfigStore.isForceTemporaryOverride(context)) {
+            Log.i(TAG, "force_temporary_override=on → skip persistent=true")
+            SystemApiBroker.overrideConfig(
+                context = context,
+                subId = subId,
+                bundle = bundle,
+                persistent = false,
+            )
+            return false
+        }
         return try {
             SystemApiBroker.overrideConfig(
                 context = context,

@@ -81,6 +81,11 @@ object ConfigStore {
     private const val KEY_ROOT_PERSIST_ENHANCE = "root_persist_enhance"
     /** Root 开机拉起 OneKuku/OneBridge；默认关。 */
     private const val KEY_ROOT_BOOT_START = "root_boot_start"
+    /**
+     * 强制 CarrierConfig 只写 temporary（跳过 try-persistent）；默认关。
+     * 部分新系统上可减少拒写/拖 phone；重启仍依赖开机重放。
+     */
+    private const val KEY_FORCE_TEMPORARY_OVERRIDE = "force_temporary_override"
     private const val KEY_LAST_OVERRIDE_PERSISTENT = "last_override_persistent"
     private const val KEY_LAST_OVERRIDE_PERSIST_HAS = "last_override_persist_has"
     private const val KEY_LAST_OVERRIDE_SUCCESS = "last_override_success"
@@ -664,6 +669,14 @@ object ConfigStore {
 
     fun setRootPersistEnhance(context: Context, enabled: Boolean) {
         prefs(context).edit().putBoolean(KEY_ROOT_PERSIST_ENHANCE, enabled).apply()
+    }
+
+    /** 强制临时覆盖：跳过 persistent=true；默认关闭。 */
+    fun isForceTemporaryOverride(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_FORCE_TEMPORARY_OVERRIDE, false)
+
+    fun setForceTemporaryOverride(context: Context, enabled: Boolean) {
+        prefs(context).edit().putBoolean(KEY_FORCE_TEMPORARY_OVERRIDE, enabled).apply()
     }
 
     /** Root 开机拉起本产品特权桥（OneBridge 或 Shizuku）；默认关闭。 */

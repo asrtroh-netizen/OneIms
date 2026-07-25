@@ -758,6 +758,20 @@
     <string name="root_persist_off">Root persistence boost disabled</string>
     <string name="diagnostic_check_root_persist">Root / config persistence</string>
     <string name="diagnostic_check_root_persist_guidance">Enable Experimental → Root extras to label whether writes were truly persistent. Safe to ignore without Root.</string>
+    <string name="force_temporary_section_title">Write policy</string>
+    <string name="force_temporary_title">Force temporary writes</string>
+    <string name="force_temporary_sub">Skip persistent=true and write temporary overrides only. Off by default. May reduce denials on newer builds; reboot still needs reapply</string>
+    <string name="force_temporary_on">Force temporary writes enabled</string>
+    <string name="force_temporary_off">Force temporary writes disabled</string>
+    <string name="diagnostic_check_platform_persistent">Platform persistence probe</string>
+    <string name="diagnostic_check_platform_persistent_guidance">Checks whether CarrierConfigLoader exposes isSystemApp / sandbox gates. If the probe fails or says the platform is tightened, rely on boot reapply, or enable Experimental → Force temporary writes.</string>
+    <string name="diagnostic_platform_persistent_allowed">Platform may still allow persistent attempts</string>
+    <string name="diagnostic_platform_persistent_blocked">Platform tightened: non-system persistent likely denied</string>
+    <string name="diagnostic_platform_persistent_unknown">Could not probe platform persistence</string>
+    <string name="diagnostic_platform_persistent_signals">isSystemApp=%1$s secureOverride=%2$s sandboxUid=%3$s</string>
+    <string name="diagnostic_platform_persistent_error">cause %1$s</string>
+    <string name="diagnostic_force_temporary_on">force-temporary=on</string>
+    <string name="diagnostic_force_temporary_off">force-temporary=off</string>
     <string name="guard_section_subtitle">Restore the last settings after restart or IMS drop</string>
     <string name="update_check_subtitle">Fetch a new version from the configured release repository</string>
     <!-- Unified feedback and high-risk confirmation -->
@@ -1038,6 +1052,47 @@
     <string name="sponsor_save_failed">Could not save. Please retry or take a screenshot.</string>
     <string name="sponsor_close_preview">Close</string>
     <string name="sponsor_voluntary_notice">Support is entirely optional and never affects access to any OneIMS feature.</string>
+
+    <string name="membership_title">OneIMS Membership</string>
+    <string name="membership_subtitle">Lifetime unlock · core calling features stay free</string>
+    <string name="membership_back_hint">Back to Settings</string>
+    <string name="membership_core_free_notice">VoLTE / VoWiFi / diagnostics / restore-to-default stay free. No paywall on the core path.</string>
+    <string name="membership_pick_plan_title">Choose a plan</string>
+    <string name="membership_pick_plan_sub">One-time lifetime unlock only — no yearly billing</string>
+    <string name="membership_plus_name">Plus</string>
+    <string name="membership_plus_price">¥29.9 lifetime</string>
+    <string name="membership_plus_b1">Hide sponsor tab</string>
+    <string name="membership_plus_b2">Priority Android major-version follow-up</string>
+    <string name="membership_plus_b3">Member badge</string>
+    <string name="membership_pro_name">Pro</string>
+    <string name="membership_pro_price">¥69.9 lifetime</string>
+    <string name="membership_pro_b1">Everything in Plus</string>
+    <string name="membership_pro_b2">6 exclusive features</string>
+    <string name="membership_pro_b3">3 custom feature tickets</string>
+    <string name="membership_pro_b4">Exclusive nameplate</string>
+    <string name="membership_recommended">Recommended</string>
+    <string name="membership_includes_title">Included</string>
+    <string name="membership_includes_plus_sub">Fewer distractions, faster OS follow-up</string>
+    <string name="membership_includes_pro_sub">Identity, exclusives, and custom tickets</string>
+    <string name="membership_feat_no_sponsor">Hide the bottom sponsor tab</string>
+    <string name="membership_feat_android_follow">Priority notes for Android major releases</string>
+    <string name="membership_feat_member_badge">Member badge</string>
+    <string name="membership_feat_all_plus">Everything in Plus</string>
+    <string name="membership_feat_exclusive_six">Identity override · signal bars · country ISO · IMS guard · expert editor · config travel pack</string>
+    <string name="membership_feat_custom_three">3 exclusive customization tickets</string>
+    <string name="membership_feat_nameplate">Exclusive nameplate (About / optional home badge)</string>
+    <string name="membership_cta_plus">Get Plus · ¥29.9</string>
+    <string name="membership_cta_pro">Get Pro · ¥69.9</string>
+    <string name="membership_restore">Restore purchase</string>
+    <string name="membership_later">Not now</string>
+    <string name="membership_payment_pending_note">Checkout is not wired yet — buttons are UI preview only and will not charge you.</string>
+    <string name="membership_purchase_pending">Checkout coming soon. Plans and copy are ready.</string>
+    <string name="membership_restore_pending">Restore purchase coming soon</string>
+    <string name="membership_settings_section">Membership</string>
+    <string name="membership_settings_section_sub">Preview lifetime plans</string>
+    <string name="membership_settings_entry">OneIMS Membership</string>
+    <string name="membership_settings_entry_sub">Plus ¥29.9 · Pro ¥69.9 (lifetime)</string>
+    <string name="membership_settings_entry_badge">Preview</string>
     <string name="settings_tools_title">Tools and support</string>
     <string name="settings_tools_subtitle">Quick Settings shortcuts</string>
     <string name="settings_sponsor_title">Support the author</string>

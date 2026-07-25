@@ -1,7 +1,7 @@
 # 2026-07-25 · 「南宫支持 Android 17」声称 vs OneIMS 现状
 
 **规模**：M（认知对齐 + 方案取舍；默认不改主写入路径）  
-**状态**：分析完成 · 独立开关待用户选型后落地  
+**状态**：分析完成 · **已落地**探测进诊断 +「强制临时写入」实验开关（见 `docs/changes/2026-07-25-platform-persist-probe-force-temporary.md`）  
 **附件**：Gemini 对话截图（讲 `cmd phone cc set-value` 的 `-p` / `isSystemApp()`，非南宫 changelog）
 
 ---

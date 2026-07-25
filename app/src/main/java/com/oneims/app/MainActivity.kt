@@ -19,11 +19,14 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -38,6 +41,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import android.content.Intent
@@ -121,6 +126,7 @@ import com.oneims.app.ui.OneKukuCardPolicy
 import com.oneims.app.ui.OneKukuCardState
 import com.oneims.app.ui.OneKukuHomeTools
 import com.oneims.app.ui.SettingsActions
+import com.oneims.app.ui.MembershipPaywallScreen
 import com.oneims.app.ui.SettingsScreen
 import com.oneims.app.ui.SettingsUiState
 import com.oneims.app.ui.SponsorScreen
@@ -215,6 +221,7 @@ private fun AppRoot(
     val snackbarHostState = remember { SnackbarHostState() }
 
     var destination by remember { mutableStateOf(AppDestination.HOME) }
+    var membershipPaywallVisible by remember { mutableStateOf(false) }
     var pendingSupportProof by remember { mutableStateOf<String?>(null) }
     fun consumeSupportIntent(intent: Intent?) {
         val data = intent?.data?.toString() ?: return
@@ -297,6 +304,9 @@ private fun AppRoot(
     }
     var rootBootStart by remember {
         mutableStateOf(ConfigStore.isRootBootStart(context))
+    }
+    var forceTemporaryOverride by remember {
+        mutableStateOf(ConfigStore.isForceTemporaryOverride(context))
     }
     var fiveGDisplayConfig by remember {
         mutableStateOf(ConfigStore.fiveGDisplayConfig(context))
@@ -1335,6 +1345,25 @@ private fun AppRoot(
         }
     }
 
+    if (membershipPaywallVisible) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            MembershipPaywallScreen(
+                onBack = { membershipPaywallVisible = false },
+                onPurchase = {
+                    publish(context.getString(R.string.membership_purchase_pending))
+                },
+                onRestore = {
+                    publish(context.getString(R.string.membership_restore_pending))
+                },
+            )
+            SnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier.align(Alignment.BottomCenter),
+            )
+        }
+        return
+    }
+
     OneImsScaffold(
         selectedDestination = destination,
         onDestinationSelected = { destination = it },
@@ -1967,6 +1996,7 @@ private fun AppRoot(
                         guardEnabled = guardEnabled,
                         rootPersistEnhance = rootPersistEnhance,
                         rootBootStart = rootBootStart,
+                        forceTemporaryOverride = forceTemporaryOverride,
                         rootPersistStatusDetail = RootPersistenceSupport.statusDetail(context),
                         fiveGDisplayConfig = fiveGDisplayConfig,
                         signalBarDisplayMode = signalBarDisplayMode,
@@ -2132,6 +2162,19 @@ private fun AppRoot(
                                         R.string.root_boot_on
                                     } else {
                                         R.string.root_boot_off
+                                    },
+                                ),
+                            )
+                        },
+                        onForceTemporaryOverrideChange = { enabled ->
+                            forceTemporaryOverride = enabled
+                            ConfigStore.setForceTemporaryOverride(context, enabled)
+                            publish(
+                                context.getString(
+                                    if (enabled) {
+                                        R.string.force_temporary_on
+                                    } else {
+                                        R.string.force_temporary_off
                                     },
                                 ),
                             )
@@ -2350,6 +2393,7 @@ private fun AppRoot(
                     actions = SettingsActions(
                         onThemeModeChange = onThemeModeChange,
                         onDynamicColorChange = onDynamicColorChange,
+                        onOpenMembership = { membershipPaywallVisible = true },
                         onCheckUpdate = {
                             if (!checkingUpdate) {
                                 checkingUpdate = true

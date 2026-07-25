@@ -210,6 +210,8 @@ data class ExperimentalUiState(
     val rootPersistEnhance: Boolean = false,
     /** Root 开机拉起 OneBridge；默认关。 */
     val rootBootStart: Boolean = false,
+    /** 强制临时 CarrierConfig 写入；默认关。 */
+    val forceTemporaryOverride: Boolean = false,
     /** 只读状态摘要（通道 + 上次 persistent）。 */
     val rootPersistStatusDetail: String = "",
     val fiveGDisplayConfig: SimpleFiveGDisplayConfig,
@@ -234,6 +236,7 @@ data class ExperimentalActions(
     val onGuardEnabledChange: (Boolean) -> Unit,
     val onRootPersistEnhanceChange: (Boolean) -> Unit = {},
     val onRootBootStartChange: (Boolean) -> Unit = {},
+    val onForceTemporaryOverrideChange: (Boolean) -> Unit = {},
     val onOpenApnCatalog: () -> Unit,
     val onApplyExpertValue: (String, String) -> Unit,
     val onFiveGDisplayConfigChange: (SimpleFiveGDisplayConfig) -> Unit,
@@ -258,4 +261,5 @@ data class SettingsActions(
     val onDynamicColorChange: (Boolean) -> Unit,
     val onCheckUpdate: () -> Unit,
     val onDownloadUpdate: (UpdateInfo) -> Unit,
+    val onOpenMembership: () -> Unit = {},
 )

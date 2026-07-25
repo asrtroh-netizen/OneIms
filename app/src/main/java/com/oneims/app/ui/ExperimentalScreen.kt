@@ -846,6 +846,50 @@ fun ExperimentalScreen(
 
         item {
 
+
+
+            SectionBlock(title = stringResource(R.string.force_temporary_section_title)) {
+
+
+
+                SettingsSwitchRow(
+
+
+
+                    title = stringResource(R.string.force_temporary_title),
+
+
+
+                    subtitle = stringResource(R.string.force_temporary_sub),
+
+
+
+                    checked = state.forceTemporaryOverride,
+
+
+
+                    onCheckedChange = actions.onForceTemporaryOverrideChange,
+
+
+
+                    icon = Icons.Filled.Build,
+
+
+
+                )
+
+
+
+            }
+
+
+
+        }
+
+
+
+        item {
+
             SectionBlock(title = stringResource(R.string.signal_bar_style_title)) {
 
                 val mode = state.signalBarDisplayMode

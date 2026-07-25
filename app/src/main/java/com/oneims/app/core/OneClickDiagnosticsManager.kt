@@ -56,6 +56,7 @@ object OneClickDiagnosticsManager {
     private const val ID_IMS_REGISTERED = "ims_registered"
     private const val ID_GUARD = "guard"
     private const val ID_ROOT_PERSIST = "root_persist"
+    private const val ID_PLATFORM_PERSISTENT = "platform_persistent"
 
     /**
      * 逐项体检，全部只读，不改任何配置。subId 为 -1（未选卡）时后续依赖选卡的检查项
@@ -202,7 +203,60 @@ object OneClickDiagnosticsManager {
             guidance = context.getString(R.string.diagnostic_check_root_persist_guidance),
         )
 
+        val probe = PersistentCapabilityProbe.probe(context)
+        val forceTemporary = ConfigStore.isForceTemporaryOverride(context)
+        items += DiagnosticCheckItem(
+            id = ID_PLATFORM_PERSISTENT,
+            title = context.getString(R.string.diagnostic_check_platform_persistent),
+            detail = platformPersistentDetail(context, probe, forceTemporary),
+            status = when (probe.outcome) {
+                PersistentCapabilityProbe.Outcome.LIKELY_ALLOWED -> CheckStatus.PASS
+                PersistentCapabilityProbe.Outcome.LIKELY_BLOCKED -> CheckStatus.UNKNOWN
+                PersistentCapabilityProbe.Outcome.UNKNOWN -> CheckStatus.UNKNOWN
+            },
+            fixable = false,
+            guidance = context.getString(R.string.diagnostic_check_platform_persistent_guidance),
+        )
+
         return items
+    }
+
+    private fun platformPersistentDetail(
+        context: Context,
+        probe: PersistentCapabilityProbe.Result,
+        forceTemporary: Boolean,
+    ): String {
+        val outcomeText = when (probe.outcome) {
+            PersistentCapabilityProbe.Outcome.LIKELY_ALLOWED ->
+                context.getString(R.string.diagnostic_platform_persistent_allowed)
+            PersistentCapabilityProbe.Outcome.LIKELY_BLOCKED ->
+                context.getString(R.string.diagnostic_platform_persistent_blocked)
+            PersistentCapabilityProbe.Outcome.UNKNOWN ->
+                context.getString(R.string.diagnostic_platform_persistent_unknown)
+        }
+        val signals = probe.signals
+        val signalText = if (signals == null) {
+            probe.errorHint?.let {
+                context.getString(R.string.diagnostic_platform_persistent_error, it)
+            }.orEmpty()
+        } else {
+            context.getString(
+                R.string.diagnostic_platform_persistent_signals,
+                if (signals.hasIsSystemApp) "Y" else "N",
+                if (signals.hasSecureOverrideConfig) "Y" else "N",
+                if (signals.hasIsSdkSandboxUidInternal) "Y" else "N",
+            )
+        }
+        val forceText = context.getString(
+            if (forceTemporary) {
+                R.string.diagnostic_force_temporary_on
+            } else {
+                R.string.diagnostic_force_temporary_off
+            },
+        )
+        return listOf(outcomeText, signalText, forceText)
+            .filter { it.isNotBlank() }
+            .joinToString(" · ")
     }
 
     /**
