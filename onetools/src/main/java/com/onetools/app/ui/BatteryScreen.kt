@@ -1,5 +1,7 @@
 package com.onetools.app.ui
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
@@ -44,13 +47,18 @@ import com.onetools.app.battery.BatteryHealthSummary
 import com.onetools.app.battery.BatteryPrefs
 import com.onetools.app.battery.BatteryPrefsSnapshot
 import com.onetools.app.battery.BatteryReader
+import com.onetools.app.battery.BatterySampleEntity
 import com.onetools.app.battery.BatterySessionEntity
 import com.onetools.app.battery.BatterySessionStore
 import com.onetools.app.battery.BatterySnapshot
+import com.onetools.app.battery.BatteryStatsDumpParser
+import com.onetools.app.battery.BatteryStatsShizuku
 import com.onetools.app.battery.healthSummary
 import com.onetools.app.meter.UsageAccess
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -72,7 +80,6 @@ fun BatteryScreen(onBack: () -> Unit) {
     )
     val sessions by sessionStore.sessions.collectAsState(initial = emptyList())
     val drainRows by drainStore.observeToday().collectAsState(initial = emptyList())
-    var hasUsage by remember { mutableStateOf(UsageAccess.hasPermission(context)) }
     val scope = rememberCoroutineScope()
 
     var snap by remember { mutableStateOf<BatterySnapshot?>(null) }
@@ -80,12 +87,18 @@ fun BatteryScreen(onBack: () -> Unit) {
     var tab by remember { mutableIntStateOf(0) }
     var designText by remember { mutableStateOf("") }
     var alarmText by remember { mutableStateOf("") }
+    var hasUsage by remember { mutableStateOf(UsageAccess.hasPermission(context)) }
+    var selectedSessionId by remember { mutableStateOf<String?>(null) }
+    var curveSamples by remember { mutableStateOf<List<BatterySampleEntity>>(emptyList()) }
+    var wakeLocks by remember { mutableStateOf<List<BatteryStatsDumpParser.WakeLockRow>>(emptyList()) }
+    var statsHint by remember { mutableStateOf<String?>(null) }
+    var statsError by remember { mutableStateOf<String?>(null) }
+    var statsBusy by remember { mutableStateOf(false) }
 
     LaunchedEffect(prefs.trackingEnabled, prefs.designCapacityMah) {
         while (true) {
             snap = BatteryReader.read(context)
             health = sessionStore.healthSummary(prefs.designCapacityMah)
-            val s = snap
             if (prefs.trackingEnabled) {
                 BatteryChargeService.start(context.applicationContext)
             }
@@ -97,6 +110,14 @@ fun BatteryScreen(onBack: () -> Unit) {
         designText = prefs.designCapacityMah.toString()
         alarmText = prefs.chargeAlarmPercent.toString()
     }
+
+    LaunchedEffect(selectedSessionId) {
+        val id = selectedSessionId
+        curveSamples = if (id == null) emptyList() else sessionStore.samplesFor(id)
+    }
+
+    val discharge = sessions.filter { it.kind == "DISCHARGE" }
+    val charge = sessions.filter { it.kind == "CHARGE" }
 
     Scaffold(
         topBar = {
@@ -124,12 +145,16 @@ fun BatteryScreen(onBack: () -> Unit) {
                 )
             }
             item {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(
+                    modifier = Modifier.horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
                     listOf(
                         stringResource(R.string.battery_tab_live),
                         stringResource(R.string.battery_tab_drain),
                         stringResource(R.string.battery_tab_health),
                         stringResource(R.string.battery_tab_history),
+                        stringResource(R.string.battery_tab_stats),
                         stringResource(R.string.battery_tab_settings),
                     ).forEachIndexed { index, label ->
                         FilterChip(
@@ -160,32 +185,7 @@ fun BatteryScreen(onBack: () -> Unit) {
                         }
                         item { MetricZh(stringResource(R.string.battery_status), s.statusLabel) }
                         item { MetricZh(stringResource(R.string.battery_power), s.pluggedLabel) }
-                        item { MetricZh(stringResource(R.string.battery_tech), s.technology) }
-                        item {
-                            MetricZh(
-                                stringResource(R.string.battery_cycles),
-                                if (s.cycleCount >= 0) s.cycleCount.toString() else "N/A",
-                            )
-                        }
-                        item {
-                            MetricZh(
-                                stringResource(R.string.battery_counter),
-                                if (s.chargeCounterMah >= 0) "${s.chargeCounterMah} mAh" else "N/A",
-                            )
-                        }
-                        item {
-                            MetricZh(
-                                stringResource(R.string.battery_current),
-                                "${s.currentNowMa} mA",
-                            )
-                        }
-                        item {
-                            val remain = s.chargingTimeRemainingMs
-                            MetricZh(
-                                stringResource(R.string.battery_charge_eta),
-                                if (remain > 0) "${remain / 60_000} min" else "N/A",
-                            )
-                        }
+                        item { MetricZh(stringResource(R.string.battery_current), "${s.currentNowMa} mA") }
                     }
                 }
                 1 -> {
@@ -239,16 +239,7 @@ fun BatteryScreen(onBack: () -> Unit) {
                                     row.mahScreenOn,
                                     row.mahScreenOff,
                                 ),
-                                style = MaterialTheme.typography.bodyMedium,
                             )
-                        }
-                    }
-                    item {
-                        Button(
-                            onClick = { hasUsage = UsageAccess.hasPermission(context) },
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Text(stringResource(R.string.battery_drain_refresh))
                         }
                     }
                 }
@@ -287,19 +278,21 @@ fun BatteryScreen(onBack: () -> Unit) {
                             (h?.sampleCount ?: 0).toString(),
                         )
                     }
-                    item {
-                        Text(
-                            stringResource(
-                                R.string.battery_health_hint,
-                                BatteryCapacityEstimator.MIN_PERCENT_DELTA,
-                            ),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
                 }
                 3 -> {
-                    if (sessions.isEmpty()) {
+                    item {
+                        Text(
+                            stringResource(R.string.battery_history_discharge),
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                    item { Text(stringResource(R.string.battery_history_pick)) }
+                    if (curveSamples.size >= 2) {
+                        item {
+                            BatterySparkline(percents = curveSamples.map { it.percent })
+                        }
+                    }
+                    if (discharge.isEmpty()) {
                         item {
                             Text(
                                 stringResource(R.string.battery_history_empty),
@@ -307,8 +300,88 @@ fun BatteryScreen(onBack: () -> Unit) {
                             )
                         }
                     } else {
-                        items(sessions.take(40), key = { it.id }) { row ->
-                            SessionCard(row)
+                        items(discharge.take(20), key = { it.id }) { row ->
+                            SessionCard(
+                                row = row,
+                                selected = row.id == selectedSessionId,
+                                onClick = { selectedSessionId = row.id },
+                            )
+                        }
+                    }
+                    item {
+                        Text(
+                            stringResource(R.string.battery_history_charge),
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                    items(charge.take(20), key = { "c-${it.id}" }) { row ->
+                        SessionCard(row = row, selected = false, onClick = null)
+                    }
+                }
+                4 -> {
+                    item {
+                        Text(
+                            stringResource(R.string.battery_stats_title),
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                    if (!BatteryStatsShizuku.isReady()) {
+                        item {
+                            Text(
+                                stringResource(R.string.battery_stats_need_shizuku),
+                                color = MaterialTheme.colorScheme.error,
+                            )
+                        }
+                    }
+                    item {
+                        Button(
+                            onClick = {
+                                scope.launch {
+                                    statsBusy = true
+                                    statsError = null
+                                    val dump = withContext(Dispatchers.IO) {
+                                        BatteryStatsShizuku.dumpBatteryStats()
+                                    }
+                                    statsBusy = false
+                                    if (!dump.ok) {
+                                        statsError = dump.error
+                                        wakeLocks = emptyList()
+                                        statsHint = null
+                                    } else {
+                                        wakeLocks = BatteryStatsDumpParser.parseWakeLocks(dump.text)
+                                        statsHint = BatteryStatsDumpParser.parseDeepSleepHint(dump.text)
+                                    }
+                                }
+                            },
+                            enabled = !statsBusy,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(stringResource(R.string.battery_stats_fetch))
+                        }
+                    }
+                    statsError?.let { err ->
+                        item {
+                            Text(
+                                stringResource(R.string.battery_stats_error, err),
+                                color = MaterialTheme.colorScheme.error,
+                            )
+                        }
+                    }
+                    statsHint?.let { hint ->
+                        item {
+                            Text(stringResource(R.string.battery_stats_deep_hint, hint))
+                        }
+                    }
+                    if (wakeLocks.isEmpty() && statsError == null) {
+                        item {
+                            Text(
+                                stringResource(R.string.battery_stats_empty),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    } else {
+                        items(wakeLocks, key = { it.name + it.detail.hashCode() }) { row ->
+                            Text(row.detail, style = MaterialTheme.typography.bodySmall)
                         }
                     }
                 }
@@ -360,15 +433,6 @@ fun BatteryScreen(onBack: () -> Unit) {
                             onValueChange = { alarmText = it.filter { c -> c.isDigit() }.take(3) },
                             modifier = Modifier.fillMaxWidth(),
                             label = { Text(stringResource(R.string.battery_alarm_percent)) },
-                            supportingText = {
-                                Text(
-                                    stringResource(
-                                        R.string.battery_alarm_range,
-                                        BatteryPrefs.MIN_ALARM,
-                                        BatteryPrefs.MAX_ALARM,
-                                    ),
-                                )
-                            },
                         )
                     }
                     item {
@@ -383,12 +447,8 @@ fun BatteryScreen(onBack: () -> Unit) {
                         Button(
                             onClick = {
                                 scope.launch {
-                                    alarmText.toIntOrNull()?.let {
-                                        prefsStore.setChargeAlarmPercent(it)
-                                    }
-                                    designText.toIntOrNull()?.let {
-                                        prefsStore.setDesignCapacityMah(it)
-                                    }
+                                    alarmText.toIntOrNull()?.let { prefsStore.setChargeAlarmPercent(it) }
+                                    designText.toIntOrNull()?.let { prefsStore.setDesignCapacityMah(it) }
                                 }
                             },
                             modifier = Modifier.fillMaxWidth(),
@@ -415,30 +475,48 @@ private fun MetricZh(label: String, value: String) {
 }
 
 @Composable
-private fun SessionCard(row: BatterySessionEntity) {
-    val fmt = remember {
-        SimpleDateFormat("MM-dd HH:mm", Locale.getDefault())
-    }
+private fun SessionCard(
+    row: BatterySessionEntity,
+    selected: Boolean,
+    onClick: (() -> Unit)?,
+) {
+    val fmt = remember { SimpleDateFormat("MM-dd HH:mm", Locale.getDefault()) }
     val title = stringResource(
         R.string.battery_session_title,
         row.startPercent,
         row.endPercent,
         fmt.format(Date(row.endedAt)),
     )
-    val detail = if (row.estimatedFullMah > 0) {
-        stringResource(R.string.battery_session_est, row.estimatedFullMah)
-    } else {
-        stringResource(
-            R.string.battery_session_weak,
-            BatteryCapacityEstimator.MIN_PERCENT_DELTA,
-        )
+    val detail = when {
+        row.kind == "DISCHARGE" && row.deepSleepPercent >= 0 ->
+            stringResource(
+                R.string.battery_history_deep_sleep,
+                row.deepSleepPercent,
+                (row.screenOffMs / 60_000L).toInt(),
+            )
+        row.estimatedFullMah > 0 ->
+            stringResource(R.string.battery_session_est, row.estimatedFullMah)
+        else ->
+            stringResource(
+                R.string.battery_session_weak,
+                BatteryCapacityEstimator.MIN_PERCENT_DELTA,
+            )
     }
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
             .padding(vertical = 4.dp),
     ) {
-        Text(title, style = MaterialTheme.typography.titleSmall)
+        Text(
+            title + if (selected) " *" else "",
+            style = MaterialTheme.typography.titleSmall,
+            color = if (selected) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.onSurface
+            },
+        )
         Text(
             detail,
             style = MaterialTheme.typography.bodySmall,
