@@ -75,8 +75,8 @@ class SpamSyncRepository(private val context: Context) {
         if (normalized.isEmpty()) return null
         val db = openDbOrNull() ?: return null
         return try {
+            // Longest prefix / exact (DAO uses LIKE phone_number || '%')
             db.spamNumberDao().search(normalized)
-                ?: db.spamNumberDao().search(phoneDigits)
         } catch (e: Exception) {
             Log.w(TAG, "local spam lookup failed", e)
             null

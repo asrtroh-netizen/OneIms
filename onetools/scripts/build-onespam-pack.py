@@ -29,14 +29,17 @@ def main() -> int:
         mode = str(item.get("mode", "")).lower()
         if mode == "tag" or item.get("tagRule"):
             continue
-        if item.get("prefix") or mode == "prefix":
-            continue
         kind = str(item.get("kind", "block")).lower()
         if kind not in ("block",):
             continue
+        is_prefix = bool(item.get("prefix")) or mode == "prefix"
         n = digits(str(item.get("n") or item.get("number") or ""))
         n = n[2:] if n.startswith("86") and len(n) > 11 else n
-        if len(n) < 7:
+        # Exact need >=7; prefixes can be shorter (400/170/…).
+        if is_prefix:
+            if len(n) < 2:
+                continue
+        elif len(n) < 7:
             continue
         tag = str(item.get("tag") or "骚扰电话")
         rows.append((n, tag, "oneblock"))

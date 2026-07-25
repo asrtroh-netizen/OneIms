@@ -22,8 +22,12 @@ object OneBlockImporter {
                 .ifBlank { org.json.JSONObject(json).opt("version")?.toString().orEmpty() }
         }.getOrDefault("").ifBlank { "oneblock-${System.currentTimeMillis() / 1000}" }
 
-        val exact = rules
-            .filter { it.mode == CallMatchMode.EXACT && it.kind == CallRuleKind.BLOCK }
+        // onespam: EXACT blocks + PREFIX blocks (longest-prefix match in DAO).
+        val spamRows = rules
+            .filter {
+                it.kind == CallRuleKind.BLOCK &&
+                    (it.mode == CallMatchMode.EXACT || it.mode == CallMatchMode.PREFIX)
+            }
             .map {
                 Triple(
                     NumberMatcher.digits(it.pattern).removePrefix("86"),
@@ -31,13 +35,12 @@ object OneBlockImporter {
                     "oneblock",
                 )
             }
-            .filter { it.first.length >= 7 }
+            .filter { it.first.length >= 2 }
             .distinctBy { it.first }
 
-        val spamCount = if (exact.isNotEmpty()) {
-            SpamPackInstaller.installRows(context, exact, version)
+        val spamCount = if (spamRows.isNotEmpty()) {
+            SpamPackInstaller.installRows(context, spamRows, version)
         } else {
-            // Keep existing onespam if JSON only has prefixes; do not wipe.
             0
         }
         return OneBlockImportResult(

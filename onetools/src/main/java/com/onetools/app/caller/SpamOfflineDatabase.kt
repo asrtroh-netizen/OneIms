@@ -34,7 +34,15 @@ data class SpamMetadataEntity(
 
 @Dao
 interface SpamNumberDao {
-    @Query("SELECT * FROM spam_numbers WHERE phone_number = :phoneNumber LIMIT 1")
+    /** Longest prefix / exact match (phone LIKE stored || '%'). */
+    @Query(
+        """
+        SELECT * FROM spam_numbers
+        WHERE :phoneNumber LIKE phone_number || '%'
+        ORDER BY length(phone_number) DESC
+        LIMIT 1
+        """,
+    )
     fun search(phoneNumber: String): SpamNumberEntity?
 
     @Query("SELECT COUNT(*) FROM spam_numbers")

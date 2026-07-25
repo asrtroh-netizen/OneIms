@@ -1,6 +1,6 @@
 {
   "schema": "onetools.blocklist.v1",
-  "version": 2,
+  "version": 3,
   "updatedAt": "2026-07-25",
   "numbers": [
     {
@@ -42,6 +42,130 @@
       "tag": "中国电信"
     },
     {
+      "n": "95566",
+      "kind": "label",
+      "tag": "中国银行客服"
+    },
+    {
+      "n": "95533",
+      "kind": "label",
+      "tag": "建设银行客服"
+    },
+    {
+      "n": "95599",
+      "kind": "label",
+      "tag": "农业银行客服"
+    },
+    {
+      "n": "95559",
+      "kind": "label",
+      "tag": "交通银行客服"
+    },
+    {
+      "n": "95528",
+      "kind": "label",
+      "tag": "浦发银行客服"
+    },
+    {
+      "n": "可能骚扰",
+      "mode": "tag",
+      "kind": "block"
+    },
+    {
+      "n": "虚拟运营商",
+      "mode": "tag",
+      "kind": "block"
+    },
+    {
+      "n": "诈骗电话",
+      "mode": "tag",
+      "kind": "block"
+    },
+    {
+      "n": "170",
+      "prefix": true,
+      "tag": "虚拟运营商",
+      "kind": "block"
+    },
+    {
+      "n": "171",
+      "prefix": true,
+      "tag": "虚拟运营商",
+      "kind": "block"
+    },
+    {
+      "n": "162",
+      "prefix": true,
+      "tag": "虚拟运营商",
+      "kind": "block"
+    },
+    {
+      "n": "165",
+      "prefix": true,
+      "tag": "虚拟运营商",
+      "kind": "block"
+    },
+    {
+      "n": "167",
+      "prefix": true,
+      "tag": "虚拟运营商",
+      "kind": "block"
+    },
+    {
+      "n": "168",
+      "prefix": true,
+      "tag": "虚拟运营商",
+      "kind": "block"
+    },
+    {
+      "n": "146",
+      "prefix": true,
+      "tag": "物联网号段",
+      "kind": "block"
+    },
+    {
+      "n": "148",
+      "prefix": true,
+      "tag": "物联网号段",
+      "kind": "block"
+    },
+    {
+      "n": "1440",
+      "prefix": true,
+      "tag": "物联网号段",
+      "kind": "block"
+    },
+    {
+      "n": "1410",
+      "prefix": true,
+      "tag": "物联网号段",
+      "kind": "block"
+    },
+    {
+      "n": "1010",
+      "prefix": true,
+      "tag": "可能骚扰",
+      "kind": "block"
+    },
+    {
+      "n": "12520",
+      "prefix": true,
+      "tag": "可能骚扰",
+      "kind": "block"
+    },
+    {
+      "n": "12590",
+      "prefix": true,
+      "tag": "可能骚扰",
+      "kind": "block"
+    },
+    {
+      "n": "118114",
+      "prefix": true,
+      "tag": "可能骚扰",
+      "kind": "block"
+    },
+    {
       "n": "17000000000",
       "kind": "block",
       "tag": "骚扰电话"
@@ -52,9 +176,24 @@
       "tag": "广告推销"
     },
     {
-      "n": "16200000000",
+      "n": "17000000002",
       "kind": "block",
-      "tag": "诈骗电话"
+      "tag": "骚扰电话"
+    },
+    {
+      "n": "17000000003",
+      "kind": "block",
+      "tag": "房产中介"
+    },
+    {
+      "n": "17000000004",
+      "kind": "block",
+      "tag": "贷款推销"
+    },
+    {
+      "n": "17000000005",
+      "kind": "block",
+      "tag": "保险推销"
     },
     {
       "n": "17100000000",
@@ -62,12 +201,63 @@
       "tag": "骚扰电话"
     },
     {
-      "n": "可能骚扰",
-      "mode": "tag",
-      "kind": "block"
+      "n": "17100000001",
+      "kind": "block",
+      "tag": "广告推销"
+    },
+    {
+      "n": "17100000002",
+      "kind": "block",
+      "tag": "诈骗电话"
+    },
+    {
+      "n": "16200000000",
+      "kind": "block",
+      "tag": "诈骗电话"
+    },
+    {
+      "n": "16200000001",
+      "kind": "block",
+      "tag": "骚扰电话"
+    },
+    {
+      "n": "16500000000",
+      "kind": "block",
+      "tag": "骚扰电话"
+    },
+    {
+      "n": "16500000001",
+      "kind": "block",
+      "tag": "广告推销"
+    },
+    {
+      "n": "16700000000",
+      "kind": "block",
+      "tag": "骚扰电话"
+    },
+    {
+      "n": "16700000001",
+      "kind": "block",
+      "tag": "诈骗电话"
+    },
+    {
+      "n": "16800000000",
+      "kind": "block",
+      "tag": "骚扰电话"
+    },
+    {
+      "n": "14600000000",
+      "kind": "block",
+      "tag": "骚扰电话"
+    },
+    {
+      "n": "14800000000",
+      "kind": "block",
+      "tag": "骚扰电话"
     }
   ],
+  "note": "PREFIX+EXACT dual-write into CallRuleStore and onespam. Virtual prefixes may false-positive delivery/taxi — whitelist as needed.",
   "keyId": "one-cdn-2026r2",
   "sigAlg": "SHA256withECDSA",
-  "signature": "MEUCIDTIqGDPHbpA5RBBnbgcEtquakYpggIwouOeKXoR9un3AiEAsD0641BLTrcZNeAGvwTtCRPChGp7/pGFgtgSBE4XsxE="
+  "signature": "MEQCIHGa7BNhpe5838x0LJjvm+04/o94DHar3lTrGwGDSMsxAiBzvOrD4TGdVo/rkiNeOkC5vH5upNehnDnZ1q9zvs6+4A=="
 }

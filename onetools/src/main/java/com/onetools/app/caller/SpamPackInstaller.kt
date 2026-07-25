@@ -17,7 +17,7 @@ import java.util.zip.ZipOutputStream
 object SpamPackInstaller {
     private const val TAG = "SpamPackInstaller"
 
-    /** Prefer [OneBlockImporter.importJson] for full dual-write; this only fills onespam exact rows. */
+    /** Prefer [OneBlockImporter.importJson] for full dual-write. */
     suspend fun installFromBlocklistJson(
         context: Context,
         json: String,
@@ -25,7 +25,10 @@ object SpamPackInstaller {
     ): Int = withContext(Dispatchers.IO) {
         val rules = BlocklistFormat.parse(json)
         val rows = rules
-            .filter { it.mode == CallMatchMode.EXACT && it.kind == CallRuleKind.BLOCK }
+            .filter {
+                it.kind == CallRuleKind.BLOCK &&
+                    (it.mode == CallMatchMode.EXACT || it.mode == CallMatchMode.PREFIX)
+            }
             .map {
                 Triple(
                     NumberMatcher.digits(it.pattern).removePrefix("86"),
@@ -33,7 +36,7 @@ object SpamPackInstaller {
                     "oneblock",
                 )
             }
-            .filter { it.first.length >= 7 }
+            .filter { it.first.length >= 2 }
             .distinctBy { it.first }
         if (rows.isEmpty()) return@withContext 0
         installRows(context, rows, version)
