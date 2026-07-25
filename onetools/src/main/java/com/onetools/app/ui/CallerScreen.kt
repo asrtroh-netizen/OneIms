@@ -85,7 +85,7 @@ import java.util.UUID
 fun CallerScreen(
     onBack: () -> Unit,
     showBack: Boolean = true,
-    onOpenRecorder: () -> Unit,
+    onOpenRecorder: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -1011,10 +1011,13 @@ fun CallerScreen(
             }
 
             item {
-                OutlinedButton(onClick = onOpenRecorder, modifier = Modifier.fillMaxWidth()) {
-                    Text(stringResource(R.string.caller_open_recorder))
-                }
+                Text(
+                    stringResource(R.string.recorder_section_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
             }
+            recorderPanelItems()
         }
     }
 }

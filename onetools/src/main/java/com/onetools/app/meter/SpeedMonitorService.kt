@@ -176,7 +176,9 @@ class SpeedMonitorService : Service() {
         val open = PendingIntent.getActivity(
             this,
             0,
-            Intent(this, MainActivity::class.java),
+            Intent(this, MainActivity::class.java)
+                .putExtra(MainActivity.EXTRA_OPEN_METER, true)
+                .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
         val stop = PendingIntent.getService(
@@ -244,7 +246,8 @@ class SpeedMonitorService : Service() {
         }
 
         fun stop(context: Context) {
-            context.startService(
+            ContextCompat.startForegroundService(
+                context,
                 Intent(context, SpeedMonitorService::class.java).setAction(ACTION_STOP),
             )
         }

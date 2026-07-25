@@ -37,13 +37,12 @@ import com.onetools.app.ui.HomeScreen
 import com.onetools.app.ui.MeterScreen
 import com.onetools.app.ui.MoreToolsScreen
 import com.onetools.app.ui.OneToolsScaffold
-import com.onetools.app.ui.RecorderScreen
 import com.onetools.app.ui.ToolsDestination
 import com.onetools.app.ui.UpdatesScreen
 import com.onetools.app.ui.theme.OneToolsTheme
 import kotlinx.coroutines.delay
 
-private enum class NestedRoute { None, Recorder, Updates }
+private enum class NestedRoute { None, Updates }
 
 class MainActivity : ComponentActivity() {
     private var serviceReady by mutableStateOf(false)
@@ -125,9 +124,6 @@ class MainActivity : ComponentActivity() {
 
                 Surface(modifier = Modifier.fillMaxSize()) {
                     when (nested) {
-                        NestedRoute.Recorder -> RecorderScreen(
-                            onBack = { nested = NestedRoute.None },
-                        )
                         NestedRoute.Updates -> UpdatesScreen(
                             onBack = { nested = NestedRoute.None },
                         )
@@ -148,10 +144,6 @@ class MainActivity : ComponentActivity() {
                                     ToolsDestination.CALLER -> CallerScreen(
                                         onBack = {},
                                         showBack = false,
-                                        onOpenRecorder = {
-                                            destination = ToolsDestination.MORE
-                                            nested = NestedRoute.Recorder
-                                        },
                                     )
                                     ToolsDestination.METER -> MeterScreen(
                                         onBack = {},
@@ -162,7 +154,6 @@ class MainActivity : ComponentActivity() {
                                         showBack = false,
                                     )
                                     ToolsDestination.MORE -> MoreToolsScreen(
-                                        onOpenRecorder = { nested = NestedRoute.Recorder },
                                         onOpenUpdates = { nested = NestedRoute.Updates },
                                         onExportDiag = { exportDiagnostic() },
                                     )
@@ -251,5 +242,14 @@ class MainActivity : ComponentActivity() {
             nested = NestedRoute.Updates
             intent.removeExtra(UpdateCheckNotifier.EXTRA_OPEN_UPDATES)
         }
+        if (intent?.getBooleanExtra(EXTRA_OPEN_METER, false) == true) {
+            destination = ToolsDestination.METER
+            nested = NestedRoute.None
+            intent.removeExtra(EXTRA_OPEN_METER)
+        }
+    }
+
+    companion object {
+        const val EXTRA_OPEN_METER = "com.onetools.app.extra.OPEN_METER"
     }
 }

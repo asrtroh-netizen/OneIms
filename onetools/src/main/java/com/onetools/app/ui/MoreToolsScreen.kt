@@ -14,7 +14,6 @@ import com.onetools.app.R
 
 @Composable
 fun MoreToolsScreen(
-    onOpenRecorder: () -> Unit,
     onOpenUpdates: () -> Unit,
     onExportDiag: () -> Unit,
 ) {
@@ -35,11 +34,6 @@ fun MoreToolsScreen(
                         color = MaterialTheme.colorScheme.onSurface,
                     )
                 }
-                OneToolsInfoCard(
-                    title = stringResource(R.string.recorder_card_title),
-                    subtitle = stringResource(R.string.recorder_card_sub),
-                    onClick = onOpenRecorder,
-                )
                 OneToolsInfoCard(
                     title = stringResource(R.string.updates_card_title),
                     subtitle = stringResource(R.string.updates_card_sub),

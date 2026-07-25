@@ -9,7 +9,7 @@ data class ReportApplyResult(
 )
 
 /**
- * Phase-1: report → local CallRule BLOCK + onespam upsert (no cloud).
+ * Phase-1: report → local CallRule LABEL + onespam upsert (no cloud, never rejects calls).
  */
 object ReportApplier {
     private const val RULE_ID_PREFIX = "report-"
@@ -40,7 +40,7 @@ object ReportApplier {
             CallRule(
                 id = ruleId,
                 pattern = report.phone,
-                kind = CallRuleKind.BLOCK,
+                kind = CallRuleKind.LABEL,
                 mode = CallMatchMode.EXACT,
                 tag = label,
             ),
@@ -58,14 +58,12 @@ object ReportApplier {
         LocalReportStore(context).remove(reportId)
         val ruleId = RULE_ID_PREFIX + NumberMatcher.digits(phone).removePrefix("86")
         CallRuleStore(context).remove(ruleId)
-        // Also remove rules that might have been created with UUID in older builds — best effort by pattern.
         val store = CallRuleStore(context)
+        val digits = NumberMatcher.digits(phone).removePrefix("86")
         store.snapshot()
             .filter {
-                it.kind == CallRuleKind.BLOCK &&
-                    it.mode == CallMatchMode.EXACT &&
-                    NumberMatcher.digits(it.pattern).removePrefix("86") ==
-                    NumberMatcher.digits(phone).removePrefix("86") &&
+                it.mode == CallMatchMode.EXACT &&
+                    NumberMatcher.digits(it.pattern).removePrefix("86") == digits &&
                     it.id.startsWith(RULE_ID_PREFIX)
             }
             .forEach { store.remove(it.id) }

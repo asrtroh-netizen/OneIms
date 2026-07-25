@@ -56,12 +56,13 @@ object CallerCheckEngine {
                 localCostMs = System.currentTimeMillis() - start,
             )
         }
+        // Legacy BLOCK rules → dialer label only (product: never reject calls).
         user.matchedRules.firstOrNull { it.kind == CallRuleKind.BLOCK }?.let { hit ->
             return CheckResult(
-                shouldBlock = true,
+                shouldBlock = false,
                 label = hit.tag.ifBlank { hit.pattern },
                 resultType = ResultType.BLACK_LIST,
-                forceBlock = true,
+                forceBlock = false,
                 spamTag = hit.tag,
                 localCostMs = System.currentTimeMillis() - start,
             )
@@ -93,10 +94,10 @@ object CallerCheckEngine {
                     (it.pattern == tag || it.tag == tag)
             }
             return CheckResult(
-                shouldBlock = true,
+                shouldBlock = false,
                 label = tag,
                 resultType = if (tagBlock) ResultType.BLACK_LIST else ResultType.SPAM_DB,
-                forceBlock = tagBlock,
+                forceBlock = false,
                 spamTag = tag,
                 localCostMs = localCost,
                 querySource = spam.source.ifBlank { "local-spam" },
@@ -127,7 +128,7 @@ object CallerCheckEngine {
                 )
             } else if (net.isSpam) {
                 CheckResult(
-                    shouldBlock = true,
+                    shouldBlock = false,
                     label = net.tag.ifBlank { "骚扰电话" },
                     resultType = ResultType.NETWORK_SPAM,
                     spamTag = net.tag,
@@ -174,7 +175,7 @@ object CallerCheckEngine {
         if (userLabelRule != null) return userLabelRule.kind
         return when (result.resultType) {
             ResultType.WHITE_LIST -> CallRuleKind.ALLOW
-            ResultType.BLACK_LIST, ResultType.SPAM_DB, ResultType.NETWORK_SPAM -> CallRuleKind.BLOCK
+            ResultType.BLACK_LIST, ResultType.SPAM_DB, ResultType.NETWORK_SPAM -> CallRuleKind.LABEL
             else -> null
         }
     }

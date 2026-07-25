@@ -109,15 +109,6 @@
             </intent-filter>
         </service>
 
-        <service
-            android:name=".caller.OneCallScreeningService"
-            android:exported="true"
-            android:permission="android.permission.BIND_SCREENING_SERVICE">
-            <intent-filter>
-                <action android:name="android.telecom.CallScreeningService" />
-            </intent-filter>
-        </service>
-
         <provider
             android:name=".caller.OneCallerDirectoryProvider"
             android:authorities="@string/caller_directory_authority"

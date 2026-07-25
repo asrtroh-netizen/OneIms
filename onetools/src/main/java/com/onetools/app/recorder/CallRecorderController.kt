@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicReference
 
 /**
  * Orchestrates consent → on-demand overlay prompt → Shizuku UserService capture.
- * Never auto-records without an explicit tap on the floating button.
+ * Never auto-records without an explicit tap; overlay taps never block the main thread.
  */
 class CallRecorderController(private val context: Context) {
     private val client = ShellRecorderClient(context.applicationContext)
@@ -63,7 +63,7 @@ class CallRecorderController(private val context: Context) {
     fun stopMonitoring() {
         monitor.stop()
         promptOverlay?.hide()
-        runCatching { stopManual() }
+        runCatching { stopManualSync() }
         lastStatus = "已停止监听"
     }
 
@@ -81,18 +81,22 @@ class CallRecorderController(private val context: Context) {
         }
     }
 
-    fun stopManual(): Result<Unit> = runCatching {
-        client.stop().getOrThrow()
-        val f = currentFile.getAndSet(null)
-        lastStatus = if (f != null) "已保存 ${f.name}" else "已停止"
-        promptOverlay?.setRecording(false)
-    }
+    fun stopManual(): Result<Unit> = runCatching { stopManualSync() }
 
+    /** Overlay tap — never run binder/IO on the UI thread (ANR). */
     fun toggleFromOverlay() {
-        if (currentFile.get() != null) {
-            stopManual()
-        } else {
-            startManual().onFailure { lastStatus = "开录失败: ${it.message}" }
+        promptOverlay?.setBusy(true)
+        executor.execute {
+            try {
+                if (currentFile.get() != null) {
+                    stopManualSync()
+                } else {
+                    startManual().onFailure { lastStatus = "开录失败: ${it.message}" }
+                }
+            } finally {
+                promptOverlay?.setBusy(false)
+                promptOverlay?.setRecording(currentFile.get() != null)
+            }
         }
     }
 
@@ -104,6 +108,13 @@ class CallRecorderController(private val context: Context) {
         promptOverlay = null
         client.unbind()
         executor.shutdownNow()
+    }
+
+    private fun stopManualSync() {
+        client.stop().getOrThrow()
+        val f = currentFile.getAndSet(null)
+        lastStatus = if (f != null) "已保存 ${f.name}" else "已停止"
+        promptOverlay?.setRecording(false)
     }
 
     private fun ensurePromptOverlay() {
@@ -123,11 +134,11 @@ class CallRecorderController(private val context: Context) {
                     return
                 }
                 promptOverlay?.show(isRecording = currentFile.get() != null)
-                lastStatus = "已接通 · 点击悬浮按钮开始录音"
+                lastStatus = "已接通 · 点击圆形按钮开始录音"
             }
             CallPhase.IDLE -> {
                 if (currentFile.get() != null) {
-                    stopManual()
+                    executor.execute { runCatching { stopManualSync() } }
                 }
                 promptOverlay?.hide()
                 lastStatus = "通话结束"
