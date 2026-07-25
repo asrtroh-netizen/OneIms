@@ -1,6 +1,6 @@
 {
   "schema": "onetools.blocklist.v1",
-  "version": 3,
+  "version": 4,
   "updatedAt": "2026-07-25",
   "numbers": [
     {
@@ -254,10 +254,19 @@
       "n": "14800000000",
       "kind": "block",
       "tag": "骚扰电话"
+    },
+    {
+      "n": "17009990001",
+      "kind": "block",
+      "tag": "骚扰电话",
+      "source": "community-report"
+    },
+    {
+      "n": "17009990002",
+      "kind": "block",
+      "tag": "诈骗电话",
+      "source": "community-report"
     }
   ],
-  "note": "PREFIX+EXACT dual-write into CallRuleStore and onespam. Virtual prefixes may false-positive delivery/taxi — whitelist as needed.",
-  "keyId": "one-cdn-2026r2",
-  "sigAlg": "SHA256withECDSA",
-  "signature": "MEQCIHGa7BNhpe5838x0LJjvm+04/o94DHar3lTrGwGDSMsxAiBzvOrD4TGdVo/rkiNeOkC5vH5upNehnDnZ1q9zvs6+4A=="
+  "note": "PREFIX+EXACT dual-write into CallRuleStore and onespam. Virtual prefixes may false-positive delivery/taxi — whitelist as needed. Own OneBlock path only — do not bind Telo CDN."
 }

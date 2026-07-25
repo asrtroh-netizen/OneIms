@@ -37,7 +37,18 @@ Pixel 上 Directory + CallScreening 是正道；其它 ROM 显示好坏 **不纳
 
 以后若要联网，再显式关「仅离线」并自建网关；报价调研见 `2026-07-25-onetools-caller-lookup-api-pricing.md`。
 
+## 骚扰库更新路径（2026-07-25 确认 · 自有 OneBlock）
+
+| 走 | 不走 |
+|---|---|
+| `update-oneblock.py` → `onespam_*.zip` + `spam-sync.json` → OneBlock Release | 默认同源 Telo `mystery0` / mast 云更新 |
+| 社区回灌：导出 `onetools.report.v1` → `ingest-reports.py` → expand 保留 `community-report` | 把对方云库当唯一真源 |
+| App「检查云端更新」拉 **自有** manifest | 在正式包硬编码 Telo download URL |
+
+本地一键：`python onetools/scripts/update-oneblock.py`（可选 `--ingest`）。发布仍人工 `publish-blocklist.ps1` + `gh release upload`。
+
 ## 文档指针
 
 - 架构：`docs/architecture/2026-07-25-onetools-architecture-blueprint.md`
+- 回灌：`docs/product/2026-07-25-onetools-caller-report-feedback-pipeline.md`
 - 变更：本文件 + Caller/Meter 相关 changes
