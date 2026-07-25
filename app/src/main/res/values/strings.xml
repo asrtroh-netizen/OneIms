@@ -849,7 +849,7 @@
     <!-- Pixel IMS 公开行为兼容高级工具（独立实现） -->
     <string name="tab_experimental">独家</string>
     <string name="experimental_title">独家功能</string>
-    <string name="experimental_subtitle">身份覆盖、离线 APN、控制中心切卡与专家工具</string>
+    <string name="experimental_subtitle">身份覆盖、离线 APN 与专家工具（显示/切卡已迁至 OneTools 特色功能）</string>
     <string name="advanced_options_title">运营商显示与漫游选项</string>
     <string name="advanced_apply">应用高级选项</string>
     <string name="advanced_apply_summary">仅把下列开关写入当前选中的 SIM</string>

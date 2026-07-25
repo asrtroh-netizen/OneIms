@@ -14,12 +14,28 @@ import com.onetools.app.R
 
 @Composable
 fun SettingsToolsScreen(
+    onOpenSpecial: () -> Unit,
     onExportDiag: () -> Unit,
 ) {
     OneToolsPage(
         title = stringResource(R.string.tab_settings),
         subtitle = stringResource(R.string.settings_subtitle),
     ) {
+        item {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(
+                    text = stringResource(R.string.special_title),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(horizontal = 4.dp),
+                )
+                OneToolsInfoCard(
+                    title = stringResource(R.string.special_card_title),
+                    subtitle = stringResource(R.string.special_card_sub),
+                    onClick = onOpenSpecial,
+                )
+            }
+        }
         item {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(

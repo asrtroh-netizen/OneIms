@@ -36,6 +36,7 @@ import com.onetools.app.ui.CallLiteScreen
 import com.onetools.app.ui.HomeScreen
 import com.onetools.app.ui.MeterScreen
 import com.onetools.app.ui.OneToolsScaffold
+import com.onetools.app.special.ui.SpecialFeaturesScreen
 import com.onetools.app.ui.SettingsToolsScreen
 import com.onetools.app.ui.ToolsDestination
 import com.onetools.app.ui.UpdatesScreen
@@ -48,6 +49,7 @@ class MainActivity : ComponentActivity() {
     private var activating by mutableStateOf(false)
     private var detailToast by mutableStateOf<String?>(null)
     private var destination by mutableStateOf(ToolsDestination.HOME)
+    private var showSpecialFeatures by mutableStateOf(false)
 
     private val notificationPermission =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { /* no-op */ }
@@ -129,27 +131,35 @@ class MainActivity : ComponentActivity() {
                                 .fillMaxSize()
                                 .padding(innerPadding),
                         ) {
-                            when (destination) {
-                                ToolsDestination.HOME -> HomeScreen(
-                                    channelState = cardState,
-                                    onActivateOrCheck = { onPrimaryAction() },
+                            if (showSpecialFeatures) {
+                                SpecialFeaturesScreen(
+                                    onBack = { showSpecialFeatures = false },
+                                    channelReady = serviceReady,
                                 )
-                                ToolsDestination.CALLER -> CallLiteScreen(showBack = false)
-                                ToolsDestination.METER -> MeterScreen(
-                                    onBack = {},
-                                    showBack = false,
-                                )
-                                ToolsDestination.BATTERY -> BatteryScreen(
-                                    onBack = {},
-                                    showBack = false,
-                                )
-                                ToolsDestination.UPDATES -> UpdatesScreen(
-                                    onBack = {},
-                                    showBack = false,
-                                )
-                                ToolsDestination.SETTINGS -> SettingsToolsScreen(
-                                    onExportDiag = { exportDiagnostic() },
-                                )
+                            } else {
+                                when (destination) {
+                                    ToolsDestination.HOME -> HomeScreen(
+                                        channelState = cardState,
+                                        onActivateOrCheck = { onPrimaryAction() },
+                                    )
+                                    ToolsDestination.CALLER -> CallLiteScreen(showBack = false)
+                                    ToolsDestination.METER -> MeterScreen(
+                                        onBack = {},
+                                        showBack = false,
+                                    )
+                                    ToolsDestination.BATTERY -> BatteryScreen(
+                                        onBack = {},
+                                        showBack = false,
+                                    )
+                                    ToolsDestination.UPDATES -> UpdatesScreen(
+                                        onBack = {},
+                                        showBack = false,
+                                    )
+                                    ToolsDestination.SETTINGS -> SettingsToolsScreen(
+                                        onOpenSpecial = { showSpecialFeatures = true },
+                                        onExportDiag = { exportDiagnostic() },
+                                    )
+                                }
                             }
                         }
                     }

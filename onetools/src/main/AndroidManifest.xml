@@ -28,6 +28,13 @@
         <package android:name="com.oneims.onelink" />
     </queries>
 
+    <!-- 特色功能 CarrierConfig：shell 委托 Instrumentation（全限定类名） -->
+    <instrumentation
+        android:name="com.onetools.app.special.broker.SpecialBrokerInstrumentation"
+        android:functionalTest="false"
+        android:handleProfiling="false"
+        android:targetPackage="${applicationId}" />
+
     <application
         android:name=".OneToolsApp"
         android:allowBackup="false"
@@ -46,6 +53,17 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <service
+            android:name=".special.sim.DataSimTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_qs_data_sim"
+            android:label="@string/special_qs_title"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
 
         <service
             android:name=".meter.SpeedMonitorService"

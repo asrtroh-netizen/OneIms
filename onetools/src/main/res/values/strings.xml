@@ -585,4 +585,42 @@
     <string name="caller_report_revoke">撤销</string>
     <string name="caller_report_revoked">已撤销举报与本机拦截</string>
     <string name="caller_report_from_lookup">用试查号码</string>
+
+    <!-- 特色功能（自 OneIMS 独家页迁入） -->
+    <string name="special_title">特色功能</string>
+    <string name="special_subtitle">信号格 · 5G 显示 · 控制中心切卡</string>
+    <string name="special_card_title">特色功能</string>
+    <string name="special_card_sub">信号格样式、5G 显示增强、控制中心快捷切卡</string>
+    <string name="special_channel_ready">Shizuku 已就绪，可写入系统显示配置</string>
+    <string name="special_channel_need">请先在首页激活 Shizuku，再使用写入能力</string>
+    <string name="special_target_sim">目标：卡槽 %1$d · %2$s</string>
+    <string name="special_signal_title">信号格显示样式</string>
+    <string name="special_signal_auto">自动适配</string>
+    <string name="special_signal_four">固定 4 格</string>
+    <string name="special_signal_five">固定 5 格</string>
+    <string name="special_signal_apply">应用信号格显示样式</string>
+    <string name="special_five_g_title">5G 显示增强</string>
+    <string name="special_five_g_enable">启用 5G 显示增强</string>
+    <string name="special_five_g_mode_conservative">保守</string>
+    <string name="special_five_g_mode_cn">国行速率感</string>
+    <string name="special_five_g_mode_cool">更激进</string>
+    <string name="special_five_g_mode_custom">自定义图标串</string>
+    <string name="special_five_g_custom_label">系统 5G 图标配置</string>
+    <string name="special_five_g_apply">应用 5G 显示增强</string>
+    <string name="special_qs_feature_title">控制中心快捷切卡</string>
+    <string name="special_qs_feature_desc">把 OneTools 切卡磁贴加入控制中心；点卡槽也可在应用内切换默认数据卡。</string>
+    <string name="special_qs_open_editor">打开系统磁贴编辑</string>
+    <string name="special_qs_manual_guide">请在控制中心编辑页把「OneTools 切卡」拖入快捷开关</string>
+    <string name="special_qs_title">OneTools 切卡</string>
+    <string name="special_qs_permission">切卡需要授权支持</string>
+    <string name="special_qs_single_sim">当前仅一张卡，无需切换</string>
+    <string name="special_qs_switching">切换中…</string>
+    <string name="special_qs_current_unknown">当前数据卡未知</string>
+    <string name="special_qs_current_sim">卡%1$d · %2$s</string>
+    <string name="special_data_switch_no_sim">未检测到可用 SIM</string>
+    <string name="special_data_switch_invalid">目标卡无效</string>
+    <string name="special_data_switch_success">已切换默认数据卡到卡槽 %1$d</string>
+    <string name="special_data_switch_failed">切卡失败：%1$s</string>
+    <string name="special_data_switch_row">卡槽 %1$d · %2$s %3$s</string>
+    <string name="special_data_switch_current">（当前）</string>
 </resources>

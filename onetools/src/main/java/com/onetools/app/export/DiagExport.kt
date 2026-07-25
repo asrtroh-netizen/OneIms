@@ -32,7 +32,7 @@ object DiagExport {
             appendLine("- shizukuGranted: `${snapshot.shizukuGranted}`")
             appendLine("- channelState: `${channelLabel(snapshot.channelState)}`")
             appendLine()
-            appendLine("> OneTools does not write carrier / IMS config. Export is local share only.")
+            appendLine("> OneTools core tools stay non-IMS; Special Features may write display CarrierConfig via Shizuku.")
         }
     }
 
