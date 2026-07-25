@@ -773,8 +773,8 @@
     <string name="force_temporary_on">已开启强制临时写入</string>
     <string name="force_temporary_off">已关闭强制临时写入</string>
     <string name="sandbox_persist_title">沙盒持久旁路</string>
-    <string name="sandbox_persist_sub">对齐南宫 3.1：在平台探测仍允许时，经 SDK Sandbox Instrumentation 尝试真持久。默认关；失败自动回落；与「强制临时」互斥（临时优先）</string>
-    <string name="sandbox_persist_home_sub">平台仍允许时走 SDK 沙盒尝试真持久；默认关，失败自动回落；开了「强制临时」则不生效</string>
+    <string name="sandbox_persist_sub">对齐南宫 3.1：平台探测仍允许时经 SDK Sandbox 尝试真持久。默认开；失败回落；与「强制临时」互斥（临时优先）</string>
+    <string name="sandbox_persist_home_sub">默认开：平台仍允许时走 SDK 沙盒尽量真持久（对齐 VoLTE 免 Shizuku 过重启）；失败回落；「强制临时」优先</string>
     <string name="sandbox_persist_on">已开启沙盒持久旁路</string>
     <string name="sandbox_persist_off">已关闭沙盒持久旁路</string>
     <string name="diagnostic_check_platform_persistent">系统持久能力探测</string>

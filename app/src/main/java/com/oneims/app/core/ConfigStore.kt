@@ -682,7 +682,8 @@ object ConfigStore {
     }
 
     fun isSandboxPersistBypass(context: Context): Boolean =
-        prefs(context).getBoolean(KEY_SANDBOX_PERSIST_BYPASS, false)
+        // 默认开：与 VoLTE「尽量真持久、开机免再连 Shizuku」对齐；用户可在首页关掉。
+        prefs(context).getBoolean(KEY_SANDBOX_PERSIST_BYPASS, true)
 
     fun setSandboxPersistBypass(context: Context, enabled: Boolean) {
         prefs(context).edit().putBoolean(KEY_SANDBOX_PERSIST_BYPASS, enabled).apply()
