@@ -100,15 +100,16 @@ def thin_keep(bw: np.ndarray) -> np.ndarray:
 
 def build_lineart(bgr: np.ndarray) -> np.ndarray:
     h0, w0 = bgr.shape[:2]
-    work_long = 2200
+    # High-res working canvas, then exact resize to reference WxH (same output resolution)
+    work_long = min(max(h0, w0), 3600)
     scale = min(1.0, work_long / max(h0, w0))
     work = (
-        cv2.resize(bgr, (int(w0 * scale), int(h0 * scale)), interpolation=cv2.INTER_AREA)
+        cv2.resize(bgr, (int(round(w0 * scale)), int(round(h0 * scale))), interpolation=cv2.INTER_AREA)
         if scale < 1.0
         else bgr
     )
     gray = cv2.cvtColor(work, cv2.COLOR_BGR2GRAY)
-    print("work", work.shape, flush=True)
+    print("work", work.shape, "target", (h0, w0), flush=True)
 
     ridge, cos_t, sin_t = ridge_and_orient(gray)
     nms = nms_along_normal(ridge, cos_t, sin_t)
@@ -137,10 +138,12 @@ def build_lineart(bgr: np.ndarray) -> np.ndarray:
     line = np.full_like(ink, 255)
     line[ink > 0] = 0
 
-    if scale < 1.0:
-        line = cv2.resize(line, (w0, h0), interpolation=cv2.INTER_LINEAR)
+    if line.shape[1] != w0 or line.shape[0] != h0:
+        # Nearest keeps strokes binary-crisp when scaling to exact reference size
+        line = cv2.resize(line, (w0, h0), interpolation=cv2.INTER_NEAREST)
         line = np.where(line < 210, 0, 255).astype(np.uint8)
 
+    assert line.shape[0] == h0 and line.shape[1] == w0, (line.shape, h0, w0)
     return cv2.cvtColor(line, cv2.COLOR_GRAY2BGR)
 
 
