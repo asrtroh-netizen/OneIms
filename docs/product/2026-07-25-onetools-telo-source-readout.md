@@ -50,7 +50,7 @@ Directory 仅在 shouldBlock 时把 label 喂给拨号器
 |---|---|
 | Directory 只喂骚扰标签 | 已把 **geo + LABEL/拦截** 合成进 Directory——**主战场** |
 | 归属地靠联网 + **悬浮窗** | **悬浮窗路线 Out**；只扩本地/CDN `geo_v1` 喂 Directory |
-| 离线库是骚扰库增量更新 | 用 **自有号段库 / OneBlock CDN** 扩 `geo_v1`，禁止 GPL `phone.dat` |
+| 离线库是骚扰库增量更新 | **已落地干净室 `onespam.db` 全路数**（清单/SHA-256/本地命中/可选联网）；号段归属另走 MIT `geo.dat`；禁止 GPL `phone.dat` |
 | Apache-2.0 可学习契约 | **禁止整段移植**；只复用 Directory / CallScreening 公开契约 |
 
 ## 6. 若用户体感「Telo 拨号里有归属地」

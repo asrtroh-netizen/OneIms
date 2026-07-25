@@ -111,21 +111,27 @@ class OneCallerDirectoryProvider : ContentProvider() {
         val digits = NumberMatcher.digits(rawNumber)
         if (digits.isEmpty()) return null
         val geo = CnMobileGeo.lookup(ctx, digits)
+        val check = runBlocking { CallerCheckEngine.check(ctx, digits) }
         val rules = runBlocking { CallRuleStore(ctx).snapshot() }
-        val result = NumberMatcher.lookup(rules, digits)
-        val chosen = result.matchedRules.firstOrNull { it.kind == CallRuleKind.ALLOW }
-            ?: result.matchedRules.firstOrNull { it.kind == CallRuleKind.LABEL }
-            ?: result.matchedRules.firstOrNull { it.kind == CallRuleKind.BLOCK }
-        // Align with Telo Directory: paint a dialer row when we have something to show
-        // (rule tag and/or geo). Telo HEAD only paints on spam hit; we also paint LABEL/geo.
+        val user = NumberMatcher.lookup(rules, digits)
+        val labelRule = user.matchedRules.firstOrNull { it.kind == CallRuleKind.LABEL }
+        val kind = CallerCheckEngine.dialerKind(check, labelRule)
+            ?: labelRule?.kind
+        val tag = when {
+            labelRule != null -> labelRule.tag.ifBlank { labelRule.pattern }
+            check.label.isNotBlank() -> check.label
+            else -> check.spamTag
+        }
+        // We paint when spam/rules/geo exists. Telo HEAD only paints spam hits;
+        // OneCaller also paints LABEL + offline geo (product decision).
         val composed = DialerLabelComposer.compose(
             geo = geo,
-            ruleKind = chosen?.kind,
-            ruleTag = chosen?.tag,
+            ruleKind = kind,
+            ruleTag = tag,
             fallbackAllow = ctx.getString(R.string.caller_label_allow),
             fallbackLabel = ctx.getString(R.string.caller_label_mark),
             fallbackBlock = ctx.getString(R.string.caller_label_block),
-            spamFmt = { tag -> ctx.getString(R.string.caller_label_spam_fmt, tag) },
+            spamFmt = { t -> ctx.getString(R.string.caller_label_spam_fmt, t) },
         ) ?: return null
         return LabelHit(
             idHash = (digits.hashCode().toLong() and 0x7fff_ffffL) + 1L,

@@ -418,4 +418,21 @@
     <string name="caller_label_spam_fmt">骚扰 · %1$s</string>
 
     <string name="caller_need_call_log">需要通话记录权限，系统才会转发号码查询到 OneCaller 目录</string>
+
+    <string name="caller_spam_title">离线骚扰库（onespam）</string>
+    <string name="caller_spam_note">对齐 Telo mast 路数：空包启动 → 清单检查 → SHA-256 校验安装 → 本地精确命中 → 可选联网。归属地仍只认系统拨号 Directory（不来电悬浮）。</string>
+    <string name="caller_spam_empty">尚未安装离线骚扰库</string>
+    <string name="caller_spam_stats">版本 %1$s · %2$d 条</string>
+    <string name="caller_spam_check">检查云端更新</string>
+    <string name="caller_spam_download">下载并安装</string>
+    <string name="caller_spam_from_oneblock">从 OneBlock JSON 灌入离线库</string>
+    <string name="caller_spam_delete">删除离线库</string>
+    <string name="caller_spam_up_to_date">已是最新（%1$s）</string>
+    <string name="caller_spam_update_available">发现新版本 %1$s（%2$d 条）</string>
+    <string name="caller_spam_installed">已安装离线库 %1$d 条</string>
+    <string name="caller_spam_deleted">已删除离线骚扰库</string>
+    <string name="caller_spam_progress">下载中 %1$d%%</string>
+    <string name="caller_notify_only">仅提示不拒接（默认开，对齐 Telo）</string>
+    <string name="caller_no_network">仅离线查号（关闭联网）</string>
+    <string name="caller_lookup_engine_fmt">引擎：%1$s · 标签「%2$s」</string>
 </resources>

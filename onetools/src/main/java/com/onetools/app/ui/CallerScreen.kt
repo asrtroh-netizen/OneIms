@@ -28,6 +28,7 @@ import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -56,9 +57,15 @@ import com.onetools.app.caller.CallMatchMode
 import com.onetools.app.caller.CallRule
 import com.onetools.app.caller.CallRuleKind
 import com.onetools.app.caller.CallRuleStore
+import com.onetools.app.caller.CallerCheckEngine
+import com.onetools.app.caller.CallerPrefs
 import com.onetools.app.caller.CnMobileGeo
 import com.onetools.app.caller.DialerLabelComposer
 import com.onetools.app.caller.NumberMatcher
+import com.onetools.app.caller.SpamPackInstaller
+import com.onetools.app.caller.SpamSyncManifest
+import com.onetools.app.caller.SpamSyncRepository
+import com.onetools.app.updates.HttpDownloads
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -74,7 +81,13 @@ fun CallerScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val store = remember { CallRuleStore(context.applicationContext) }
+    val prefs = remember { CallerPrefs(context.applicationContext) }
+    val spamSync = remember { SpamSyncRepository(context.applicationContext) }
     val rules by store.rules.collectAsState(initial = emptyList())
+    val spamVersion by spamSync.versionFlow.collectAsState()
+    val spamRows by spamSync.rowCountFlow.collectAsState()
+    val notifyOnly by prefs.notifyOnlyFlow.collectAsState(initial = true)
+    val noNetwork by prefs.noNetworkQueryFlow.collectAsState(initial = false)
     val lifecycleOwner = LocalLifecycleOwner.current
 
     var number by remember { mutableStateOf("") }
@@ -87,12 +100,18 @@ fun CallerScreen(
     var lookupResult by remember { mutableStateOf("") }
     var importText by remember { mutableStateOf("") }
     var status by remember { mutableStateOf("") }
+    var pendingManifest by remember { mutableStateOf<SpamSyncManifest?>(null) }
+    var downloadProgress by remember { mutableIntStateOf(-1) }
     var roleHeld by remember { mutableStateOf(false) }
     var callLogGranted by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CALL_LOG) ==
                 PackageManager.PERMISSION_GRANTED,
         )
+    }
+
+    LaunchedEffect(Unit) {
+        spamSync.refreshLocalStats()
     }
 
     fun refreshRole() {
@@ -330,6 +349,164 @@ fun CallerScreen(
                             },
                         )
                     }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            stringResource(R.string.caller_notify_only),
+                            modifier = Modifier.weight(1f),
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                        Switch(
+                            checked = notifyOnly,
+                            onCheckedChange = { checked ->
+                                scope.launch { prefs.setNotifyOnly(checked) }
+                            },
+                        )
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            stringResource(R.string.caller_no_network),
+                            modifier = Modifier.weight(1f),
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                        Switch(
+                            checked = noNetwork,
+                            onCheckedChange = { checked ->
+                                scope.launch { prefs.setNoNetworkQuery(checked) }
+                            },
+                        )
+                    }
+                }
+            }
+
+            item {
+                CallerSection(title = stringResource(R.string.caller_spam_title)) {
+                    Text(
+                        stringResource(R.string.caller_spam_note),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        if (spamVersion.isBlank()) {
+                            stringResource(R.string.caller_spam_empty)
+                        } else {
+                            stringResource(R.string.caller_spam_stats, spamVersion, spamRows)
+                        },
+                        style = MaterialTheme.typography.titleSmall,
+                    )
+                    if (downloadProgress in 0..100) {
+                        Text(
+                            stringResource(R.string.caller_spam_progress, downloadProgress),
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                    OutlinedButton(
+                        onClick = {
+                            scope.launch {
+                                status = context.getString(R.string.caller_fetching)
+                                runCatching {
+                                    val url = prefs.spamSyncManifestUrl()
+                                    val manifest = withContext(Dispatchers.IO) {
+                                        spamSync.checkUpdate(url, spamVersion)
+                                    }
+                                    pendingManifest = manifest
+                                    status = if (!manifest.hasUpdate) {
+                                        context.getString(
+                                            R.string.caller_spam_up_to_date,
+                                            manifest.latestVersion.ifBlank { spamVersion.ifBlank { "—" } },
+                                        )
+                                    } else {
+                                        context.getString(
+                                            R.string.caller_spam_update_available,
+                                            manifest.latestVersion,
+                                            manifest.rowCount,
+                                        )
+                                    }
+                                }.onFailure {
+                                    status = context.getString(
+                                        R.string.caller_fetch_fail,
+                                        it.message ?: "error",
+                                    )
+                                }
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(stringResource(R.string.caller_spam_check))
+                    }
+                    Button(
+                        onClick = {
+                            val manifest = pendingManifest
+                            if (manifest == null || !manifest.hasUpdate) {
+                                Toast.makeText(
+                                    context,
+                                    R.string.caller_spam_check,
+                                    Toast.LENGTH_SHORT,
+                                ).show()
+                                return@Button
+                            }
+                            scope.launch {
+                                downloadProgress = 0
+                                val ok = withContext(Dispatchers.IO) {
+                                    spamSync.downloadAndInstall(manifest) { downloadProgress = it }
+                                }
+                                downloadProgress = -1
+                                status = if (ok) {
+                                    context.getString(
+                                        R.string.caller_spam_installed,
+                                        spamSync.rowCountFlow.value,
+                                    )
+                                } else {
+                                    context.getString(R.string.caller_fetch_fail, "checksum/install")
+                                }
+                            }
+                        },
+                        enabled = pendingManifest?.hasUpdate == true,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(stringResource(R.string.caller_spam_download))
+                    }
+                    OutlinedButton(
+                        onClick = {
+                            scope.launch {
+                                status = context.getString(R.string.caller_fetching)
+                                runCatching {
+                                    val json = withContext(Dispatchers.IO) {
+                                        HttpDownloads.get(BuildConfig.ONE_BLOCKLIST_URL)
+                                    }
+                                    val n = SpamPackInstaller.installFromBlocklistJson(context, json)
+                                    status = context.getString(R.string.caller_spam_installed, n)
+                                }.onFailure {
+                                    status = context.getString(
+                                        R.string.caller_fetch_fail,
+                                        it.message ?: "error",
+                                    )
+                                }
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(stringResource(R.string.caller_spam_from_oneblock))
+                    }
+                    TextButton(
+                        onClick = {
+                            scope.launch {
+                                spamSync.deleteDatabase()
+                                pendingManifest = null
+                                status = context.getString(R.string.caller_spam_deleted)
+                            }
+                        },
+                        enabled = spamVersion.isNotBlank(),
+                    ) {
+                        Text(stringResource(R.string.caller_spam_delete))
+                    }
                 }
             }
 
@@ -448,33 +625,49 @@ fun CallerScreen(
                     Button(
                         onClick = {
                             scope.launch {
-                                val r = store.lookup(lookupNumber)
+                                val check = CallerCheckEngine.check(context, lookupNumber)
                                 val geo = CnMobileGeo.lookup(context, lookupNumber)
-                                val chosen = r.matchedRules
-                                    .firstOrNull { it.kind == CallRuleKind.ALLOW }
-                                    ?: r.matchedRules.firstOrNull { it.kind == CallRuleKind.LABEL }
-                                    ?: r.matchedRules.firstOrNull { it.kind == CallRuleKind.BLOCK }
+                                val rulesSnap = store.snapshot()
+                                val user = NumberMatcher.lookup(rulesSnap, lookupNumber)
+                                val labelRule = user.matchedRules
+                                    .firstOrNull { it.kind == CallRuleKind.LABEL }
+                                val kind = CallerCheckEngine.dialerKind(check, labelRule)
+                                    ?: labelRule?.kind
+                                val tag = when {
+                                    labelRule != null ->
+                                        labelRule.tag.ifBlank { labelRule.pattern }
+                                    check.label.isNotBlank() -> check.label
+                                    else -> check.spamTag
+                                }
                                 val composed = DialerLabelComposer.compose(
                                     geo = geo,
-                                    ruleKind = chosen?.kind,
-                                    ruleTag = chosen?.tag,
+                                    ruleKind = kind,
+                                    ruleTag = tag,
                                     fallbackAllow = context.getString(R.string.caller_label_allow),
                                     fallbackLabel = context.getString(R.string.caller_label_mark),
                                     fallbackBlock = context.getString(R.string.caller_label_block),
-                                    spamFmt = { tag ->
-                                        context.getString(R.string.caller_label_spam_fmt, tag)
+                                    spamFmt = { t ->
+                                        context.getString(R.string.caller_label_spam_fmt, t)
                                     },
                                 )
-                                val decisionText = when (r.decision) {
-                                    NumberMatcher.Decision.BLOCK ->
+                                val decisionText = when {
+                                    check.shouldBlock ->
                                         context.getString(R.string.caller_lookup_decision_block)
-                                    NumberMatcher.Decision.ALLOW_LIST ->
+                                    check.resultType == CallerCheckEngine.ResultType.WHITE_LIST ->
                                         context.getString(R.string.caller_lookup_decision_allow)
-                                    NumberMatcher.Decision.ALLOW_UNKNOWN ->
+                                    else ->
                                         context.getString(R.string.caller_lookup_decision_pass)
                                 }
                                 lookupResult = buildString {
                                     append(decisionText)
+                                    append("\n")
+                                    append(
+                                        context.getString(
+                                            R.string.caller_lookup_engine_fmt,
+                                            check.resultType.name,
+                                            check.label.ifBlank { "—" },
+                                        ),
+                                    )
                                     append("\n")
                                     append(context.getString(R.string.caller_lookup_dialer_fmt))
                                     append(

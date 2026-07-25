@@ -25,6 +25,15 @@ android {
             "ONE_BLOCKLIST_URL",
             "\"https://raw.githubusercontent.com/asrtroh-netizen/OneBlock/main/phone/one-blocklist.json\"",
         )
+        // Telo-shaped spam pack manifest (has_update/download_url/checksum). Empty CDN → UI can
+        // still install from OneBlock JSON into onespam.db.
+        buildConfigField(
+            "String",
+            "ONE_SPAM_SYNC_MANIFEST_URL",
+            "\"https://cdn.oneims.app/onetools/caller/spam-sync.json\"",
+        )
+        // Optional live query endpoint; blank disables network spam lookup.
+        buildConfigField("String", "ONE_CALLER_QUERY_URL", "\"\"")
         buildConfigField("boolean", "ONE_INDEX_REQUIRE_SIGNATURE", "true")
     }
 
