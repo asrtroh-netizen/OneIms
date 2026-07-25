@@ -268,5 +268,8 @@
       "source": "community-report"
     }
   ],
-  "note": "PREFIX+EXACT dual-write into CallRuleStore and onespam. Virtual prefixes may false-positive delivery/taxi — whitelist as needed. Own OneBlock path only — do not bind Telo CDN."
+  "note": "PREFIX+EXACT dual-write into CallRuleStore and onespam. Virtual prefixes may false-positive delivery/taxi — whitelist as needed. Own OneBlock path only — do not bind Telo CDN.",
+  "keyId": "one-cdn-2026r2",
+  "sigAlg": "SHA256withECDSA",
+  "signature": "MEQCIGrT3y3EkFXn8xJHnjD7j4OT04mgToK9IPPs8O4JSElsAiBmQ3HPr9tPvMw/iGcDinac360RlJCt2UUh6NBHa5/sBQ=="
 }
