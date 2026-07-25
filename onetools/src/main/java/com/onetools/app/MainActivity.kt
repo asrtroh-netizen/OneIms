@@ -32,6 +32,7 @@ import com.onetools.app.export.DiagExport
 import com.onetools.app.updates.UpdateCheckNotifier
 import com.onetools.app.ui.CallLiteScreen
 import com.onetools.app.ui.HomeScreen
+import com.onetools.app.ui.LiveLabScreen
 import com.onetools.app.ui.MeterScreen
 import com.onetools.app.ui.OneToolsScaffold
 import com.onetools.app.special.ui.SpecialFeaturesScreen
@@ -144,6 +145,9 @@ class MainActivity : ComponentActivity() {
                                     ToolsDestination.METER -> MeterScreen(
                                         onBack = {},
                                         showBack = false,
+                                    )
+                                    ToolsDestination.LAB -> LiveLabScreen(
+                                        onOpenSpecial = { showSpecialFeatures = true },
                                     )
                                     ToolsDestination.UPDATES -> UpdatesScreen(
                                         onBack = {},

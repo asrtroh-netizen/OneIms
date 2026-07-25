@@ -57,6 +57,11 @@
     <string name="tab_caller">通话</string>
     <string name="recorder_section_title">通话录音</string>
     <string name="tab_meter">网速</string>
+    <string name="tab_lab">实验室</string>
+    <string name="lab_title">实时动态实验室</string>
+    <string name="lab_subtitle">实验性实时能力 · 显示增强 · 持续演进</string>
+    <string name="lab_section_display">显示与切卡</string>
+    <string name="lab_section_display_sub">需要 Shizuku；效果因 ROM / SystemUI 而异</string>
     <string name="tab_more">更多</string>
     <string name="home_quick_title">快捷开关</string>
     <string name="home_quick_sub">详情仍在各功能页调整</string>
@@ -73,9 +78,9 @@
     <string name="caller_meter_card_title">来电 · 网速</string>
     <string name="caller_meter_card_sub">归属拦截 + Pixel Meter 一页切换</string>
     <string name="caller_meter_hub_title">来电 · 网速</string>
-    <string name="caller_meter_hub_note">同一页切换 Caller / Meter；电池在首页单独入口。</string>
+    <string name="caller_meter_hub_note">同一页切换 Caller / Meter。</string>
     <string name="home_section_tools">工具</string>
-    <string name="home_section_tools_sub">来电 · 网速 · 电池 · 录音 · 更新</string>
+    <string name="home_section_tools_sub">来电 · 网速 · 实验室 · 更新</string>
 
     <string name="updates_card_title">应用更新</string>
     <string name="updates_card_sub">One 索引 · GitHub 源 · 可选静默装</string>
