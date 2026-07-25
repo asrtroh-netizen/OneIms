@@ -8,8 +8,10 @@
 
 ## Obtainium / GlassWire / Pixel Telo
 
-- **Out**: update-center presets that pull Pixel Telo / forks; GPL Obtainium source.
-- Update center remains first-party (does not embed Obtainium source).
+- **Out**: update-center presets that pull Pixel Telo / forks; **GPL-3 Obtainium source is never copied**.
+- Update center is first-party clean-room Kotlin. Feature ideas may mirror Obtainium's public
+  behavior (sources, background check, filters) but implementations are original.
+- Commercial store scrapers (APKPure / Aptoide / …) are intentionally not bundled.
 
 ## OneCaller (first-party) + geo
 

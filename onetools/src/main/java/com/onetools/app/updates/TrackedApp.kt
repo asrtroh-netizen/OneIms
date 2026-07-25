@@ -66,6 +66,10 @@ data class TrackedApp(
     val note: String,
     val source: AppSource = AppSource.GITHUB,
     val host: String? = null,
+    /** Optional regex matched against APK file name (Obtainium-like filter). */
+    val apkRegex: String? = null,
+    val includePrereleases: Boolean = false,
+    val trackUpdates: Boolean = true,
 )
 
 object InstalledVersions {
@@ -78,4 +82,4 @@ object InstalledVersions {
 }
 
 fun TrackedApp.withPackageName(pkg: String?): TrackedApp =
-    if (pkg.isNullOrBlank() || pkg == packageName) this else copy(packageName = pkg)
+    if (pkg.isNullOrBlank()) this else copy(packageName = pkg)

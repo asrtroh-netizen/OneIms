@@ -88,7 +88,7 @@ object OneIndexClient {
             },
             publishedAt = json.optString("generatedAt", ""),
         )
-        ApkAssetPicker.pick(listOf(asset), app.assetPrefer, abis)
+        ApkAssetPicker.pick(listOf(asset), app.assetPrefer, abis, app.apkRegex)
     }
 
     fun appsFromIndexJson(raw: String, indexUrl: String): List<TrackedApp> {

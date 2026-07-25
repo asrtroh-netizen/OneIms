@@ -2,7 +2,7 @@ package com.onetools.app.updates
 
 import java.net.URI
 
-/** Parse GitHub / GitLab / F-Droid inputs into TrackedApp. */
+/** Parse GitHub / GitLab / Forgejo / F-Droid / Direct / HTML inputs into TrackedApp. */
 object GitHubRepoParser {
     fun parse(
         raw: String,
@@ -10,17 +10,26 @@ object GitHubRepoParser {
         sourceHint: AppSource = AppSource.GITHUB,
         packageName: String? = null,
         hostOverride: String? = null,
+        apkRegex: String? = null,
+        includePrereleases: Boolean = false,
     ): Result<TrackedApp> = runCatching {
         val trimmed = raw.trim()
         require(trimmed.isNotEmpty()) { "empty" }
 
         val detected = detectSource(trimmed, sourceHint)
-        when (detected) {
+        val base = when (detected) {
             AppSource.FDROID -> parseFdroid(trimmed, titleOverride, packageName, hostOverride)
             AppSource.GITLAB -> parseGitlab(trimmed, titleOverride, packageName, hostOverride)
+            AppSource.FORGEJO -> parseForgejo(trimmed, titleOverride, packageName, hostOverride)
             AppSource.ONE_INDEX -> parseOneIndex(trimmed, titleOverride, packageName, hostOverride)
+            AppSource.DIRECT -> parseDirect(trimmed, titleOverride, packageName)
+            AppSource.HTML -> parseHtml(trimmed, titleOverride, packageName)
             AppSource.GITHUB -> parseGithub(trimmed, titleOverride, packageName)
         }
+        base.copy(
+            apkRegex = apkRegex?.trim()?.takeIf { it.isNotEmpty() },
+            includePrereleases = includePrereleases,
+        )
     }
 
     private fun detectSource(raw: String, hint: AppSource): AppSource {
@@ -31,6 +40,10 @@ object GitHubRepoParser {
                 AppSource.ONE_INDEX
             lower.startsWith("fdroid:") || lower.contains("f-droid.org") -> AppSource.FDROID
             lower.contains("gitlab.") || lower.contains("gitlab.com") -> AppSource.GITLAB
+            lower.contains("codeberg.org") || lower.contains("forgejo") ||
+                lower.startsWith("forgejo:") -> AppSource.FORGEJO
+            lower.endsWith(".apk") || lower.contains(".apk?") -> AppSource.DIRECT
+            lower.startsWith("html:") -> AppSource.HTML
             lower.contains("github.com") -> AppSource.GITHUB
             else -> hint
         }
@@ -70,6 +83,74 @@ object GitHubRepoParser {
             note = "$host/$owner/$repo",
             source = AppSource.GITLAB,
             host = host,
+        )
+    }
+
+    private fun parseForgejo(
+        raw: String,
+        titleOverride: String?,
+        packageName: String?,
+        hostOverride: String?,
+    ): TrackedApp {
+        val cleaned = raw.removePrefix("forgejo:").trim()
+        val host = hostOverride?.takeIf { it.isNotBlank() }
+            ?: hostFromUrl(cleaned)
+            ?: "codeberg.org"
+        val (owner, repo) = ownerRepoFrom(cleaned, defaultHost = host)
+        return TrackedApp(
+            id = "fj-$host-$owner-$repo".lowercase().replace('.', '-'),
+            title = titleOverride?.takeIf { it.isNotBlank() } ?: repo,
+            packageName = packageName?.takeIf { it.isNotBlank() },
+            githubOwner = owner,
+            githubRepo = repo,
+            assetPrefer = listOf("arm64-v8a", "release.apk", ".apk"),
+            note = "$host/$owner/$repo",
+            source = AppSource.FORGEJO,
+            host = host,
+        )
+    }
+
+    private fun parseDirect(
+        raw: String,
+        titleOverride: String?,
+        packageName: String?,
+    ): TrackedApp {
+        val url = if (raw.startsWith("http")) raw else "https://$raw"
+        require(url.contains(".apk", ignoreCase = true)) { "Direct 需要 .apk URL" }
+        val name = url.substringAfterLast('/').substringBefore('?').ifBlank { "app.apk" }
+        return TrackedApp(
+            id = "direct-${name.lowercase().hashCode().toUInt().toString(16)}",
+            title = titleOverride?.takeIf { it.isNotBlank() } ?: name.removeSuffix(".apk"),
+            packageName = packageName?.takeIf { it.isNotBlank() },
+            githubOwner = "direct",
+            githubRepo = name,
+            assetPrefer = listOf(".apk"),
+            note = "Direct APK",
+            source = AppSource.DIRECT,
+            host = url,
+        )
+    }
+
+    private fun parseHtml(
+        raw: String,
+        titleOverride: String?,
+        packageName: String?,
+    ): TrackedApp {
+        val url = raw.removePrefix("html:").trim().let {
+            if (it.startsWith("http")) it else "https://$it"
+        }
+        require(url.startsWith("http")) { "HTML 需要页面 URL" }
+        val hint = url.substringAfterLast('/').ifBlank { "page" }
+        return TrackedApp(
+            id = "html-${hint.lowercase().hashCode().toUInt().toString(16)}",
+            title = titleOverride?.takeIf { it.isNotBlank() } ?: hint,
+            packageName = packageName?.takeIf { it.isNotBlank() },
+            githubOwner = "html",
+            githubRepo = hint,
+            assetPrefer = listOf(".apk"),
+            note = "HTML fallback",
+            source = AppSource.HTML,
+            host = url,
         )
     }
 
@@ -140,7 +221,8 @@ object GitHubRepoParser {
         return when {
             raw.contains("://") || raw.contains(defaultHost, ignoreCase = true) ||
                 raw.contains("github.com", ignoreCase = true) ||
-                raw.contains("gitlab.", ignoreCase = true) -> {
+                raw.contains("gitlab.", ignoreCase = true) ||
+                raw.contains("codeberg.org", ignoreCase = true) -> {
                 val normalized = if (raw.startsWith("http", ignoreCase = true)) raw else "https://$raw"
                 val path = URI(normalized).path.orEmpty()
                 val parts = path.trim('/').split('/').filter { it.isNotBlank() }

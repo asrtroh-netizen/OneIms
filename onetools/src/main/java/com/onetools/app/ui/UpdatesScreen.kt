@@ -14,13 +14,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -32,6 +37,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -48,6 +54,8 @@ import com.onetools.app.updates.ReleaseAsset
 import com.onetools.app.updates.ShizukuApkInstaller
 import com.onetools.app.updates.TrackedApp
 import com.onetools.app.updates.UpdateCatalogRepository
+import com.onetools.app.updates.UpdateCheckPrefs
+import com.onetools.app.updates.UpdateCheckPrefsSnapshot
 import com.onetools.app.updates.UpdateFetcher
 import com.onetools.app.updates.VersionCompare
 import com.onetools.app.updates.withPackageName
@@ -63,8 +71,12 @@ fun UpdatesScreen(onBack: () -> Unit) {
     val scope = rememberCoroutineScope()
     val repo = remember { UpdateCatalogRepository(context.applicationContext) }
     val tokenStore = remember { MembershipTokenStore(context.applicationContext) }
+    val checkPrefsStore = remember { UpdateCheckPrefs(context.applicationContext) }
     val apps by repo.apps.collectAsState(initial = emptyList())
     val memberToken by tokenStore.tokenFlow.collectAsState(initial = "")
+    val checkPrefs by checkPrefsStore.snapshotFlow.collectAsState(
+        initial = UpdateCheckPrefsSnapshot(true, UpdateCheckPrefs.DEFAULT_HOURS),
+    )
     val abis = remember { Build.SUPPORTED_ABIS.toList() }
 
     var busyId by remember { mutableStateOf<String?>(null) }
@@ -107,9 +119,55 @@ fun UpdatesScreen(onBack: () -> Unit) {
             }
             item {
                 Text(
+                    stringResource(R.string.updates_parity_note),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(stringResource(R.string.updates_auto_check))
+                        Text(
+                            stringResource(
+                                R.string.updates_auto_check_sub,
+                                checkPrefs.intervalHours,
+                            ),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    Switch(
+                        checked = checkPrefs.enabled,
+                        onCheckedChange = { checked ->
+                            scope.launch { checkPrefsStore.setEnabled(checked) }
+                        },
+                    )
+                }
+            }
+            item {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf(3, 6, 12, 24).forEach { hours ->
+                        FilterChip(
+                            selected = checkPrefs.intervalHours == hours,
+                            onClick = {
+                                scope.launch { checkPrefsStore.setIntervalHours(hours) }
+                            },
+                            label = { Text("${hours}h") },
+                            enabled = checkPrefs.enabled,
+                        )
+                    }
+                }
+            }
+            item {
+                Text(
                     stringResource(R.string.updates_abi_hint, abis.firstOrNull() ?: "unknown"),
                     style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
             }
             item {
@@ -349,7 +407,7 @@ fun UpdatesScreen(onBack: () -> Unit) {
             busy = adding,
             shizukuReady = ShizukuChannel.isServiceReady(),
             onDismiss = { if (!adding) showAdd = false },
-            onConfirm = { input, title, packageName, source, host ->
+            onConfirm = { input, title, packageName, source, host, apkRegex, includePre ->
                 scope.launch {
                     adding = true
                     val parsed = GitHubRepoParser.parse(
@@ -358,6 +416,8 @@ fun UpdatesScreen(onBack: () -> Unit) {
                         sourceHint = source,
                         packageName = packageName,
                         hostOverride = host,
+                        apkRegex = apkRegex,
+                        includePrereleases = includePre,
                     )
                     parsed.onFailure {
                         Toast.makeText(context, it.message ?: "invalid", Toast.LENGTH_LONG).show()
@@ -455,12 +515,22 @@ private fun AddAppDialog(
     busy: Boolean,
     shizukuReady: Boolean,
     onDismiss: () -> Unit,
-    onConfirm: (input: String, title: String, packageName: String, source: AppSource, host: String) -> Unit,
+    onConfirm: (
+        input: String,
+        title: String,
+        packageName: String,
+        source: AppSource,
+        host: String,
+        apkRegex: String,
+        includePrereleases: Boolean,
+    ) -> Unit,
 ) {
     var input by remember { mutableStateOf("") }
     var title by remember { mutableStateOf("") }
     var packageName by remember { mutableStateOf("") }
     var host by remember { mutableStateOf("") }
+    var apkRegex by remember { mutableStateOf("") }
+    var includePre by remember { mutableStateOf(false) }
     var source by remember { mutableStateOf(AppSource.GITHUB) }
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -475,17 +545,29 @@ private fun AddAppDialog(
                     if (shizukuReady) stringResource(R.string.updates_silent_ready)
                     else stringResource(R.string.updates_silent_need_channel),
                     style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(
+                    modifier = Modifier.horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
                     SourceChip("GitHub", source == AppSource.GITHUB, enabled = !busy) {
                         source = AppSource.GITHUB
                     }
                     SourceChip("GitLab", source == AppSource.GITLAB, enabled = !busy) {
                         source = AppSource.GITLAB
                     }
+                    SourceChip("Forgejo", source == AppSource.FORGEJO, enabled = !busy) {
+                        source = AppSource.FORGEJO
+                    }
                     SourceChip("F-Droid", source == AppSource.FDROID, enabled = !busy) {
                         source = AppSource.FDROID
+                    }
+                    SourceChip("Direct", source == AppSource.DIRECT, enabled = !busy) {
+                        source = AppSource.DIRECT
+                    }
+                    SourceChip("HTML", source == AppSource.HTML, enabled = !busy) {
+                        source = AppSource.HTML
                     }
                     SourceChip("One", source == AppSource.ONE_INDEX, enabled = !busy) {
                         source = AppSource.ONE_INDEX
@@ -499,8 +581,12 @@ private fun AddAppDialog(
                             when (source) {
                                 AppSource.FDROID -> stringResource(R.string.updates_add_fdroid)
                                 AppSource.ONE_INDEX -> stringResource(R.string.updates_add_one_index)
-                                AppSource.GITLAB -> stringResource(R.string.updates_add_repo)
-                                AppSource.GITHUB -> stringResource(R.string.updates_add_repo)
+                                AppSource.DIRECT -> stringResource(R.string.updates_add_direct)
+                                AppSource.HTML -> stringResource(R.string.updates_add_html)
+                                AppSource.FORGEJO,
+                                AppSource.GITLAB,
+                                AppSource.GITHUB,
+                                -> stringResource(R.string.updates_add_repo)
                             },
                         )
                     },
@@ -508,7 +594,9 @@ private fun AddAppDialog(
                     enabled = !busy,
                     modifier = Modifier.fillMaxWidth(),
                 )
-                if (source == AppSource.GITLAB || source == AppSource.FDROID || source == AppSource.ONE_INDEX) {
+                if (source == AppSource.GITLAB || source == AppSource.FDROID ||
+                    source == AppSource.ONE_INDEX || source == AppSource.FORGEJO
+                ) {
                     OutlinedTextField(
                         value = host,
                         onValueChange = { host = it },
@@ -516,6 +604,7 @@ private fun AddAppDialog(
                             Text(
                                 when (source) {
                                     AppSource.GITLAB -> stringResource(R.string.updates_add_gitlab_host)
+                                    AppSource.FORGEJO -> stringResource(R.string.updates_add_forgejo_host)
                                     AppSource.FDROID -> stringResource(R.string.updates_add_fdroid_host)
                                     AppSource.ONE_INDEX -> stringResource(R.string.updates_add_one_index_url)
                                     else -> stringResource(R.string.updates_add_gitlab_host)
@@ -543,6 +632,23 @@ private fun AddAppDialog(
                     enabled = !busy,
                     modifier = Modifier.fillMaxWidth(),
                 )
+                OutlinedTextField(
+                    value = apkRegex,
+                    onValueChange = { apkRegex = it },
+                    label = { Text(stringResource(R.string.updates_add_apk_regex)) },
+                    singleLine = true,
+                    enabled = !busy,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(
+                        checked = includePre,
+                        onCheckedChange = { includePre = it },
+                        enabled = !busy &&
+                            (source == AppSource.GITHUB || source == AppSource.FORGEJO),
+                    )
+                    Text(stringResource(R.string.updates_add_prerelease))
+                }
                 if (busy) {
                     Text(
                         stringResource(R.string.updates_validating),
@@ -553,7 +659,9 @@ private fun AddAppDialog(
         },
         confirmButton = {
             TextButton(
-                onClick = { onConfirm(input, title, packageName, source, host) },
+                onClick = {
+                    onConfirm(input, title, packageName, source, host, apkRegex, includePre)
+                },
                 enabled = !busy && input.isNotBlank(),
             ) {
                 Text(stringResource(R.string.updates_add_confirm))

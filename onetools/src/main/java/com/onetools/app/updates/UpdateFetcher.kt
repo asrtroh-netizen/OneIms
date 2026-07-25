@@ -85,7 +85,10 @@ object UpdateFetcher {
     ): Result<Unit> = when (app.source) {
         AppSource.GITHUB -> GitHubReleaseClient.validateRepo(app.githubOwner, app.githubRepo)
         AppSource.GITLAB -> GitLabReleaseClient.validate(app)
+        AppSource.FORGEJO -> ForgejoReleaseClient.validate(app)
         AppSource.FDROID -> FDroidReleaseClient.validate(app)
+        AppSource.DIRECT -> DirectApkClient.validate(app)
+        AppSource.HTML -> HtmlApkClient.validate(app)
         AppSource.ONE_INDEX -> OneIndexClient.validate(app, context, bearerToken)
     }
 
@@ -97,7 +100,10 @@ object UpdateFetcher {
     ): Result<ReleaseAsset> = when (app.source) {
         AppSource.GITHUB -> GitHubReleaseClient.latestAsset(app, abis)
         AppSource.GITLAB -> GitLabReleaseClient.latestAsset(app, abis)
+        AppSource.FORGEJO -> ForgejoReleaseClient.latestAsset(app, abis)
         AppSource.FDROID -> FDroidReleaseClient.latestAsset(app, abis)
+        AppSource.DIRECT -> DirectApkClient.latestAsset(app, abis)
+        AppSource.HTML -> HtmlApkClient.latestAsset(app, abis)
         AppSource.ONE_INDEX -> OneIndexClient.latestAsset(app, abis, context, bearerToken)
     }
 
@@ -144,7 +150,7 @@ object GitLabReleaseClient {
             }
         }
         require(candidates.isNotEmpty()) { "No APK link in GitLab release $tag" }
-        ApkAssetPicker.pick(candidates, app.assetPrefer, abis)
+        ApkAssetPicker.pick(candidates, app.assetPrefer, abis, app.apkRegex)
     }
 
     fun normalizeHost(host: String?): String {
@@ -190,7 +196,7 @@ object FDroidReleaseClient {
             publishedAt = "",
         )
         // F-Droid usually one apk; still run prefer scoring for consistency.
-        ApkAssetPicker.pick(listOf(asset), app.assetPrefer, abis)
+        ApkAssetPicker.pick(listOf(asset), app.assetPrefer, abis, app.apkRegex)
     }
 
     fun normalizeBase(host: String?): String {

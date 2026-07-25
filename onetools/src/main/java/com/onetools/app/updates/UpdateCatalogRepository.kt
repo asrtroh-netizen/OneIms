@@ -7,14 +7,13 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import org.json.JSONArray
-import org.json.JSONObject
 
 private val Context.updateCatalogStore: DataStore<Preferences> by preferencesDataStore("one_update_catalog")
 
 /**
- * Persist user-managed app sources (Obtainium-like catalog).
+ * Persist user-managed app sources (Obtainium-like catalog, clean-room).
  */
 class UpdateCatalogRepository(private val context: Context) {
     private val key = stringSetPreferencesKey("tracked_json")
@@ -27,6 +26,8 @@ class UpdateCatalogRepository(private val context: Context) {
             set.mapNotNull { decode(it) }.sortedBy { it.title.lowercase() }
         }
     }
+
+    suspend fun snapshot(): List<TrackedApp> = apps.first()
 
     suspend fun ensureSeeded() {
         context.updateCatalogStore.edit { prefs ->
@@ -72,48 +73,9 @@ class UpdateCatalogRepository(private val context: Context) {
         }
     }
 
-    private fun encode(app: TrackedApp): String {
-        return JSONObject()
-            .put("id", app.id)
-            .put("title", app.title)
-            .put("packageName", app.packageName)
-            .put("owner", app.githubOwner)
-            .put("repo", app.githubRepo)
-            .put("prefer", JSONArray(app.assetPrefer))
-            .put("note", app.note)
-            .put("source", app.source.name)
-            .put("host", app.host)
-            .toString()
-    }
+    private fun encode(app: TrackedApp): String = CatalogExport.trackedToJson(app).toString()
 
     private fun decode(raw: String): TrackedApp? = runCatching {
-        val o = JSONObject(raw)
-        val prefer = o.optJSONArray("prefer")
-        val list = buildList {
-            if (prefer != null) {
-                for (i in 0 until prefer.length()) add(prefer.getString(i))
-            }
-        }.ifEmpty { listOf(".apk") }
-        TrackedApp(
-            id = o.getString("id"),
-            title = o.getString("title"),
-            packageName = if (o.has("packageName") && !o.isNull("packageName")) {
-                o.getString("packageName").takeIf { it.isNotBlank() }
-            } else {
-                null
-            },
-            githubOwner = o.getString("owner"),
-            githubRepo = o.getString("repo"),
-            assetPrefer = list,
-            note = o.optString("note", ""),
-            source = runCatching {
-                AppSource.valueOf(o.optString("source", AppSource.GITHUB.name))
-            }.getOrDefault(AppSource.GITHUB),
-            host = if (o.has("host") && !o.isNull("host")) {
-                o.getString("host").takeIf { it.isNotBlank() }
-            } else {
-                null
-            },
-        )
+        CatalogExport.decodeTracked(org.json.JSONObject(raw))
     }.getOrNull()
 }

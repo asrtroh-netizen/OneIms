@@ -130,7 +130,17 @@
     <string name="updates_title">应用更新</string>
     <string name="updates_intro">添加 GitHub 等公开源、检查 Release、下载安装 APK。首发含 One 生态预设，可自行增删。</string>
     <string name="updates_intro_better">自有 One 索引协议 onetools.update.v1、ABI 选包、源校验、导入导出；Shizuku 可用时优先静默装。</string>
-    <string name="updates_add_hint_multi">GitHub/GitLab：owner/repo 或 URL。F-Droid：包名。One：自有索引 one:https://.../one-update.json。</string>
+    <string name="updates_parity_note">干净室对齐 Obtainium 开源侧能力（定时检查 / Forgejo / Direct / HTML / 正则过滤）。不并 GPL 源码；不含 APKPure 等商店爬虫。</string>
+    <string name="updates_auto_check">后台定时检查更新</string>
+    <string name="updates_auto_check_sub">约每 %1$d 小时（需网络）；有更新时通知</string>
+    <string name="updates_auto_channel">应用更新</string>
+    <string name="updates_auto_notif_title">%1$d 个应用可更新</string>
+    <string name="updates_add_hint_multi">GitHub/GitLab/Forgejo：owner/repo 或 URL。Direct：.apk 链接。HTML：页面 URL。F-Droid：包名。One：one:https://…/one-update.json。</string>
+    <string name="updates_add_direct">Direct APK URL</string>
+    <string name="updates_add_html">HTML 页面 URL</string>
+    <string name="updates_add_forgejo_host">Forgejo/Codeberg 主机（可空=codeberg.org）</string>
+    <string name="updates_add_apk_regex">APK 文件名正则（可选）</string>
+    <string name="updates_add_prerelease">包含预发布</string>
     <string name="updates_add_one_index">应用 id（索引内 apps[].id）</string>
     <string name="updates_add_one_index_url">One 索引 URL（https://.../one-update.json）</string>
     <string name="updates_add_fdroid">F-Droid 包名</string>

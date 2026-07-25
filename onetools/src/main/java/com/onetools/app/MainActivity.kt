@@ -23,6 +23,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import android.content.Intent
 import com.onetools.app.battery.BatteryWidgetUpdater
+import com.onetools.app.updates.UpdateCheckNotifier
 import com.onetools.app.channel.ChannelCardPolicy
 import com.onetools.app.channel.ChannelCardState
 import com.onetools.app.channel.ShizukuChannel
@@ -208,6 +209,10 @@ class MainActivity : ComponentActivity() {
         if (intent?.getBooleanExtra(BatteryWidgetUpdater.EXTRA_OPEN_BATTERY, false) == true) {
             route = AppRoute.Battery
             intent.removeExtra(BatteryWidgetUpdater.EXTRA_OPEN_BATTERY)
+        }
+        if (intent?.getBooleanExtra(UpdateCheckNotifier.EXTRA_OPEN_UPDATES, false) == true) {
+            route = AppRoute.Updates
+            intent.removeExtra(UpdateCheckNotifier.EXTRA_OPEN_UPDATES)
         }
     }
 }
