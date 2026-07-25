@@ -9,6 +9,12 @@
 | `asrtroh-netizen/vohive-release` | `iniwex5/vohive-release` |
 | `asrtroh-netizen/PixelTelo`（更早） | `Pixel-Tailor-CN/PixelTelo` |
 
+## 已删除（非 fork · 用户点名）
+
+| 仓库 | 备注 |
+|---|---|
+| `asrtroh-netizen/halox-page` | Public · 非 fork · 2026-07-25 删除 |
+
 ## 保留
 
 | 仓库 | 原因 |
