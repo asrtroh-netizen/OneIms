@@ -37,6 +37,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.onetools.app.R
+import com.onetools.app.battery.BatteryAppDrainStore
 import com.onetools.app.battery.BatteryCapacityEstimator
 import com.onetools.app.battery.BatteryChargeService
 import com.onetools.app.battery.BatteryHealthSummary
@@ -47,6 +48,7 @@ import com.onetools.app.battery.BatterySessionEntity
 import com.onetools.app.battery.BatterySessionStore
 import com.onetools.app.battery.BatterySnapshot
 import com.onetools.app.battery.healthSummary
+import com.onetools.app.meter.UsageAccess
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -59,6 +61,7 @@ fun BatteryScreen(onBack: () -> Unit) {
     val context = LocalContext.current
     val prefsStore = remember { BatteryPrefs(context.applicationContext) }
     val sessionStore = remember { BatterySessionStore(context.applicationContext) }
+    val drainStore = remember { BatteryAppDrainStore(context.applicationContext) }
     val prefs by prefsStore.snapshotFlow.collectAsState(
         initial = BatteryPrefsSnapshot(
             designCapacityMah = BatteryPrefs.DEFAULT_DESIGN_MAH,
@@ -68,6 +71,8 @@ fun BatteryScreen(onBack: () -> Unit) {
         ),
     )
     val sessions by sessionStore.sessions.collectAsState(initial = emptyList())
+    val drainRows by drainStore.observeToday().collectAsState(initial = emptyList())
+    var hasUsage by remember { mutableStateOf(UsageAccess.hasPermission(context)) }
     val scope = rememberCoroutineScope()
 
     var snap by remember { mutableStateOf<BatterySnapshot?>(null) }
@@ -81,7 +86,7 @@ fun BatteryScreen(onBack: () -> Unit) {
             snap = BatteryReader.read(context)
             health = sessionStore.healthSummary(prefs.designCapacityMah)
             val s = snap
-            if (prefs.trackingEnabled && s?.isPlugged == true) {
+            if (prefs.trackingEnabled) {
                 BatteryChargeService.start(context.applicationContext)
             }
             delay(2000)
@@ -122,6 +127,7 @@ fun BatteryScreen(onBack: () -> Unit) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf(
                         stringResource(R.string.battery_tab_live),
+                        stringResource(R.string.battery_tab_drain),
                         stringResource(R.string.battery_tab_health),
                         stringResource(R.string.battery_tab_history),
                         stringResource(R.string.battery_tab_settings),
@@ -183,6 +189,70 @@ fun BatteryScreen(onBack: () -> Unit) {
                     }
                 }
                 1 -> {
+                    item {
+                        Text(
+                            stringResource(R.string.battery_drain_today),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                    item {
+                        Text(
+                            stringResource(R.string.battery_drain_hint),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    if (!hasUsage) {
+                        item {
+                            Text(
+                                stringResource(R.string.battery_drain_need_usage),
+                                color = MaterialTheme.colorScheme.error,
+                            )
+                        }
+                        item {
+                            Button(
+                                onClick = {
+                                    UsageAccess.openSettings(context)
+                                    hasUsage = UsageAccess.hasPermission(context)
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                            ) {
+                                Text(stringResource(R.string.battery_drain_open_usage))
+                            }
+                        }
+                    }
+                    if (drainRows.isEmpty()) {
+                        item {
+                            Text(
+                                stringResource(R.string.battery_drain_empty),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    } else {
+                        items(drainRows.take(40), key = { it.id }) { row ->
+                            Text(
+                                stringResource(
+                                    R.string.battery_drain_row,
+                                    row.label,
+                                    row.mahTotal,
+                                    row.mahScreenOn,
+                                    row.mahScreenOff,
+                                ),
+                                style = MaterialTheme.typography.bodyMedium,
+                            )
+                        }
+                    }
+                    item {
+                        Button(
+                            onClick = { hasUsage = UsageAccess.hasPermission(context) },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(stringResource(R.string.battery_drain_refresh))
+                        }
+                    }
+                }
+                2 -> {
                     val h = health
                     item {
                         Text(
@@ -228,7 +298,7 @@ fun BatteryScreen(onBack: () -> Unit) {
                         )
                     }
                 }
-                2 -> {
+                3 -> {
                     if (sessions.isEmpty()) {
                         item {
                             Text(

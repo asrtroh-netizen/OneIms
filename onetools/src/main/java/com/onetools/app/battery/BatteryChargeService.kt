@@ -10,6 +10,7 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
+import android.os.PowerManager
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.onetools.app.MainActivity
@@ -24,39 +25,51 @@ import kotlinx.coroutines.runBlocking
 import java.util.UUID
 
 /**
- * Foreground sampler while charging — records a charge session and fires optional % alarm.
+ * Foreground battery monitor — charge sessions + discharge per-app attribution
+ * (AccuBattery-shaped, clean-room).
  */
 class BatteryChargeService : Service() {
     private val scope = CoroutineScope(Dispatchers.Default)
     private var job: Job? = null
 
+    private var mode: Mode = Mode.IDLE
+
+    // charge session
     private var sessionId: String? = null
     private var startedAt: Long = 0L
     private var startPercent: Int = -1
     private var startMah: Int = -1
     private var alarmFired = false
 
+    // discharge sample
+    private var lastPercent: Int = -1
+    private var lastMah: Int = -1
+    private var lastSampleAt: Long = 0L
+    private var recentMahPerHour: Double = 0.0
+
+    private enum class Mode { IDLE, CHARGE, DISCHARGE }
+
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_STOP -> {
-                finalizeSession()
+                finalizeChargeIfNeeded()
                 stopSelf()
                 return START_NOT_STICKY
             }
-            else -> startTracking()
+            else -> ensureRunning()
         }
         return START_STICKY
     }
 
     override fun onDestroy() {
         job?.cancel()
-        finalizeSession()
+        finalizeChargeIfNeeded()
         super.onDestroy()
     }
 
-    private fun startTracking() {
+    private fun ensureRunning() {
         val prefs = runBlocking { BatteryPrefs(applicationContext).snapshot() }
         if (!prefs.trackingEnabled) {
             stopSelf()
@@ -73,21 +86,6 @@ class BatteryChargeService : Service() {
         } else {
             startForeground(NOTIF_ID, notif)
         }
-        if (sessionId == null) {
-            val snap = BatteryReader.read(this) ?: run {
-                stopSelf()
-                return
-            }
-            if (!snap.isPlugged) {
-                stopSelf()
-                return
-            }
-            sessionId = UUID.randomUUID().toString()
-            startedAt = System.currentTimeMillis()
-            startPercent = snap.percent
-            startMah = snap.chargeCounterMah
-            alarmFired = false
-        }
         job?.cancel()
         job = scope.launch {
             while (isActive) {
@@ -100,22 +98,44 @@ class BatteryChargeService : Service() {
     private fun tick() {
         val snap = BatteryReader.read(this) ?: return
         val prefs = runBlocking { BatteryPrefs(applicationContext).snapshot() }
-        val mgr = getSystemService(NotificationManager::class.java)
-        mgr?.notify(
-            NOTIF_ID,
-            buildNotif(
-                getString(
-                    R.string.battery_tracking_live,
-                    snap.percent,
-                    snap.currentNowMa,
-                ),
-            ),
+        if (!prefs.trackingEnabled) {
+            stopSelf()
+            return
+        }
+        if (snap.isPlugged) {
+            if (mode != Mode.CHARGE) {
+                // leaving discharge
+                lastPercent = -1
+                lastMah = -1
+                beginCharge(snap)
+            }
+            tickCharge(snap, prefs)
+        } else {
+            if (mode == Mode.CHARGE) {
+                finalizeChargeIfNeeded()
+            }
+            mode = Mode.DISCHARGE
+            tickDischarge(snap, prefs)
+        }
+    }
+
+    private fun beginCharge(snap: BatterySnapshot) {
+        mode = Mode.CHARGE
+        sessionId = UUID.randomUUID().toString()
+        startedAt = System.currentTimeMillis()
+        startPercent = snap.percent
+        startMah = snap.chargeCounterMah
+        alarmFired = false
+    }
+
+    private fun tickCharge(snap: BatterySnapshot, prefs: BatteryPrefsSnapshot) {
+        notifyLive(
+            getString(R.string.battery_tracking_live, snap.percent, snap.currentNowMa),
         )
         if (
             prefs.chargeAlarmEnabled &&
             !alarmFired &&
-            snap.percent >= prefs.chargeAlarmPercent &&
-            snap.isPlugged
+            snap.percent >= prefs.chargeAlarmPercent
         ) {
             alarmFired = true
             BatteryChargeAlarm.notifyThreshold(
@@ -124,23 +144,70 @@ class BatteryChargeService : Service() {
                 prefs.chargeAlarmPercent,
             )
         }
-        if (!snap.isPlugged) {
-            finalizeSession()
-            stopSelf()
-        }
     }
 
-    private fun finalizeSession() {
+    private fun tickDischarge(snap: BatterySnapshot, prefs: BatteryPrefsSnapshot) {
+        val now = System.currentTimeMillis()
+        if (lastPercent < 0) {
+            lastPercent = snap.percent
+            lastMah = snap.chargeCounterMah
+            lastSampleAt = now
+            notifyLive(
+                getString(R.string.battery_drain_live, snap.percent, 0),
+            )
+            return
+        }
+        val mah = BatteryDrainMath.pickMahDelta(
+            prevMah = lastMah,
+            nowMah = snap.chargeCounterMah,
+            prevPct = lastPercent,
+            nowPct = snap.percent,
+            designMah = prefs.designCapacityMah,
+        )
+        val elapsedH = ((now - lastSampleAt).coerceAtLeast(1L)).toDouble() / 3_600_000.0
+        if (mah > 0 && elapsedH > 0) {
+            val rate = mah / elapsedH
+            recentMahPerHour = if (recentMahPerHour <= 0) rate else (recentMahPerHour * 0.7 + rate * 0.3)
+            val fg = ForegroundAppProbe.current(this)
+            val pkg = fg?.packageName ?: "unknown"
+            val label = fg?.label ?: getString(R.string.battery_drain_unknown_app)
+            val screenOn = isScreenOn()
+            runBlocking {
+                BatteryAppDrainStore(applicationContext).attribute(pkg, label, mah, screenOn)
+            }
+        }
+        lastPercent = snap.percent
+        lastMah = snap.chargeCounterMah
+        lastSampleAt = now
+        val remain = BatteryDrainMath.remainingMinutes(
+            snap.percent,
+            prefs.designCapacityMah,
+            recentMahPerHour,
+        )
+        notifyLive(
+            getString(
+                R.string.battery_drain_live,
+                snap.percent,
+                remain ?: 0,
+            ),
+        )
+    }
+
+    private fun isScreenOn(): Boolean {
+        val pm = getSystemService(PowerManager::class.java) ?: return true
+        return pm.isInteractive
+    }
+
+    private fun finalizeChargeIfNeeded() {
         val id = sessionId ?: return
         sessionId = null
+        mode = Mode.IDLE
         val snap = BatteryReader.read(this) ?: return
-        val endPct = snap.percent
-        val endMah = snap.chargeCounterMah
         val estimate = BatteryCapacityEstimator.estimateFullMah(
             startPercent = startPercent,
-            endPercent = endPct,
+            endPercent = snap.percent,
             startChargeMah = startMah,
-            endChargeMah = endMah,
+            endChargeMah = snap.chargeCounterMah,
         ) ?: 0
         val entity = BatterySessionEntity(
             id = id,
@@ -148,9 +215,9 @@ class BatteryChargeService : Service() {
             startedAt = startedAt,
             endedAt = System.currentTimeMillis(),
             startPercent = startPercent,
-            endPercent = endPct,
+            endPercent = snap.percent,
             startChargeMah = startMah,
-            endChargeMah = endMah,
+            endChargeMah = snap.chargeCounterMah,
             estimatedFullMah = estimate,
         )
         runBlocking {
@@ -168,6 +235,10 @@ class BatteryChargeService : Service() {
                 NotificationManager.IMPORTANCE_LOW,
             ),
         )
+    }
+
+    private fun notifyLive(text: String) {
+        getSystemService(NotificationManager::class.java)?.notify(NOTIF_ID, buildNotif(text))
     }
 
     private fun buildNotif(text: String): Notification {

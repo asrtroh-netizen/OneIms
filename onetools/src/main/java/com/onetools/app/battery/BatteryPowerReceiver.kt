@@ -10,10 +10,9 @@ import android.content.Intent
 class BatteryPowerReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {
         when (intent?.action) {
-            Intent.ACTION_POWER_CONNECTED ->
-                BatteryChargeService.start(context.applicationContext)
-            Intent.ACTION_POWER_DISCONNECTED ->
-                BatteryChargeService.stop(context.applicationContext)
+            Intent.ACTION_POWER_CONNECTED,
+            Intent.ACTION_POWER_DISCONNECTED,
+            -> BatteryChargeService.start(context.applicationContext)
         }
     }
 }
