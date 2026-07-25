@@ -14,16 +14,16 @@
 
 <br/>
 
-### ⬇️ 下载 APK（最新 · v3.0.3 · 请自选产品线）
+### ⬇️ 下载 APK（最新 · v3.0.4 · 请自选产品线）
 
 > **两个包功能相同（IMS/诊断/恢复），差别只在「特权通道怎么激活」——看下方选购指南，**只装其中一个**即可；进阶用户也可同机并存对比。
 
 | 推荐给… | 包 | 下载 |
 |---|---|---|
-| 🟢 **想少装 App、App 内一键配对** | **OneKuku（独立激活）** | [OneIms-OneKuku-standalone-3.0.3.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.0.3/OneIms-OneKuku-standalone-3.0.3.apk) |
-| 🔵 **已有 / 想用 Shizuku 轻壳** | **OneIms Lite（Shizuku）** | [OneIms-Lite-Shizuku-3.0.3.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.0.3/OneIms-Lite-Shizuku-3.0.3.apk) |
+| 🟢 **想少装 App、App 内一键配对** | **OneKuku（独立激活）** | [OneIms-OneKuku-standalone-3.0.4.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.0.4/OneIms-OneKuku-standalone-3.0.4.apk) |
+| 🔵 **已有 / 想用 Shizuku 轻壳** | **OneIms Lite（Shizuku）** | [OneIms-Lite-Shizuku-3.0.4.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.0.4/OneIms-Lite-Shizuku-3.0.4.apk) |
 
-[📦 全部 Release 资产](https://github.com/asrtroh-netizen/OneIms/releases/tag/v3.0.3)
+[📦 全部 Release 资产](https://github.com/asrtroh-netizen/OneIms/releases/tag/v3.0.4)
 
 > 💙 **友情推荐特权通道**：[asrtroh 修缮版 Shizuku V15.0](https://github.com/asrtroh-netizen/shizuku)（配对一次 · 旧 Wi‑Fi 自连 · 开机 FGS 内激活）  
 > 下载正式包：[Releases](https://github.com/asrtroh-netizen/shizuku/releases) · 截图：
@@ -64,10 +64,36 @@
 
 | 对外名称 | 包名 | 特权通道 | Release 文件名 |
 |---|---|---|---|
-| **OneIms · OneKuku** `3.0.3-onekuku` | `com.oneims.app` | 内嵌 OneBridge + 无线调试配对 | `OneIms-OneKuku-standalone-3.0.3.apk`（备注：独立激活） |
-| **OneIms · OneIms Lite** `3.0.3-onelink` | `com.oneims.onelink` | 官方 Shizuku | `OneIms-Lite-Shizuku-3.0.3.apk`（备注：Shizuku） |
+| **OneIms · OneKuku** `3.0.4-onekuku` | `com.oneims.app` | 内嵌 OneBridge + 无线调试配对 | `OneIms-OneKuku-standalone-3.0.4.apk`（备注：独立激活） |
+| **OneIms · OneIms Lite** `3.0.4-onelink` | `com.oneims.onelink` | 官方 Shizuku | `OneIms-Lite-Shizuku-3.0.4.apk`（备注：Shizuku） |
 
 > **双包同版号一起更新**；请只从本页 Release 链接下载，勿混装未知来源包。
+
+---
+
+## ✨ What's New · 3.0.4
+
+**本版主线：首页「持久性 VoLTE/NR」+ 系统设置露出 VoNR + 尽量屏蔽系统更新（组件 / 设置 / hosts）。**
+
+### 🏠 持久性 VoLTE/NR（首页）
+
+* 首页开关「持久性 VoLTE/NR」：平台允许时经沙盒旁路尝试重启后仍保留；默认开启
+* 探测已拦截的机型不会误报成功，自动回落既有写入 / 开机重放
+
+### 📶 系统设置露出 VoNR
+
+* 开启 VoNR 时同步写入 NR 可用性等 CarrierConfig，便于系统设置出现 VoNR 相关项（视机型 / 运营商而定）
+
+### 🛡️ 尽量屏蔽系统更新（独家功能，默认开）
+
+* 组件禁用 + `ota_disable_automatic_update` +（有 Root/Magisk 时）hosts 挡 Google OTA 域名
+* **能用则用**；不保证挡死所有更新渠道；关掉可恢复
+
+### 🔄 升级
+
+* 🟢 OneKuku：覆盖安装 `OneIms-OneKuku-standalone-3.0.4.apk`
+* 🔵 OneIms Lite：覆盖安装 `OneIms-Lite-Shizuku-3.0.4.apk`
+* versionCode `74`（相对 3.0.3 的 `73` 会提示升级）
 
 ---
 
