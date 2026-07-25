@@ -90,3 +90,35 @@ OneIMS 目标覆盖 A + B（+ Boot/Guard 重放逼近 C 的体验）
 | 方案 2 开 | 写入结果明确 temporary；重启依赖既有重放 |
 | A17 真机 | 委托清理失败不冒充业务失败；诊断可见持久模式 |
 | 免 Root | 不出现「已永久写入」假成功文案 |
+
+---
+
+## 7. 截图 ↔ vvb2060/Ims（南宫系）源码逐点对照（2026-07-25 补）
+
+**源码树**：`.tmp_vvb2060_ims`（`versionName=3.1` / `versionCode=6`）  
+**附图论点**：内存态会丢；`-p`/persistent 写持久库；带持久时系统校验 `isSystemApp()`。
+
+| 附图说法 | 对方源码落点 | 含义 |
+|---|---|---|
+| 普通改 CarrierConfig 重启丢 | `PrivilegedProcess.onCreate` 非沙盒分支：`overrideConfig(context, **false**)` | 默认 Instrumentation 路径只写 **临时** |
+| `-p` / persistent 写持久库 | 沙盒分支：`overrideConfig(context, **true**)` | 仅走 SDK Sandbox + shell 委托时才尝试真持久 |
+| 系统校验 `isSystemApp()` | `ShizukuProvider.canPersistent()`：`CarrierConfigLoader.getDeclaredMethod("isSystemApp")` | **不是绕过**，是 **探测** 平台有没有这道门 |
+| 有门则难持久 | `isSystemApp` 存在后，再探 `isSdkSandboxUidInternal`：存在则 `canPersistent→false` | 新平台（含多数 A16 QPR2+/A17）→ **直接放弃 persistent 尝试**，改 `INSTR_FLAG_NO_RESTART` + temporary |
+| 持久被拒要回退 | `overrideConfig`：`SecurityException` 且原 `persistent==true` → 再调一次 `persistent=false` | 与 OneIMS `CarrierConfigOverrideWriter.overrideConfigBestEffort` **同构** |
+
+### `canPersistent` 决策树（源码语义）
+
+```
+反射 CarrierConfigLoader
+├─ 无 isSystemApp 方法     → true（老系统，可试 persistent + sandbox）
+├─ 有 isSystemApp
+│   ├─ 有 isSdkSandboxUidInternal → false（新系统锁死 sandbox 持久）
+│   └─ 无该内部方法           → true（仍试 sandbox 持久）
+└─ 其它异常                 → false
+```
+
+### 对「南宫支持 17.0」的源码级裁决
+
+1. **3.1 能在新系统上跑**，是因为它在探测到 `isSystemApp`+`isSdkSandboxUidInternal` 后 **主动改写 temporary**，不是魔法破解 `-p`。  
+2. Gemini 附图描述的正是对方 `canPersistent` / `overrideConfig` 所面对的 **同一道 AOSP 门**。  
+3. OneIMS 3.0.2 的 try-persistent→temporary + Boot/Guard 重放，与对方策略 **同族**；我们并未「弄错支持矩阵」，差别在产品层（重放/诊断/双包），不在「谁偷偷拿到了 system 身份」。
