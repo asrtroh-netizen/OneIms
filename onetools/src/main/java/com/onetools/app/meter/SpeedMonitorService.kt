@@ -90,6 +90,8 @@ class SpeedMonitorService : Service() {
     private fun startMonitoring() {
         isRunning = true
         scope.launch {
+            // Product: 通知栏网速是主路径 — 启动监测时强制打开常驻通知。
+            MeterSettings(applicationContext).setNotificationEnabled(true)
             refreshPrefs()
             withContext(Dispatchers.Main) {
                 ensureChannel()
@@ -129,10 +131,9 @@ class SpeedMonitorService : Service() {
                     lastTx = totals.txBytes
                     val text = MeterRateFormatter.format(prefs, down, up)
                     lastFormatted = text
-                    if (prefs.notificationEnabled) {
-                        val nm = getSystemService(NotificationManager::class.java)
-                        nm.notify(NOTIFICATION_ID, buildNotification(text, down, up))
-                    }
+                    // FGS 常驻通知始终刷新速率（关通知开关也不停更，避免「开了没网速」）。
+                    val nm = getSystemService(NotificationManager::class.java)
+                    nm.notify(NOTIFICATION_ID, buildNotification(text, down, up))
                     applyOverlayState(text)
                     delay(prefs.sampleIntervalMs)
                 }
@@ -164,11 +165,17 @@ class SpeedMonitorService : Service() {
 
     private fun ensureChannel() {
         val nm = getSystemService(NotificationManager::class.java)
+        // New channel id so importance bump applies (Android freezes old channel importance).
         val channel = NotificationChannel(
             CHANNEL_ID,
             getString(R.string.meter_channel_name),
-            NotificationManager.IMPORTANCE_LOW,
-        )
+            NotificationManager.IMPORTANCE_DEFAULT,
+        ).apply {
+            description = getString(R.string.meter_channel_desc)
+            setShowBadge(false)
+            enableVibration(false)
+            setSound(null, null)
+        }
         nm.createNotificationChannel(channel)
     }
 
@@ -190,14 +197,17 @@ class SpeedMonitorService : Service() {
         val iconBitmap = MeterDynamicIcon.create(down, up, prefs.displayMode)
         val icon = androidx.core.graphics.drawable.IconCompat.createWithBitmap(iconBitmap)
         val chip = MeterChipFormat.format(prefs, down, up)
+        // Title = live speed so shade / collapsed row shows rates at a glance.
+        val title = content.ifBlank { getString(R.string.meter_starting) }
+        val body = getString(R.string.meter_notification_hint)
         // Android 16+ (API 36): status-bar chip via promoted ongoing + shortCriticalText.
         if (Build.VERSION.SDK_INT >= 36 && prefs.statusBarChipEnabled) {
             val nm = getSystemService(NotificationManager::class.java)
             val allowPromoted = nm?.canPostPromotedNotifications() == true
             val platform = Notification.Builder(this, CHANNEL_ID)
                 .setSmallIcon(android.graphics.drawable.Icon.createWithBitmap(iconBitmap))
-                .setContentTitle(getString(R.string.meter_notification_title))
-                .setContentText(content)
+                .setContentTitle(title)
+                .setContentText(body)
                 .setSubText(chip)
                 .setOngoing(true)
                 .setOnlyAlertOnce(true)
@@ -215,20 +225,22 @@ class SpeedMonitorService : Service() {
         }
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(icon)
-            .setContentTitle(getString(R.string.meter_notification_title))
-            .setContentText(content)
+            .setContentTitle(title)
+            .setContentText(body)
             .setSubText(chip)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setShowWhen(false)
+            .setSilent(true)
             .setCategory(NotificationCompat.CATEGORY_STATUS)
             .setContentIntent(open)
             .addAction(0, getString(R.string.meter_stop), stop)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .build()
     }
 
     companion object {
-        const val CHANNEL_ID = "onetools_meter"
+        const val CHANNEL_ID = "onetools_meter_speed_v2"
         const val NOTIFICATION_ID = 42
         const val ACTION_STOP = "com.onetools.app.meter.STOP"
         const val ACTION_APPLY_PREFS = "com.onetools.app.meter.APPLY_PREFS"

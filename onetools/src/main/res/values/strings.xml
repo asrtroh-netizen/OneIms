@@ -47,7 +47,9 @@
     <string name="tab_more">更多</string>
     <string name="home_quick_title">快捷开关</string>
     <string name="home_quick_sub">详情仍在各功能页调整</string>
-    <string name="home_toggle_meter">网速监测</string>
+    <string name="home_toggle_meter">通知栏网速</string>
+    <string name="meter_channel_desc">常驻显示实时上下行网速</string>
+    <string name="meter_notification_hint">OneTools · 下拉通知栏可看实时速率 · 点此打开网速页</string>
     <string name="home_toggle_overlay">悬浮网速</string>
     <string name="home_toggle_battery">电池跟踪</string>
     <string name="home_toggle_record_prompt">通话录音提示球</string>
@@ -296,7 +298,7 @@
 
     <string name="meter_starting">正在采样…</string>
 
-    <string name="meter_channel_name">网速监测</string>
+    <string name="meter_channel_name">通知栏网速</string>
 
     <string name="meter_notification_title">OneTools 网速</string>
 
@@ -332,7 +334,7 @@
 
     <string name="meter_saved">已保存</string>
 
-    <string name="meter_notif_enable">通知栏显示</string>
+    <string name="meter_notif_enable">通知栏显示实时网速（开启监测后始终刷新）</string>
 
     <string name="meter_overlay_enable">悬浮窗显示</string>
 
