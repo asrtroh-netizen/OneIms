@@ -23,13 +23,13 @@
 
 | 推荐给… | 包 | 下载 |
 |---|---|---|
-| 🟢 **想少装 App、App 内一键配对** | **OneKuku（独立激活）** | [OneIms-OneKuku-standalone-3.0.2.apk](https://github.com/OneCatx/OneIms/releases/download/v3.0.2/OneIms-OneKuku-standalone-3.0.2.apk) |
-| 🔵 **已有 / 想用 Shizuku 轻壳** | **OneIms Lite（Shizuku）** | [OneIms-Lite-Shizuku-3.0.2.apk](https://github.com/OneCatx/OneIms/releases/download/v3.0.2/OneIms-Lite-Shizuku-3.0.2.apk) |
+| 🟢 **想少装 App、App 内一键配对** | **OneKuku（独立激活）** | [OneIms-OneKuku-standalone-3.0.2.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.0.2/OneIms-OneKuku-standalone-3.0.2.apk) |
+| 🔵 **已有 / 想用 Shizuku 轻壳** | **OneIms Lite（Shizuku）** | [OneIms-Lite-Shizuku-3.0.2.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.0.2/OneIms-Lite-Shizuku-3.0.2.apk) |
 
-[📦 全部 Release 资产](https://github.com/OneCatx/OneIms/releases/tag/v3.0.2)
+[📦 全部 Release 资产](https://github.com/asrtroh-netizen/OneIms/releases/tag/v3.0.2)
 
-> 💙 **友情推荐特权通道**：[asrtroh 修缮版 Shizuku V15.0](https://github.com/OneCatx/shizuku)（配对一次 · 旧 Wi‑Fi 自连 · 开机 FGS 内激活）  
-> 下载正式包：[Releases](https://github.com/OneCatx/shizuku/releases) · 截图：
+> 💙 **友情推荐特权通道**：[asrtroh 修缮版 Shizuku V15.0](https://github.com/asrtroh-netizen/shizuku)（配对一次 · 旧 Wi‑Fi 自连 · 开机 FGS 内激活）  
+> 下载正式包：[Releases](https://github.com/asrtroh-netizen/shizuku/releases) · 截图：
 >
 > <img src="docs/screenshots/shizuku-asrtroh-home-active.png" alt="asrtroh Shizuku Active" width="280" />
 >
@@ -50,7 +50,7 @@
 |---|---|---|
 | **适合谁** | 不想另外装 Shizuku；希望 **App 内无线调试 + 通知栏填码** 一条龙 | 已熟悉 Shizuku；想要 **更小安装包、更轻壳** |
 | **包名** | `com.oneims.app` | `com.oneims.onelink` |
-| **激活方式** | 内嵌 OneBridge · 无线调试配对 · 可通知栏六位码 | **推荐搭配** [asrtroh 修缮版 Shizuku](https://github.com/OneCatx/shizuku)（开机自启更稳）；也可使用官方 [RikkaApps/Shizuku](https://shizuku.rikka.app/) |
+| **激活方式** | 内嵌 OneBridge · 无线调试配对 · 可通知栏六位码 | **推荐搭配** [asrtroh 修缮版 Shizuku](https://github.com/asrtroh-netizen/shizuku)（开机自启更稳）；也可使用官方 [RikkaApps/Shizuku](https://shizuku.rikka.app/) |
 | **额外依赖** | 无（通道打进包内） | 需安装 Shizuku；日常保持 **Active** 即可 |
 | **体积** | 较大（含内嵌 ADB/Bridge） | 较小 |
 | **同机并存** | ✅ 可与 OneIms Lite 同时安装 | ✅ 可与 OneKuku 同时安装 |
@@ -58,7 +58,7 @@
 **怎么选（一句话）：**
 
 * 你是 **「我只想在一个 App 里搞定」** → 下 **OneKuku（独立激活）**
-* 你是 **「我手机本来就有 / 想用 Shizuku」** → 下 **OneIms Lite** + **[asrtroh Shizuku V15.0](https://github.com/OneCatx/shizuku/releases)**（友情推荐）
+* 你是 **「我手机本来就有 / 想用 Shizuku」** → 下 **OneIms Lite** + **[asrtroh Shizuku V15.0](https://github.com/asrtroh-netizen/shizuku/releases)**（友情推荐）
 * 不确定 → 先试 **OneKuku**；若你本来就在用 Shizuku 生态，再换 **OneIms Lite** 也行
 
 ---
@@ -542,7 +542,7 @@ OneIms **不是**运营商官方软件，也 **不是开源项目**（本仓库�
 它只是帮助你**理解并安全地调试自己的设备**。  
 用它之前请先确认你有权限修改本机配置；出问题请优先「一键还原」或重启。
 
-安装请只从本仓库 [Releases](https://github.com/OneCatx/OneIms/releases) 获取 APK。
+安装请只从本仓库 [Releases](https://github.com/asrtroh-netizen/OneIms/releases) 获取 APK。
 
 ---
 

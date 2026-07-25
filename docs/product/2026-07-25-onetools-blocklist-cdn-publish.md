@@ -3,16 +3,16 @@
 ## Canonical (main branch)
 
 ```text
-https://raw.githubusercontent.com/OneCatx/OneBlock/main/phone/one-blocklist.json
+https://raw.githubusercontent.com/asrtroh-netizen/OneBlock/main/phone/one-blocklist.json
 ```
 
 ## Release mirror (OneBlock only — not OneIms)
 
 ```text
-https://github.com/OneCatx/OneBlock/releases/download/onetools-cdn-assets/one-blocklist.json
+https://github.com/asrtroh-netizen/OneBlock/releases/download/onetools-cdn-assets/one-blocklist.json
 ```
 
-Tag: `onetools-cdn-assets` on **OneCatx/OneBlock**.  
+Tag: `onetools-cdn-assets` on **asrtroh-netizen/OneBlock**.  
 The old OneIms release with the same tag has been removed.
 
 ```powershell

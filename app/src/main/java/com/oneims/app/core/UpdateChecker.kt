@@ -29,7 +29,7 @@ import java.net.URL
  */
 object UpdateChecker {
 
-    private const val REPO_OWNER = "OneCatx"
+    private const val REPO_OWNER = "asrtroh-netizen"
     private const val REPO_NAME = "OneIms"
 
     private const val CONNECT_TIMEOUT_MS = 8000

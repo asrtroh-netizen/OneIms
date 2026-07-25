@@ -60,7 +60,7 @@ object OneKukuCoreComponent {
 
     val BUNDLED_ASSET_CANDIDATES: List<String> = listOf(BUNDLED_BRIDGE_ASSET_NAME)
 
-    private const val CORE_REPO_OWNER = "OneCatx"
+    private const val CORE_REPO_OWNER = "asrtroh-netizen"
     private const val CORE_REPO_NAME = "OneIms"
     private const val CONNECT_TIMEOUT_MS = 8000
     private const val READ_TIMEOUT_MS = 8000

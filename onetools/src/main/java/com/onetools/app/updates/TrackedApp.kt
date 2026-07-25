@@ -33,7 +33,7 @@ object TrackedApps {
         ),
         TrackedApp(
             id = "one-shizuku-asrtroh",
-            title = "Shizuku（OneCatx）",
+            title = "Shizuku（asrtroh）",
             packageName = "moe.shizuku.privileged.api",
             githubOwner = "one-index",
             githubRepo = "shizuku-asrtroh",
