@@ -1,6 +1,6 @@
 {
   "schema": "onetools.blocklist.v1",
-  "version": 5,
+  "version": 6,
   "updatedAt": "2026-07-25",
   "numbers": [
     {
@@ -216,6 +216,18 @@
       "kind": "block"
     },
     {
+      "n": "1349",
+      "prefix": true,
+      "tag": "物联网号段",
+      "kind": "block"
+    },
+    {
+      "n": "174",
+      "prefix": true,
+      "tag": "虚拟运营商",
+      "kind": "block"
+    },
+    {
       "n": "1010",
       "prefix": true,
       "tag": "可能骚扰",
@@ -228,13 +240,31 @@
       "kind": "block"
     },
     {
+      "n": "10100",
+      "prefix": true,
+      "tag": "可能骚扰",
+      "kind": "block"
+    },
+    {
       "n": "12520",
       "prefix": true,
       "tag": "可能骚扰",
       "kind": "block"
     },
     {
+      "n": "12530",
+      "prefix": true,
+      "tag": "可能骚扰",
+      "kind": "block"
+    },
+    {
       "n": "12580",
+      "prefix": true,
+      "tag": "可能骚扰",
+      "kind": "block"
+    },
+    {
+      "n": "12586",
       "prefix": true,
       "tag": "可能骚扰",
       "kind": "block"
@@ -252,6 +282,18 @@
       "kind": "block"
     },
     {
+      "n": "17910",
+      "prefix": true,
+      "tag": "网络电话",
+      "kind": "block"
+    },
+    {
+      "n": "17911",
+      "prefix": true,
+      "tag": "网络电话",
+      "kind": "block"
+    },
+    {
       "n": "17951",
       "prefix": true,
       "tag": "网络电话",
@@ -259,6 +301,54 @@
     },
     {
       "n": "95013",
+      "prefix": true,
+      "tag": "可能骚扰",
+      "kind": "block"
+    },
+    {
+      "n": "95105",
+      "prefix": true,
+      "tag": "可能骚扰",
+      "kind": "block"
+    },
+    {
+      "n": "95188",
+      "prefix": true,
+      "tag": "可能骚扰",
+      "kind": "block"
+    },
+    {
+      "n": "960",
+      "prefix": true,
+      "tag": "可能骚扰",
+      "kind": "block"
+    },
+    {
+      "n": "968",
+      "prefix": true,
+      "tag": "可能骚扰",
+      "kind": "block"
+    },
+    {
+      "n": "4001",
+      "prefix": true,
+      "tag": "可能骚扰",
+      "kind": "block"
+    },
+    {
+      "n": "4002",
+      "prefix": true,
+      "tag": "可能骚扰",
+      "kind": "block"
+    },
+    {
+      "n": "4003",
+      "prefix": true,
+      "tag": "可能骚扰",
+      "kind": "block"
+    },
+    {
+      "n": "4005",
       "prefix": true,
       "tag": "可能骚扰",
       "kind": "block"
@@ -279,6 +369,42 @@
       "n": "4008",
       "prefix": true,
       "tag": "可能骚扰",
+      "kind": "block"
+    },
+    {
+      "n": "4009",
+      "prefix": true,
+      "tag": "可能骚扰",
+      "kind": "block"
+    },
+    {
+      "n": "40060",
+      "prefix": true,
+      "tag": "可能骚扰",
+      "kind": "block"
+    },
+    {
+      "n": "1065",
+      "prefix": true,
+      "tag": "短信通道",
+      "kind": "block"
+    },
+    {
+      "n": "1069",
+      "prefix": true,
+      "tag": "短信通道",
+      "kind": "block"
+    },
+    {
+      "n": "1705",
+      "prefix": true,
+      "tag": "虚拟运营商",
+      "kind": "block"
+    },
+    {
+      "n": "1715",
+      "prefix": true,
+      "tag": "虚拟运营商",
       "kind": "block"
     },
     {
@@ -462,5 +588,5 @@
   "note": "PREFIX+EXACT dual-write into CallRuleStore and onespam. Virtual prefixes may false-positive delivery/taxi — whitelist as needed. Own OneBlock path only — do not bind Telo CDN.",
   "keyId": "one-cdn-2026r2",
   "sigAlg": "SHA256withECDSA",
-  "signature": "MEUCIB+0lzLd5zcQA+QSKAtTszEtyAqSDdRASMRL8mMssZB5AiEAsIyRJe590E3HHAJNmn50QqgRM8rygaeIk5Xy6lzprf0="
+  "signature": "MEYCIQD3HAd68CsyPjVVPSenLfqo6abe7BqhFQZbmxq2Kr/5YAIhAPF67YEtAz48Dd58PE8F+4WD0DvmskAJQoVnfZHD3U9s"
 }
