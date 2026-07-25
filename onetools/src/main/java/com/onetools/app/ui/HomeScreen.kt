@@ -23,8 +23,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.onetools.app.R
-import com.onetools.app.battery.BatteryChargeService
-import com.onetools.app.battery.BatteryPrefs
 import com.onetools.app.channel.ChannelCardState
 import com.onetools.app.meter.MeterOverlayController
 import com.onetools.app.meter.MeterSettings
@@ -39,18 +37,8 @@ fun HomeScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val meterSettings = remember { MeterSettings(context.applicationContext) }
-    val batteryPrefs = remember { BatteryPrefs(context.applicationContext) }
     val meterSnap by meterSettings.snapshotFlow.collectAsState(
         initial = com.onetools.app.meter.MeterPrefsSnapshot(),
-    )
-    val batterySnap by batteryPrefs.snapshotFlow.collectAsState(
-        initial = com.onetools.app.battery.BatteryPrefsSnapshot(
-            designCapacityMah = BatteryPrefs.DEFAULT_DESIGN_MAH,
-            chargeAlarmEnabled = true,
-            chargeAlarmPercent = BatteryPrefs.DEFAULT_ALARM_PERCENT,
-            trackingEnabled = true,
-            designCapacityUserSet = false,
-        ),
     )
     var meterRunning by remember { mutableStateOf(SpeedMonitorService.isRunning) }
 
@@ -111,18 +99,6 @@ fun HomeScreen(
                                         SpeedMonitorService::class.java,
                                     ).setAction(SpeedMonitorService.ACTION_APPLY_PREFS),
                                 )
-                            }
-                        },
-                    )
-                    HomeToggleRow(
-                        title = stringResource(R.string.home_toggle_battery),
-                        checked = batterySnap.trackingEnabled,
-                        onCheckedChange = { on ->
-                            scope.launch {
-                                batteryPrefs.setTrackingEnabled(on)
-                                if (on) {
-                                    BatteryChargeService.start(context.applicationContext)
-                                }
                             }
                         },
                     )

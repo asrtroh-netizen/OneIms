@@ -24,14 +24,12 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.onetools.app.battery.BatteryWidgetUpdater
 import com.onetools.app.channel.ChannelCardPolicy
 import com.onetools.app.channel.ChannelCardState
 import com.onetools.app.channel.ShizukuChannel
 import com.onetools.app.device.DeviceSnapshotReader
 import com.onetools.app.export.DiagExport
 import com.onetools.app.updates.UpdateCheckNotifier
-import com.onetools.app.ui.BatteryScreen
 import com.onetools.app.ui.CallLiteScreen
 import com.onetools.app.ui.HomeScreen
 import com.onetools.app.ui.MeterScreen
@@ -147,10 +145,6 @@ class MainActivity : ComponentActivity() {
                                         onBack = {},
                                         showBack = false,
                                     )
-                                    ToolsDestination.BATTERY -> BatteryScreen(
-                                        onBack = {},
-                                        showBack = false,
-                                    )
                                     ToolsDestination.UPDATES -> UpdatesScreen(
                                         onBack = {},
                                         showBack = false,
@@ -234,10 +228,6 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun consumeDeepLinks(intent: Intent?) {
-        if (intent?.getBooleanExtra(BatteryWidgetUpdater.EXTRA_OPEN_BATTERY, false) == true) {
-            destination = ToolsDestination.BATTERY
-            intent.removeExtra(BatteryWidgetUpdater.EXTRA_OPEN_BATTERY)
-        }
         if (intent?.getBooleanExtra(UpdateCheckNotifier.EXTRA_OPEN_UPDATES, false) == true) {
             destination = ToolsDestination.UPDATES
             intent.removeExtra(UpdateCheckNotifier.EXTRA_OPEN_UPDATES)

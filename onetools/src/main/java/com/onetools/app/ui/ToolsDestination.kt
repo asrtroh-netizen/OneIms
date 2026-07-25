@@ -7,7 +7,6 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.onetools.app.R
 
@@ -19,7 +18,6 @@ enum class ToolsDestination(
     HOME(R.string.tab_home, Icons.Filled.Home),
     CALLER(R.string.tab_caller, Icons.Filled.Call),
     METER(R.string.tab_meter, Icons.Filled.Refresh),
-    BATTERY(R.string.tab_battery, Icons.Filled.Star),
     UPDATES(R.string.tab_updates, Icons.AutoMirrored.Filled.Send),
     SETTINGS(R.string.tab_settings, Icons.Filled.Settings),
 }
