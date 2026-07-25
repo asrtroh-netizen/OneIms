@@ -8,21 +8,36 @@ import android.graphics.Typeface
 import kotlin.math.roundToInt
 
 /**
- * Renders a compact speed glyph for notification smallIcon (Pixel Meter–style dynamic icon).
+ * Notification / QS glyphs.
+ * Status-bar [smallIcon] MUST be alpha-only white silhouette (Android ignores RGB → black/white block otherwise).
+ * Shade largeIcon / QS can use the tinted variant.
  */
 object MeterDynamicIcon {
+    fun createSilhouette(downBps: Long, upBps: Long, mode: MeterDisplayMode): Bitmap {
+        val label = shortLabel(valueFor(mode, downBps, upBps))
+        return draw(label, silhouette = true)
+    }
+
     fun create(downBps: Long, upBps: Long, mode: MeterDisplayMode): Bitmap {
-        val value = when (mode) {
-            MeterDisplayMode.UP -> upBps
-            MeterDisplayMode.DOWN, MeterDisplayMode.BOTH, MeterDisplayMode.TOTAL ->
-                if (mode == MeterDisplayMode.TOTAL) downBps + upBps else downBps
-        }
-        val label = shortLabel(value)
+        val label = shortLabel(valueFor(mode, downBps, upBps))
+        return draw(label, silhouette = false)
+    }
+
+    private fun valueFor(mode: MeterDisplayMode, down: Long, up: Long): Long = when (mode) {
+        MeterDisplayMode.UP -> up
+        MeterDisplayMode.TOTAL -> down + up
+        MeterDisplayMode.DOWN, MeterDisplayMode.BOTH -> down
+    }
+
+    private fun draw(label: String, silhouette: Boolean): Bitmap {
         val size = 96
         val bmp = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bmp)
-        val bg = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.argb(255, 0x11, 0x13, 0x18) }
-        canvas.drawRoundRect(0f, 0f, size.toFloat(), size.toFloat(), 20f, 20f, bg)
+        if (!silhouette) {
+            val bg = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.argb(255, 0x11, 0x13, 0x18) }
+            canvas.drawRoundRect(0f, 0f, size.toFloat(), size.toFloat(), 20f, 20f, bg)
+        }
+        // Silhouette: only white pixels (alpha) — transparent background.
         val text = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.WHITE
             textAlign = Paint.Align.CENTER

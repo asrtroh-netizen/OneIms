@@ -702,7 +702,15 @@ fun CallerScreen(
                                     check.label.isNotBlank() -> check.label
                                     else -> check.spamTag
                                 }
+                                val digits = NumberMatcher.digits(lookupNumber)
+                                val numberDisplay = if (digits.removePrefix("86").length == 11) {
+                                    val d = digits.removePrefix("86")
+                                    "${d.substring(0, 3)} ${d.substring(3, 7)} ${d.substring(7)}"
+                                } else {
+                                    digits
+                                }
                                 val composed = DialerLabelComposer.compose(
+                                    numberDisplay = numberDisplay,
                                     geo = geo,
                                     ruleKind = kind,
                                     ruleTag = tag,

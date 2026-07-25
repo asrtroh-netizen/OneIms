@@ -126,6 +126,21 @@ fun BatteryScreen(
     val charge = sessions.filter { it.kind == "CHARGE" }
 
     val body: LazyListScope.() -> Unit = {
+            if (!showBack) {
+                item {
+                    Text(
+                        stringResource(R.string.page_onebattery),
+                        style = MaterialTheme.typography.headlineLarge,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Text(
+                        stringResource(R.string.onebattery_subtitle),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 6.dp, bottom = 4.dp),
+                    )
+                }
+            }
             item {
                 Text(
                     stringResource(R.string.battery_accu_note),
@@ -539,7 +554,7 @@ fun BatteryScreen(
 
     if (showBack) {
         OneToolsToolPage(
-            title = stringResource(R.string.battery_title),
+            title = stringResource(R.string.page_onebattery),
             onBack = onBack,
             verticalSpacing = 10,
             content = body,

@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.horizontalScroll
@@ -66,7 +67,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun UpdatesScreen(onBack: () -> Unit) {
+fun UpdatesScreen(
+    onBack: () -> Unit,
+    showBack: Boolean = true,
+) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val repo = remember { UpdateCatalogRepository(context.applicationContext) }
@@ -106,10 +110,22 @@ fun UpdatesScreen(onBack: () -> Unit) {
         )
     }
 
-    OneToolsToolPage(
-        title = stringResource(R.string.updates_title),
-        onBack = onBack,
-    ) {
+    val pageBody: androidx.compose.foundation.lazy.LazyListScope.() -> Unit = {
+            if (!showBack) {
+                item {
+                    Text(
+                        stringResource(R.string.page_oneupdate),
+                        style = MaterialTheme.typography.headlineLarge,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                    )
+                    Text(
+                        stringResource(R.string.oneupdate_subtitle),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 6.dp, bottom = 4.dp),
+                    )
+                }
+            }
             item {
                 Text(
                     stringResource(R.string.updates_intro_better),
@@ -400,6 +416,24 @@ fun UpdatesScreen(onBack: () -> Unit) {
                     },
                 )
             }
+    }
+
+    if (showBack) {
+        OneToolsToolPage(
+            title = stringResource(R.string.page_oneupdate),
+            onBack = onBack,
+            content = pageBody,
+        )
+    } else {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 20.dp)
+                .statusBarsPadding(),
+            contentPadding = PaddingValues(top = 16.dp, bottom = 36.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            content = pageBody,
+        )
     }
 
     if (showAdd) {

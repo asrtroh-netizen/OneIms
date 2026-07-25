@@ -82,10 +82,25 @@ fun MeterScreen(
     }
 
     ToolScaffold(
-        title = stringResource(R.string.meter_title),
+        title = stringResource(R.string.page_onemeter),
         onBack = onBack,
         showBack = showBack,
     ) {
+        if (!showBack) {
+            item {
+                Text(
+                    stringResource(R.string.page_onemeter),
+                    style = MaterialTheme.typography.headlineLarge,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                )
+                Text(
+                    stringResource(R.string.onemeter_subtitle),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 6.dp, bottom = 4.dp),
+                )
+            }
+        }
         item {
             Text(
                 stringResource(R.string.meter_desc),

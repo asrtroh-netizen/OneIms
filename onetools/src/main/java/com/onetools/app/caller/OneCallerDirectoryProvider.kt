@@ -111,20 +111,25 @@ class OneCallerDirectoryProvider : ContentProvider() {
         val digits = NumberMatcher.digits(rawNumber)
         if (digits.isEmpty()) return null
         val geo = CnMobileGeo.lookup(ctx, digits)
-        val check = runBlocking { CallerCheckEngine.check(ctx, digits) }
         val rules = runBlocking { CallRuleStore(ctx).snapshot() }
         val user = NumberMatcher.lookup(rules, digits)
+        // Lightweight: only user ALLOW/LABEL rules + offline geo. Never paint geo as name;
+        // never pull spam/network tags into DISPLAY_NAME.
+        val allowRule = user.matchedRules.firstOrNull { it.kind == CallRuleKind.ALLOW }
         val labelRule = user.matchedRules.firstOrNull { it.kind == CallRuleKind.LABEL }
-        val kind = CallerCheckEngine.dialerKind(check, labelRule)
-            ?: labelRule?.kind
-        val tag = when {
-            labelRule != null -> labelRule.tag.ifBlank { labelRule.pattern }
-            check.label.isNotBlank() -> check.label
-            else -> check.spamTag
+        val kind = when {
+            allowRule != null -> CallRuleKind.ALLOW
+            labelRule != null -> CallRuleKind.LABEL
+            else -> null
         }
-        // We paint when spam/rules/geo exists. Telo HEAD only paints spam hits;
-        // OneCaller also paints LABEL + offline geo (product decision).
+        val tag = when (kind) {
+            CallRuleKind.ALLOW -> allowRule?.tag?.ifBlank { allowRule.pattern }
+            CallRuleKind.LABEL -> labelRule?.tag?.ifBlank { labelRule.pattern }
+            else -> null
+        }
+        val numberDisplay = formatPhoneDisplay(digits)
         val composed = DialerLabelComposer.compose(
+            numberDisplay = numberDisplay,
             geo = geo,
             ruleKind = kind,
             ruleTag = tag,
@@ -156,6 +161,15 @@ class OneCallerDirectoryProvider : ContentProvider() {
         selection: String?,
         selectionArgs: Array<out String>?,
     ): Int = 0
+
+    private fun formatPhoneDisplay(digits: String): String {
+        val d = digits.removePrefix("86")
+        return if (d.length == 11) {
+            "${d.substring(0, 3)} ${d.substring(3, 7)} ${d.substring(7)}"
+        } else {
+            d
+        }
+    }
 
     private data class LabelHit(val idHash: Long, val displayName: String, val label: String)
 

@@ -32,17 +32,15 @@ import com.onetools.app.device.DeviceSnapshotReader
 import com.onetools.app.export.DiagExport
 import com.onetools.app.updates.UpdateCheckNotifier
 import com.onetools.app.ui.BatteryScreen
-import com.onetools.app.ui.CallerScreen
+import com.onetools.app.ui.CallLiteScreen
 import com.onetools.app.ui.HomeScreen
 import com.onetools.app.ui.MeterScreen
-import com.onetools.app.ui.MoreToolsScreen
 import com.onetools.app.ui.OneToolsScaffold
+import com.onetools.app.ui.SettingsToolsScreen
 import com.onetools.app.ui.ToolsDestination
 import com.onetools.app.ui.UpdatesScreen
 import com.onetools.app.ui.theme.OneToolsTheme
 import kotlinx.coroutines.delay
-
-private enum class NestedRoute { None, Updates }
 
 class MainActivity : ComponentActivity() {
     private var serviceReady by mutableStateOf(false)
@@ -50,7 +48,6 @@ class MainActivity : ComponentActivity() {
     private var activating by mutableStateOf(false)
     private var detailToast by mutableStateOf<String?>(null)
     private var destination by mutableStateOf(ToolsDestination.HOME)
-    private var nested by mutableStateOf(NestedRoute.None)
 
     private val notificationPermission =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { /* no-op */ }
@@ -123,41 +120,36 @@ class MainActivity : ComponentActivity() {
                 }
 
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    when (nested) {
-                        NestedRoute.Updates -> UpdatesScreen(
-                            onBack = { nested = NestedRoute.None },
-                        )
-                        NestedRoute.None -> OneToolsScaffold(
-                            selected = destination,
-                            onSelect = { destination = it },
-                        ) { innerPadding ->
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(innerPadding),
-                            ) {
-                                when (destination) {
-                                    ToolsDestination.HOME -> HomeScreen(
-                                        channelState = cardState,
-                                        onActivateOrCheck = { onPrimaryAction() },
-                                    )
-                                    ToolsDestination.CALLER -> CallerScreen(
-                                        onBack = {},
-                                        showBack = false,
-                                    )
-                                    ToolsDestination.METER -> MeterScreen(
-                                        onBack = {},
-                                        showBack = false,
-                                    )
-                                    ToolsDestination.BATTERY -> BatteryScreen(
-                                        onBack = {},
-                                        showBack = false,
-                                    )
-                                    ToolsDestination.MORE -> MoreToolsScreen(
-                                        onOpenUpdates = { nested = NestedRoute.Updates },
-                                        onExportDiag = { exportDiagnostic() },
-                                    )
-                                }
+                    OneToolsScaffold(
+                        selected = destination,
+                        onSelect = { destination = it },
+                    ) { innerPadding ->
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(innerPadding),
+                        ) {
+                            when (destination) {
+                                ToolsDestination.HOME -> HomeScreen(
+                                    channelState = cardState,
+                                    onActivateOrCheck = { onPrimaryAction() },
+                                )
+                                ToolsDestination.CALLER -> CallLiteScreen(showBack = false)
+                                ToolsDestination.METER -> MeterScreen(
+                                    onBack = {},
+                                    showBack = false,
+                                )
+                                ToolsDestination.BATTERY -> BatteryScreen(
+                                    onBack = {},
+                                    showBack = false,
+                                )
+                                ToolsDestination.UPDATES -> UpdatesScreen(
+                                    onBack = {},
+                                    showBack = false,
+                                )
+                                ToolsDestination.SETTINGS -> SettingsToolsScreen(
+                                    onExportDiag = { exportDiagnostic() },
+                                )
                             }
                         }
                     }
@@ -234,17 +226,14 @@ class MainActivity : ComponentActivity() {
     private fun consumeDeepLinks(intent: Intent?) {
         if (intent?.getBooleanExtra(BatteryWidgetUpdater.EXTRA_OPEN_BATTERY, false) == true) {
             destination = ToolsDestination.BATTERY
-            nested = NestedRoute.None
             intent.removeExtra(BatteryWidgetUpdater.EXTRA_OPEN_BATTERY)
         }
         if (intent?.getBooleanExtra(UpdateCheckNotifier.EXTRA_OPEN_UPDATES, false) == true) {
-            destination = ToolsDestination.MORE
-            nested = NestedRoute.Updates
+            destination = ToolsDestination.UPDATES
             intent.removeExtra(UpdateCheckNotifier.EXTRA_OPEN_UPDATES)
         }
         if (intent?.getBooleanExtra(EXTRA_OPEN_METER, false) == true) {
             destination = ToolsDestination.METER
-            nested = NestedRoute.None
             intent.removeExtra(EXTRA_OPEN_METER)
         }
     }

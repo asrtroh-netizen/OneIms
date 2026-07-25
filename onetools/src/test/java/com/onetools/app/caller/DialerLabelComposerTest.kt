@@ -6,9 +6,10 @@ import org.junit.Test
 
 class DialerLabelComposerTest {
     @Test
-    fun geoOnlyLooksNative() {
+    fun geoOnlyKeepsNumberAsName() {
         val geo = CnMobileGeo.Hit("北京", "北京", "中国移动")
         val r = DialerLabelComposer.compose(
+            numberDisplay = "138 0013 8000",
             geo = geo,
             ruleKind = null,
             ruleTag = null,
@@ -17,13 +18,15 @@ class DialerLabelComposerTest {
             fallbackBlock = "拦截名单",
             spamFmt = { "骚扰 · $it" },
         )
-        assertEquals("北京 · 移动", r!!.displayName)
+        assertEquals("138 0013 8000", r!!.displayName)
+        assertEquals(geo.dialerLine(), r.label)
     }
 
     @Test
-    fun labelPlusGeoJoinsCleanly() {
+    fun labelRuleUsesTagAsNameGeoAsLabel() {
         val geo = CnMobileGeo.Hit("上海", "上海", "中国联通")
         val r = DialerLabelComposer.compose(
+            numberDisplay = "95588",
             geo = geo,
             ruleKind = CallRuleKind.LABEL,
             ruleTag = "工商银行客服",
@@ -32,12 +35,14 @@ class DialerLabelComposerTest {
             fallbackBlock = "拦截名单",
             spamFmt = { "骚扰 · $it" },
         )
-        assertEquals("工商银行客服 · 上海 · 联通", r!!.displayName)
+        assertEquals("工商银行客服", r!!.displayName)
+        assertEquals(geo.dialerLine(), r.label)
     }
 
     @Test
     fun nothingReturnsNull() {
         val r = DialerLabelComposer.compose(
+            numberDisplay = "",
             geo = null,
             ruleKind = null,
             ruleTag = null,

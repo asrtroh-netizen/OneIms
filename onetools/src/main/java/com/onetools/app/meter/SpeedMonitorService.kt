@@ -194,18 +194,21 @@ class SpeedMonitorService : Service() {
             Intent(this, SpeedMonitorService::class.java).setAction(ACTION_STOP),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
-        val iconBitmap = MeterDynamicIcon.create(down, up, prefs.displayMode)
-        val icon = androidx.core.graphics.drawable.IconCompat.createWithBitmap(iconBitmap)
+        // smallIcon = alpha silhouette (status bar); largeIcon = tinted speed chip (shade).
+        val silhouette = MeterDynamicIcon.createSilhouette(down, up, prefs.displayMode)
+        val colored = MeterDynamicIcon.create(down, up, prefs.displayMode)
+        val smallIcon = androidx.core.graphics.drawable.IconCompat.createWithBitmap(silhouette)
         val chip = MeterChipFormat.format(prefs, down, up)
-        // Title = live speed so shade / collapsed row shows rates at a glance.
         val title = content.ifBlank { getString(R.string.meter_starting) }
         val body = getString(R.string.meter_notification_hint)
-        // Android 16+ (API 36): status-bar chip via promoted ongoing + shortCriticalText.
+        val accent = 0xFF111318.toInt()
         if (Build.VERSION.SDK_INT >= 36 && prefs.statusBarChipEnabled) {
             val nm = getSystemService(NotificationManager::class.java)
             val allowPromoted = nm?.canPostPromotedNotifications() == true
             val platform = Notification.Builder(this, CHANNEL_ID)
-                .setSmallIcon(android.graphics.drawable.Icon.createWithBitmap(iconBitmap))
+                .setSmallIcon(android.graphics.drawable.Icon.createWithBitmap(silhouette))
+                .setLargeIcon(colored)
+                .setColor(accent)
                 .setContentTitle(title)
                 .setContentText(body)
                 .setSubText(chip)
@@ -224,7 +227,9 @@ class SpeedMonitorService : Service() {
             return platform.build()
         }
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(icon)
+            .setSmallIcon(smallIcon)
+            .setLargeIcon(colored)
+            .setColor(accent)
             .setContentTitle(title)
             .setContentText(body)
             .setSubText(chip)
