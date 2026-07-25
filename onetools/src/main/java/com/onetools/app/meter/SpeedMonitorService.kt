@@ -179,6 +179,11 @@ class SpeedMonitorService : Service() {
         nm.createNotificationChannel(channel)
     }
 
+    /**
+     * Notification shape mirrors Pixel Meter [NotificationHelper.buildNotificationFromState]:
+     * fixed title, contentText = ↓/↑ lines, SECRET visibility, either Live Update chip
+     * (static ic + shortCriticalText) or bitmap smallIcon (value over unit).
+     */
     private fun buildNotification(content: String, down: Long = 0, up: Long = 0): Notification {
         val open = PendingIntent.getActivity(
             this,
@@ -188,60 +193,47 @@ class SpeedMonitorService : Service() {
                 .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
-        val stop = PendingIntent.getService(
-            this,
-            1,
-            Intent(this, SpeedMonitorService::class.java).setAction(ACTION_STOP),
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-        )
-        // Pixel Meter style: value+unit stacked glyph; BOTH uses total on icon.
-        val density = resources.displayMetrics.density
-        val silhouette = MeterDynamicIcon.createSilhouette(down, up, prefs.displayMode, density)
-        val colored = MeterDynamicIcon.create(down, up, prefs.displayMode, density)
-        val smallIcon = androidx.core.graphics.drawable.IconCompat.createWithBitmap(silhouette)
-        val chip = MeterChipFormat.format(prefs, down, up)
-        val title = content.ifBlank { getString(R.string.meter_starting) }
-        val body = getString(R.string.meter_notification_hint)
-        val accent = 0xFF111318.toInt()
-        if (Build.VERSION.SDK_INT >= 36 && prefs.statusBarChipEnabled) {
-            val nm = getSystemService(NotificationManager::class.java)
-            val allowPromoted = nm?.canPostPromotedNotifications() == true
+        val contentText = content.ifBlank { getString(R.string.meter_starting) }
+        val useLiveUpdate = Build.VERSION.SDK_INT >= 36 && prefs.statusBarChipEnabled
+        if (useLiveUpdate) {
+            // Pixel Meter live-update branch (platform APIs; androidx may lag).
+            val live = MeterChipFormat.format(prefs, down, up)
             val platform = Notification.Builder(this, CHANNEL_ID)
-                .setSmallIcon(android.graphics.drawable.Icon.createWithBitmap(silhouette))
-                .setLargeIcon(colored)
-                .setColor(accent)
-                .setContentTitle(title)
-                .setContentText(body)
-                .setSubText(chip)
                 .setOngoing(true)
                 .setOnlyAlertOnce(true)
-                .setShowWhen(false)
-                .setCategory(Notification.CATEGORY_STATUS)
                 .setContentIntent(open)
-                .addAction(
-                    Notification.Action.Builder(null, getString(R.string.meter_stop), stop).build(),
-                )
-                .setShortCriticalText(chip)
-            if (allowPromoted) {
+                .setVisibility(Notification.VISIBILITY_SECRET)
+                .setShowWhen(false)
+                .setContentTitle(getString(R.string.meter_notification_title))
+                .setContentText(contentText)
+                .setSmallIcon(R.drawable.ic_meter_speed)
+                .setShortCriticalText(live)
+            val nm = getSystemService(NotificationManager::class.java)
+            if (nm?.canPostPromotedNotifications() == true) {
                 platform.setFlag(Notification.FLAG_PROMOTED_ONGOING, true)
             }
             return platform.build()
         }
+        val density = resources.displayMetrics.density
+        val silhouette = MeterDynamicIcon.createSilhouette(
+            down,
+            up,
+            prefs.displayMode,
+            density,
+        )
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(smallIcon)
-            .setLargeIcon(colored)
-            .setColor(accent)
-            .setContentTitle(title)
-            .setContentText(body)
-            .setSubText(chip)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
+            .setContentIntent(open)
+            .setVisibility(NotificationCompat.VISIBILITY_SECRET)
+            .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
             .setShowWhen(false)
             .setSilent(true)
-            .setCategory(NotificationCompat.CATEGORY_STATUS)
-            .setContentIntent(open)
-            .addAction(0, getString(R.string.meter_stop), stop)
-            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setContentTitle(getString(R.string.meter_notification_title))
+            .setContentText(contentText)
+            .setSmallIcon(
+                androidx.core.graphics.drawable.IconCompat.createWithBitmap(silhouette),
+            )
             .build()
     }
 

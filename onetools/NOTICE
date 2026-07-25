@@ -21,6 +21,10 @@
 - Small override/sample: `assets/caller/geo_v1.json` (`onetools.geo.v1`).
 - **Do not** bundle GPL-licensed phone datasets (e.g. xluohome/phonedata LICENSE GPL-3).
 
-## Pixel Meter (capability reference — clean-room / Apache-inspired)
+## Pixel Meter (capability reference — Apache-2.0)
 
-- Overlay / notification speed meter is first-party adaptation; see meter package.
+- Upstream: https://github.com/Mystery00/PixelMeter
+- Adapted ideas: physical-interface sampling (`SpeedDataSource`), notification
+  bitmap value/unit stack + Live Update chip path (`NotificationHelper`),
+  `ic_meter_speed` path geometry from upstream `ic_speed`.
+- Implementation remains first-party under this tree; see `meter` package.
