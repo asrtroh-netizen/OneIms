@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.horizontalScroll
@@ -428,9 +427,8 @@ fun UpdatesScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 20.dp)
-                .statusBarsPadding(),
-            contentPadding = PaddingValues(top = 16.dp, bottom = 36.dp),
+                .padding(horizontal = 20.dp),
+            contentPadding = PaddingValues(top = 28.dp, bottom = 36.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
             content = pageBody,
         )

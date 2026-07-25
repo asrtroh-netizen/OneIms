@@ -195,8 +195,18 @@ class SpeedMonitorService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
         // smallIcon = alpha silhouette (status bar); largeIcon = tinted speed chip (shade).
-        val silhouette = MeterDynamicIcon.createSilhouette(down, up, prefs.displayMode)
-        val colored = MeterDynamicIcon.create(down, up, prefs.displayMode)
+        val silhouette = MeterDynamicIcon.createSilhouette(
+            down,
+            up,
+            prefs.displayMode,
+            prefs.speedOrder,
+        )
+        val colored = MeterDynamicIcon.create(
+            down,
+            up,
+            prefs.displayMode,
+            prefs.speedOrder,
+        )
         val smallIcon = androidx.core.graphics.drawable.IconCompat.createWithBitmap(silhouette)
         val chip = MeterChipFormat.format(prefs, down, up)
         val title = content.ifBlank { getString(R.string.meter_starting) }

@@ -37,10 +37,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.onetools.app.ui.theme.OneToolsTokens
 
-private val PageMaxWidth = 720.dp
+/** Align with OneIMS [OneImsPage] page width. */
+private val PageMaxWidth = 960.dp
 
 /**
  * One 系列首页骨架（对齐 OneIMS [OneImsPage]）：标题区 + 最大宽度内容列。
+ * Status-bar inset comes from Scaffold innerPadding (MainActivity) — do NOT stack statusBarsPadding here.
  */
 @Composable
 fun OneToolsPage(
@@ -49,9 +51,7 @@ fun OneToolsPage(
     content: LazyListScope.() -> Unit,
 ) {
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .statusBarsPadding(),
+        modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.TopCenter,
     ) {
         LazyColumn(
@@ -59,9 +59,9 @@ fun OneToolsPage(
                 .widthIn(max = PageMaxWidth)
                 .fillMaxSize(),
             contentPadding = PaddingValues(
-                start = OneToolsTokens.cardPaddingHorizontal,
+                start = 20.dp,
                 top = 28.dp,
-                end = OneToolsTokens.cardPaddingHorizontal,
+                end = 20.dp,
                 bottom = 36.dp,
             ),
             verticalArrangement = Arrangement.spacedBy(20.dp),

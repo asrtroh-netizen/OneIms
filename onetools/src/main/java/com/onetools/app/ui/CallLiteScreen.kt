@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -56,9 +55,7 @@ fun CallLiteScreen(showBack: Boolean = false, onBack: () -> Unit = {}) {
     ) { granted -> callLogOk = granted }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .statusBarsPadding(),
+        modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         if (showBack) {
@@ -69,7 +66,8 @@ fun CallLiteScreen(showBack: Boolean = false, onBack: () -> Unit = {}) {
                 .fillMaxSize()
                 .padding(horizontal = 20.dp),
             contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                top = if (showBack) 8.dp else 20.dp,
+                // Dock tabs already get status-bar inset from Scaffold; match OneImsPage top=28.
+                top = if (showBack) 8.dp else 28.dp,
                 bottom = 40.dp,
             ),
             verticalArrangement = Arrangement.spacedBy(14.dp),
