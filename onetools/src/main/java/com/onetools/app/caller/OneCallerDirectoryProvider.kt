@@ -13,8 +13,12 @@ import com.onetools.app.R
 import kotlinx.coroutines.runBlocking
 
 /**
- * Clean-room Contacts Directory for dialer / caller-ID labels.
+ * Clean-room Contacts Directory — paints labels into Pixel Phone / caller-ID UI.
  * Public ContactsContract.Directory contract only — not derived from Pixel Telo.
+ *
+ * Shows:
+ * - CN mobile geo (onetools.geo.v1) for unknown numbers
+ * - Custom LABEL / ALLOW / BLOCK tags composed into a single native-looking line
  */
 class OneCallerDirectoryProvider : ContentProvider() {
     private val matcher = UriMatcher(UriMatcher.NO_MATCH)
@@ -27,6 +31,7 @@ class OneCallerDirectoryProvider : ContentProvider() {
         matcher.addURI(authority, "phone_lookup/*", CODE_PHONE_LOOKUP)
         matcher.addURI(authority, "contacts/filter/*", CODE_CONTACTS_FILTER)
         matcher.addURI(authority, "data/phones/filter/*", CODE_PHONE_FILTER)
+        CnMobileGeo.warm(ctx)
         return true
     }
 
@@ -109,32 +114,27 @@ class OneCallerDirectoryProvider : ContentProvider() {
 
     private fun resolveLabel(rawNumber: String): LabelHit? {
         val ctx = context ?: return null
-        val rules = runBlocking { CallRuleStore(ctx).snapshot() }
         val digits = NumberMatcher.digits(rawNumber)
         if (digits.isEmpty()) return null
+        val geo = CnMobileGeo.lookup(ctx, digits)
+        val rules = runBlocking { CallRuleStore(ctx).snapshot() }
         val result = NumberMatcher.lookup(rules, digits)
-        if (result.matchedRules.isEmpty()) return null
         val chosen = result.matchedRules.firstOrNull { it.kind == CallRuleKind.ALLOW }
             ?: result.matchedRules.firstOrNull { it.kind == CallRuleKind.LABEL }
             ?: result.matchedRules.firstOrNull { it.kind == CallRuleKind.BLOCK }
-            ?: return null
-        val tag = chosen.tag.ifBlank {
-            when (chosen.kind) {
-                CallRuleKind.ALLOW -> ctx.getString(R.string.caller_label_allow)
-                CallRuleKind.LABEL -> ctx.getString(R.string.caller_label_mark)
-                CallRuleKind.BLOCK -> ctx.getString(R.string.caller_label_block)
-            }
-        }
-        val name = when (chosen.kind) {
-            CallRuleKind.ALLOW,
-            CallRuleKind.LABEL,
-            -> tag
-            CallRuleKind.BLOCK -> ctx.getString(R.string.caller_label_spam_fmt, tag)
-        }
+        val composed = DialerLabelComposer.compose(
+            geo = geo,
+            ruleKind = chosen?.kind,
+            ruleTag = chosen?.tag,
+            fallbackAllow = ctx.getString(R.string.caller_label_allow),
+            fallbackLabel = ctx.getString(R.string.caller_label_mark),
+            fallbackBlock = ctx.getString(R.string.caller_label_block),
+            spamFmt = { tag -> ctx.getString(R.string.caller_label_spam_fmt, tag) },
+        ) ?: return null
         return LabelHit(
             idHash = digits.hashCode().toLong().and(0x7fff_ffffL),
-            displayName = name,
-            label = tag,
+            displayName = composed.displayName,
+            label = composed.label,
         )
     }
 

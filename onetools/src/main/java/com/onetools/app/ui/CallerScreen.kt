@@ -56,6 +56,8 @@ import com.onetools.app.caller.CallMatchMode
 import com.onetools.app.caller.CallRule
 import com.onetools.app.caller.CallRuleKind
 import com.onetools.app.caller.CallRuleStore
+import com.onetools.app.caller.CnMobileGeo
+import com.onetools.app.caller.DialerLabelComposer
 import com.onetools.app.caller.NumberMatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -447,6 +449,22 @@ fun CallerScreen(
                         onClick = {
                             scope.launch {
                                 val r = store.lookup(lookupNumber)
+                                val geo = CnMobileGeo.lookup(context, lookupNumber)
+                                val chosen = r.matchedRules
+                                    .firstOrNull { it.kind == CallRuleKind.ALLOW }
+                                    ?: r.matchedRules.firstOrNull { it.kind == CallRuleKind.LABEL }
+                                    ?: r.matchedRules.firstOrNull { it.kind == CallRuleKind.BLOCK }
+                                val composed = DialerLabelComposer.compose(
+                                    geo = geo,
+                                    ruleKind = chosen?.kind,
+                                    ruleTag = chosen?.tag,
+                                    fallbackAllow = context.getString(R.string.caller_label_allow),
+                                    fallbackLabel = context.getString(R.string.caller_label_mark),
+                                    fallbackBlock = context.getString(R.string.caller_label_block),
+                                    spamFmt = { tag ->
+                                        context.getString(R.string.caller_label_spam_fmt, tag)
+                                    },
+                                )
                                 val decisionText = when (r.decision) {
                                     NumberMatcher.Decision.BLOCK ->
                                         context.getString(R.string.caller_lookup_decision_block)
@@ -455,21 +473,14 @@ fun CallerScreen(
                                     NumberMatcher.Decision.ALLOW_UNKNOWN ->
                                         context.getString(R.string.caller_lookup_decision_pass)
                                 }
-                                val label = r.matchedRules
-                                    .firstOrNull { it.kind == CallRuleKind.ALLOW }
-                                    ?: r.matchedRules.firstOrNull { it.kind == CallRuleKind.LABEL }
-                                    ?: r.matchedRules.firstOrNull { it.kind == CallRuleKind.BLOCK }
-                                val tagPart = label?.tag?.takeIf { it.isNotBlank() }
-                                    ?: r.tags.firstOrNull()
                                 lookupResult = buildString {
                                     append(decisionText)
-                                    if (!tagPart.isNullOrBlank()) {
-                                        append(" · ")
-                                        append(context.getString(R.string.caller_lookup_label_fmt, tagPart))
-                                    } else if (r.matchedRules.isEmpty()) {
-                                        append(" · ")
-                                        append(context.getString(R.string.caller_lookup_no_label))
-                                    }
+                                    append("\n")
+                                    append(context.getString(R.string.caller_lookup_dialer_fmt))
+                                    append(
+                                        composed?.displayName
+                                            ?: context.getString(R.string.caller_lookup_no_label),
+                                    )
                                 }
                             }
                         },

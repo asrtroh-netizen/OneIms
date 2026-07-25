@@ -284,7 +284,7 @@
 
     <string name="caller_hero_eyebrow">Pixel · OneCaller</string>
 
-    <string name="caller_intro">干净室自研，专为 Pixel Phone：归属标签、骚扰拦截、白名单。设为默认「来电显示与骚扰拦截」后生效。</string>
+    <string name="caller_intro">专为 Pixel Phone：把号码归属地与自定义标签写进系统拨号/来电界面（Contacts Directory），并可拦截骚扰。请设为默认「来电显示与骚扰拦截」，并授予通话记录权限。</string>
 
     <string name="caller_status_ready">已是默认来电筛选 · 规则即时生效</string>
 
@@ -358,7 +358,9 @@
 
     <string name="caller_lookup_label_fmt">显示「%1$s」</string>
 
-    <string name="caller_lookup_no_label">无归属标签</string>
+    <string name="caller_lookup_no_label">无归属地 / 标签</string>
+
+    <string name="caller_lookup_dialer_fmt">拨号器将显示：</string>
 
     <string name="caller_add">添加</string>
 

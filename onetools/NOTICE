@@ -6,9 +6,17 @@
 - License: Apache License 2.0 (typical for Battery Info–style FOSS apps).
 - OneTools battery reader is first-party clean-room code; see `battery/BatteryReader.kt`.
 
-## Obtainium / GlassWire / Pixel Meter / Pixel Telo / OneCaller
+## Obtainium / GlassWire / Pixel Telo
 
-- **Out of product scope** (2026-07-25): no call lookup, Meter stacks, Telo UI,
-  or update-center presets that pull Pixel Telo / forks (e.g. Pixel-Tailor-CN/PixelTelo).
+- **Out**: update-center presets that pull Pixel Telo / forks; GPL Obtainium source.
 - Update center remains first-party (does not embed Obtainium source).
-- Do not reintroduce GPL Obtainium source into `:onetools`.
+
+## OneCaller (first-party) + geo
+
+- CallScreening + Contacts Directory are first-party clean-room.
+- Mobile geo uses schema `onetools.geo.v1` JSON (`assets/caller/geo_v1.json`).
+- **Do not** bundle GPL `phone.dat` (e.g. xluohome/phonedata) into `:onetools`.
+
+## Pixel Meter (capability reference — clean-room / Apache-inspired)
+
+- Overlay / notification speed meter is first-party adaptation; see meter package.
