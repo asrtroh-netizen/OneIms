@@ -46,7 +46,8 @@ class MeterNotificationTileService : TileService() {
                 }
             }
             // QS: white silhouette on transparent — avoids solid black tile glyph.
-            val bmp = MeterDynamicIcon.createSilhouette(0, 0, MeterDisplayMode.BOTH)
+            val density = resources.displayMetrics.density
+            val bmp = MeterDynamicIcon.createSilhouette(0, 0, MeterDisplayMode.BOTH, density)
             icon = Icon.createWithBitmap(bmp)
             updateTile()
         }
@@ -106,7 +107,8 @@ class MeterOverlayTileService : TileService() {
                     getString(com.onetools.app.R.string.meter_tile_overlay_off)
                 }
             }
-            val bmp = MeterDynamicIcon.createSilhouette(0, 0, MeterDisplayMode.DOWN)
+            val density = resources.displayMetrics.density
+            val bmp = MeterDynamicIcon.createSilhouette(0, 0, MeterDisplayMode.DOWN, density)
             icon = Icon.createWithBitmap(bmp)
             updateTile()
         }

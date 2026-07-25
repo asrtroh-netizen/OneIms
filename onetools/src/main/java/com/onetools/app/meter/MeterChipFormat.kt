@@ -8,10 +8,12 @@ import kotlin.math.roundToInt
  */
 object MeterChipFormat {
     fun format(prefs: MeterPrefsSnapshot, downBytesPerSec: Long, upBytesPerSec: Long): String {
+        // BOTH → total (Pixel Meter live-update / bitmap total path).
         val bytes = when (prefs.displayMode) {
             MeterDisplayMode.UP -> upBytesPerSec
-            MeterDisplayMode.TOTAL -> downBytesPerSec + upBytesPerSec
-            MeterDisplayMode.DOWN, MeterDisplayMode.BOTH -> downBytesPerSec
+            MeterDisplayMode.DOWN -> downBytesPerSec
+            MeterDisplayMode.TOTAL, MeterDisplayMode.BOTH ->
+                downBytesPerSec + upBytesPerSec
         }
         val label = when (prefs.rateUnit) {
             MeterRateUnit.BITS_PER_SEC -> shortBits(bytes.coerceAtLeast(0L) * 8L)

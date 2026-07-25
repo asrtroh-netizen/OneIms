@@ -8,90 +8,101 @@ import android.graphics.Typeface
 import kotlin.math.roundToInt
 
 /**
- * Notification / QS glyphs.
- * Status-bar [smallIcon] MUST be alpha-only white silhouette (Android ignores RGB → black/white block otherwise).
- * Shade largeIcon / QS can use the tinted variant.
+ * Notification / QS glyphs — aligned with Pixel Meter [NotificationHelper] (Apache-2.0):
+ * - Icon canvas ≈ 24dp (min 48px)
+ * - Bitmap mode draws **value** (0.65×size) over **unit** (0.35×size)
+ * - BOTH / TOTAL modes use combined throughput on the glyph; shade text shows ↓/↑ lines
  *
- * BOTH mode draws stacked ↓ / ↑ lines so the ~24dp status glyph still shows both directions.
+ * Status-bar [smallIcon] must stay alpha-only white (Android ignores RGB otherwise).
  */
 object MeterDynamicIcon {
     fun createSilhouette(
         downBps: Long,
         upBps: Long,
         mode: MeterDisplayMode,
-        order: MeterSpeedOrder = MeterSpeedOrder.DOWN_THEN_UP,
-    ): Bitmap = draw(linesFor(mode, downBps, upBps, order), silhouette = true)
+        density: Float,
+    ): Bitmap {
+        val bytes = valueFor(mode, downBps, upBps)
+        val (value, unit) = formatValueUnit(bytes)
+        return draw(value, unit, density, silhouette = true)
+    }
 
     fun create(
         downBps: Long,
         upBps: Long,
         mode: MeterDisplayMode,
-        order: MeterSpeedOrder = MeterSpeedOrder.DOWN_THEN_UP,
-    ): Bitmap = draw(linesFor(mode, downBps, upBps, order), silhouette = false)
-
-    private fun linesFor(
-        mode: MeterDisplayMode,
-        down: Long,
-        up: Long,
-        order: MeterSpeedOrder,
-    ): List<String> {
-        val downLine = "↓${shortLabel(down)}"
-        val upLine = "↑${shortLabel(up)}"
-        return when (mode) {
-            MeterDisplayMode.BOTH -> when (order) {
-                MeterSpeedOrder.DOWN_THEN_UP -> listOf(downLine, upLine)
-                MeterSpeedOrder.UP_THEN_DOWN -> listOf(upLine, downLine)
-            }
-            MeterDisplayMode.DOWN -> listOf(downLine)
-            MeterDisplayMode.UP -> listOf(upLine)
-            MeterDisplayMode.TOTAL -> listOf(shortLabel(down + up))
-        }
+        density: Float,
+    ): Bitmap {
+        val bytes = valueFor(mode, downBps, upBps)
+        val (value, unit) = formatValueUnit(bytes)
+        return draw(value, unit, density, silhouette = false)
     }
 
-    private fun draw(lines: List<String>, silhouette: Boolean): Bitmap {
-        // Larger source bitmap → after SystemUI scales to ~24dp, stroke/glyphs stay thicker.
-        val size = 192
+    /** BOTH → total (Pixel Meter bitmap path). */
+    private fun valueFor(mode: MeterDisplayMode, down: Long, up: Long): Long = when (mode) {
+        MeterDisplayMode.UP -> up
+        MeterDisplayMode.DOWN -> down
+        MeterDisplayMode.TOTAL, MeterDisplayMode.BOTH -> down + up
+    }
+
+    private fun draw(
+        valueText: String,
+        unitText: String,
+        density: Float,
+        silhouette: Boolean,
+    ): Bitmap {
+        // Pixel Meter: (density * 24).coerceAtLeast(48)
+        val size = (density * 24f).roundToInt().coerceAtLeast(48)
         val bmp = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bmp)
         if (!silhouette) {
             val bg = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.argb(255, 0x11, 0x13, 0x18) }
-            canvas.drawRoundRect(0f, 0f, size.toFloat(), size.toFloat(), 36f, 36f, bg)
+            canvas.drawRoundRect(0f, 0f, size.toFloat(), size.toFloat(), size * 0.2f, size * 0.2f, bg)
         }
-        val text = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.WHITE
             textAlign = Paint.Align.CENTER
-            typeface = Typeface.create(Typeface.DEFAULT_BOLD, Typeface.BOLD)
-            // Fill most of the glyph; two-line BOTH uses slightly smaller size.
-            textSize = when {
-                lines.size >= 2 -> 62f
-                lines.firstOrNull().orEmpty().length <= 3 -> 88f
-                else -> 72f
-            }
-            isFakeBoldText = true
+            typeface = Typeface.DEFAULT_BOLD
+            textSize = size * 0.65f
         }
-        val metrics = text.fontMetrics
-        val lineHeight = (metrics.descent - metrics.ascent) * 0.92f
-        val blockHeight = lineHeight * lines.size
-        var y = size / 2f - blockHeight / 2f - metrics.ascent
+        val unitPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.WHITE
+            textAlign = Paint.Align.CENTER
+            typeface = Typeface.DEFAULT_BOLD
+            textSize = size * 0.35f
+        }
         val cx = size / 2f
-        for (line in lines) {
-            canvas.drawText(line, cx, y, text)
-            y += lineHeight
-        }
+        // Pixel Meter cyValue / cyUnit
+        canvas.drawText(valueText, cx, size * 0.5f, textPaint)
+        canvas.drawText(unitText, cx, size * 0.95f, unitPaint)
         return bmp
     }
 
-    fun shortLabel(bytesPerSec: Long): String {
-        if (bytesPerSec < 0) return "0"
-        val kb = bytesPerSec / 1024.0
+    /**
+     * Split numeric value and unit for stacked glyph (Pixel Meter formatSpeedText shape).
+     * Returns e.g. ("1.2","MB/s") / ("856","KB/s").
+     */
+    fun formatValueUnit(bytesPerSec: Long): Pair<String, String> {
+        val bytes = bytesPerSec.coerceAtLeast(0L)
+        if (bytes < 1024L) return bytes.toString() to "B/s"
+        val kb = bytes / 1024.0
+        if (kb < 1000) return "%.0f".format(kb) to "KB/s"
         val mb = kb / 1024.0
+        if (mb < 1000) {
+            return if (mb < 10) "%.1f".format(mb) to "MB/s" else "%.0f".format(mb) to "MB/s"
+        }
+        val gb = mb / 1024.0
+        return if (gb < 10) "%.1f".format(gb) to "GB/s" else "%.0f".format(gb) to "GB/s"
+    }
+
+    /** Compact single-token label (chip / legacy). */
+    fun shortLabel(bytesPerSec: Long): String {
+        val (v, u) = formatValueUnit(bytesPerSec)
         return when {
-            mb >= 100 -> "${mb.roundToInt()}"
-            mb >= 10 -> "${mb.roundToInt()}M"
-            mb >= 1 -> String.format("%.1fM", mb)
-            kb >= 100 -> "${kb.roundToInt()}K"
-            kb >= 1 -> "${kb.roundToInt()}K"
-            else -> "${bytesPerSec}B"
+            u.startsWith("GB") -> "${v}G"
+            u.startsWith("MB") -> "${v}M"
+            u.startsWith("KB") -> "${v}K"
+            else -> "${v}B"
         }
     }
 }
