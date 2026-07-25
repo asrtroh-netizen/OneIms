@@ -8,7 +8,7 @@
 
 | 项 | 行为 |
 |---|---|
-| `ImsController.applyAll` | 去掉非 Tensor VoWiFi 硬失败；成功后附加 best-effort 提示 |
+| `ImsController.applyAll` | 去掉非 Tensor VoWiFi 硬失败；不追加长提示 |
 | `ImsController.setWfcMode` | 同上，允许尝试 |
 | `VoWifiNameFormatManager` | 本就无 SoC 门，保持可点（含名称格式） |
 | `DeviceInfo.supportsVowifiForceEnable` | 仅作「是否主推 Tensor 路径」提示，不硬拦 |

@@ -287,7 +287,7 @@
     <string name="compat_advice_degraded">Degraded: update the hidden-API compat layer and retry; Root channel can go direct, non-root still needs Instrumentation.</string>
     <string name="compat_advice_need_shizuku">Activate OneKuku first.</string>
     <string name="compat_advice_unsupported">Device does not meet prerequisites; not recommended to avoid impacting calls.</string>
-    <string name="compat_advice_mediatek_vowifi">On MediaTek / Dimensity, VoWiFi is not the primary path and the OEM may ignore changes; the app still allows attempts. Tensor Pixel is the primary target.</string>
+    <string name="compat_advice_mediatek_vowifi">MediaTek VoWiFi may have no effect; Tensor preferred.</string>
 
     <!-- Device info -->
     <string name="dev_unknown">Unknown</string>
@@ -300,7 +300,7 @@
     <string name="dev_tensor_yes">Yes (supported)</string>
     <string name="dev_tensor_no">No (non-Tensor, may be unsupported)</string>
     <string name="dev_soc">SoC: %1$s</string>
-    <string name="dev_mediatek_vowifi_note">MediaTek / Dimensity: VoWiFi force-enable disabled (cannot change / no effect)</string>
+    <string name="dev_mediatek_vowifi_note">MediaTek: VoWiFi may have no effect</string>
     <string name="dev_sim_count">Active SIMs: %1$d</string>
     <string name="dev_delegate">Instrumentation permission proxy: %1$s</string>
     <string name="dev_delegate_yes">Supported (new-patch compatible)</string>
@@ -345,10 +345,8 @@
     <!-- IMS config result messages -->
     <string name="msg_health_rollback">Basic comms abnormal (call/data/SMS); config auto-restored to stay safe. IMS not enabled.</string>
     <string name="msg_apply_ok">Config applied (persistent=false, re-apply after reboot). Basic comms OK.</string>
-    <string name="msg_vowifi_mediatek_unsupported">MediaTek / Dimensity: VoWiFi is not the primary supported path; OEM may ignore changes. This app still allows write attempts.</string>
-    <string name="msg_vowifi_non_tensor_unsupported">Non-Tensor: VoWiFi is not the primary supported path; OEM may ignore changes. This app still allows write attempts.</string>
-    <string name="msg_vowifi_mediatek_best_effort">Note: On MediaTek / Dimensity, whether it takes effect depends on the OEM; this app cannot control that.</string>
-    <string name="msg_vowifi_non_tensor_best_effort">Note: On non-Tensor devices, whether it takes effect depends on the OEM; this app cannot control that.</string>
+    <string name="msg_vowifi_mediatek_unsupported">MediaTek VoWiFi may have no effect (still allowed)</string>
+    <string name="msg_vowifi_non_tensor_unsupported">Non-Tensor VoWiFi may have no effect (still allowed)</string>
     <string name="msg_apply_partial">CarrierConfig applied, but these provisioning writes were incomplete: %1$s</string>
     <string name="msg_write_not_started">No configuration was written: %1$s</string>
     <string name="msg_write_rollback">Write failed; rollback was confirmed successful: %1$s</string>
