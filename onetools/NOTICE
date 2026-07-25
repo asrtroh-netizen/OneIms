@@ -8,7 +8,7 @@
 
 ## Obtainium / GlassWire / Pixel Meter / Pixel Telo / OneCaller
 
-- **Out of product scope** (2026-07-25 subtraction): OneTools no longer ships
-  call lookup / CallScreening, Meter speed overlay, or in-app Telo screening UI.
+- **Out of product scope** (2026-07-25): no call lookup, Meter stacks, Telo UI,
+  or update-center presets that pull Pixel Telo / forks (e.g. Pixel-Tailor-CN/PixelTelo).
 - Update center remains first-party (does not embed Obtainium source).
 - Do not reintroduce GPL Obtainium source into `:onetools`.
