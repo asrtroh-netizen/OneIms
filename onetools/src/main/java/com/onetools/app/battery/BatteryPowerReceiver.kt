@@ -12,7 +12,10 @@ class BatteryPowerReceiver : BroadcastReceiver() {
         when (intent?.action) {
             Intent.ACTION_POWER_CONNECTED,
             Intent.ACTION_POWER_DISCONNECTED,
-            -> BatteryChargeService.start(context.applicationContext)
+            -> {
+                BatteryChargeService.start(context.applicationContext)
+                BatteryWidgetUpdater.updateAll(context.applicationContext)
+            }
         }
     }
 }

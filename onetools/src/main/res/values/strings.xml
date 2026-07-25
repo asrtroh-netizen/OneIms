@@ -101,7 +101,17 @@
     <string name="battery_alarm_percent">闹钟电量阈值（%）</string>
     <string name="battery_alarm_range">建议 %1$d–%2$d，默认 80</string>
     <string name="battery_design_input">设计容量 mAh</string>
+    <string name="battery_design_presets">Pixel 设计容量预设</string>
+    <string name="battery_design_detect">检测本机并应用</string>
+    <string name="battery_design_detect_ok">已应用 %1$s · %2$d mAh</string>
+    <string name="battery_design_detect_fail">未识别为已知 Pixel 机型，请手填或点选预设</string>
+    <string name="battery_design_auto_hint">未手动设置时，启动会按机型自动填入 Pixel 标称容量。</string>
     <string name="battery_save_settings">保存设置</string>
+    <string name="battery_widget_label">OneTools 电池</string>
+    <string name="battery_widget_description">电量、充电状态与温度</string>
+    <string name="battery_widget_placeholder_status">状态</string>
+    <string name="battery_widget_placeholder_meta">温度 · 电流</string>
+    <string name="battery_stats_via">来源：%1$s</string>
     <string name="battery_alarm_channel">充电闹钟</string>
     <string name="battery_alarm_title">可以拔充电器了</string>
     <string name="battery_alarm_body">当前 %1$d%%，已到你设的 %2$d%% 阈值</string>

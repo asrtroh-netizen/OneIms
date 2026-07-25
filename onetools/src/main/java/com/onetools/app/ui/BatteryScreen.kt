@@ -53,8 +53,10 @@ import com.onetools.app.battery.BatterySessionStore
 import com.onetools.app.battery.BatterySnapshot
 import com.onetools.app.battery.BatteryStatsDumpParser
 import com.onetools.app.battery.BatteryStatsShizuku
+import com.onetools.app.battery.PixelDesignCapacity
 import com.onetools.app.battery.healthSummary
 import com.onetools.app.meter.UsageAccess
+import android.widget.Toast
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -76,6 +78,7 @@ fun BatteryScreen(onBack: () -> Unit) {
             chargeAlarmEnabled = true,
             chargeAlarmPercent = BatteryPrefs.DEFAULT_ALARM_PERCENT,
             trackingEnabled = true,
+            designCapacityUserSet = false,
         ),
     )
     val sessions by sessionStore.sessions.collectAsState(initial = emptyList())
@@ -94,6 +97,8 @@ fun BatteryScreen(onBack: () -> Unit) {
     var statsHint by remember { mutableStateOf<String?>(null) }
     var statsError by remember { mutableStateOf<String?>(null) }
     var statsBusy by remember { mutableStateOf(false) }
+    var statsVia by remember { mutableStateOf<String?>(null) }
+    var designHint by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(prefs.trackingEnabled, prefs.designCapacityMah) {
         while (true) {
@@ -340,16 +345,18 @@ fun BatteryScreen(onBack: () -> Unit) {
                                     statsBusy = true
                                     statsError = null
                                     val dump = withContext(Dispatchers.IO) {
-                                        BatteryStatsShizuku.dumpBatteryStats()
+                                        BatteryStatsShizuku.dumpBatteryStats(context.applicationContext)
                                     }
                                     statsBusy = false
                                     if (!dump.ok) {
                                         statsError = dump.error
                                         wakeLocks = emptyList()
                                         statsHint = null
+                                        statsVia = null
                                     } else {
                                         wakeLocks = BatteryStatsDumpParser.parseWakeLocks(dump.text)
                                         statsHint = BatteryStatsDumpParser.parseDeepSleepHint(dump.text)
+                                        statsVia = dump.via
                                     }
                                 }
                             },
@@ -365,6 +372,11 @@ fun BatteryScreen(onBack: () -> Unit) {
                                 stringResource(R.string.battery_stats_error, err),
                                 color = MaterialTheme.colorScheme.error,
                             )
+                        }
+                    }
+                    statsVia?.let { via ->
+                        item {
+                            Text(stringResource(R.string.battery_stats_via, via))
                         }
                     }
                     statsHint?.let { hint ->
@@ -444,11 +456,91 @@ fun BatteryScreen(onBack: () -> Unit) {
                         )
                     }
                     item {
+                        Text(
+                            stringResource(R.string.battery_design_presets),
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                    item {
+                        Text(
+                            stringResource(R.string.battery_design_auto_hint),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    item {
+                        Button(
+                            onClick = {
+                                scope.launch {
+                                    val preset = prefsStore.applyDetectedPixelPreset()
+                                    if (preset != null) {
+                                        designText = preset.mah.toString()
+                                        designHint = context.getString(
+                                            R.string.battery_design_detect_ok,
+                                            preset.label,
+                                            preset.mah,
+                                        )
+                                    } else {
+                                        designHint = context.getString(R.string.battery_design_detect_fail)
+                                        Toast.makeText(
+                                            context,
+                                            R.string.battery_design_detect_fail,
+                                            Toast.LENGTH_SHORT,
+                                        ).show()
+                                    }
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(stringResource(R.string.battery_design_detect))
+                        }
+                    }
+                    designHint?.let { hint ->
+                        item {
+                            Text(
+                                hint,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                    }
+                    item {
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            PixelDesignCapacity.PRESETS.forEach { preset ->
+                                val selected = designHint?.contains(preset.label) == true ||
+                                    (designHint == null && prefs.designCapacityMah == preset.mah &&
+                                        PixelDesignCapacity.match()?.label == preset.label)
+                                FilterChip(
+                                    selected = selected,
+                                    onClick = {
+                                        scope.launch {
+                                            prefsStore.setDesignCapacityMah(preset.mah, userSet = true)
+                                            designText = preset.mah.toString()
+                                            designHint = context.getString(
+                                                R.string.battery_design_detect_ok,
+                                                preset.label,
+                                                preset.mah,
+                                            )
+                                        }
+                                    },
+                                    label = { Text("${preset.label} · ${preset.mah}") },
+                                )
+                            }
+                        }
+                    }
+                    item {
                         Button(
                             onClick = {
                                 scope.launch {
                                     alarmText.toIntOrNull()?.let { prefsStore.setChargeAlarmPercent(it) }
-                                    designText.toIntOrNull()?.let { prefsStore.setDesignCapacityMah(it) }
+                                    designText.toIntOrNull()?.let {
+                                        prefsStore.setDesignCapacityMah(it, userSet = true)
+                                    }
                                 }
                             },
                             modifier = Modifier.fillMaxWidth(),

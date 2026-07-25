@@ -1,30 +1,62 @@
 package com.onetools.app.battery
 
+import android.content.Context
 import com.onetools.app.channel.ShizukuChannel
 import rikka.shizuku.Shizuku
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
 /**
- * Pull `dumpsys batterystats` via Shizuku when available (best-effort).
- * Uses reflective [Shizuku.newProcess] — deprecated upstream; UserService is future work.
+ * Pull `dumpsys batterystats` via Shizuku.
+ * Prefers UserService ([ShellBatteryService]); falls back to reflective [Shizuku.newProcess].
  */
 object BatteryStatsShizuku {
     data class DumpResult(
         val ok: Boolean,
         val text: String,
         val error: String? = null,
+        val via: String? = null,
     )
 
     fun isReady(): Boolean = ShizukuChannel.isServiceReady()
 
-    fun dumpBatteryStats(maxChars: Int = 200_000): DumpResult {
+    fun dumpBatteryStats(context: Context, maxChars: Int = 200_000): DumpResult {
         if (!isReady()) {
             return DumpResult(false, "", "Shizuku 未就绪")
         }
+        val app = context.applicationContext
+        val user = dumpViaUserService(app, maxChars)
+        if (user.ok) return user
+
+        val legacy = dumpViaNewProcess(maxChars)
+        if (legacy.ok) return legacy.copy(via = "newProcess")
+
+        val err = buildString {
+            append(user.error ?: "UserService 失败")
+            if (legacy.error != null) {
+                append("；回退 newProcess：")
+                append(legacy.error)
+            }
+        }
+        return DumpResult(false, "", err)
+    }
+
+    private fun dumpViaUserService(context: Context, maxChars: Int): DumpResult {
+        val client = ShellBatteryClient(context)
+        return try {
+            client.dumpBatteryStats(maxChars).fold(
+                onSuccess = { DumpResult(ok = true, text = it, via = "UserService") },
+                onFailure = { DumpResult(false, "", it.message ?: "UserService 失败") },
+            )
+        } finally {
+            client.unbind()
+        }
+    }
+
+    private fun dumpViaNewProcess(maxChars: Int): DumpResult {
         return runCatching {
             val process = newProcess(arrayOf("dumpsys", "batterystats"))
-                ?: return DumpResult(false, "", "Shizuku.newProcess 不可用，需后续 UserService")
+                ?: return DumpResult(false, "", "Shizuku.newProcess 不可用")
             try {
                 val text = BufferedReader(InputStreamReader(process.inputStream)).use { br ->
                     buildString {
@@ -38,7 +70,7 @@ object BatteryStatsShizuku {
                     }
                 }
                 process.waitFor()
-                DumpResult(ok = text.isNotBlank(), text = text)
+                DumpResult(ok = text.isNotBlank(), text = text, via = "newProcess")
             } finally {
                 runCatching { process.destroy() }
             }

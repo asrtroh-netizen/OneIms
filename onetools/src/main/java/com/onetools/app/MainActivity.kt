@@ -21,6 +21,8 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import android.content.Intent
+import com.onetools.app.battery.BatteryWidgetUpdater
 import com.onetools.app.channel.ChannelCardPolicy
 import com.onetools.app.channel.ChannelCardState
 import com.onetools.app.channel.ShizukuChannel
@@ -59,6 +61,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        consumeOpenBattery(intent)
         refreshChannel()
         ensureNotificationPermission()
 
@@ -192,6 +195,19 @@ class MainActivity : ComponentActivity() {
             DiagExport.share(this, body)
         }.onFailure {
             detailToast = getString(R.string.export_share_fail)
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        consumeOpenBattery(intent)
+    }
+
+    private fun consumeOpenBattery(intent: Intent?) {
+        if (intent?.getBooleanExtra(BatteryWidgetUpdater.EXTRA_OPEN_BATTERY, false) == true) {
+            route = AppRoute.Battery
+            intent.removeExtra(BatteryWidgetUpdater.EXTRA_OPEN_BATTERY)
         }
     }
 }

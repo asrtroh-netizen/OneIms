@@ -16,10 +16,13 @@ data class BatteryPrefsSnapshot(
     val chargeAlarmEnabled: Boolean,
     val chargeAlarmPercent: Int,
     val trackingEnabled: Boolean,
+    /** True once the user (or a chip) explicitly set design capacity. */
+    val designCapacityUserSet: Boolean,
 )
 
 class BatteryPrefs(private val context: Context) {
     private val designKey = intPreferencesKey("design_capacity_mah")
+    private val designUserSetKey = booleanPreferencesKey("design_capacity_user_set")
     private val alarmEnabledKey = booleanPreferencesKey("charge_alarm_enabled")
     private val alarmPercentKey = intPreferencesKey("charge_alarm_percent")
     private val trackingKey = booleanPreferencesKey("tracking_enabled")
@@ -31,15 +34,36 @@ class BatteryPrefs(private val context: Context) {
             chargeAlarmPercent = (p[alarmPercentKey] ?: DEFAULT_ALARM_PERCENT)
                 .coerceIn(MIN_ALARM, MAX_ALARM),
             trackingEnabled = p[trackingKey] ?: true,
+            designCapacityUserSet = p[designUserSetKey] ?: false,
         )
     }
 
     suspend fun snapshot(): BatteryPrefsSnapshot = snapshotFlow.first()
 
-    suspend fun setDesignCapacityMah(value: Int) {
+    suspend fun setDesignCapacityMah(value: Int, userSet: Boolean = true) {
         context.batteryPrefsStore.edit {
             it[designKey] = value.coerceIn(500, 20_000)
+            it[designUserSetKey] = userSet
         }
+    }
+
+    /**
+     * When the user has never set design capacity, apply Pixel preset for this device.
+     * @return applied preset label, or null if skipped / unknown device.
+     */
+    suspend fun applyPixelDesignIfUnset(): String? {
+        val snap = snapshot()
+        if (snap.designCapacityUserSet) return null
+        val preset = PixelDesignCapacity.match() ?: return null
+        setDesignCapacityMah(preset.mah, userSet = false)
+        return preset.label
+    }
+
+    /** Force-apply current device Pixel preset (marks as user-set so it sticks). */
+    suspend fun applyDetectedPixelPreset(): PixelDesignCapacity.Preset? {
+        val preset = PixelDesignCapacity.match() ?: return null
+        setDesignCapacityMah(preset.mah, userSet = true)
+        return preset
     }
 
     suspend fun setChargeAlarmEnabled(value: Boolean) {
@@ -57,7 +81,7 @@ class BatteryPrefs(private val context: Context) {
     }
 
     companion object {
-        /** Sensible Pixel-class placeholder until user calibrates. */
+        /** Fallback when device is not a known Pixel. */
         const val DEFAULT_DESIGN_MAH = 4500
         const val DEFAULT_ALARM_PERCENT = 80
         const val MIN_ALARM = 50
