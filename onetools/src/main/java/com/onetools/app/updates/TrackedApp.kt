@@ -66,7 +66,7 @@ data class TrackedApp(
     val note: String,
     val source: AppSource = AppSource.GITHUB,
     val host: String? = null,
-    /** Optional regex matched against APK file name (Obtainium-like filter). */
+    /** Optional regex matched against APK file name. */
     val apkRegex: String? = null,
     val includePrereleases: Boolean = false,
     val trackUpdates: Boolean = true,

@@ -7,7 +7,7 @@ import androidx.work.WorkerParameters
 import com.onetools.app.updates.VersionCompare.UpdateState
 
 /**
- * Background catalog check (Obtainium-like). Clean-room; no GPL code.
+ * Background catalog check for One 自主更新中心.
  */
 class UpdateCheckWorker(
     appContext: Context,

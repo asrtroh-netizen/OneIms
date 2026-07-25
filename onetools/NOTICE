@@ -6,11 +6,10 @@
 - License: Apache License 2.0 (typical for Battery Info–style FOSS apps).
 - OneTools battery reader is first-party clean-room code; see `battery/BatteryReader.kt`.
 
-## Obtainium / GlassWire / Pixel Telo
+## GlassWire / Pixel Telo / third-party updaters
 
-- **Out**: update-center presets that pull Pixel Telo / forks; **GPL-3 Obtainium source is never copied**.
-- Update center is first-party clean-room Kotlin. Feature ideas may mirror Obtainium's public
-  behavior (sources, background check, filters) but implementations are original.
+- **Out**: update-center presets that pull Pixel Telo / forks.
+- Update center is first-party Kotlin (One 自主更新中心). Do not embed third-party GPL updater source.
 - Commercial store scrapers (APKPure / Aptoide / …) are intentionally not bundled.
 
 ## OneCaller (first-party) + geo

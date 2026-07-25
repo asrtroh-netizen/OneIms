@@ -129,8 +129,8 @@
     <string name="updates_card_sub">One 索引 · GitHub 源 · 可选静默装</string>
     <string name="updates_title">应用更新</string>
     <string name="updates_intro">添加 GitHub 等公开源、检查 Release、下载安装 APK。首发含 One 生态预设，可自行增删。</string>
-    <string name="updates_intro_better">自有 One 索引协议 onetools.update.v1、ABI 选包、源校验、导入导出；Shizuku 可用时优先静默装。</string>
-    <string name="updates_parity_note">干净室对齐 Obtainium 开源侧能力（定时检查 / Forgejo / Direct / HTML / 正则过滤）。不并 GPL 源码；不含 APKPure 等商店爬虫。</string>
+    <string name="updates_intro_better">One 自主更新中心：自有索引 onetools.update.v1、ABI 选包、源校验、导入导出；Shizuku 可用时优先静默装。</string>
+    <string name="updates_parity_note">支持定时检查、GitHub/GitLab/Forgejo、Direct APK、HTML 回退与文件名过滤。不含第三方商店爬虫。</string>
     <string name="updates_auto_check">后台定时检查更新</string>
     <string name="updates_auto_check_sub">约每 %1$d 小时（需网络）；有更新时通知</string>
     <string name="updates_auto_channel">应用更新</string>
@@ -162,10 +162,9 @@
     <string name="updates_token_save">保存</string>
     <string name="updates_token_saved">会员 Token 已保存</string>
     <string name="updates_token_cleared">会员 Token 已清除</string>
-    <string name="updates_gpl_notice">本模块为自研实现，不包含 Obtainium 源码。</string>
     <string name="updates_add">添加应用源</string>
-    <string name="updates_add_title">添加 GitHub 应用</string>
-    <string name="updates_add_hint">支持 owner/repo 或 https://github.com/owner/repo；添加前会校验仓库存在。</string>
+    <string name="updates_add_title">添加应用源</string>
+    <string name="updates_add_hint">支持 owner/repo、Release URL、Direct APK 或 HTML 页；添加前会校验源可用。</string>
     <string name="updates_add_repo">仓库</string>
     <string name="updates_add_name">显示名称（可选）</string>
     <string name="updates_add_package">包名 packageName（可选，可下载后自动绑定）</string>

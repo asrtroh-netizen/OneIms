@@ -16,11 +16,11 @@ class GitHubRepoParserTest {
     @Test
     fun parsesUrl() {
         val app = GitHubRepoParser.parse(
-            "https://github.com/ImranR98/Obtainium/",
-            titleOverride = "Obtainium",
+            "https://github.com/asrtroh-netizen/OneIms/",
+            titleOverride = "OneIms",
         ).getOrThrow()
-        assertEquals("ImranR98", app.githubOwner)
-        assertEquals("Obtainium", app.githubRepo)
-        assertEquals("Obtainium", app.title)
+        assertEquals("asrtroh-netizen", app.githubOwner)
+        assertEquals("OneIms", app.githubRepo)
+        assertEquals("OneIms", app.title)
     }
 }

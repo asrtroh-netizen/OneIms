@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.map
 private val Context.updateCatalogStore: DataStore<Preferences> by preferencesDataStore("one_update_catalog")
 
 /**
- * Persist user-managed app sources (Obtainium-like catalog, clean-room).
+ * Persist user-managed app sources for One 自主更新中心.
  */
 class UpdateCatalogRepository(private val context: Context) {
     private val key = stringSetPreferencesKey("tracked_json")

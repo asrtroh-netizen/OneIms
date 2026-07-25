@@ -16,7 +16,7 @@ object ApkInstaller {
         }.getOrDefault(false)
     }
 
-    /** Read packageName from a downloaded APK (for auto-bind after Obtainium-like add). */
+    /** Read packageName from a downloaded APK (auto-bind after add/download). */
     fun packageNameFromApk(context: Context, apk: File): String? {
         val path = apk.absolutePath
         val info = context.packageManager.getPackageArchiveInfo(path, 0) ?: return null

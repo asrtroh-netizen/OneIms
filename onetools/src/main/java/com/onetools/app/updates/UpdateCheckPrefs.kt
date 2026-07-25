@@ -13,7 +13,7 @@ private val Context.updateCheckStore by preferencesDataStore("one_update_check_p
 
 data class UpdateCheckPrefsSnapshot(
     val enabled: Boolean,
-    /** Hours between background checks; Obtainium-like default 6h. */
+    /** Hours between background checks (default 6h). */
     val intervalHours: Int,
 )
 

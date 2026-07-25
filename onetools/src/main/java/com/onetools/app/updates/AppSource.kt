@@ -1,9 +1,6 @@
 package com.onetools.app.updates
 
-/**
- * Clean-room source kinds inspired by Obtainium's OSS-facing set.
- * Does **not** embed Obtainium (GPL-3) code.
- */
+/** First-party source kinds for One 自主更新中心. */
 enum class AppSource {
     GITHUB,
     GITLAB,

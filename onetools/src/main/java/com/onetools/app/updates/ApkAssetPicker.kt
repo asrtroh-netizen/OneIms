@@ -2,7 +2,7 @@ package com.onetools.app.updates
 
 /**
  * Prefer APKs matching device ABI, then user prefer tokens, then generic `.apk`.
- * Optional [apkRegex] filters candidates first (Obtainium-like name filter, clean-room).
+ * Optional [apkRegex] filters candidates by file name before ABI scoring.
  */
 object ApkAssetPicker {
     fun pick(
