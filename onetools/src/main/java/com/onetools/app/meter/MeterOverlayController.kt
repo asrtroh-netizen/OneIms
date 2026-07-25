@@ -3,7 +3,6 @@ package com.onetools.app.meter
 import android.content.Context
 import android.graphics.Color
 import android.graphics.PixelFormat
-import android.graphics.Rect
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Build
@@ -102,18 +101,12 @@ class MeterOverlayController(
                 WindowManager.LayoutParams.WRAP_CONTENT,
                 type,
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
-                    WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
                 PixelFormat.TRANSLUCENT,
             ).apply {
                 gravity = Gravity.TOP or Gravity.START
                 x = style.overlayX
                 y = style.overlayY
-                // Allow drawing into status-bar / cutout band (island-beside-camera).
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                    layoutInDisplayCutoutMode =
-                        WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
-                }
             }
             runCatching {
                 wm.addView(tv, lp)
@@ -142,37 +135,20 @@ class MeterOverlayController(
     }
 
     /**
-     * Dock beside the camera punch-hole (DisplayCutout) — closest third-party stand-in
-     * for a Dynamic Island style capsule. System Live Update chips cannot be repositioned.
+     * Approximate OEM status-bar net-speed slot: top-right, near system icons.
+     * Third-party apps cannot draw inside SystemUI; this is the closest overlay dock.
      */
     fun moveToOemStatusSlot() {
         runOnMain {
-            val tv = view
+            val (x, y) = oemSlotXy(context)
             val lp = params
-            if (lp != null && tv != null && wm != null) {
+            if (lp != null && view != null && wm != null) {
                 lp.gravity = Gravity.TOP or Gravity.START
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                    lp.layoutInDisplayCutoutMode =
-                        WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
-                }
-                val place: (Int) -> Unit = { chipW ->
-                    val (x, y) = oemSlotXy(context, chipW)
-                    lp.x = x
-                    lp.y = y
-                    runCatching { wm.updateViewLayout(tv, lp) }
-                    settings.saveOverlayPositionAsync(x, y)
-                }
-                if (tv.width > 0) {
-                    place(tv.width)
-                } else {
-                    val approx = (88f * context.resources.displayMetrics.density).toInt()
-                    place(approx)
-                    tv.post { if (tv.width > 0) place(tv.width) }
-                }
-            } else {
-                val (x, y) = oemSlotXy(context)
-                settings.saveOverlayPositionAsync(x, y)
+                lp.x = x
+                lp.y = y
+                runCatching { wm.updateViewLayout(view, lp) }
             }
+            settings.saveOverlayPositionAsync(x, y)
         }
     }
 
@@ -206,53 +182,20 @@ class MeterOverlayController(
     private fun dp(v: Float): Float = v * context.resources.displayMetrics.density
 
     companion object {
-        fun oemSlotXy(context: Context, chipWidthPx: Int = 0): Pair<Int, Int> {
+        fun oemSlotXy(context: Context): Pair<Int, Int> {
             val dm = context.resources.displayMetrics
             val density = dm.density
-            val chipW = if (chipWidthPx > 0) {
-                chipWidthPx
-            } else {
-                (88f * density).toInt()
-            }
-            val gap = (6f * density).toInt()
-            val cutout = primaryCutoutRect(context)
-            if (cutout != null && !cutout.isEmpty) {
-                val rightX = cutout.right + gap
-                val leftX = cutout.left - chipW - gap
-                val placeRight = rightX + chipW <= dm.widthPixels - gap
-                val x = when {
-                    placeRight -> rightX.coerceAtLeast(0)
-                    leftX >= 0 -> leftX
-                    else -> ((dm.widthPixels - chipW) / 2).coerceAtLeast(0)
-                }
-                // Vertically center on the punch-hole inside the status-bar band.
-                val chipH = (20f * density).toInt()
-                val y = (cutout.centerY() - chipH / 2).coerceAtLeast(0)
-                return x to y
-            }
-            // No cutout info: top-center (many Pixels) as island fallback.
+            val approxChipWidth = (72f * density).toInt()
+            val margin = (6f * density).toInt()
             val resId = context.resources.getIdentifier("status_bar_height", "dimen", "android")
             val statusBar = if (resId > 0) {
                 context.resources.getDimensionPixelSize(resId)
             } else {
                 (24f * density).toInt()
             }
-            val x = ((dm.widthPixels - chipW) / 2).coerceAtLeast(0)
-            val y = (statusBar / 4).coerceAtLeast(0)
+            val x = (dm.widthPixels - approxChipWidth - margin).coerceAtLeast(0)
+            val y = (statusBar - (2f * density).toInt()).coerceAtLeast(0)
             return x to y
-        }
-
-        /** Largest bounding rect — usually the camera punch-hole. */
-        private fun primaryCutoutRect(context: Context): Rect? {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) return null
-            val wm = context.getSystemService(WindowManager::class.java) ?: return null
-            val cutout = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                wm.currentWindowMetrics.windowInsets.displayCutout
-            } else {
-                @Suppress("DEPRECATION")
-                wm.defaultDisplay?.cutout
-            } ?: return null
-            return cutout.boundingRects.maxByOrNull { it.width() * it.height() }
         }
     }
 

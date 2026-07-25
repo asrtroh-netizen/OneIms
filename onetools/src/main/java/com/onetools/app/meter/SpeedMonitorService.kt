@@ -56,21 +56,13 @@ class SpeedMonitorService : Service() {
             }
             ACTION_DOCK_OEM -> {
                 scope.launch {
-                    val ms = MeterSettings(applicationContext)
-                    // Compact pill beside camera — closest stand-in for Dynamic Island.
-                    ms.setOverlayTextSp(11f)
-                    ms.setOverlayCornerDp(28f)
-                    ms.setOverlayPadding(10f, 4f)
-                    ms.setOverlayAlpha(0.9f)
-                    ms.setOverlayTheme(MeterOverlayTheme.ONE_DARK)
                     refreshPrefs()
                     ensureOverlay()
                     val (x, y) = MeterOverlayController.oemSlotXy(this@SpeedMonitorService)
-                    ms.setOverlayPosition(x, y)
-                    ms.setOverlayEnabled(true)
+                    MeterSettings(applicationContext).setOverlayPosition(x, y)
+                    MeterSettings(applicationContext).setOverlayEnabled(true)
                     refreshPrefs()
                     applyOverlayState(lastFormatted.ifEmpty { getString(R.string.meter_starting) })
-                    overlay?.applyStyle(prefs)
                     overlay?.moveToOemStatusSlot()
                 }
                 return START_STICKY
