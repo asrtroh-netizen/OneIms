@@ -121,7 +121,7 @@
     <string name="cap_vowifi">VoWiFi</string>
     <string name="cap_vowifi_sub">WiFi 通话</string>
     <string name="cap_vonr">VoNR</string>
-    <string name="cap_vonr_sub">5G 语音</string>
+    <string name="cap_vonr_sub">5G 语音（Vo5G）；开启后会一并开放 NR，便于系统通话设置露出开关</string>
     <string name="action_apply_core">应用核心能力</string>
     <string name="cap_vilte">ViLTE</string>
     <string name="cap_vilte_sub">视频通话</string>

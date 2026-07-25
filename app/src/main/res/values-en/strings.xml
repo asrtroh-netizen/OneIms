@@ -119,7 +119,7 @@
     <string name="cap_vowifi">VoWiFi</string>
     <string name="cap_vowifi_sub">WiFi calling</string>
     <string name="cap_vonr">VoNR</string>
-    <string name="cap_vonr_sub">Voice over 5G</string>
+    <string name="cap_vonr_sub">Voice over 5G (Vo5G); also enables NR availabilities so system Call Settings can show the toggle</string>
     <string name="action_apply_core">Apply core features</string>
     <string name="cap_vilte">ViLTE</string>
     <string name="cap_vilte_sub">Video calling</string>

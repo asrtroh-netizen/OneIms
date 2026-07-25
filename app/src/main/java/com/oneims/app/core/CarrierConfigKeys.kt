@@ -28,6 +28,10 @@ object CarrierConfigKeys {
 
     const val VONR_ENABLED = "vonr_enabled_bool"
     const val VONR_SETTING_VISIBILITY = "vonr_setting_visibility_bool"
+    /** 用户偏好默认开 VoNR（有设置项时）。 */
+    const val VONR_ON_BY_DEFAULT = "vonr_on_by_default_bool"
+    /** AOSP：NSA=1 / SA=2；Settings 要求该数组非空才露出 VoNR 菜单。 */
+    val NR_AVAILABILITIES_NSA_AND_SA = intArrayOf(1, 2)
 
     // UT（补充业务：呼叫转移/等待等）
     const val CARRIER_SUPPORTS_SS_OVER_UT = "carrier_supports_ss_over_ut_bool"
@@ -106,7 +110,11 @@ object CarrierConfigKeys {
         EDITABLE_WFC_MODE, EDITABLE_WFC_ROAMING_MODE,
     )
 
-    val vonrBooleanTrueKeys = listOf(VONR_ENABLED, VONR_SETTING_VISIBILITY)
+    val vonrBooleanTrueKeys = listOf(
+        VONR_ENABLED,
+        VONR_SETTING_VISIBILITY,
+        VONR_ON_BY_DEFAULT,
+    )
 }
 
 /**

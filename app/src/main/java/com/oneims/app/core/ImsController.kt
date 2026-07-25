@@ -73,6 +73,12 @@ object ImsController {
             }
             if (enableVonr) {
                 CarrierConfigKeys.vonrBooleanTrueKeys.forEach { bundle.putBoolean(it, true) }
+                // AOSP Settings VoNR 入口：visibility + 设备 5G + NR availabilities 非空，三者缺一不显示。
+                // 开 VoNR 时一并写入 NSA+SA，避免「只开 VoNR、未开 5G NR」时系统只剩 VoLTE。
+                bundle.putIntArray(
+                    CarrierConfigKeys.NR_AVAILABILITIES_INT_ARRAY,
+                    CarrierConfigKeys.NR_AVAILABILITIES_NSA_AND_SA,
+                )
             }
             // OneKuku：persistent override + 同 subId 回读；单项失败记入 detail
             val write = CarrierConfigOverrideWriter.applyPersistentOverride(
@@ -275,7 +281,12 @@ object ImsController {
     fun apply5g(context: Context, subId: Int, enableSaNsa: Boolean): ConfigResult {
         return try {
             val b = PersistableBundle().apply {
-                if (enableSaNsa) putIntArray(CarrierConfigKeys.NR_AVAILABILITIES_INT_ARRAY, intArrayOf(1, 2))
+                if (enableSaNsa) {
+                    putIntArray(
+                        CarrierConfigKeys.NR_AVAILABILITIES_INT_ARRAY,
+                        CarrierConfigKeys.NR_AVAILABILITIES_NSA_AND_SA,
+                    )
+                }
             }
             if (!enableSaNsa || b.keySet().isEmpty()) {
                 return ConfigResult(true, context.getString(R.string.msg_5g, ""))
