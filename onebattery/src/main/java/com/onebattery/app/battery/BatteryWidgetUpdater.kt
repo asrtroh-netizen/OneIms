@@ -43,7 +43,10 @@ object BatteryWidgetUpdater {
                 R.id.widget_meta,
                 buildString {
                     append(String.format("%.1f°C", snap.temperatureC))
-                    if (snap.currentNowMa > 0) {
+                    if (snap.powerWatts > 0f) {
+                        append(" · ")
+                        append(String.format("%.2fW", snap.powerWatts))
+                    } else if (snap.currentNowMa > 0) {
                         append(" · ")
                         append(snap.currentNowMa)
                         append(" mA")

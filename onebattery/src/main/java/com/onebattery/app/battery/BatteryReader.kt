@@ -23,6 +23,8 @@ data class BatterySnapshot(
     val cycleCount: Int,
     val chargeCounterMah: Int,
     val currentNowMa: Int,
+    /** Instantaneous power in watts: V × I (clean-room; mirrors Guru public “W” metric). */
+    val powerWatts: Float,
     val chargingTimeRemainingMs: Long,
     val isCharging: Boolean,
     val isPlugged: Boolean,
@@ -60,6 +62,12 @@ object BatteryReader {
             bm.getLongProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW)
         }.getOrDefault(0L)
         val currentMa = (kotlin.math.abs(currentUa) / 1000).toInt()
+        // Guru UI formats W from voltage + current; we use public BatteryManager fields only.
+        val powerW = if (voltage > 0 && currentMa > 0) {
+            (voltage / 1000f) * (currentMa / 1000f)
+        } else {
+            0f
+        }
 
         val chargeRemain = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             runCatching { bm.computeChargeTimeRemaining() }.getOrDefault(-1L)
@@ -83,6 +91,7 @@ object BatteryReader {
             cycleCount = cycles,
             chargeCounterMah = chargeMah,
             currentNowMa = currentMa,
+            powerWatts = powerW,
             chargingTimeRemainingMs = chargeRemain,
             isCharging = isCharging,
             isPlugged = isPlugged,

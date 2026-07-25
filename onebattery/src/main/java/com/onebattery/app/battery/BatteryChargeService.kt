@@ -38,7 +38,10 @@ class BatteryChargeService : Service() {
     private var chargeStartedAt: Long = 0L
     private var chargeStartPercent: Int = -1
     private var chargeStartMah: Int = -1
-    private var alarmFired = false
+    private var chargeAlarmFired = false
+    private var lowAlarmFired = false
+    private var tempHighAlarmFired = false
+    private var tempLowAlarmFired = false
 
     private var dischargeSessionId: String? = null
     private var dischargeStartedAt: Long = 0L
@@ -76,7 +79,7 @@ class BatteryChargeService : Service() {
 
     private fun ensureRunning() {
         val prefs = runBlocking { BatteryPrefs(applicationContext).snapshot() }
-        if (!prefs.trackingEnabled) {
+        if (!prefs.trackingEnabled && !prefs.persistentNotifEnabled) {
             stopSelf()
             return
         }
@@ -103,8 +106,18 @@ class BatteryChargeService : Service() {
     private fun tick() {
         val snap = BatteryReader.read(this) ?: return
         val prefs = runBlocking { BatteryPrefs(applicationContext).snapshot() }
-        if (!prefs.trackingEnabled) {
+        if (!prefs.trackingEnabled && !prefs.persistentNotifEnabled) {
             stopSelf()
+            return
+        }
+        evaluateAlarms(snap, prefs)
+        if (prefs.persistentNotifEnabled || prefs.trackingEnabled) {
+            notifyLive(statusLine(snap))
+        }
+        if (!prefs.trackingEnabled) {
+            if (mode != Mode.IDLE) {
+                finalizeAll()
+            }
             return
         }
         if (snap.isPlugged) {
@@ -126,13 +139,61 @@ class BatteryChargeService : Service() {
         }
     }
 
+    private fun statusLine(snap: BatterySnapshot): String {
+        return getString(
+            R.string.battery_status_notif_line,
+            snap.percent,
+            snap.temperatureC,
+            snap.powerWatts,
+            snap.currentNowMa,
+        )
+    }
+
+    private fun evaluateAlarms(snap: BatterySnapshot, prefs: BatteryPrefsSnapshot) {
+        if (prefs.chargeAlarmEnabled && snap.isPlugged) {
+            if (!chargeAlarmFired && snap.percent >= prefs.chargeAlarmPercent) {
+                chargeAlarmFired = true
+                BatteryChargeAlarm.notifyThreshold(this, snap.percent, prefs.chargeAlarmPercent)
+            }
+        } else if (snap.percent < prefs.chargeAlarmPercent - 2) {
+            chargeAlarmFired = false
+        }
+
+        if (prefs.lowAlarmEnabled) {
+            if (!lowAlarmFired && snap.percent <= prefs.lowAlarmPercent) {
+                lowAlarmFired = true
+                BatteryChargeAlarm.notifyLow(this, snap.percent, prefs.lowAlarmPercent)
+            } else if (snap.percent > prefs.lowAlarmPercent + 3) {
+                lowAlarmFired = false
+            }
+        }
+
+        if (prefs.tempHighAlarmEnabled) {
+            if (!tempHighAlarmFired && snap.temperatureC >= prefs.tempHighC) {
+                tempHighAlarmFired = true
+                BatteryChargeAlarm.notifyTempHigh(this, snap.temperatureC, prefs.tempHighC)
+            } else if (snap.temperatureC < prefs.tempHighC - 2f) {
+                tempHighAlarmFired = false
+            }
+        }
+
+        if (prefs.tempLowAlarmEnabled) {
+            if (!tempLowAlarmFired && snap.temperatureC <= prefs.tempLowC) {
+                tempLowAlarmFired = true
+                BatteryChargeAlarm.notifyTempLow(this, snap.temperatureC, prefs.tempLowC)
+            } else if (snap.temperatureC > prefs.tempLowC + 2f) {
+                tempLowAlarmFired = false
+            }
+        }
+    }
+
     private fun beginCharge(snap: BatterySnapshot) {
         mode = Mode.CHARGE
         chargeSessionId = UUID.randomUUID().toString()
         chargeStartedAt = System.currentTimeMillis()
         chargeStartPercent = snap.percent
         chargeStartMah = snap.chargeCounterMah
-        alarmFired = false
+        chargeAlarmFired = false
         lastPercent = -1
         lastMah = -1
     }
@@ -163,21 +224,9 @@ class BatteryChargeService : Service() {
     }
 
     private fun tickCharge(snap: BatterySnapshot, prefs: BatteryPrefsSnapshot) {
-        notifyLive(
-            getString(R.string.battery_tracking_live, snap.percent, snap.currentNowMa),
-        )
-        if (
-            prefs.chargeAlarmEnabled &&
-            !alarmFired &&
-            snap.percent >= prefs.chargeAlarmPercent
-        ) {
-            alarmFired = true
-            BatteryChargeAlarm.notifyThreshold(
-                this,
-                snap.percent,
-                prefs.chargeAlarmPercent,
-            )
-        }
+        // Status line + charge alarm handled in tick()/evaluateAlarms().
+        if (prefs.persistentNotifEnabled) return
+        notifyLive(getString(R.string.battery_tracking_live, snap.percent, snap.currentNowMa))
     }
 
     private fun tickDischarge(snap: BatterySnapshot, prefs: BatteryPrefsSnapshot) {
@@ -229,13 +278,15 @@ class BatteryChargeService : Service() {
             prefs.designCapacityMah,
             recentMahPerHour,
         )
-        notifyLive(
-            getString(
-                R.string.battery_drain_live,
-                snap.percent,
-                remain ?: 0,
-            ),
-        )
+        if (!prefs.persistentNotifEnabled) {
+            notifyLive(
+                getString(
+                    R.string.battery_drain_live,
+                    snap.percent,
+                    remain ?: 0,
+                ),
+            )
+        }
     }
 
     private fun isScreenOn(): Boolean {
@@ -330,11 +381,12 @@ class BatteryChargeService : Service() {
         )
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_lock_idle_charging)
-            .setContentTitle(getString(R.string.battery_tracking_title))
+            .setContentTitle(getString(R.string.battery_status_notif_title))
             .setContentText(text)
             .setContentIntent(open)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
+            .setSilent(true)
             .build()
     }
 
@@ -350,6 +402,15 @@ class BatteryChargeService : Service() {
 
         fun stop(context: Context) {
             context.stopService(Intent(context, BatteryChargeService::class.java))
+        }
+
+        fun sync(context: Context) {
+            val prefs = runBlocking { BatteryPrefs(context.applicationContext).snapshot() }
+            if (prefs.trackingEnabled || prefs.persistentNotifEnabled) {
+                start(context)
+            } else {
+                stop(context)
+            }
         }
     }
 }

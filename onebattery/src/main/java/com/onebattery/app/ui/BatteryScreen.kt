@@ -77,7 +77,14 @@ fun BatteryScreen(
             designCapacityMah = BatteryPrefs.DEFAULT_DESIGN_MAH,
             chargeAlarmEnabled = true,
             chargeAlarmPercent = BatteryPrefs.DEFAULT_ALARM_PERCENT,
+            lowAlarmEnabled = true,
+            lowAlarmPercent = BatteryPrefs.DEFAULT_LOW_ALARM_PERCENT,
+            tempHighAlarmEnabled = true,
+            tempHighC = BatteryPrefs.DEFAULT_TEMP_HIGH_C,
+            tempLowAlarmEnabled = false,
+            tempLowC = BatteryPrefs.DEFAULT_TEMP_LOW_C,
             trackingEnabled = true,
+            persistentNotifEnabled = true,
             designCapacityUserSet = false,
         ),
     )
@@ -90,6 +97,9 @@ fun BatteryScreen(
     var tab by remember { mutableIntStateOf(0) }
     var designText by remember { mutableStateOf("") }
     var alarmText by remember { mutableStateOf("") }
+    var lowAlarmText by remember { mutableStateOf("") }
+    var tempHighText by remember { mutableStateOf("") }
+    var tempLowText by remember { mutableStateOf("") }
     var hasUsage by remember { mutableStateOf(UsageAccess.hasPermission(context)) }
     var selectedSessionId by remember { mutableStateOf<String?>(null) }
     var curveSamples by remember { mutableStateOf<List<BatterySampleEntity>>(emptyList()) }
@@ -100,20 +110,27 @@ fun BatteryScreen(
     var statsVia by remember { mutableStateOf<String?>(null) }
     var designHint by remember { mutableStateOf<String?>(null) }
 
-    LaunchedEffect(prefs.trackingEnabled, prefs.designCapacityMah) {
+    LaunchedEffect(prefs.trackingEnabled, prefs.persistentNotifEnabled, prefs.designCapacityMah) {
         while (true) {
             snap = BatteryReader.read(context)
             health = sessionStore.healthSummary(prefs.designCapacityMah)
-            if (prefs.trackingEnabled) {
-                BatteryChargeService.start(context.applicationContext)
-            }
+            BatteryChargeService.sync(context.applicationContext)
             delay(2000)
         }
     }
 
-    LaunchedEffect(prefs.designCapacityMah, prefs.chargeAlarmPercent) {
+    LaunchedEffect(
+        prefs.designCapacityMah,
+        prefs.chargeAlarmPercent,
+        prefs.lowAlarmPercent,
+        prefs.tempHighC,
+        prefs.tempLowC,
+    ) {
         designText = prefs.designCapacityMah.toString()
         alarmText = prefs.chargeAlarmPercent.toString()
+        lowAlarmText = prefs.lowAlarmPercent.toString()
+        tempHighText = prefs.tempHighC.toInt().toString()
+        tempLowText = prefs.tempLowC.toInt().toString()
     }
 
     LaunchedEffect(selectedSessionId) {
@@ -189,6 +206,12 @@ fun BatteryScreen(
                         item { MetricZh(stringResource(R.string.battery_status), s.statusLabel) }
                         item { MetricZh(stringResource(R.string.battery_power), s.pluggedLabel) }
                         item { MetricZh(stringResource(R.string.battery_current), "${s.currentNowMa} mA") }
+                        item {
+                            MetricZh(
+                                stringResource(R.string.battery_watts),
+                                stringResource(R.string.battery_watts_value, s.powerWatts),
+                            )
+                        }
                     }
                 }
                 1 -> {
@@ -411,9 +434,31 @@ fun BatteryScreen(
                                 onCheckedChange = { checked ->
                                     scope.launch {
                                         prefsStore.setTrackingEnabled(checked)
-                                        if (!checked) {
-                                            BatteryChargeService.stop(context.applicationContext)
-                                        }
+                                        BatteryChargeService.sync(context.applicationContext)
+                                    }
+                                },
+                            )
+                        }
+                    }
+                    item {
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                stringResource(R.string.battery_persistent_notif_toggle) +
+                                    "\n" +
+                                    stringResource(R.string.battery_persistent_notif_hint),
+                                modifier = Modifier.weight(1f),
+                                style = MaterialTheme.typography.bodyMedium,
+                            )
+                            Switch(
+                                checked = prefs.persistentNotifEnabled,
+                                onCheckedChange = { checked ->
+                                    scope.launch {
+                                        prefsStore.setPersistentNotifEnabled(checked)
+                                        BatteryChargeService.sync(context.applicationContext)
                                     }
                                 },
                             )
@@ -443,6 +488,88 @@ fun BatteryScreen(
                             onValueChange = { alarmText = it.filter { c -> c.isDigit() }.take(3) },
                             modifier = Modifier.fillMaxWidth(),
                             label = { Text(stringResource(R.string.battery_alarm_percent)) },
+                        )
+                    }
+                    item {
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                stringResource(R.string.battery_low_alarm_toggle),
+                                modifier = Modifier.weight(1f),
+                            )
+                            Switch(
+                                checked = prefs.lowAlarmEnabled,
+                                onCheckedChange = { checked ->
+                                    scope.launch { prefsStore.setLowAlarmEnabled(checked) }
+                                },
+                            )
+                        }
+                    }
+                    item {
+                        OutlinedTextField(
+                            value = lowAlarmText,
+                            onValueChange = { lowAlarmText = it.filter { c -> c.isDigit() }.take(3) },
+                            modifier = Modifier.fillMaxWidth(),
+                            label = { Text(stringResource(R.string.battery_low_alarm_percent)) },
+                        )
+                    }
+                    item {
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                stringResource(R.string.battery_temp_high_alarm_toggle),
+                                modifier = Modifier.weight(1f),
+                            )
+                            Switch(
+                                checked = prefs.tempHighAlarmEnabled,
+                                onCheckedChange = { checked ->
+                                    scope.launch { prefsStore.setTempHighAlarmEnabled(checked) }
+                                },
+                            )
+                        }
+                    }
+                    item {
+                        OutlinedTextField(
+                            value = tempHighText,
+                            onValueChange = {
+                                tempHighText = it.filter { c -> c.isDigit() || c == '-' }.take(3)
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            label = { Text(stringResource(R.string.battery_temp_high_c)) },
+                        )
+                    }
+                    item {
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                stringResource(R.string.battery_temp_low_alarm_toggle),
+                                modifier = Modifier.weight(1f),
+                            )
+                            Switch(
+                                checked = prefs.tempLowAlarmEnabled,
+                                onCheckedChange = { checked ->
+                                    scope.launch { prefsStore.setTempLowAlarmEnabled(checked) }
+                                },
+                            )
+                        }
+                    }
+                    item {
+                        OutlinedTextField(
+                            value = tempLowText,
+                            onValueChange = {
+                                tempLowText = it.filter { c -> c.isDigit() || c == '-' }.take(3)
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            label = { Text(stringResource(R.string.battery_temp_low_c)) },
                         )
                     }
                     item {
@@ -536,9 +663,13 @@ fun BatteryScreen(
                             onClick = {
                                 scope.launch {
                                     alarmText.toIntOrNull()?.let { prefsStore.setChargeAlarmPercent(it) }
+                                    lowAlarmText.toIntOrNull()?.let { prefsStore.setLowAlarmPercent(it) }
+                                    tempHighText.toFloatOrNull()?.let { prefsStore.setTempHighC(it) }
+                                    tempLowText.toFloatOrNull()?.let { prefsStore.setTempLowC(it) }
                                     designText.toIntOrNull()?.let {
                                         prefsStore.setDesignCapacityMah(it, userSet = true)
                                     }
+                                    BatteryChargeService.sync(context.applicationContext)
                                 }
                             },
                             modifier = Modifier.fillMaxWidth(),

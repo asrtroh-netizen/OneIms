@@ -2,7 +2,7 @@
 <resources>
     <string name="app_name">OneBattery</string>
     <string name="page_onebattery">OneBattery</string>
-    <string name="onebattery_subtitle">健康估算 · 充电闹钟 · Widget</string>
+    <string name="onebattery_subtitle">功率 · 多闹钟 · 常驻通知 · Widget</string>
     <string name="tab_battery">电池</string>
     <string name="home_toggle_battery">电池跟踪</string>
     <string name="battery_card_title">电池</string>
@@ -46,7 +46,25 @@
     <string name="battery_cycles">循环次数</string>
     <string name="battery_counter">电量计数</string>
     <string name="battery_current">电流</string>
+    <string name="battery_watts">功率</string>
+    <string name="battery_watts_value">%1$.2f W</string>
     <string name="battery_charge_eta">预计充满</string>
+    <string name="battery_status_notif_title">OneBattery</string>
+    <string name="battery_status_notif_line">%1$d%% · %2$.1f°C · %3$.2f W · %4$d mA</string>
+    <string name="battery_persistent_notif_toggle">常驻状态栏通知</string>
+    <string name="battery_persistent_notif_hint">显示电量、温度与功率；关闭跟踪时仍可单独开通知。</string>
+    <string name="battery_low_alarm_toggle">低电量闹钟</string>
+    <string name="battery_low_alarm_percent">低电量阈值（%）</string>
+    <string name="battery_low_alarm_title">电量偏低</string>
+    <string name="battery_low_alarm_body">当前 %1$d%%，已到你设的 %2$d%% 低电阈值</string>
+    <string name="battery_temp_high_alarm_toggle">高温闹钟</string>
+    <string name="battery_temp_high_c">高温阈值（℃）</string>
+    <string name="battery_temp_high_alarm_title">电池偏热</string>
+    <string name="battery_temp_high_alarm_body">当前 %1$.1f℃，已到你设的 %2$.0f℃ 高温阈值</string>
+    <string name="battery_temp_low_alarm_toggle">低温闹钟</string>
+    <string name="battery_temp_low_c">低温阈值（℃）</string>
+    <string name="battery_temp_low_alarm_title">电池偏冷</string>
+    <string name="battery_temp_low_alarm_body">当前 %1$.1f℃，已到你设的 %2$.0f℃ 低温阈值</string>
     <string name="battery_health_title">电池健康（估算）</string>
     <string name="battery_estimated_mah">估算容量</string>
     <string name="battery_design_mah">设计容量</string>
