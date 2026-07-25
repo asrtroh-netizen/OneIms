@@ -4,12 +4,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -19,9 +17,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -274,29 +269,11 @@ fun PrimaryPillButton(
     enabled: Boolean = true,
     loading: Boolean = false,
 ) {
-    Button(
+    OneToolsPrimaryButton(
+        text = if (loading) stringResource(R.string.action_processing) else text,
         onClick = onClick,
-        enabled = enabled && !loading,
-        modifier = modifier
-            .fillMaxWidth()
-            .heightIn(min = 52.dp),
-        shape = RoundedCornerShape(percent = 50),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = Color.White,
-            contentColor = Color.Black,
-            disabledContainerColor = Color.White.copy(alpha = 0.38f),
-            disabledContentColor = Color.Black.copy(alpha = 0.38f),
-        ),
-        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 14.dp),
-    ) {
-        if (loading) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(18.dp),
-                color = Color.Black,
-                strokeWidth = 2.dp,
-            )
-            Spacer(modifier = Modifier.width(10.dp))
-        }
-        Text(text = if (loading) stringResource(R.string.action_processing) else text)
-    }
+        modifier = modifier,
+        enabled = enabled,
+        loading = loading,
+    )
 }

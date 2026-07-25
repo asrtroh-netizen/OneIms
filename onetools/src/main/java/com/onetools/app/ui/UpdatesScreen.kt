@@ -94,15 +94,10 @@ fun UpdatesScreen(onBack: () -> Unit) {
         )
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        TextButton(onClick = onBack) { Text("← ${stringResource(R.string.updates_title)}") }
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 20.dp),
-            contentPadding = PaddingValues(bottom = 36.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
+    OneToolsToolPage(
+        title = stringResource(R.string.updates_title),
+        onBack = onBack,
+    ) {
             item {
                 Text(
                     stringResource(R.string.updates_intro_better),
@@ -347,7 +342,6 @@ fun UpdatesScreen(onBack: () -> Unit) {
                     },
                 )
             }
-        }
     }
 
     if (showAdd) {

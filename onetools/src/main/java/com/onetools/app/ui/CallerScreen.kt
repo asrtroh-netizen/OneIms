@@ -286,11 +286,15 @@ fun CallerScreen(
         Toast.makeText(context, R.string.caller_settings_fail, Toast.LENGTH_SHORT).show()
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
         if (showBack) {
-            TextButton(onClick = onBack) {
-                Text("← ${stringResource(R.string.caller_title)}")
-            }
+            OneToolsToolHeader(
+                title = stringResource(R.string.caller_title),
+                onBack = onBack,
+            )
         }
         LazyColumn(
             modifier = Modifier

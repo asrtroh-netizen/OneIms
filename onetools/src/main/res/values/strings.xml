@@ -46,6 +46,8 @@
     <string name="caller_meter_card_sub">归属拦截 + Pixel Meter 一页切换</string>
     <string name="caller_meter_hub_title">来电 · 网速</string>
     <string name="caller_meter_hub_note">同一页切换 Caller / Meter；电池在首页单独入口。</string>
+    <string name="home_section_tools">工具</string>
+    <string name="home_section_tools_sub">来电 · 网速 · 电池 · 录音 · 更新</string>
     <string name="battery_card_title">电池</string>
     <string name="battery_card_sub">实时 · 健康估算 · 充电闹钟（对齐 AccuBattery 思路）</string>
     <string name="battery_title">电池</string>

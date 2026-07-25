@@ -93,15 +93,10 @@ fun RecorderScreen(onBack: () -> Unit) {
         return true
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        TextButton(onClick = onBack) { Text("← ${stringResource(R.string.recorder_title)}") }
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 20.dp),
-            contentPadding = PaddingValues(bottom = 36.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
+    OneToolsToolPage(
+        title = stringResource(R.string.recorder_title),
+        onBack = onBack,
+    ) {
             item {
                 Text(
                     stringResource(R.string.recorder_intro),
@@ -258,6 +253,5 @@ fun RecorderScreen(onBack: () -> Unit) {
                     }
                 }
             }
-        }
     }
 }

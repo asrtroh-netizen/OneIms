@@ -659,10 +659,9 @@ private fun ToolScaffold(
     showBack: Boolean = true,
     content: LazyListScope.() -> Unit,
 ) {
-    Column(modifier = Modifier.fillMaxSize()) {
-        if (showBack) {
-            TextButton(onClick = onBack) { Text("← $title") }
-        }
+    if (showBack) {
+        OneToolsToolPage(title = title, onBack = onBack, content = content)
+    } else {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()

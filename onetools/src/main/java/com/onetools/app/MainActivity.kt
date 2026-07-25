@@ -76,7 +76,7 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            OneToolsTheme(dynamicColor = false) {
+            OneToolsTheme(dynamicColor = true) {
                 val lifecycleOwner = LocalLifecycleOwner.current
                 DisposableEffect(lifecycleOwner) {
                     val observer = LifecycleEventObserver { _, event ->

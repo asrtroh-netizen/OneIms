@@ -22,6 +22,14 @@ object OneToolsTokens {
     val itemSpacing = 12.dp
     val iconSize = 20.dp
     val rowMinHeight = 72.dp
+
+    @Composable
+    fun pressedOverlay(): Color =
+        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+
+    @Composable
+    fun dividerColor(): Color =
+        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.65f)
 }
 
 /**
@@ -113,7 +121,8 @@ private val OneToolsTypography = Typography().let { defaults ->
 @Composable
 fun OneToolsTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = false,
+    /** 对齐 OneIMS：默认跟随系统动态取色。 */
+    dynamicColor: Boolean = true,
     content: @Composable () -> Unit,
 ) {
     val context = LocalContext.current
