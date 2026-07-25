@@ -215,6 +215,8 @@ data class ExperimentalUiState(
     val rootBootStart: Boolean = false,
     /** 强制临时 CarrierConfig 写入；默认关。 */
     val forceTemporaryOverride: Boolean = false,
+    /** 尽量屏蔽系统更新；默认关。 */
+    val systemUpdateShield: Boolean = false,
     /** 只读状态摘要（通道 + 上次 persistent）。 */
     val rootPersistStatusDetail: String = "",
     val fiveGDisplayConfig: SimpleFiveGDisplayConfig,
@@ -240,6 +242,7 @@ data class ExperimentalActions(
     val onRootPersistEnhanceChange: (Boolean) -> Unit = {},
     val onRootBootStartChange: (Boolean) -> Unit = {},
     val onForceTemporaryOverrideChange: (Boolean) -> Unit = {},
+    val onSystemUpdateShieldChange: (Boolean) -> Unit = {},
     val onOpenApnCatalog: () -> Unit,
     val onApplyExpertValue: (String, String) -> Unit,
     val onFiveGDisplayConfigChange: (SimpleFiveGDisplayConfig) -> Unit,

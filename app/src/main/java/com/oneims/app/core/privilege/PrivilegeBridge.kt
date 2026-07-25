@@ -61,6 +61,8 @@ interface PrivilegeBridge {
             "carrier_config",
             "isub",
             "phone",
+            /** 系统更新屏蔽：IPackageManager 启停包/组件。 */
+            "package",
         )
     }
 }

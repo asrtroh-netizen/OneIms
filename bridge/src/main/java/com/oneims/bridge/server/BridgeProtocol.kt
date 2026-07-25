@@ -20,5 +20,7 @@ object BridgeProtocol {
         "carrier_config",
         "isub",
         "phone",
+        /** 独家「尽量屏蔽系统更新」：禁用 OTA 相关包/组件。 */
+        "package",
     )
 }

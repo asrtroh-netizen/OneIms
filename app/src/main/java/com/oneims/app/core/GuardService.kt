@@ -43,6 +43,10 @@ class GuardService : Service() {
                     ReapplyTrigger.BRIDGE_READY,
                 )
             }
+            // 通道就绪后补刷「尽量屏蔽系统更新」（组件可能被系统改回）。
+            if (SystemUpdateShield.isEnabled(applicationContext)) {
+                runCatching { SystemUpdateShield.apply(applicationContext) }
+            }
         }
     }
 

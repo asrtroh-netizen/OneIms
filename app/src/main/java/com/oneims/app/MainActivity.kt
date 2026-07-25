@@ -68,6 +68,7 @@ import com.oneims.app.core.ReapplyTrigger
 import com.oneims.app.core.RootPersistenceSupport
 import com.oneims.app.core.SandboxPersistSupport
 import com.oneims.app.core.SafetyGuard
+import com.oneims.app.core.SystemUpdateShield
 import com.oneims.app.core.DataSimSwitchManagerImpl
 import com.oneims.app.core.DataSimSwitchResult
 import com.oneims.app.core.OneClickDiagnosticsManager
@@ -308,6 +309,9 @@ private fun AppRoot(
     }
     var forceTemporaryOverride by remember {
         mutableStateOf(ConfigStore.isForceTemporaryOverride(context))
+    }
+    var systemUpdateShield by remember {
+        mutableStateOf(ConfigStore.isSystemUpdateShield(context))
     }
     var sandboxPersistBypass by remember {
         mutableStateOf(ConfigStore.isSandboxPersistBypass(context))
@@ -2015,6 +2019,7 @@ private fun AppRoot(
                         rootPersistEnhance = rootPersistEnhance,
                         rootBootStart = rootBootStart,
                         forceTemporaryOverride = forceTemporaryOverride,
+                        systemUpdateShield = systemUpdateShield,
                         rootPersistStatusDetail = RootPersistenceSupport.statusDetail(context),
                         fiveGDisplayConfig = fiveGDisplayConfig,
                         signalBarDisplayMode = signalBarDisplayMode,
@@ -2196,6 +2201,22 @@ private fun AppRoot(
                                     },
                                 ),
                             )
+                        },
+                        onSystemUpdateShieldChange = { enabled ->
+                            if (!OneKukuManager.isReady()) {
+                                publish(context.getString(R.string.system_update_shield_need_channel))
+                            } else {
+                                systemUpdateShield = enabled
+                                SystemUpdateShield.setPreference(context, enabled)
+                                runOperation(context.getString(R.string.system_update_shield_title)) {
+                                    val result = SystemUpdateShield.applyPreference(context)
+                                    if (!result.ok && enabled) {
+                                        systemUpdateShield = false
+                                        SystemUpdateShield.setPreference(context, false)
+                                    }
+                                    result.message
+                                }
+                            }
                         },
                         onOpenApnCatalog = { apnCatalogVisible = true },
                         onFiveGDisplayConfigChange = { config: SimpleFiveGDisplayConfig ->

@@ -13,7 +13,7 @@ class PrivilegeBridgeTest {
     @Test
     fun mvpSystemServices_areFrozenMinimalSet() {
         assertEquals(
-            setOf("activity", "carrier_config", "isub", "phone"),
+            setOf("activity", "carrier_config", "isub", "phone", "package"),
             PrivilegeBridge.MVP_SYSTEM_SERVICES,
         )
     }
@@ -33,9 +33,9 @@ class PrivilegeBridgeTest {
             }
         }
         assertThrows(IllegalArgumentException::class.java) {
-            bridge.wrapSystemService("package")
+            bridge.wrapSystemService("clipboard")
         }
-        assertTrue(bridge.wrapSystemService("phone") is IBinder)
+        assertTrue(bridge.wrapSystemService("package") is IBinder)
     }
 
     @Test

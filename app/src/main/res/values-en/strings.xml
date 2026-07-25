@@ -763,6 +763,9 @@
     <string name="force_temporary_sub">Skip persistent=true and write temporary overrides only. Off by default. May reduce denials on newer builds; reboot still needs reapply</string>
     <string name="force_temporary_on">Force temporary writes enabled</string>
     <string name="force_temporary_off">Force temporary writes disabled</string>
+    <string name="system_update_shield_title">Block system updates (best effort)</string>
+    <string name="system_update_shield_sub">When the privilege channel is ready, disable common auto-update components. Not guaranteed. May affect Google system updates; turn off to restore</string>
+    <string name="system_update_shield_need_channel">Activate the privilege channel first</string>
     <string name="sandbox_persist_title">Persistent VoLTE/NR</string>
     <string name="sandbox_persist_sub"></string>
     <string name="sandbox_persist_home_sub"></string>

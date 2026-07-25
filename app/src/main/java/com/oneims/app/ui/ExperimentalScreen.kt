@@ -36,6 +36,8 @@ import androidx.compose.material.icons.filled.Settings
 
 import androidx.compose.material.icons.filled.Star
 
+import androidx.compose.material.icons.filled.Warning
+
 import androidx.compose.material3.FilterChip
 
 import androidx.compose.material3.Icon
@@ -880,7 +882,47 @@ fun ExperimentalScreen(
 
 
 
+            }
 
+
+
+        }
+
+
+
+        item {
+
+
+
+            SectionBlock(title = stringResource(R.string.system_update_shield_title)) {
+
+
+
+                SettingsSwitchRow(
+
+
+
+                    title = stringResource(R.string.system_update_shield_title),
+
+
+
+                    subtitle = stringResource(R.string.system_update_shield_sub),
+
+
+
+                    checked = state.systemUpdateShield,
+
+
+
+                    onCheckedChange = actions.onSystemUpdateShieldChange,
+
+
+
+                    icon = Icons.Filled.Warning,
+
+
+
+                )
 
 
 

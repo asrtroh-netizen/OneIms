@@ -772,6 +772,9 @@
     <string name="force_temporary_sub">跳过 persistent=true，直接写临时覆盖；默认关。部分新系统可减少拒写；重启仍靠开机重放</string>
     <string name="force_temporary_on">已开启强制临时写入</string>
     <string name="force_temporary_off">已关闭强制临时写入</string>
+    <string name="system_update_shield_title">尽量屏蔽系统更新</string>
+    <string name="system_update_shield_sub">通道激活后尽量关掉自动系统更新相关组件；不保证百分百。可能影响 Google 系统更新；关掉本开关可恢复</string>
+    <string name="system_update_shield_need_channel">请先激活特权通道再开关</string>
     <string name="sandbox_persist_title">持久性VoLTE/NR</string>
     <string name="sandbox_persist_sub"></string>
     <string name="sandbox_persist_home_sub"></string>
