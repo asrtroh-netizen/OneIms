@@ -256,6 +256,10 @@ object CarrierConfigOverrideWriter {
             )
             return false
         }
+        if (SandboxPersistSupport.tryPersistentOverride(context, subId, bundle)) {
+            Log.i(TAG, "sandbox persist bypass succeeded")
+            return true
+        }
         return try {
             SystemApiBroker.overrideConfig(
                 context = context,

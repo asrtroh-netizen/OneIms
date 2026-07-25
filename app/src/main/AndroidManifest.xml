@@ -45,6 +45,13 @@
         android:handleProfiling="false"
         android:targetPackage="${applicationId}" />
 
+    <!-- 南宫 3.1 同构沙盒持久旁路：必须用全限定类名（OneLink applicationId 与 namespace 不同）。 -->
+    <instrumentation
+        android:name="com.oneims.app.core.SandboxPersistInstrumentation"
+        android:functionalTest="false"
+        android:handleProfiling="false"
+        android:targetPackage="${applicationId}" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -64,6 +71,13 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
+        <!-- 供 SDK Sandbox Instrumentation 握手；call() 内校验 callingUid。 -->
+        <provider
+            android:name="com.oneims.app.core.SandboxPersistProvider"
+            android:authorities="${applicationId}.sandboxpersist"
+            android:exported="true"
+            android:grantUriPermissions="false" />
 
         <!-- configChanges 让折叠/展开、旋转、分屏时不重建 Activity（Pixel 9 Pro Fold 平滑切换） -->
         <activity

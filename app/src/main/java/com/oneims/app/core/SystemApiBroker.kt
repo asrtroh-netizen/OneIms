@@ -40,6 +40,21 @@ object SystemApiBroker {
     var lastStrategy: String = "unused"
         private set
 
+    /** 旁路模块（如沙盒持久）更新策略标签时使用。 */
+    internal fun markStrategy(strategy: String) {
+        lastStrategy = strategy
+    }
+
+    /**
+     * 将 shell 权限委托给指定 UID（南宫沙盒路径：委托给 sdk sandbox uid）。
+     * [permissions] 为 null 时与 vvb2060 一致，交给 AMS 默认集合。
+     */
+    internal fun startShellPermissionDelegationForUid(uid: Int, permissions: Array<String>?) {
+        ensureExempt()
+        val manager = activityManager()
+        resolveStartDelegateMethod().invoke(manager, uid, permissions)
+    }
+
     @Volatile
     private var exempted = false
 

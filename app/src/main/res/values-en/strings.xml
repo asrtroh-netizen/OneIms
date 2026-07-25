@@ -763,6 +763,10 @@
     <string name="force_temporary_sub">Skip persistent=true and write temporary overrides only. Off by default. May reduce denials on newer builds; reboot still needs reapply</string>
     <string name="force_temporary_on">Force temporary writes enabled</string>
     <string name="force_temporary_off">Force temporary writes disabled</string>
+    <string name="sandbox_persist_title">Sandbox persist bypass</string>
+    <string name="sandbox_persist_sub">Nangong 3.1-style: when the platform probe still allows it, try true persistence via SDK Sandbox Instrumentation. Off by default; falls back automatically; force-temporary wins if both are on</string>
+    <string name="sandbox_persist_on">Sandbox persist bypass enabled</string>
+    <string name="sandbox_persist_off">Sandbox persist bypass disabled</string>
     <string name="diagnostic_check_platform_persistent">Platform persistence probe</string>
     <string name="diagnostic_check_platform_persistent_guidance">Checks whether CarrierConfigLoader exposes isSystemApp / sandbox gates. If the probe fails or says the platform is tightened, rely on boot reapply, or enable Experimental → Force temporary writes.</string>
     <string name="diagnostic_platform_persistent_allowed">Platform may still allow persistent attempts</string>

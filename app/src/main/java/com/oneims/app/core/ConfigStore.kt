@@ -86,6 +86,8 @@ object ConfigStore {
      * 部分新系统上可减少拒写/拖 phone；重启仍依赖开机重放。
      */
     private const val KEY_FORCE_TEMPORARY_OVERRIDE = "force_temporary_override"
+    /** SDK Sandbox Instrumentation 持久写旁路（南宫 3.1 同构）；默认关。 */
+    private const val KEY_SANDBOX_PERSIST_BYPASS = "sandbox_persist_bypass"
     private const val KEY_LAST_OVERRIDE_PERSISTENT = "last_override_persistent"
     private const val KEY_LAST_OVERRIDE_PERSIST_HAS = "last_override_persist_has"
     private const val KEY_LAST_OVERRIDE_SUCCESS = "last_override_success"
@@ -677,6 +679,13 @@ object ConfigStore {
 
     fun setForceTemporaryOverride(context: Context, enabled: Boolean) {
         prefs(context).edit().putBoolean(KEY_FORCE_TEMPORARY_OVERRIDE, enabled).apply()
+    }
+
+    fun isSandboxPersistBypass(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_SANDBOX_PERSIST_BYPASS, false)
+
+    fun setSandboxPersistBypass(context: Context, enabled: Boolean) {
+        prefs(context).edit().putBoolean(KEY_SANDBOX_PERSIST_BYPASS, enabled).apply()
     }
 
     /** Root 开机拉起本产品特权桥（OneBridge 或 Shizuku）；默认关闭。 */
