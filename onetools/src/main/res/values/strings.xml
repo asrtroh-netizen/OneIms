@@ -292,7 +292,7 @@
 
     <string name="caller_setup_title">权限与系统设置</string>
 
-    <string name="caller_gap_note">面向 Google Pixel / 系统 Phone。导入拦截库、备份规则；与录音联动。Directory 归属需通话记录权限。</string>
+    <string name="caller_gap_note">面向 Google Pixel / 系统 Phone。归属地只走系统拨号 Directory 原生行（不来电悬浮）。需通话记录权限；可导入拦截库与备份。</string>
 
     <string name="caller_set_default">设为默认来电筛选</string>
 

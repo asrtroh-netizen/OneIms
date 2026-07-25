@@ -44,12 +44,14 @@ Directory 仅在 shouldBlock 时把 label 喂给拨号器
 
 ## 5. 对 OneCaller 的含义（可落地、不抄代码）
 
+> **用户拍板：不要看来电悬浮。** 归属地验收只认 Directory → 系统 Phone 原生行。
+
 | Telo | OneCaller 现状 / 建议 |
 |---|---|
-| Directory 只喂骚扰标签 | 我们已把 **geo + LABEL/拦截** 合成进 Directory——**覆盖面可比 Telo 更宽** |
-| 归属地靠 **联网 + 悬浮窗** | 我们用本地 `geo_v1` 干净室库；可再加「来电悬浮」作增强，但那不是系统 Phone 原生 |
-| 离线库是骚扰库增量更新 | 我们应用 **自有号段库 / OneBlock CDN** 扩 `geo_v1`，禁止 GPL `phone.dat` |
-| Apache-2.0 可学习契约 | **禁止整段移植**；只复用公开 Android API 契约（Directory / CallScreening） |
+| Directory 只喂骚扰标签 | 已把 **geo + LABEL/拦截** 合成进 Directory——**主战场** |
+| 归属地靠联网 + **悬浮窗** | **悬浮窗路线 Out**；只扩本地/CDN `geo_v1` 喂 Directory |
+| 离线库是骚扰库增量更新 | 用 **自有号段库 / OneBlock CDN** 扩 `geo_v1`，禁止 GPL `phone.dat` |
+| Apache-2.0 可学习契约 | **禁止整段移植**；只复用 Directory / CallScreening 公开契约 |
 
 ## 6. 若用户体感「Telo 拨号里有归属地」
 

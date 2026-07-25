@@ -17,6 +17,15 @@
 这里的「像」= **像 Pixel 系统电话那套体验**（默认来电筛选角色 + 来电标签），不是像国产厂商全家桶云标记。  
 Pixel 上 Directory + CallScreening 是正道；其它 ROM 显示好坏 **不纳入成功标准**。
 
+## 归属地展示硬边界（2026-07-25 用户拍板）
+
+| 算成功 | 不算 / 不做 |
+|---|---|
+| **系统拨号器 / Phone 来电界面** 里由 Directory 画出的原生归属地行 | **来电悬浮窗**（Telo Overlay 路线）——明确 **不要看、不做为验收** |
+| CallScreening 拦截行为 | 用悬浮窗冒充「原生归属地」 |
+
+对照 Telo：其 Directory 当前 HEAD 主要喂骚扰标签；归属地多靠联网+悬浮。OneCaller **只卷 Directory 原生行**，用自有 `geo_v1` / CDN 把号段喂满。
+
 ## 文档指针
 
 - 架构：`docs/architecture/2026-07-25-onetools-architecture-blueprint.md`

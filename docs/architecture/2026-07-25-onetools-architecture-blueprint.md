@@ -30,7 +30,7 @@
 | F4 | 一键导出诊断文本（本地；含通道四态快照） | `export` |
 | F5 | 与 OneIMS 关系说明页 | `ui` |
 | F6 | 隐私边界声明 | `ui` / `policy` |
-| F7 | **来电归属 + 骚扰拦截**（CallScreening / 本地规则 / Directory；干净室；**Pixel Phone 验收**） | `caller` |
+| F7 | **来电归属 + 骚扰拦截**（CallScreening / 本地规则 / **Directory 原生行**；干净室；Pixel Phone 验收；**不做来电悬浮冒充归属地**） | `caller` |
 | F8 | **网速监测**（类 Pixel Meter：通知/悬浮 + 状态栏贴顶/芯片逼近 + 分应用流量） | `meter` |
 
 ### Out（架构硬墙 · 禁止落入代码路径）
