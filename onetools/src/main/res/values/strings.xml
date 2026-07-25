@@ -42,6 +42,10 @@
     <string name="toast_open_shizuku_fail">未找到 Shizuku，请先安装官方或修缮版</string>
     <string name="toast_status_ok">通道状态已刷新</string>
 
+    <string name="caller_meter_card_title">来电 · 网速</string>
+    <string name="caller_meter_card_sub">归属拦截 + Pixel Meter 一页切换</string>
+    <string name="caller_meter_hub_title">来电 · 网速</string>
+    <string name="caller_meter_hub_note">同一页切换 Caller / Meter；电池在首页单独入口。</string>
     <string name="battery_card_title">电池</string>
     <string name="battery_card_sub">实时 · 健康估算 · 充电闹钟（对齐 AccuBattery 思路）</string>
     <string name="battery_title">电池</string>

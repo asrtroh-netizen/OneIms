@@ -27,15 +27,14 @@ import com.onetools.app.channel.ShizukuChannel
 import com.onetools.app.device.DeviceSnapshotReader
 import com.onetools.app.export.DiagExport
 import com.onetools.app.ui.BatteryScreen
-import com.onetools.app.ui.CallerScreen
+import com.onetools.app.ui.CallerMeterHubScreen
 import com.onetools.app.ui.HomeScreen
-import com.onetools.app.ui.MeterScreen
 import com.onetools.app.ui.RecorderScreen
 import com.onetools.app.ui.UpdatesScreen
 import com.onetools.app.ui.theme.OneToolsTheme
 import kotlinx.coroutines.delay
 
-private enum class AppRoute { Home, Battery, Meter, Caller, Updates, Recorder }
+private enum class AppRoute { Home, CallerMeter, Battery, Updates, Recorder }
 
 class MainActivity : ComponentActivity() {
     private var serviceReady by mutableStateOf(false)
@@ -118,19 +117,17 @@ class MainActivity : ComponentActivity() {
                         AppRoute.Home -> HomeScreen(
                             channelState = cardState,
                             onActivateOrCheck = { onPrimaryAction() },
+                            onOpenCallerMeter = { route = AppRoute.CallerMeter },
                             onOpenBattery = { route = AppRoute.Battery },
-                            onOpenMeter = { route = AppRoute.Meter },
-                            onOpenCaller = { route = AppRoute.Caller },
                             onOpenUpdates = { route = AppRoute.Updates },
                             onOpenRecorder = { route = AppRoute.Recorder },
                             onExportDiag = { exportDiagnostic() },
                         )
-                        AppRoute.Battery -> BatteryScreen(onBack = { route = AppRoute.Home })
-                        AppRoute.Meter -> MeterScreen(onBack = { route = AppRoute.Home })
-                        AppRoute.Caller -> CallerScreen(
+                        AppRoute.CallerMeter -> CallerMeterHubScreen(
                             onBack = { route = AppRoute.Home },
                             onOpenRecorder = { route = AppRoute.Recorder },
                         )
+                        AppRoute.Battery -> BatteryScreen(onBack = { route = AppRoute.Home })
                         AppRoute.Updates -> UpdatesScreen(onBack = { route = AppRoute.Home })
                         AppRoute.Recorder -> RecorderScreen(onBack = { route = AppRoute.Home })
                     }

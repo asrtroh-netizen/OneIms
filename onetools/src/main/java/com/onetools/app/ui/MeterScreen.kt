@@ -58,7 +58,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun MeterScreen(onBack: () -> Unit) {
+fun MeterScreen(
+    onBack: () -> Unit,
+    showBack: Boolean = true,
+) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val settings = remember { MeterSettings(context.applicationContext) }
@@ -115,6 +118,7 @@ fun MeterScreen(onBack: () -> Unit) {
     ToolScaffold(
         title = stringResource(R.string.meter_title),
         onBack = onBack,
+        showBack = showBack,
     ) {
         item {
             Text(
@@ -652,10 +656,13 @@ fun MeterScreen(onBack: () -> Unit) {
 private fun ToolScaffold(
     title: String,
     onBack: () -> Unit,
+    showBack: Boolean = true,
     content: LazyListScope.() -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
-        TextButton(onClick = onBack) { Text("← $title") }
+        if (showBack) {
+            TextButton(onClick = onBack) { Text("← $title") }
+        }
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()

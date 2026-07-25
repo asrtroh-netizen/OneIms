@@ -24,9 +24,8 @@ import com.onetools.app.channel.ChannelCardState
 fun HomeScreen(
     channelState: ChannelCardState,
     onActivateOrCheck: () -> Unit,
+    onOpenCallerMeter: () -> Unit,
     onOpenBattery: () -> Unit,
-    onOpenMeter: () -> Unit,
-    onOpenCaller: () -> Unit,
     onOpenUpdates: () -> Unit,
     onOpenRecorder: () -> Unit,
     onExportDiag: () -> Unit,
@@ -67,25 +66,17 @@ fun HomeScreen(
 
         item {
             InfoCard(
+                title = stringResource(R.string.caller_meter_card_title),
+                subtitle = stringResource(R.string.caller_meter_card_sub),
+                onClick = onOpenCallerMeter,
+            )
+        }
+
+        item {
+            InfoCard(
                 title = stringResource(R.string.battery_card_title),
                 subtitle = stringResource(R.string.battery_card_sub),
                 onClick = onOpenBattery,
-            )
-        }
-
-        item {
-            InfoCard(
-                title = stringResource(R.string.meter_card_title),
-                subtitle = stringResource(R.string.meter_card_sub),
-                onClick = onOpenMeter,
-            )
-        }
-
-        item {
-            InfoCard(
-                title = stringResource(R.string.caller_card_title),
-                subtitle = stringResource(R.string.caller_card_sub),
-                onClick = onOpenCaller,
             )
         }
 

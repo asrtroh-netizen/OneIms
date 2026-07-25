@@ -83,6 +83,7 @@ import java.util.UUID
 @Composable
 fun CallerScreen(
     onBack: () -> Unit,
+    showBack: Boolean = true,
     onOpenRecorder: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -286,8 +287,10 @@ fun CallerScreen(
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        TextButton(onClick = onBack) {
-            Text("← ${stringResource(R.string.caller_title)}")
+        if (showBack) {
+            TextButton(onClick = onBack) {
+                Text("← ${stringResource(R.string.caller_title)}")
+            }
         }
         LazyColumn(
             modifier = Modifier
