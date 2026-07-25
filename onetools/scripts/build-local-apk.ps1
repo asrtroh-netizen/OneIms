@@ -16,17 +16,27 @@ if (-not (Test-Path $apk)) {
 $dist = Join-Path $Root "onetools\dist"
 New-Item -ItemType Directory -Force -Path $dist | Out-Null
 
-# Read versionName from built APK via aapt if available; else stamp time.
+# Distinct filename: include versionName so installs aren't confused with Pixel Meter / old builds.
+$gradle = Get-Content (Join-Path $Root "onetools\build.gradle.kts") -Raw
+$versionName = "0.0.0"
+if ($gradle -match 'versionName\s*=\s*"([^"]+)"') {
+    $versionName = $Matches[1]
+}
 $stamp = Get-Date -Format "yyyyMMdd-HHmm"
-$out = Join-Path $dist "OneTools-debug-$stamp.apk"
+$out = Join-Path $dist "OneTools-v$versionName-debug-$stamp.apk"
+$latest = Join-Path $dist "OneTools-v$versionName-latest-debug.apk"
+# Stable pointer for adb scripts (always newest build).
+$alias = Join-Path $dist "OneTools-latest-debug.apk"
+
 Copy-Item -Force $apk $out
-$latest = Join-Path $dist "OneTools-latest-debug.apk"
 Copy-Item -Force $apk $latest
+Copy-Item -Force $apk $alias
 
 Write-Host ""
 Write-Host "OK local product APK (not published):"
 Write-Host "  $out"
 Write-Host "  $latest"
+Write-Host "  $alias"
 Write-Host ""
 Write-Host "Install on Pixel (USB debugging):"
 Write-Host "  adb install -r `"$latest`""
