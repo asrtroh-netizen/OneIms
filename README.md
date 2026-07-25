@@ -20,10 +20,10 @@
 
 | 推荐给… | 包 | 下载 |
 |---|---|---|
-| 🟢 **想少装 App、App 内一键配对** | **OneKuku（独立激活）** | [OneIms-OneKuku-standalone-3.0.4.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.0.4/OneIms-OneKuku-standalone-3.0.4.apk) |
-| 🔵 **已有 / 想用 Shizuku 轻壳** | **OneIms Lite（Shizuku）** | [OneIms-Lite-Shizuku-3.0.4.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.0.4/OneIms-Lite-Shizuku-3.0.4.apk) |
+| 🟢 **想少装 App、App 内一键配对** | **OneKuku（独立激活）** | [OneIms-OneKuku-standalone-3.0.5.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.0.5/OneIms-OneKuku-standalone-3.0.5.apk) |
+| 🔵 **已有 / 想用 Shizuku 轻壳** | **OneIms Lite（Shizuku）** | [OneIms-Lite-Shizuku-3.0.5.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.0.5/OneIms-Lite-Shizuku-3.0.5.apk) |
 
-[📦 全部 Release 资产](https://github.com/asrtroh-netizen/OneIms/releases/tag/v3.0.4)
+[📦 全部 Release 资产](https://github.com/asrtroh-netizen/OneIms/releases/tag/v3.0.5)
 
 > 💙 **友情推荐特权通道**：[asrtroh 修缮版 Shizuku V15.0](https://github.com/asrtroh-netizen/shizuku)（配对一次 · 旧 Wi‑Fi 自连 · 开机 FGS 内激活）  
 > 下载正式包：[Releases](https://github.com/asrtroh-netizen/shizuku/releases) · 截图：
@@ -64,10 +64,32 @@
 
 | 对外名称 | 包名 | 特权通道 | Release 文件名 |
 |---|---|---|---|
-| **OneIms · OneKuku** `3.0.4-onekuku` | `com.oneims.app` | 内嵌 OneBridge + 无线调试配对 | `OneIms-OneKuku-standalone-3.0.4.apk`（备注：独立激活） |
-| **OneIms · OneIms Lite** `3.0.4-onelink` | `com.oneims.onelink` | 官方 Shizuku | `OneIms-Lite-Shizuku-3.0.4.apk`（备注：Shizuku） |
+| **OneIms · OneKuku** `3.0.5-onekuku` | `com.oneims.app` | 内嵌 OneBridge + 无线调试配对 | `OneIms-OneKuku-standalone-3.0.5.apk`（备注：独立激活） |
+| **OneIms · OneIms Lite** `3.0.5-onelink` | `com.oneims.onelink` | 官方 Shizuku | `OneIms-Lite-Shizuku-3.0.5.apk`（备注：Shizuku） |
 
 > **双包同版号一起更新**；请只从本页 Release 链接下载，勿混装未知来源包。
+
+---
+
+## ✨ What's New · 3.0.5
+
+**本版主线：VoWiFi 写入门对非 Tensor 放开尝试；独家页收敛为身份 / 国家码 / 守护 / APN / 专家编辑。**
+
+### 📶 VoWiFi
+
+* 非 Tensor（含联发科等）不再硬拒写入；是否在状态栏生效仍取决于 OEM SystemUI
+* 成功提示保持简短，不堆长 caveat
+
+### 🧪 独家页
+
+* 移除三项显示/切卡入口（产品面不再宣传）
+* 保留：身份覆盖、国家码、掉线守护、离线 APN、专家编辑
+
+### 🔄 升级
+
+* 🟢 OneKuku：覆盖安装 `OneIms-OneKuku-standalone-3.0.5.apk`
+* 🔵 OneIms Lite：覆盖安装 `OneIms-Lite-Shizuku-3.0.5.apk`
+* versionCode `75`（相对 3.0.4 的 `74` 会提示升级）
 
 ---
 
@@ -131,7 +153,7 @@
 ### 🧯 一键恢复系统默认
 
 * 首页「快速开始」新增危险色按钮 **一键恢复系统默认状态**
-* 确认后清空当前 SIM 由本应用写入的 CarrierConfig 覆盖与相关显示增强，恢复运营商系统默认
+* 确认后清空当前 SIM 由本应用写入的 CarrierConfig 覆盖，恢复运营商系统默认
 * **不会删除**已保存的通话配置快照；仍可用「一键应用上次配置」写回
 * 前置：已选卡、通道已授权
 
