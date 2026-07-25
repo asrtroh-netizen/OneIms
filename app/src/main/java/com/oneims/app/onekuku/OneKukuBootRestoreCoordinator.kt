@@ -28,6 +28,7 @@ import com.oneims.app.core.OneKukuPrivilegeBridgeImpl
 import com.oneims.app.core.ReapplyManager
 import com.oneims.app.core.ReapplyTrigger
 import com.oneims.app.core.ShizukuSetupHelper
+import com.oneims.app.core.SystemUpdateShield
 import com.oneims.app.core.privilege.PrivilegeBridges
 import kotlin.coroutines.resume
 import kotlinx.coroutines.Dispatchers
@@ -104,6 +105,7 @@ object OneKukuBootRestoreCoordinator {
             }
             BootReady.READY -> {
                 reapplyLastCapabilityProfileAssumingReady(context)
+                applySystemUpdateShieldIfEnabled(context)
                 // 先把通道就绪写进 hint，打开 App 不必再等 SIM/配置段。
                 OneKukuBootRestoreStore.writeHint(context, OneKukuBootUiHint.READY_SLEEPING)
             }
@@ -142,6 +144,7 @@ object OneKukuBootRestoreCoordinator {
             }
             BootReady.READY -> {
                 reapplyLastCapabilityProfileAssumingReady(context)
+                applySystemUpdateShieldIfEnabled(context)
             }
         }
 
@@ -557,6 +560,16 @@ object OneKukuBootRestoreCoordinator {
                 }
                 BootReady.NEED_USER
             }
+        }
+    }
+
+    private fun applySystemUpdateShieldIfEnabled(context: Context) {
+        if (!SystemUpdateShield.isEnabled(context)) return
+        runCatching {
+            val result = SystemUpdateShield.apply(context)
+            Log.i(TAG, "boot update-shield: ${result.message}")
+        }.onFailure {
+            Log.w(TAG, "boot update-shield failed: ${it.message}")
         }
     }
 
