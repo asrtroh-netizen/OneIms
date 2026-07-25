@@ -19,6 +19,11 @@
 
 产物：`onebattery/build/outputs/apk/debug/onebattery-debug.apk`（另拷 `OneBattery-debug.apk`）
 
+## Git
+
+- `8535f7e` 种子提交曾误带 `onebattery/build/`
+- `8024854` 已从版本库移除构建产物，并在 `.gitignore` 增加 `/onebattery/build/`
+
 ## 明确不做
 
 - 反编译 / 克隆 `com.paget96.batteryguru`
