@@ -1,0 +1,19 @@
+package com.onetools.app.battery
+
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+
+/**
+ * Starts / stops clean-room charge tracking when power is connected.
+ */
+class BatteryPowerReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent?) {
+        when (intent?.action) {
+            Intent.ACTION_POWER_CONNECTED ->
+                BatteryChargeService.start(context.applicationContext)
+            Intent.ACTION_POWER_DISCONNECTED ->
+                BatteryChargeService.stop(context.applicationContext)
+        }
+    }
+}

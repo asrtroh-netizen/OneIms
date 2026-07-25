@@ -24,6 +24,8 @@ data class BatterySnapshot(
     val chargeCounterMah: Int,
     val currentNowMa: Int,
     val chargingTimeRemainingMs: Long,
+    val isCharging: Boolean,
+    val isPlugged: Boolean,
 )
 
 object BatteryReader {
@@ -65,6 +67,10 @@ object BatteryReader {
             -1L
         }
 
+        val isPlugged = plugged != 0
+        val isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
+            (isPlugged && status == BatteryManager.BATTERY_STATUS_FULL)
+
         return BatterySnapshot(
             percent = percent,
             healthCode = health,
@@ -78,33 +84,35 @@ object BatteryReader {
             chargeCounterMah = chargeMah,
             currentNowMa = currentMa,
             chargingTimeRemainingMs = chargeRemain,
+            isCharging = isCharging,
+            isPlugged = isPlugged,
         )
     }
 
     fun healthLabel(code: Int): String = when (code) {
-        BatteryManager.BATTERY_HEALTH_GOOD -> "Good"
-        BatteryManager.BATTERY_HEALTH_OVERHEAT -> "Overheat"
-        BatteryManager.BATTERY_HEALTH_DEAD -> "Dead"
-        BatteryManager.BATTERY_HEALTH_OVER_VOLTAGE -> "Over voltage"
-        BatteryManager.BATTERY_HEALTH_UNSPECIFIED_FAILURE -> "Failure"
-        BatteryManager.BATTERY_HEALTH_COLD -> "Cold"
-        else -> "Unknown"
+        BatteryManager.BATTERY_HEALTH_GOOD -> "良好"
+        BatteryManager.BATTERY_HEALTH_OVERHEAT -> "过热"
+        BatteryManager.BATTERY_HEALTH_DEAD -> "损坏"
+        BatteryManager.BATTERY_HEALTH_OVER_VOLTAGE -> "过压"
+        BatteryManager.BATTERY_HEALTH_UNSPECIFIED_FAILURE -> "故障"
+        BatteryManager.BATTERY_HEALTH_COLD -> "过冷"
+        else -> "未知"
     }
 
     private fun statusLabel(status: Int): String = when (status) {
-        BatteryManager.BATTERY_STATUS_CHARGING -> "Charging"
-        BatteryManager.BATTERY_STATUS_DISCHARGING -> "Discharging"
-        BatteryManager.BATTERY_STATUS_FULL -> "Full"
-        BatteryManager.BATTERY_STATUS_NOT_CHARGING -> "Not charging"
-        else -> "Unknown"
+        BatteryManager.BATTERY_STATUS_CHARGING -> "充电中"
+        BatteryManager.BATTERY_STATUS_DISCHARGING -> "放电中"
+        BatteryManager.BATTERY_STATUS_FULL -> "已充满"
+        BatteryManager.BATTERY_STATUS_NOT_CHARGING -> "未在充电"
+        else -> "未知"
     }
 
     private fun pluggedLabel(plugged: Int): String = when (plugged) {
-        0 -> "Unplugged"
-        BatteryManager.BATTERY_PLUGGED_AC -> "AC"
+        0 -> "未插电"
+        BatteryManager.BATTERY_PLUGGED_AC -> "交流电"
         BatteryManager.BATTERY_PLUGGED_USB -> "USB"
-        BatteryManager.BATTERY_PLUGGED_WIRELESS -> "Wireless"
-        BatteryManager.BATTERY_PLUGGED_DOCK -> "Dock"
-        else -> "Other"
+        BatteryManager.BATTERY_PLUGGED_WIRELESS -> "无线"
+        BatteryManager.BATTERY_PLUGGED_DOCK -> "底座"
+        else -> "其他"
     }
 }

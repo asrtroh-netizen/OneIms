@@ -7,7 +7,7 @@ import org.junit.Test
 class BatteryReaderTest {
     @Test
     fun healthLabel_mapsKnownCodes() {
-        assertEquals("Good", BatteryReader.healthLabel(BatteryManager.BATTERY_HEALTH_GOOD))
-        assertEquals("Unknown", BatteryReader.healthLabel(-1))
+        assertEquals("良好", BatteryReader.healthLabel(BatteryManager.BATTERY_HEALTH_GOOD))
+        assertEquals("未知", BatteryReader.healthLabel(-1))
     }
 }
