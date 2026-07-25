@@ -10,7 +10,7 @@
    - 系统/拨号器内置能力，或
    - **Root / 特权权限**（`CAPTURE_AUDIO_OUTPUT` 等），或
    - **Shizuku/ADB shell 侧技巧**（近年出现，OEM 易碎）
-3. **售卖与许可**：OneTools 若闭源/商用，**不能把 GPL-3 录音 App 源码嵌进 `:onetools`**（传染风险，同 Obtainium）。允许：更新中心安装对方 APK、外链、或自研干净室。
+3. **售卖与许可**：OneTools 若闭源/商用，**不能把 GPL-3 录音 App 源码嵌进 `:onetools`**（传染风险）。允许：更新中心安装对方 APK、外链、或自研干净室。
 
 ## 1. 主流可见方案对照
 
@@ -39,7 +39,7 @@ OneTools 已定：**Shizuku 通道、不引入 `:bridge`、拟售卖、强调自
 1. **短期（可卖、可控）**：走 **路径 A**  
    - 默认推荐：**ShizuCallRecorder**（Shizuku 非 Root，和 OneTools 通道一致）  
    - Root 用户可选：**BCR**（成熟稳定）  
-   - 用现有「类 Obtainium / One Index」安装与更新，不做源码合并。
+   - 用 One 自主更新中心 / One Index 安装与更新，不做源码合并。
 2. **中期（自我 IP）**：若录音要成为付费卖点，再立项 **路径 B 干净室**，并配套地区合规开关与明示同意 UI。
 3. **文案**：集成页必须有「请确认当地法律允许录音」勾选，不能默认静默全录。
 

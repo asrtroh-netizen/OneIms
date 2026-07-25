@@ -19,5 +19,4 @@ BUILD SUCCESSFUL；`SpeedFormatTest` / `BatteryReaderTest` / `ChannelCardPolicyT
 
 - Pixel Meter 完整悬浮窗 / QS Tile / Koin 架构
 - Battery Info 设计容量 PowerProfile 私有 API / Widget
-- Obtainium
 - 真机手测 **NOT RUN**

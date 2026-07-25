@@ -1,7 +1,5 @@
-# 2026-07-25 · One 自主更新器（去 Obtainium）
+# 2026-07-25 · One 自主更新器
 
-用户：「做就做个自主的」→ 更新中心改为 **One 自研**，目录仅 OneTools / OneIms 双线 / asrtroh Shizuku；移除 Obtainium 主路径。
+更新中心为 **One 自研**：可增删 GitHub/GitLab/Forgejo/F-Droid/Direct/HTML 与 One Index 源；目录默认 OneTools / OneIms / Shizuku。
 
-后续纠偏：要 **类 Obtainium 可增删 GitHub 源**（仍自研，不并 GPL 源）。见 `2026-07-25-onetools-obtainium-like-catalog.md`。
-
-验证：`assembleDebug` SUCCESS。
+验证：`assembleDebug` SUCCESS。后续增强见更新中心相关 changes（定时检查等）。
