@@ -8,39 +8,32 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.onetools.app.R
 
 /**
- * 「实时动态实验室」：实验性实时能力入口页（当前承接特色功能）。
+ * 「实时动态实验室」：与「特色功能」分栏；此处只放实时动态类实验，不挂显示/切卡特色。
  */
 @Composable
-fun LiveLabScreen(
-    onOpenSpecial: () -> Unit,
-) {
+fun LiveLabScreen() {
     OneToolsPage(
         title = stringResource(R.string.lab_title),
         subtitle = stringResource(R.string.lab_subtitle),
     ) {
         item {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(
+                modifier = Modifier.padding(horizontal = 4.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
                 Text(
-                    text = stringResource(R.string.lab_section_display),
+                    text = stringResource(R.string.lab_empty_title),
                     style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(horizontal = 4.dp),
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
-                    text = stringResource(R.string.lab_section_display_sub),
-                    style = MaterialTheme.typography.bodySmall,
+                    text = stringResource(R.string.lab_empty_body),
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 4.dp),
-                )
-                OneToolsInfoCard(
-                    title = stringResource(R.string.special_card_title),
-                    subtitle = stringResource(R.string.special_card_sub),
-                    onClick = onOpenSpecial,
                 )
             }
         }

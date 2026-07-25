@@ -59,9 +59,9 @@
     <string name="tab_meter">网速</string>
     <string name="tab_lab">实验室</string>
     <string name="lab_title">实时动态实验室</string>
-    <string name="lab_subtitle">实验性实时能力 · 显示增强 · 持续演进</string>
-    <string name="lab_section_display">显示与切卡</string>
-    <string name="lab_section_display_sub">需要 Shizuku；效果因 ROM / SystemUI 而异</string>
+    <string name="lab_subtitle">实时动态类实验 · 与特色功能分开</string>
+    <string name="lab_empty_title">实验室筹备中</string>
+    <string name="lab_empty_body">这里只放实时动态实验，不与「特色功能」混放。显示与切卡类能力请到「设置 → 特色功能」。</string>
     <string name="tab_more">更多</string>
     <string name="home_quick_title">快捷开关</string>
     <string name="home_quick_sub">详情仍在各功能页调整</string>
@@ -71,7 +71,7 @@
     <string name="home_toggle_overlay">悬浮网速</string>
     <string name="home_toggle_record_prompt">通话录音提示球</string>
     <string name="more_subtitle">更新中心 · 诊断导出</string>
-    <string name="settings_subtitle">诊断导出 · 其它设置</string>
+    <string name="settings_subtitle">特色功能 · 诊断导出</string>
     <string name="toast_open_shizuku_fail">未找到 Shizuku，请先安装官方或修缮版</string>
     <string name="toast_status_ok">通道状态已刷新</string>
 

@@ -146,9 +146,7 @@ class MainActivity : ComponentActivity() {
                                         onBack = {},
                                         showBack = false,
                                     )
-                                    ToolsDestination.LAB -> LiveLabScreen(
-                                        onOpenSpecial = { showSpecialFeatures = true },
-                                    )
+                                    ToolsDestination.LAB -> LiveLabScreen()
                                     ToolsDestination.UPDATES -> UpdatesScreen(
                                         onBack = {},
                                         showBack = false,
