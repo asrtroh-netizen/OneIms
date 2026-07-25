@@ -19,6 +19,7 @@
 .tmp_apk_cmp/
 .tmp_pixelmeter/
 .tmp_batteryinfo/
+.tmp_batteryguru_re/
 __pycache__/
 *.pyc
 onetools/scripts/one-index-dev-private.pem

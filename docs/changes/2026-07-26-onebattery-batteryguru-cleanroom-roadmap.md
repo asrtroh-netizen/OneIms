@@ -1,20 +1,20 @@
 # 变更说明 · OneBattery 对齐 Battery Guru 公开能力（干净室路线图）
 
 **日期**：2026-07-26  
-**状态**：架构定稿 · 待切片落地  
+**状态**：架构定稿 · 反编译取料已完成 · 待切片落地  
 **规模**：L（产品能力对位；单仓 `:onebattery`）
 
 ## 1. 需求解读
 
-用户口语「妇科Better GuRU」→ **复刻 Battery Guru**（`com.paget96.batteryguru` 级体验）。
+用户口语「妇科Better GuRU」→ **复刻 Battery Guru**（`com.paget96.batteryguru` 级体验）。  
+后续用户明确「要反编译拿一些东西再造」→ **研究向静态取料已做**（见 `2026-07-26-batteryguru-decompile-takeaways.md`）。
 
-权威约束（既有，不推翻）：
+权威约束（产品侧仍成立）：
 
 - `docs/changes/2026-07-26-onebattery-standalone-seed.md`
-  - **不做**反编译 / 源码级克隆 `com.paget96.batteryguru`
-  - **不做**商标名 Battery Guru
-  - **不做** AOD 全功能（首期）
-- 实现路径：干净室自研，能力集合可参考公开商店描述 + 本仓 AccuBattery 思路历史
+  - **不做**商标名 Battery Guru / 整包换皮上架
+  - **不做** AOD 全功能（首期；取料已摸清结构，落地另议）
+- 实现路径：干净室自研回灌；反编译产物仅在 `.tmp_batteryguru_re/`（不入库）
 
 ## 2. 当前基线（已验证）
 
