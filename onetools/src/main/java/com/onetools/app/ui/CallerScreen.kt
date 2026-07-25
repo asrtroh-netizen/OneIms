@@ -67,7 +67,8 @@ fun CallerScreen(
     var number by remember { mutableStateOf("") }
     var asPrefix by remember { mutableStateOf(false) }
     var asTag by remember { mutableStateOf(false) }
-    var asAllow by remember { mutableStateOf(false) }
+    /** 0=归属标签 1=拦截 2=白名单 */
+    var ruleAction by remember { mutableStateOf(0) }
     var ruleTag by remember { mutableStateOf("") }
     var lookupNumber by remember { mutableStateOf("") }
     var lookupResult by remember { mutableStateOf("") }
@@ -236,6 +237,34 @@ fun CallerScreen(
                 Text(stringResource(R.string.caller_add_title), style = MaterialTheme.typography.titleMedium)
             }
             item {
+                Text(
+                    stringResource(R.string.caller_action_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            item {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    listOf(
+                        0 to R.string.caller_action_label,
+                        1 to R.string.caller_action_block,
+                        2 to R.string.caller_action_allow,
+                    ).forEach { (idx, res) ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(
+                                checked = ruleAction == idx,
+                                onCheckedChange = { if (it) ruleAction = idx },
+                            )
+                            Text(stringResource(res), style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                }
+            }
+            item {
                 OutlinedTextField(
                     value = number,
                     onValueChange = { number = it },
@@ -278,12 +307,6 @@ fun CallerScreen(
                 }
             }
             item {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = asAllow, onCheckedChange = { asAllow = it })
-                    Text(stringResource(R.string.caller_allow))
-                }
-            }
-            item {
                 Button(
                     onClick = {
                         val pattern = if (asTag) {
@@ -295,12 +318,21 @@ fun CallerScreen(
                             Toast.makeText(context, R.string.caller_number_invalid, Toast.LENGTH_SHORT).show()
                             return@Button
                         }
+                        if (ruleAction == 0 && ruleTag.isBlank() && !asTag) {
+                            Toast.makeText(context, R.string.caller_label_need_tag, Toast.LENGTH_SHORT).show()
+                            return@Button
+                        }
+                        val kind = when (ruleAction) {
+                            2 -> CallRuleKind.ALLOW
+                            1 -> CallRuleKind.BLOCK
+                            else -> CallRuleKind.LABEL
+                        }
                         scope.launch {
                             store.upsert(
                                 CallRule(
                                     id = UUID.randomUUID().toString(),
                                     pattern = pattern,
-                                    kind = if (asAllow) CallRuleKind.ALLOW else CallRuleKind.BLOCK,
+                                    kind = kind,
                                     mode = when {
                                         asTag -> CallMatchMode.TAG
                                         asPrefix -> CallMatchMode.PREFIX
@@ -335,11 +367,28 @@ fun CallerScreen(
                     onClick = {
                         scope.launch {
                             val r = store.lookup(lookupNumber)
+                            val decisionText = when (r.decision) {
+                                NumberMatcher.Decision.BLOCK ->
+                                    context.getString(R.string.caller_lookup_decision_block)
+                                NumberMatcher.Decision.ALLOW_LIST ->
+                                    context.getString(R.string.caller_lookup_decision_allow)
+                                NumberMatcher.Decision.ALLOW_UNKNOWN ->
+                                    context.getString(R.string.caller_lookup_decision_pass)
+                            }
+                            val label = r.matchedRules
+                                .firstOrNull { it.kind == CallRuleKind.ALLOW }
+                                ?: r.matchedRules.firstOrNull { it.kind == CallRuleKind.LABEL }
+                                ?: r.matchedRules.firstOrNull { it.kind == CallRuleKind.BLOCK }
+                            val tagPart = label?.tag?.takeIf { it.isNotBlank() }
+                                ?: r.tags.firstOrNull()
                             lookupResult = buildString {
-                                append(r.decision.name)
-                                if (r.tags.isNotEmpty()) append(" · tags=").append(r.tags.joinToString(","))
-                                if (r.matchedRules.isNotEmpty()) {
-                                    append(" · hits=").append(r.matchedRules.size)
+                                append(decisionText)
+                                if (!tagPart.isNullOrBlank()) {
+                                    append(" · ")
+                                    append(context.getString(R.string.caller_lookup_label_fmt, tagPart))
+                                } else if (r.matchedRules.isEmpty()) {
+                                    append(" · ")
+                                    append(context.getString(R.string.caller_lookup_no_label))
                                 }
                             }
                         }
@@ -445,9 +494,28 @@ fun CallerScreen(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
+                        val kindLabel = when (rule.kind) {
+                            CallRuleKind.LABEL -> stringResource(R.string.caller_action_label)
+                            CallRuleKind.BLOCK -> stringResource(R.string.caller_action_block)
+                            CallRuleKind.ALLOW -> stringResource(R.string.caller_action_allow)
+                        }
+                        val modeLabel = when (rule.mode) {
+                            CallMatchMode.EXACT -> stringResource(R.string.caller_mode_exact)
+                            CallMatchMode.PREFIX -> stringResource(R.string.caller_mode_prefix)
+                            CallMatchMode.TAG -> stringResource(R.string.caller_mode_tag)
+                        }
                         Text(
-                            "${rule.kind.name} · ${rule.mode.name} · ${rule.pattern}" +
-                                if (rule.tag.isNotBlank()) " · ${rule.tag}" else "",
+                            buildString {
+                                append(kindLabel)
+                                append(" · ")
+                                append(modeLabel)
+                                append(" · ")
+                                append(rule.pattern)
+                                if (rule.tag.isNotBlank()) {
+                                    append(" · ")
+                                    append(rule.tag)
+                                }
+                            },
                             style = MaterialTheme.typography.bodyMedium,
                         )
                     }

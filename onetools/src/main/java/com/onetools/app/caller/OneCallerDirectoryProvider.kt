@@ -113,18 +113,22 @@ class OneCallerDirectoryProvider : ContentProvider() {
         val digits = NumberMatcher.digits(rawNumber)
         if (digits.isEmpty()) return null
         val result = NumberMatcher.lookup(rules, digits)
-        if (result.decision == NumberMatcher.Decision.ALLOW_UNKNOWN) return null
+        if (result.matchedRules.isEmpty()) return null
         val chosen = result.matchedRules.firstOrNull { it.kind == CallRuleKind.ALLOW }
+            ?: result.matchedRules.firstOrNull { it.kind == CallRuleKind.LABEL }
             ?: result.matchedRules.firstOrNull { it.kind == CallRuleKind.BLOCK }
             ?: return null
         val tag = chosen.tag.ifBlank {
             when (chosen.kind) {
                 CallRuleKind.ALLOW -> ctx.getString(R.string.caller_label_allow)
+                CallRuleKind.LABEL -> ctx.getString(R.string.caller_label_mark)
                 CallRuleKind.BLOCK -> ctx.getString(R.string.caller_label_block)
             }
         }
         val name = when (chosen.kind) {
-            CallRuleKind.ALLOW -> tag
+            CallRuleKind.ALLOW,
+            CallRuleKind.LABEL,
+            -> tag
             CallRuleKind.BLOCK -> ctx.getString(R.string.caller_label_spam_fmt, tag)
         }
         return LabelHit(

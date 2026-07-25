@@ -3,7 +3,12 @@ package com.onetools.app.caller
 import org.json.JSONArray
 import org.json.JSONObject
 
-enum class CallRuleKind { BLOCK, ALLOW }
+enum class CallRuleKind {
+    /** Show dialer/caller-ID label only; never reject the call. */
+    LABEL,
+    BLOCK,
+    ALLOW,
+}
 
 enum class CallMatchMode { EXACT, PREFIX, TAG }
 
@@ -61,6 +66,7 @@ object NumberMatcher {
         val tags = (directHits.map { it.tag } + tagHits.map { it.pattern })
             .filter { it.isNotBlank() }
             .distinct()
+        // LABEL never rejects; ALLOW wins over BLOCK; LABEL-only → allow through.
         val decision = when {
             hits.any { it.kind == CallRuleKind.ALLOW } -> Decision.ALLOW_LIST
             hits.any { it.kind == CallRuleKind.BLOCK } -> Decision.BLOCK
@@ -92,6 +98,7 @@ object BlocklistFormat {
                 val prefix = o.optBoolean("prefix", false) || modeStr == "prefix"
                 val kind = when (o.optString("kind", "block").lowercase()) {
                     "allow", "white" -> CallRuleKind.ALLOW
+                    "label", "mark", "归属" -> CallRuleKind.LABEL
                     else -> CallRuleKind.BLOCK
                 }
                 val mode = when {
@@ -117,6 +124,7 @@ object BlocklistFormat {
         .put(
             "numbers",
             JSONArray()
+                .put(JSONObject().put("n", "95588").put("kind", "label").put("tag", "工商银行客服"))
                 .put(JSONObject().put("n", "400").put("prefix", true).put("tag", "可能骚扰"))
                 .put(JSONObject().put("n", "106").put("prefix", true).put("kind", "block"))
                 .put(JSONObject().put("mode", "tag").put("n", "可能骚扰").put("kind", "block")),

@@ -282,7 +282,7 @@
 
     <string name="caller_title">来电归属与拦截</string>
 
-    <string name="caller_intro">干净室自研：系统 CallScreeningService + 本地规则。支持来电归属标签与骚扰拦截；设为默认「来电显示与骚扰拦截」后生效。</string>
+    <string name="caller_intro">干净室自研：系统 CallScreeningService + 本地规则。可先给号码打「归属」标签（只显示、不拒接），或设拦截/白名单；设为默认「来电显示与骚扰拦截」后生效。</string>
 
     <string name="caller_gap_note">可导入拦截库、导出/备份规则；与通话录音页联动。拨号器 Directory 标签依赖通话记录权限。</string>
 
@@ -302,7 +302,17 @@
 
     <string name="caller_role_unavailable">本机不提供来电拦截角色</string>
 
-    <string name="caller_add_title">添加规则</string>
+    <string name="caller_add_title">添加归属 / 拦截规则</string>
+
+    <string name="caller_action_hint">先选动作：归属只在拨号器/来电显示标签，不会拒接；拦截会拒接；白名单优先放行。</string>
+
+    <string name="caller_action_label">归属</string>
+
+    <string name="caller_action_block">拦截</string>
+
+    <string name="caller_action_allow">白名单</string>
+
+    <string name="caller_label_need_tag">归属规则请填写标签名（如「工商银行」）</string>
 
     <string name="caller_number_hint">号码或前缀数字</string>
 
@@ -312,15 +322,29 @@
 
     <string name="caller_tag_mode">标签规则（按 tag 命中成员号）</string>
 
-    <string name="caller_tag_hint">标签（成员号填写 / 标签规则填写标签名）</string>
+    <string name="caller_tag_hint">归属名 / 标签（如「工商银行客服」）</string>
 
-    <string name="caller_allow">白名单（优先于黑名单）</string>
+    <string name="caller_mode_exact">精确</string>
 
-    <string name="caller_lookup_title">手动查号</string>
+    <string name="caller_mode_prefix">前缀</string>
 
-    <string name="caller_lookup_hint">输入号码试查</string>
+    <string name="caller_mode_tag">标签组</string>
 
-    <string name="caller_lookup">查号</string>
+    <string name="caller_lookup_title">试查归属</string>
+
+    <string name="caller_lookup_hint">输入号码，预览来电时会显示什么</string>
+
+    <string name="caller_lookup">试查</string>
+
+    <string name="caller_lookup_decision_block">将拦截</string>
+
+    <string name="caller_lookup_decision_allow">白名单放行</string>
+
+    <string name="caller_lookup_decision_pass">正常接通</string>
+
+    <string name="caller_lookup_label_fmt">显示「%1$s」</string>
+
+    <string name="caller_lookup_no_label">无归属标签</string>
 
     <string name="caller_add">添加</string>
 
@@ -369,6 +393,8 @@
     <string name="caller_directory_display">OneCaller</string>
 
     <string name="caller_label_allow">白名单</string>
+
+    <string name="caller_label_mark">已标记</string>
 
     <string name="caller_label_block">拦截名单</string>
 

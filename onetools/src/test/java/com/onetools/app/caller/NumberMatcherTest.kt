@@ -56,6 +56,15 @@ class NumberMatcherTest {
     }
 
     @Test
+    fun labelOnlyDoesNotBlockButCarriesTag() {
+        val label = CallRule("1", "95588", CallRuleKind.LABEL, CallMatchMode.EXACT, tag = "工商银行客服")
+        val result = NumberMatcher.lookup(listOf(label), "95588")
+        assertEquals(NumberMatcher.Decision.ALLOW_UNKNOWN, result.decision)
+        assertEquals("工商银行客服", result.tags.single())
+        assertEquals(CallRuleKind.LABEL, result.matchedRules.single().kind)
+    }
+
+    @Test
     fun exportRoundTrip() {
         val rules = listOf(
             CallRule("1", "400", CallRuleKind.BLOCK, CallMatchMode.PREFIX, "骚扰"),
