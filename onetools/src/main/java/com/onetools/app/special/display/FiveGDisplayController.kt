@@ -73,7 +73,7 @@ object FiveGDisplayController {
         val overrides = PersistableBundle().apply {
             putString(DisplayKeys.FIVE_G_ICON_CONFIGURATION_STRING, value)
         }
-        SpecialBroker.overrideConfigBestEffort(context, subId, overrides)
+        SpecialBroker.applyOverridesResilient(context, subId, overrides)
     }
 
     private fun readIcon(context: Context, subId: Int): String? {

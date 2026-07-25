@@ -92,7 +92,7 @@ object SignalBarController {
             putIntArray(DisplayKeys.NR_SSRSRP_THRESHOLDS_INT_ARRAY, nr)
             putInt(DisplayKeys.PARAMETERS_USE_FOR_NR_SIGNAL_BAR_INT, parameters)
         }
-        SpecialBroker.overrideConfigBestEffort(context, subId, overrides)
+        SpecialBroker.applyOverridesResilient(context, subId, overrides)
     }
 
     private fun verifyInflate(context: Context, subId: Int, expectInflate: Boolean): Boolean {

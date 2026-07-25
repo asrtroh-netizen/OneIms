@@ -86,6 +86,7 @@ object SpecialBroker {
         subId: Int,
         bundle: PersistableBundle?,
         persistent: Boolean,
+        awaitReadback: Boolean = true,
     ) {
         require(subId >= 0) { "Invalid subscription id: $subId" }
         if (SpecialPrivilege.getUid() == 0) {
@@ -97,23 +98,152 @@ object SpecialBroker {
                 putInt(SpecialBrokerProtocol.ARG_PERSISTENT, if (persistent) 1 else 0)
             }
         }
-        if (bundle != null) {
+        if (bundle != null && awaitReadback) {
             awaitOverrideReadback(context, subId, bundle)
         }
     }
 
-    /** 优先 persistent；被拒绝时回退 temporary。 */
+    /** 优先 persistent；拒持久化或整包回读失败时回退 temporary（对齐 OneIMS）。 */
     fun overrideConfigBestEffort(
         context: Context,
         subId: Int,
         bundle: PersistableBundle,
+        awaitReadback: Boolean = true,
     ): Boolean {
-        return runCatching {
-            overrideConfig(context, subId, bundle, persistent = true)
+        return try {
+            overrideConfig(context, subId, bundle, persistent = true, awaitReadback = awaitReadback)
             true
-        }.getOrElse {
-            overrideConfig(context, subId, bundle, persistent = false)
-            false
+        } catch (error: Throwable) {
+            try {
+                overrideConfig(
+                    context,
+                    subId,
+                    bundle,
+                    persistent = false,
+                    awaitReadback = awaitReadback,
+                )
+                false
+            } catch (temporaryError: Throwable) {
+                if (isPersistentPrivilegeDenied(error)) throw temporaryError
+                throw error.apply { addSuppressed(temporaryError) }
+            }
+        }
+    }
+
+    /**
+     * 批量写入；整包回读失败时逐键补写（对标 OneIMS CarrierConfigOverrideWriter）。
+     * Pixel 上部分阈值数组常不完整回读，逐键可保住 inflate / 5G 图标等关键键。
+     */
+    fun applyOverridesResilient(
+        context: Context,
+        subId: Int,
+        values: PersistableBundle,
+    ) {
+        require(subId >= 0) { "Invalid subscription id: $subId" }
+        require(values.keySet().isNotEmpty()) { "override values must not be empty" }
+
+        val batchOk = runCatching {
+            overrideConfigBestEffort(context, subId, values, awaitReadback = true)
+            verifyContains(context, subId, values)
+        }.getOrDefault(false)
+
+        val failures = mutableListOf<String>()
+        for (key in values.keySet()) {
+            val single = PersistableBundle()
+            if (!copyPersistableKey(values, single, key)) {
+                failures += "$key: unsupported type"
+                continue
+            }
+            var ok = batchOk && verifyContains(context, subId, single)
+            if (!ok) {
+                ok = runCatching {
+                    overrideConfigBestEffort(context, subId, single, awaitReadback = false)
+                    awaitOverrideReadback(context, subId, single)
+                    true
+                }.getOrElse { error ->
+                    failures += "$key: ${SpecialErrors.describe(error)}"
+                    false
+                }
+            }
+            if (!ok && failures.none { it.startsWith("$key:") }) {
+                failures += "$key: readback mismatch"
+            }
+        }
+        if (failures.isNotEmpty()) {
+            error("CarrierConfig partial/fail: ${failures.joinToString("; ")}")
+        }
+    }
+
+    private fun verifyContains(context: Context, subId: Int, expected: PersistableBundle): Boolean {
+        val actual = getCarrierConfig(context, subId) ?: return false
+        return bundleContains(actual, expected)
+    }
+
+    private fun isPersistentPrivilegeDenied(error: Throwable): Boolean {
+        val messages = generateSequence(error) { it.cause }
+            .mapNotNull { it.message }
+            .joinToString(" ")
+        return messages.contains("only can be invoked by system app", ignoreCase = true) ||
+            (
+                messages.contains("persistent=true", ignoreCase = true) &&
+                    messages.contains("system app", ignoreCase = true)
+                )
+    }
+
+    @Suppress("DEPRECATION")
+    private fun copyPersistableKey(
+        source: PersistableBundle,
+        dest: PersistableBundle,
+        key: String,
+    ): Boolean {
+        if (!source.containsKey(key)) return false
+        return when (val value = source.get(key)) {
+            null -> {
+                dest.putString(key, null)
+                true
+            }
+            is Boolean -> {
+                dest.putBoolean(key, value)
+                true
+            }
+            is Int -> {
+                dest.putInt(key, value)
+                true
+            }
+            is Long -> {
+                dest.putLong(key, value)
+                true
+            }
+            is Double -> {
+                dest.putDouble(key, value)
+                true
+            }
+            is String -> {
+                dest.putString(key, value)
+                true
+            }
+            is BooleanArray -> {
+                dest.putBooleanArray(key, value)
+                true
+            }
+            is IntArray -> {
+                dest.putIntArray(key, value)
+                true
+            }
+            is LongArray -> {
+                dest.putLongArray(key, value)
+                true
+            }
+            is DoubleArray -> {
+                dest.putDoubleArray(key, value)
+                true
+            }
+            is Array<*> -> {
+                @Suppress("UNCHECKED_CAST")
+                dest.putStringArray(key, value as Array<String>)
+                true
+            }
+            else -> false
         }
     }
 

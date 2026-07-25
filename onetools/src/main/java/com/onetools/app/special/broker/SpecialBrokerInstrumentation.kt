@@ -150,10 +150,22 @@ class SpecialBrokerInstrumentation : Instrumentation() {
             try {
                 SpecialBroker.stopShellPermissionDelegation()
             } catch (cleanupError: Throwable) {
-                if (operationError != null) {
-                    operationError.addSuppressed(cleanupError)
-                } else {
-                    Log.w(TAG, "Shell permission stop failed: ${SpecialErrors.describe(cleanupError)}")
+                // stop API 在新系统上偶发缺失：不得把已成功的写入改判失败。
+                val benign = cleanupError is NoSuchMethodException ||
+                    cleanupError.cause is NoSuchMethodException ||
+                    SpecialErrors.describe(cleanupError)
+                        .contains("stopDelegateShellPermissionIdentity", ignoreCase = true)
+                when {
+                    benign -> Log.w(
+                        TAG,
+                        "Shell permission stop skipped: ${SpecialErrors.describe(cleanupError)}",
+                    )
+                    operationError != null -> operationError.addSuppressed(cleanupError)
+                    else -> Log.w(
+                        TAG,
+                        "Shell permission stop failed after success: ${SpecialErrors.describe(cleanupError)}",
+                        cleanupError,
+                    )
                 }
             }
         }

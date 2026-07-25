@@ -4,6 +4,8 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.telephony.SubscriptionManager
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -59,30 +61,55 @@ fun SpecialFeaturesScreen(
     var fiveG by remember { mutableStateOf(SpecialFeatureStore.fiveGConfig(context)) }
     var busy by remember { mutableStateOf(false) }
     var status by remember { mutableStateOf<String?>(null) }
+    var hasPhonePermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.READ_PHONE_STATE,
+            ) == PackageManager.PERMISSION_GRANTED,
+        )
+    }
+    val privilegeReady = channelReady && SpecialPrivilege.isReady()
 
     fun refreshSims() {
-        val hasPhone = ContextCompat.checkSelfPermission(
+        hasPhonePermission = ContextCompat.checkSelfPermission(
             context,
             Manifest.permission.READ_PHONE_STATE,
         ) == PackageManager.PERMISSION_GRANTED
-        sims = if (hasPhone) {
+        sims = if (hasPhonePermission) {
             runCatching { DataSimController.getActiveSims(context) }.getOrDefault(emptyList())
         } else {
             emptyList()
         }
-        if (selectedSubId < 0) {
-            selectedSubId = sims.firstOrNull { it.isDefaultData }?.subId
-                ?: sims.firstOrNull()?.subId
-                ?: SubscriptionManager.getDefaultDataSubscriptionId().takeIf { it >= 0 }
-                ?: -1
-        }
+        selectedSubId = sims.firstOrNull { it.isDefaultData }?.subId
+            ?: sims.firstOrNull()?.subId
+            ?: SubscriptionManager.getDefaultDataSubscriptionId().takeIf { it >= 0 }
+            ?: -1
         if (selectedSubId >= 0) {
             signalMode = SpecialFeatureStore.signalBarMode(context, selectedSubId)
         }
         fiveG = SpecialFeatureStore.fiveGConfig(context)
     }
 
-    LaunchedEffect(Unit) { refreshSims() }
+    val phonePermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        hasPhonePermission = granted
+        refreshSims()
+        status = if (granted) {
+            context.getString(R.string.special_phone_permission_granted)
+        } else {
+            context.getString(R.string.special_phone_permission_denied)
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        if (!hasPhonePermission) {
+            phonePermissionLauncher.launch(Manifest.permission.READ_PHONE_STATE)
+        } else {
+            refreshSims()
+        }
+    }
 
     OneToolsToolPage(
         title = stringResource(R.string.special_title),
@@ -91,14 +118,26 @@ fun SpecialFeaturesScreen(
     ) {
         item {
             Text(
-                text = if (channelReady && SpecialPrivilege.isReady()) {
-                    stringResource(R.string.special_channel_ready)
-                } else {
-                    stringResource(R.string.special_channel_need)
+                text = when {
+                    !privilegeReady -> stringResource(R.string.special_channel_need)
+                    !hasPhonePermission -> stringResource(R.string.special_phone_permission_need)
+                    else -> stringResource(R.string.special_channel_ready)
                 },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+        }
+        if (!hasPhonePermission) {
+            item {
+                Button(
+                    onClick = {
+                        phonePermissionLauncher.launch(Manifest.permission.READ_PHONE_STATE)
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(stringResource(R.string.special_phone_permission_action))
+                }
+            }
         }
 
         item {
@@ -151,7 +190,7 @@ fun SpecialFeaturesScreen(
                             busy = false
                         }
                     },
-                    enabled = !busy && channelReady,
+                    enabled = !busy && privilegeReady && hasPhonePermission && selectedSubId >= 0,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp),
@@ -220,7 +259,7 @@ fun SpecialFeaturesScreen(
                             busy = false
                         }
                     },
-                    enabled = !busy && channelReady,
+                    enabled = !busy && privilegeReady && hasPhonePermission && selectedSubId >= 0,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp),
@@ -248,7 +287,10 @@ fun SpecialFeaturesScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable(enabled = !busy && !sim.isDefaultData && channelReady) {
+                            .clickable(
+                                enabled = !busy && !sim.isDefaultData && privilegeReady &&
+                                    hasPhonePermission,
+                            ) {
                                 busy = true
                                 scope.launch {
                                     val result = DataSimController.switchDefaultDataSubId(
