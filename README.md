@@ -28,7 +28,7 @@
 
 [📦 全部 Release 资产](https://github.com/OneCatx/OneIms/releases/tag/v3.0.2)
 
-> 💙 **友情推荐特权通道**：[OneCatx 修缮版 Shizuku V15.0](https://github.com/OneCatx/shizuku)（配对一次 · 旧 Wi‑Fi 自连 · 开机 FGS 内激活）  
+> 💙 **友情推荐特权通道**：[asrtroh 修缮版 Shizuku V15.0](https://github.com/OneCatx/shizuku)（配对一次 · 旧 Wi‑Fi 自连 · 开机 FGS 内激活）  
 > 下载正式包：[Releases](https://github.com/OneCatx/shizuku/releases) · 截图：
 >
 > <img src="docs/screenshots/shizuku-asrtroh-home-active.png" alt="asrtroh Shizuku Active" width="280" />
@@ -50,7 +50,7 @@
 |---|---|---|
 | **适合谁** | 不想另外装 Shizuku；希望 **App 内无线调试 + 通知栏填码** 一条龙 | 已熟悉 Shizuku；想要 **更小安装包、更轻壳** |
 | **包名** | `com.oneims.app` | `com.oneims.onelink` |
-| **激活方式** | 内嵌 OneBridge · 无线调试配对 · 可通知栏六位码 | **推荐搭配** [OneCatx 修缮版 Shizuku](https://github.com/OneCatx/shizuku)（开机自启更稳）；也可使用官方 [RikkaApps/Shizuku](https://shizuku.rikka.app/) |
+| **激活方式** | 内嵌 OneBridge · 无线调试配对 · 可通知栏六位码 | **推荐搭配** [asrtroh 修缮版 Shizuku](https://github.com/OneCatx/shizuku)（开机自启更稳）；也可使用官方 [RikkaApps/Shizuku](https://shizuku.rikka.app/) |
 | **额外依赖** | 无（通道打进包内） | 需安装 Shizuku；日常保持 **Active** 即可 |
 | **体积** | 较大（含内嵌 ADB/Bridge） | 较小 |
 | **同机并存** | ✅ 可与 OneIms Lite 同时安装 | ✅ 可与 OneKuku 同时安装 |
