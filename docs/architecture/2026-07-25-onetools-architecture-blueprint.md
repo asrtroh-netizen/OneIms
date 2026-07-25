@@ -5,13 +5,14 @@
 > 视角：资深全栈架构师  
 > 产品规格：`docs/product/2026-07-24-onetools-initiation.md`  
 > 拍板：定位 **方案 A** · 独立 Android App · 与 OneIMS 解耦  
-> **纠偏（2026-07-25）**：① 首页四态 + **必须 Shizuku** ② **配色与 OneIMS 一致** ③ **第一页 UI 直接拉 OneIMS（OneLink/Shizuku 线）**
+> **纠偏（2026-07-25）**：① 首页四态 + **必须 Shizuku** ② **配色与 OneIMS 一致** ③ **第一页 UI 直接拉 OneIMS（OneLink/Shizuku 线）**  
+> **纠偏（2026-07-25 夜）**：**Pixel 专属**——验收与兼容只盯 Google Pixel / 类原生 Phone；不做小米/华为等厂商拨号器适配表
 
 ---
 
 ## 0. 一句话
 
-**OneTools** = One 生态姊妹工具 App：首页 **直接复用 OneIMS（Shizuku/OneLink 线）第一页 UI + 同一套配色 token**，通道走 Shizuku 四态总控；其下可挂工具能力。**不写运营商配置**；视觉与首屏不另起炉灶。
+**OneTools** = **Pixel 专属** One 生态姊妹工具 App：首页复用 OneIMS（Shizuku/OneLink）第一页 UI + 同套配色；通道走 Shizuku 四态。其下挂 Caller / Meter 等轻度能力。**不写运营商配置**；**不承诺非 Pixel ROM 体验**。
 
 ---
 
@@ -29,8 +30,8 @@
 | F4 | 一键导出诊断文本（本地；含通道四态快照） | `export` |
 | F5 | 与 OneIMS 关系说明页 | `ui` |
 | F6 | 隐私边界声明 | `ui` / `policy` |
-| F7 | **来电归属 + 骚扰拦截**（CallScreening / 本地规则 / Directory；干净室自研） | `caller` |
-| F8 | **网速监测**（类 Pixel Meter：通知/悬浮 + **OEM 贴顶对标** + 分应用流量） | `meter` |
+| F7 | **来电归属 + 骚扰拦截**（CallScreening / 本地规则 / Directory；干净室；**Pixel Phone 验收**） | `caller` |
+| F8 | **网速监测**（类 Pixel Meter：通知/悬浮 + 状态栏贴顶/芯片逼近 + 分应用流量） | `meter` |
 
 ### Out（架构硬墙 · 禁止落入代码路径）
 
@@ -38,9 +39,10 @@
 - **内嵌 OneBridge / 自研无线调试配对栈**（OneTools 走 Shizuku，不复制 OneKuku 重通道）
 - 会员支付闭环、插件市场、Root 提权实现、iOS
 - **应用内 Pixel Telo / 外置 Telo 对照入口**（fork 已删；不合并 Telo 源码）
-- **Meter 不做**：GlassWire 防火墙、套餐限额告警等；**OEM 贴顶 / 状态栏芯片对标要保留**（用户 2026-07-25 明确保留）
+- **非 Pixel 厂商拨号器 / SystemUI 专项适配**（小米/华为/OPPO…兼容表、专有 API、分 ROM 分支）——用户明确不管
+- **Meter 不做**：GlassWire 防火墙、套餐限额告警等；**状态栏贴顶 / Android 16 芯片逼近要保留**（对标 Pixel/AOSP 状态栏观感）
 
-**产品纠偏（2026-07-25 晚）**：OneTools = **轻度配套小工具**；Caller = 归属 + 拦截（干净室）；Meter = 类 Pixel Meter + OEM 贴顶对标 + 分应用流量。
+**产品纠偏（2026-07-25 夜）**：OneTools = **Pixel 专属轻度配套**；Caller = 归属 + 拦截（干净室，Pixel Phone）；Meter = 类 Pixel Meter + 状态栏贴顶/芯片 + 分应用流量。
 
 **守卫规则**：不得 `implementation(project(":bridge"))`；不得复制 OneIMS 写配 Service；**允许且必须**接入 `dev.rikka.shizuku:api/provider`（对齐 OneLink）。
 

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">OneTools</string>
-    <string name="home_subtitle">OneIMS 配套小工具 · 轻度好用 · Shizuku 通道</string>
+    <string name="home_subtitle">Pixel 专属 · OneIMS 配套小工具 · Shizuku 通道</string>
     <string name="channel_display_name">OneTools</string>
     <string name="channel_eyebrow">通道状态</string>
 
@@ -139,19 +139,19 @@
 
     <string name="meter_card_title">网速监测</string>
 
-    <string name="meter_card_sub">类 Pixel Meter · 悬浮/通知 · OEM贴顶 · 分应用流量</string>
+    <string name="meter_card_sub">类 Pixel Meter · 悬浮/通知 · 状态栏贴顶 · 分应用流量</string>
 
     <string name="meter_title">网速监测</string>
 
-    <string name="meter_desc">类 Pixel Meter：通知栏 / 悬浮窗显示实时上下行；可一键贴顶逼近 OEM 状态栏网速位（Android 16+ 另有状态栏芯片）。物理链路采样忽略 VPN。另附分应用流量。可从快捷设置添加 Tile。</string>
+    <string name="meter_desc">类 Pixel Meter：通知栏 / 悬浮窗显示实时上下行；可一键贴顶逼近 Pixel/AOSP 状态栏网速位（Android 16+ 另有状态栏芯片）。物理链路采样忽略 VPN。另附分应用流量。可从快捷设置添加 Tile。</string>
 
-    <string name="meter_oem_title">OEM 状态栏对标</string>
+    <string name="meter_oem_title">状态栏贴顶对标</string>
 
-    <string name="meter_oem_sub">厂商把网速画进 SystemUI；第三方用 Live Update 芯片（需 Android 16+ 且系统提升通知）+ 贴顶悬浮兜底。</string>
+    <string name="meter_oem_sub">Pixel/AOSP 把网速画进 SystemUI；第三方用 Live Update 芯片（需 Android 16+ 且系统提升通知）+ 贴顶悬浮兜底。仅针对 Pixel 验收。</string>
 
     <string name="meter_chip_enable">状态栏芯片（Android 16+）</string>
 
-    <string name="meter_oem_dock">悬浮窗贴到 OEM 位（右上）</string>
+    <string name="meter_oem_dock">悬浮窗贴到状态栏位（右上）</string>
 
     <string name="meter_oem_dock_need_overlay">请先开启悬浮窗并授予「显示在其他应用上层」</string>
 
@@ -282,9 +282,9 @@
 
     <string name="caller_title">来电归属与拦截</string>
 
-    <string name="caller_intro">干净室自研：系统 CallScreeningService + 本地规则。可先给号码打「归属」标签（只显示、不拒接），或设拦截/白名单；设为默认「来电显示与骚扰拦截」后生效。</string>
+    <string name="caller_intro">Pixel 专属干净室：CallScreeningService + 本地规则。可打「归属」标签（只显示、不拒接），或设拦截/白名单。请在 Pixel 上设为默认「来电显示与骚扰拦截」后生效。</string>
 
-    <string name="caller_gap_note">可导入拦截库、导出/备份规则；与通话录音页联动。拨号器 Directory 标签依赖通话记录权限。</string>
+    <string name="caller_gap_note">面向 Google Pixel / 默认 Phone。可导入拦截库、备份规则；与录音联动。Directory 归属显示需通话记录权限。</string>
 
     <string name="caller_set_default">申请设为默认来电拦截应用</string>
 
