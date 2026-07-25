@@ -5,11 +5,14 @@ import org.json.JSONObject
 import java.util.concurrent.atomic.AtomicReference
 
 /**
- * Clean-room CN mobile geo for native dialer labels.
- * Data: assets/caller/geo_v1.json (OneTools schema) — not GPL phone.dat.
+ * CN mobile geo for native dialer labels.
+ *
+ * Primary: assets/caller/geo.dat (full prefix index, MIT dataset — see NOTICE)
+ * Fallback: assets/caller/geo_v1.json (small starter / override)
  */
 object CnMobileGeo {
-    private const val ASSET = "caller/geo_v1.json"
+    private const val ASSET_DAT = "caller/geo.dat"
+    private const val ASSET_JSON = "caller/geo_v1.json"
 
     data class Hit(
         val province: String,
@@ -31,22 +34,25 @@ object CnMobileGeo {
         }
     }
 
-    private val mapRef = AtomicReference<Map<String, Hit>?>()
+    private val datRef = AtomicReference<ByteArray?>()
+    private val jsonRef = AtomicReference<Map<String, Hit>?>()
+    private val versionRef = AtomicReference<String?>()
 
     fun warm(context: Context) {
-        load(context.applicationContext)
+        loadDat(context.applicationContext)
+        loadJson(context.applicationContext)
     }
 
+    fun dataVersion(): String? = versionRef.get()
+
     fun lookup(context: Context, rawDigits: String): Hit? {
-        val map = load(context.applicationContext) ?: return null
         val phone = normalizeMobile(rawDigits) ?: return null
-        // Longest prefix first: 7 then 6 then 5 (data uses 7-digit keys primarily).
-        for (len in 7 downTo 5) {
-            if (phone.length >= len) {
-                map[phone.substring(0, len)]?.let { return it }
-            }
+        val dat = loadDat(context.applicationContext)
+        if (dat != null) {
+            PhoneDatIndex.lookup(dat, phone)?.let { return it }
         }
-        return null
+        val map = loadJson(context.applicationContext) ?: return null
+        return lookupMap(map, phone)
     }
 
     internal fun lookupMap(map: Map<String, Hit>, rawDigits: String): Hit? {
@@ -77,12 +83,22 @@ object CnMobileGeo {
         return out
     }
 
-    private fun load(context: Context): Map<String, Hit>? {
-        mapRef.get()?.let { return it }
+    private fun loadDat(context: Context): ByteArray? {
+        datRef.get()?.let { return it }
         return runCatching {
-            context.assets.open(ASSET).bufferedReader().use { it.readText() }
+            context.assets.open(ASSET_DAT).use { it.readBytes() }.also { bytes ->
+                datRef.set(bytes)
+                versionRef.set(PhoneDatIndex.versionLabel(bytes))
+            }
+        }.getOrNull()
+    }
+
+    private fun loadJson(context: Context): Map<String, Hit>? {
+        jsonRef.get()?.let { return it }
+        return runCatching {
+            context.assets.open(ASSET_JSON).bufferedReader().use { it.readText() }
                 .let { parseJson(it) }
-                .also { mapRef.set(it) }
+                .also { jsonRef.set(it) }
         }.getOrNull()
     }
 

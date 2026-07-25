@@ -14,8 +14,11 @@
 ## OneCaller (first-party) + geo
 
 - CallScreening + Contacts Directory are first-party clean-room.
-- Mobile geo uses schema `onetools.geo.v1` JSON (`assets/caller/geo_v1.json`).
-- **Do not** bundle GPL `phone.dat` (e.g. xluohome/phonedata) into `:onetools`.
+- Full prefix index: `assets/caller/geo.dat` — binary compatible with the
+  common phone.dat layout, dataset from [sndnvaps/Phonedata](https://github.com/sndnvaps/Phonedata)
+  (**MIT**), version marker `2302` (~4.1MB, public-collected prefixes per upstream).
+- Small override/sample: `assets/caller/geo_v1.json` (`onetools.geo.v1`).
+- **Do not** bundle GPL-licensed phone datasets (e.g. xluohome/phonedata LICENSE GPL-3).
 
 ## Pixel Meter (capability reference — clean-room / Apache-inspired)
 
