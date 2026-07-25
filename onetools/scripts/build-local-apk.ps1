@@ -18,7 +18,7 @@ New-Item -ItemType Directory -Force -Path $dist | Out-Null
 
 # Read versionName from built APK via aapt if available; else stamp time.
 $stamp = Get-Date -Format "yyyyMMdd-HHmm"
-$out = Join-Path $dist "OneTools-0.2.0-debug-$stamp.apk"
+$out = Join-Path $dist "OneTools-debug-$stamp.apk"
 Copy-Item -Force $apk $out
 $latest = Join-Path $dist "OneTools-latest-debug.apk"
 Copy-Item -Force $apk $latest

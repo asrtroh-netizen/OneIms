@@ -38,7 +38,14 @@
     <string name="export_share_subject">OneTools 诊断摘要</string>
     <string name="export_share_chooser">分享诊断摘要</string>
     <string name="export_share_fail">无法打开分享面板</string>
-    <string name="relation_note">OneTools 是 OneIMS 的轻度配套小工具，不替代写配；来电归属+骚扰拦截；网速对标 Pixel Meter + 分应用流量。</string>
+    <string name="relation_note">OneTools 是 OneIMS 的轻度配套小工具，不替代写配；来电归属地；网速对标 Pixel Meter + 分应用流量。</string>
+    <string name="tab_home">首页</string>
+    <string name="tab_caller">来电</string>
+    <string name="tab_meter">网速</string>
+    <string name="tab_battery">电池</string>
+    <string name="tab_more">更多</string>
+    <string name="home_dock_hint">底部 Dock：来电 · 网速 · 电池 · 更多（录音 / 更新 / 导出）</string>
+    <string name="more_subtitle">录音 · 更新中心 · 诊断导出</string>
     <string name="toast_open_shizuku_fail">未找到 Shizuku，请先安装官方或修缮版</string>
     <string name="toast_status_ok">通道状态已刷新</string>
 
@@ -211,6 +218,10 @@
     <string name="recorder_legal">我确认已了解并遵守当地通话录音法律（含对方知情同意等要求），自愿使用本功能。</string>
     <string name="recorder_need_legal">请先勾选法律确认</string>
     <string name="recorder_auto">通话接通后自动开录 / 挂断停录</string>
+    <string name="recorder_prompt_on_call">通话接通后弹出悬浮按钮，点按才录音（挂断自动停）</string>
+    <string name="recorder_need_overlay">请授予「显示在其他应用上层」以便弹出录音按钮</string>
+    <string name="recorder_overlay_start">录音</string>
+    <string name="recorder_overlay_stop">停止</string>
     <string name="recorder_start">立即开始录音</string>
     <string name="recorder_stop">停止并保存</string>
     <string name="recorder_started">已开始（见状态行音频源；理想为 STEREO_UPLINK+DOWNLINK）</string>
@@ -362,15 +373,15 @@
     <string name="meter_overlay_gestures">拖动可换位并自动记住；双击悬浮窗可临时关闭（需再开开关）。</string>
 
 
-    <string name="caller_card_title">来电归属与拦截</string>
+    <string name="caller_card_title">来电归属</string>
 
-    <string name="caller_card_sub">归属标签 · 骚扰拦截 · 本地规则</string>
+    <string name="caller_card_sub">归属标签 · 本地规则 · 不拦截</string>
 
-    <string name="caller_title">来电归属与拦截</string>
+    <string name="caller_title">来电归属</string>
 
     <string name="caller_hero_eyebrow">Pixel · OneCaller</string>
 
-    <string name="caller_intro">专为 Pixel Phone：把号码归属地与自定义标签写进系统拨号/来电界面（Contacts Directory），并可拦截骚扰。请设为默认「来电显示与骚扰拦截」，并授予通话记录权限。</string>
+    <string name="caller_intro">专为 Pixel Phone：把号码归属地与自定义标签写进系统拨号/来电界面（Contacts Directory）。本版不做通话拦截，请授予通话记录权限以便归属展示。</string>
 
     <string name="caller_status_ready">已是默认来电筛选 · 规则即时生效</string>
 
@@ -378,7 +389,7 @@
 
     <string name="caller_setup_title">权限与系统设置</string>
 
-    <string name="caller_gap_note">面向 Google Pixel / 系统 Phone。归属地只走系统拨号 Directory 原生行（不来电悬浮）。需通话记录权限；可导入拦截库与备份。</string>
+    <string name="caller_gap_note">面向 Google Pixel / 系统 Phone。归属地只走系统拨号 Directory 原生行（不来电悬浮、不拦截）。需通话记录权限；可导入号段库与备份。</string>
 
     <string name="caller_set_default">设为默认来电筛选</string>
 
@@ -404,7 +415,7 @@
 
     <string name="caller_add_title">添加归属 / 拦截规则</string>
 
-    <string name="caller_action_hint">先选动作：归属只在拨号器/来电显示标签，不会拒接；拦截会拒接；白名单优先放行。</string>
+    <string name="caller_action_hint">先选动作：归属只在拨号器/来电显示标签；白名单仅作标记（本版不拦截任何来电）。</string>
 
     <string name="caller_action_label">归属</string>
 
@@ -535,7 +546,9 @@
     <string name="caller_report_ok">已举报并写入本机库：%1$s</string>
     <string name="caller_report_saved_only">已记录举报（未自动拦截）</string>
     <string name="caller_report_need_phone">请先填有效号码（≥7 位数字）</string>
-    <string name="caller_report_apply_local">举报后立刻本机拦截（默认开）</string>
+    <string name="caller_report_apply_local">举报后立刻本机标记（默认开）</string>
+    <string name="caller_report_apply_local_label">举报后立刻写入本机标签库（默认开，不拦截）</string>
+    <string name="caller_status_geo_only">专注归属展示 · 通话拦截已关闭</string>
     <string name="caller_report_list_title">本机举报记录（%1$d）</string>
     <string name="caller_report_revoke">撤销</string>
     <string name="caller_report_revoked">已撤销举报与本机拦截</string>

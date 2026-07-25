@@ -134,8 +134,16 @@ fun RecorderScreen(onBack: () -> Unit) {
                     Checkbox(
                         checked = auto,
                         onCheckedChange = {
+                            if (it && !controller.canDrawOverlay()) {
+                                Toast.makeText(
+                                    context,
+                                    R.string.recorder_need_overlay,
+                                    Toast.LENGTH_LONG,
+                                ).show()
+                                controller.openOverlaySettings()
+                            }
                             auto = it
-                            controller.autoEnabled = it
+                            controller.promptOnCallEnabled = it
                             if (it) {
                                 if (!ensurePerms()) return@Checkbox
                                 controller.startMonitoring()
@@ -147,7 +155,7 @@ fun RecorderScreen(onBack: () -> Unit) {
                         enabled = consented,
                     )
                     Text(
-                        stringResource(R.string.recorder_auto),
+                        stringResource(R.string.recorder_prompt_on_call),
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.padding(start = 4.dp),
                     )

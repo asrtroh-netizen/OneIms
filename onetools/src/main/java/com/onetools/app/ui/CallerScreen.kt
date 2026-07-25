@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
@@ -287,7 +288,9 @@ fun CallerScreen(
     }
 
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .then(if (!showBack) Modifier.statusBarsPadding() else Modifier),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         if (showBack) {
@@ -300,7 +303,7 @@ fun CallerScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 20.dp),
-            contentPadding = PaddingValues(bottom = 40.dp),
+            contentPadding = PaddingValues(top = if (showBack) 0.dp else 16.dp, bottom = 40.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             item {
@@ -330,30 +333,11 @@ fun CallerScreen(
                             color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.88f),
                         )
                         Text(
-                            if (roleHeld) {
-                                stringResource(R.string.caller_status_ready)
-                            } else {
-                                stringResource(R.string.caller_status_need_role)
-                            },
+                            stringResource(R.string.caller_status_geo_only),
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.onPrimaryContainer,
                         )
-                        if (!roleHeld) {
-                            Button(
-                                onClick = { requestScreeningRole() },
-                                modifier = Modifier.fillMaxWidth(),
-                            ) {
-                                Text(stringResource(R.string.caller_set_default))
-                            }
-                        } else {
-                            OutlinedButton(
-                                onClick = { requestScreeningRole() },
-                                modifier = Modifier.fillMaxWidth(),
-                            ) {
-                                Text(stringResource(R.string.caller_role_held))
-                            }
-                        }
                     }
                 }
             }
@@ -409,23 +393,6 @@ fun CallerScreen(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            stringResource(R.string.caller_notify_only),
-                            modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.bodyMedium,
-                        )
-                        Switch(
-                            checked = notifyOnly,
-                            onCheckedChange = { checked ->
-                                scope.launch { prefs.setNotifyOnly(checked) }
-                            },
-                        )
-                    }
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
                             stringResource(R.string.caller_no_network),
                             modifier = Modifier.weight(1f),
                             style = MaterialTheme.typography.bodyMedium,
@@ -443,7 +410,7 @@ fun CallerScreen(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            stringResource(R.string.caller_report_apply_local),
+                            stringResource(R.string.caller_report_apply_local_label),
                             modifier = Modifier.weight(1f),
                             style = MaterialTheme.typography.bodyMedium,
                         )
@@ -613,15 +580,16 @@ fun CallerScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                        // Product: attribution + allowlist only (no block action).
                         val labels = listOf(
                             stringResource(R.string.caller_action_label),
-                            stringResource(R.string.caller_action_block),
                             stringResource(R.string.caller_action_allow),
                         )
                         labels.forEachIndexed { index, label ->
+                            val action = if (index == 0) 0 else 2
                             SegmentedButton(
-                                selected = ruleAction == index,
-                                onClick = { ruleAction = index },
+                                selected = ruleAction == action,
+                                onClick = { ruleAction = action },
                                 shape = SegmentedButtonDefaults.itemShape(index, labels.size),
                             ) {
                                 Text(label)

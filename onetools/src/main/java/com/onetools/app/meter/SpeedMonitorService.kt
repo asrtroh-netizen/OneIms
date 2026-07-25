@@ -18,23 +18,26 @@ import com.onetools.app.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 
 /**
  * Foreground notification + optional overlay showing live rates.
  * Display modes inspired by Pixel Meter (Apache-2.0); implementation is first-party.
  */
 class SpeedMonitorService : Service() {
-    private val scope = CoroutineScope(Dispatchers.Default)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var job: Job? = null
     private var sampler: PhysicalSpeedSampler? = null
     private var overlay: MeterOverlayController? = null
     private var lastRx = -1L
     private var lastTx = -1L
     private var prefs = MeterPrefsSnapshot()
+    private var lastFormatted: String = ""
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -45,27 +48,23 @@ class SpeedMonitorService : Service() {
                 return START_NOT_STICKY
             }
             ACTION_APPLY_PREFS -> {
-                refreshPrefs()
-                applyOverlayState(lastFormatted)
+                scope.launch {
+                    refreshPrefs()
+                    applyOverlayState(lastFormatted)
+                }
                 return START_STICKY
             }
             ACTION_DOCK_OEM -> {
-                refreshPrefs()
-                if (overlay == null) {
-                    overlay = MeterOverlayController(this) {
-                        runBlocking { MeterSettings(applicationContext).setOverlayEnabled(false) }
-                        refreshPrefs()
-                        applyOverlayState(lastFormatted)
-                    }
-                }
-                runBlocking {
+                scope.launch {
+                    refreshPrefs()
+                    ensureOverlay()
                     val (x, y) = MeterOverlayController.oemSlotXy(this@SpeedMonitorService)
                     MeterSettings(applicationContext).setOverlayPosition(x, y)
                     MeterSettings(applicationContext).setOverlayEnabled(true)
+                    refreshPrefs()
+                    applyOverlayState(lastFormatted.ifEmpty { getString(R.string.meter_starting) })
+                    overlay?.moveToOemStatusSlot()
                 }
-                refreshPrefs()
-                applyOverlayState(lastFormatted.ifEmpty { getString(R.string.meter_starting) })
-                overlay?.moveToOemStatusSlot()
                 return START_STICKY
             }
             else -> startMonitoring()
@@ -73,70 +72,76 @@ class SpeedMonitorService : Service() {
         return START_STICKY
     }
 
-    private var lastFormatted: String = ""
-
-    private fun refreshPrefs() {
-        prefs = runBlocking { MeterSettings(applicationContext).snapshot() }
+    private suspend fun refreshPrefs() {
+        prefs = MeterSettings(applicationContext).snapshot()
     }
 
-    private fun startMonitoring() {
-        isRunning = true
-        refreshPrefs()
-        ensureChannel()
-        val notification = buildNotification(getString(R.string.meter_starting), 0, 0)
-        if (Build.VERSION.SDK_INT >= 34) {
-            startForeground(
-                NOTIFICATION_ID,
-                notification,
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE,
-            )
-        } else {
-            startForeground(NOTIFICATION_ID, notification)
-        }
-
-        if (sampler == null) {
-            val cm = getSystemService(ConnectivityManager::class.java)
-            sampler = PhysicalSpeedSampler(cm).also { it.start() }
-        }
-        if (overlay == null) {
-            overlay = MeterOverlayController(this) {
-                // Double-tap: hide overlay until user re-enables in settings / tile.
-                runBlocking { MeterSettings(applicationContext).setOverlayEnabled(false) }
+    private fun ensureOverlay() {
+        if (overlay != null) return
+        overlay = MeterOverlayController(this) {
+            scope.launch {
+                MeterSettings(applicationContext).setOverlayEnabled(false)
                 refreshPrefs()
                 applyOverlayState(lastFormatted)
             }
         }
-        applyOverlayState(getString(R.string.meter_starting))
+    }
 
-        job?.cancel()
-        job = scope.launch {
-            while (isActive) {
-                refreshPrefs()
-                val totals = sampler?.readTotals() ?: PhysicalSpeedSampler.TrafficTotals(0, 0)
-                val down: Long
-                val up: Long
-                if (lastRx < 0 || lastTx < 0) {
-                    down = 0
-                    up = 0
+    private fun startMonitoring() {
+        isRunning = true
+        scope.launch {
+            refreshPrefs()
+            withContext(Dispatchers.Main) {
+                ensureChannel()
+                val notification = buildNotification(getString(R.string.meter_starting), 0, 0)
+                if (Build.VERSION.SDK_INT >= 34) {
+                    startForeground(
+                        NOTIFICATION_ID,
+                        notification,
+                        ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE,
+                    )
                 } else {
-                    down = (totals.rxBytes - lastRx).coerceAtLeast(0)
-                    up = (totals.txBytes - lastTx).coerceAtLeast(0)
+                    startForeground(NOTIFICATION_ID, notification)
                 }
-                lastRx = totals.rxBytes
-                lastTx = totals.txBytes
-                val text = MeterRateFormatter.format(prefs, down, up)
-                lastFormatted = text
-                if (prefs.notificationEnabled) {
-                    val nm = getSystemService(NotificationManager::class.java)
-                    nm.notify(NOTIFICATION_ID, buildNotification(text, down, up))
+            }
+            if (sampler == null) {
+                val cm = getSystemService(ConnectivityManager::class.java)
+                sampler = PhysicalSpeedSampler(cm).also { it.start() }
+            }
+            ensureOverlay()
+            applyOverlayState(getString(R.string.meter_starting))
+
+            job?.cancel()
+            job = scope.launch {
+                while (isActive) {
+                    refreshPrefs()
+                    val totals = sampler?.readTotals() ?: PhysicalSpeedSampler.TrafficTotals(0, 0)
+                    val down: Long
+                    val up: Long
+                    if (lastRx < 0 || lastTx < 0) {
+                        down = 0
+                        up = 0
+                    } else {
+                        down = (totals.rxBytes - lastRx).coerceAtLeast(0)
+                        up = (totals.txBytes - lastTx).coerceAtLeast(0)
+                    }
+                    lastRx = totals.rxBytes
+                    lastTx = totals.txBytes
+                    val text = MeterRateFormatter.format(prefs, down, up)
+                    lastFormatted = text
+                    if (prefs.notificationEnabled) {
+                        val nm = getSystemService(NotificationManager::class.java)
+                        nm.notify(NOTIFICATION_ID, buildNotification(text, down, up))
+                    }
+                    applyOverlayState(text)
+                    delay(prefs.sampleIntervalMs)
                 }
-                applyOverlayState(text)
-                delay(prefs.sampleIntervalMs)
             }
         }
     }
 
     private fun applyOverlayState(text: String) {
+        // Controllers already marshal to main; call from any thread.
         val o = overlay ?: return
         if (prefs.overlayEnabled && o.canDraw()) {
             o.show(text, prefs)
@@ -149,6 +154,7 @@ class SpeedMonitorService : Service() {
     override fun onDestroy() {
         isRunning = false
         job?.cancel()
+        scope.cancel()
         sampler?.stop()
         sampler = null
         overlay?.hide()

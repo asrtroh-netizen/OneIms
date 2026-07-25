@@ -6,8 +6,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Button
@@ -60,7 +65,10 @@ import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BatteryScreen(onBack: () -> Unit) {
+fun BatteryScreen(
+    onBack: () -> Unit = {},
+    showBack: Boolean = true,
+) {
     val context = LocalContext.current
     val prefsStore = remember { BatteryPrefs(context.applicationContext) }
     val sessionStore = remember { BatterySessionStore(context.applicationContext) }
@@ -117,11 +125,7 @@ fun BatteryScreen(onBack: () -> Unit) {
     val discharge = sessions.filter { it.kind == "DISCHARGE" }
     val charge = sessions.filter { it.kind == "CHARGE" }
 
-    OneToolsToolPage(
-        title = stringResource(R.string.battery_title),
-        onBack = onBack,
-        verticalSpacing = 10,
-    ) {
+    val body: LazyListScope.() -> Unit = {
             item {
                 Text(
                     stringResource(R.string.battery_accu_note),
@@ -531,6 +535,25 @@ fun BatteryScreen(onBack: () -> Unit) {
                 }
             }
             item { Spacer(Modifier.padding(12.dp)) }
+    }
+
+    if (showBack) {
+        OneToolsToolPage(
+            title = stringResource(R.string.battery_title),
+            onBack = onBack,
+            verticalSpacing = 10,
+            content = body,
+        )
+    } else {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+                .padding(horizontal = 20.dp),
+            contentPadding = PaddingValues(top = 16.dp, bottom = 36.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+            content = body,
+        )
     }
 }
 

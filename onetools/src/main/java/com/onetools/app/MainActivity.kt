@@ -1,6 +1,7 @@
 package com.onetools.app
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -9,8 +10,12 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -19,32 +24,34 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import android.content.Intent
 import com.onetools.app.battery.BatteryWidgetUpdater
-import com.onetools.app.updates.UpdateCheckNotifier
 import com.onetools.app.channel.ChannelCardPolicy
 import com.onetools.app.channel.ChannelCardState
 import com.onetools.app.channel.ShizukuChannel
 import com.onetools.app.device.DeviceSnapshotReader
 import com.onetools.app.export.DiagExport
+import com.onetools.app.updates.UpdateCheckNotifier
 import com.onetools.app.ui.BatteryScreen
-import com.onetools.app.ui.CallerMeterHubScreen
+import com.onetools.app.ui.CallerScreen
 import com.onetools.app.ui.HomeScreen
+import com.onetools.app.ui.MeterScreen
+import com.onetools.app.ui.MoreToolsScreen
+import com.onetools.app.ui.OneToolsScaffold
 import com.onetools.app.ui.RecorderScreen
+import com.onetools.app.ui.ToolsDestination
 import com.onetools.app.ui.UpdatesScreen
 import com.onetools.app.ui.theme.OneToolsTheme
 import kotlinx.coroutines.delay
 
-private enum class AppRoute { Home, CallerMeter, Battery, Updates, Recorder }
+private enum class NestedRoute { None, Recorder, Updates }
 
 class MainActivity : ComponentActivity() {
     private var serviceReady by mutableStateOf(false)
     private var channelSleeping by mutableStateOf(false)
     private var activating by mutableStateOf(false)
     private var detailToast by mutableStateOf<String?>(null)
-    private var route by mutableStateOf(AppRoute.Home)
+    private var destination by mutableStateOf(ToolsDestination.HOME)
+    private var nested by mutableStateOf(NestedRoute.None)
 
     private val notificationPermission =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { /* no-op */ }
@@ -62,7 +69,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        consumeOpenBattery(intent)
+        consumeDeepLinks(intent)
         refreshChannel()
         ensureNotificationPermission()
 
@@ -117,23 +124,51 @@ class MainActivity : ComponentActivity() {
                 }
 
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    when (route) {
-                        AppRoute.Home -> HomeScreen(
-                            channelState = cardState,
-                            onActivateOrCheck = { onPrimaryAction() },
-                            onOpenCallerMeter = { route = AppRoute.CallerMeter },
-                            onOpenBattery = { route = AppRoute.Battery },
-                            onOpenUpdates = { route = AppRoute.Updates },
-                            onOpenRecorder = { route = AppRoute.Recorder },
-                            onExportDiag = { exportDiagnostic() },
+                    when (nested) {
+                        NestedRoute.Recorder -> RecorderScreen(
+                            onBack = { nested = NestedRoute.None },
                         )
-                        AppRoute.CallerMeter -> CallerMeterHubScreen(
-                            onBack = { route = AppRoute.Home },
-                            onOpenRecorder = { route = AppRoute.Recorder },
+                        NestedRoute.Updates -> UpdatesScreen(
+                            onBack = { nested = NestedRoute.None },
                         )
-                        AppRoute.Battery -> BatteryScreen(onBack = { route = AppRoute.Home })
-                        AppRoute.Updates -> UpdatesScreen(onBack = { route = AppRoute.Home })
-                        AppRoute.Recorder -> RecorderScreen(onBack = { route = AppRoute.Home })
+                        NestedRoute.None -> OneToolsScaffold(
+                            selected = destination,
+                            onSelect = { destination = it },
+                        ) { innerPadding ->
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(innerPadding),
+                            ) {
+                                when (destination) {
+                                    ToolsDestination.HOME -> HomeScreen(
+                                        channelState = cardState,
+                                        onActivateOrCheck = { onPrimaryAction() },
+                                    )
+                                    ToolsDestination.CALLER -> CallerScreen(
+                                        onBack = {},
+                                        showBack = false,
+                                        onOpenRecorder = {
+                                            destination = ToolsDestination.MORE
+                                            nested = NestedRoute.Recorder
+                                        },
+                                    )
+                                    ToolsDestination.METER -> MeterScreen(
+                                        onBack = {},
+                                        showBack = false,
+                                    )
+                                    ToolsDestination.BATTERY -> BatteryScreen(
+                                        onBack = {},
+                                        showBack = false,
+                                    )
+                                    ToolsDestination.MORE -> MoreToolsScreen(
+                                        onOpenRecorder = { nested = NestedRoute.Recorder },
+                                        onOpenUpdates = { nested = NestedRoute.Updates },
+                                        onExportDiag = { exportDiagnostic() },
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -202,16 +237,18 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        consumeOpenBattery(intent)
+        consumeDeepLinks(intent)
     }
 
-    private fun consumeOpenBattery(intent: Intent?) {
+    private fun consumeDeepLinks(intent: Intent?) {
         if (intent?.getBooleanExtra(BatteryWidgetUpdater.EXTRA_OPEN_BATTERY, false) == true) {
-            route = AppRoute.Battery
+            destination = ToolsDestination.BATTERY
+            nested = NestedRoute.None
             intent.removeExtra(BatteryWidgetUpdater.EXTRA_OPEN_BATTERY)
         }
         if (intent?.getBooleanExtra(UpdateCheckNotifier.EXTRA_OPEN_UPDATES, false) == true) {
-            route = AppRoute.Updates
+            destination = ToolsDestination.MORE
+            nested = NestedRoute.Updates
             intent.removeExtra(UpdateCheckNotifier.EXTRA_OPEN_UPDATES)
         }
     }

@@ -10,8 +10,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
@@ -47,7 +49,9 @@ fun OneToolsPage(
     content: LazyListScope.() -> Unit,
 ) {
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .statusBarsPadding(),
         contentAlignment = Alignment.TopCenter,
     ) {
         LazyColumn(
@@ -93,6 +97,7 @@ fun OneToolsToolHeader(
 ) {
     Row(
         modifier = Modifier
+            .statusBarsPadding()
             .widthIn(max = PageMaxWidth)
             .fillMaxWidth()
             .padding(start = 4.dp, end = 12.dp, top = 4.dp),
@@ -139,7 +144,9 @@ fun OneToolsToolPage(
     content: LazyListScope.() -> Unit,
 ) {
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .navigationBarsPadding(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         OneToolsToolHeader(title = title, onBack = onBack, subtitle = subtitle)
