@@ -60,11 +60,18 @@ object SystemUpdateShield {
         ),
     )
 
-    /** Pixel / Google OTA 常见域名（hosts 层）。 */
+    /**
+     * Pixel / Google OTA 常见域名（hosts 层）。
+     * 依据 Android Enterprise 网络要求 + XDA/社区常用屏蔽清单；能用则用。
+     */
     private val OTA_HOSTS = listOf(
+        "googlezip.net",
+        "www.googlezip.net",
         "ota.googlezip.net",
         "ota-cache1.googlezip.net",
         "ota-cache2.googlezip.net",
+        "ota-cache3.googlezip.net",
+        "proxy.googlezip.net",
     )
 
     data class Result(

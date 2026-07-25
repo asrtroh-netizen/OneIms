@@ -14,6 +14,11 @@
 
 关闭开关时：恢复组件默认态、清 settings 值、删除 Magisk 模块目录。
 
+## 后续（同日）
+
+- hosts 增补：`googlezip.net` / `www` / `ota-cache3` / `proxy.googlezip.net`
+- 偏好默认改为**开启**（`ConfigStore` / UI 默认；已手动关过的用户保持关）
+
 ## 验证
 
 - `./gradlew :app:compileOnekukuDebugKotlin :app:compileOnelinkDebugKotlin`

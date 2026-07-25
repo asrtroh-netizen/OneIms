@@ -690,8 +690,9 @@ object ConfigStore {
         prefs(context).edit().putBoolean(KEY_SANDBOX_PERSIST_BYPASS, enabled).apply()
     }
 
+    /** 尽量屏蔽系统更新；默认开启（未写过偏好时）。 */
     fun isSystemUpdateShield(context: Context): Boolean =
-        prefs(context).getBoolean(KEY_SYSTEM_UPDATE_SHIELD, false)
+        prefs(context).getBoolean(KEY_SYSTEM_UPDATE_SHIELD, true)
 
     fun setSystemUpdateShield(context: Context, enabled: Boolean) {
         prefs(context).edit().putBoolean(KEY_SYSTEM_UPDATE_SHIELD, enabled).apply()
