@@ -1,6 +1,6 @@
 {
   "schema": "onetools.blocklist.v1",
-  "version": 4,
+  "version": 5,
   "updatedAt": "2026-07-25",
   "numbers": [
     {
@@ -82,6 +82,56 @@
       "kind": "block"
     },
     {
+      "n": "95555",
+      "kind": "label",
+      "tag": "招商银行客服"
+    },
+    {
+      "n": "95568",
+      "kind": "label",
+      "tag": "民生银行客服"
+    },
+    {
+      "n": "95595",
+      "kind": "label",
+      "tag": "光大银行客服"
+    },
+    {
+      "n": "95558",
+      "kind": "label",
+      "tag": "中信银行客服"
+    },
+    {
+      "n": "95338",
+      "kind": "label",
+      "tag": "邮储银行客服"
+    },
+    {
+      "n": "95561",
+      "kind": "label",
+      "tag": "兴业银行客服"
+    },
+    {
+      "n": "11185",
+      "kind": "label",
+      "tag": "中国邮政"
+    },
+    {
+      "n": "12315",
+      "kind": "label",
+      "tag": "消费者投诉"
+    },
+    {
+      "n": "12321",
+      "kind": "label",
+      "tag": "网络不良信息举报"
+    },
+    {
+      "n": "12345",
+      "kind": "label",
+      "tag": "政务热线"
+    },
+    {
       "n": "170",
       "prefix": true,
       "tag": "虚拟运营商",
@@ -118,6 +168,18 @@
       "kind": "block"
     },
     {
+      "n": "172",
+      "prefix": true,
+      "tag": "虚拟运营商",
+      "kind": "block"
+    },
+    {
+      "n": "178",
+      "prefix": true,
+      "tag": "虚拟运营商",
+      "kind": "block"
+    },
+    {
       "n": "146",
       "prefix": true,
       "tag": "物联网号段",
@@ -142,13 +204,37 @@
       "kind": "block"
     },
     {
+      "n": "1400",
+      "prefix": true,
+      "tag": "物联网号段",
+      "kind": "block"
+    },
+    {
+      "n": "147",
+      "prefix": true,
+      "tag": "物联网号段",
+      "kind": "block"
+    },
+    {
       "n": "1010",
       "prefix": true,
       "tag": "可能骚扰",
       "kind": "block"
     },
     {
+      "n": "1019",
+      "prefix": true,
+      "tag": "可能骚扰",
+      "kind": "block"
+    },
+    {
       "n": "12520",
+      "prefix": true,
+      "tag": "可能骚扰",
+      "kind": "block"
+    },
+    {
+      "n": "12580",
       "prefix": true,
       "tag": "可能骚扰",
       "kind": "block"
@@ -161,6 +247,36 @@
     },
     {
       "n": "118114",
+      "prefix": true,
+      "tag": "可能骚扰",
+      "kind": "block"
+    },
+    {
+      "n": "17951",
+      "prefix": true,
+      "tag": "网络电话",
+      "kind": "block"
+    },
+    {
+      "n": "95013",
+      "prefix": true,
+      "tag": "可能骚扰",
+      "kind": "block"
+    },
+    {
+      "n": "4006",
+      "prefix": true,
+      "tag": "可能骚扰",
+      "kind": "block"
+    },
+    {
+      "n": "4007",
+      "prefix": true,
+      "tag": "可能骚扰",
+      "kind": "block"
+    },
+    {
+      "n": "4008",
       "prefix": true,
       "tag": "可能骚扰",
       "kind": "block"
@@ -196,6 +312,26 @@
       "tag": "保险推销"
     },
     {
+      "n": "17000000006",
+      "kind": "block",
+      "tag": "教育培训"
+    },
+    {
+      "n": "17000000007",
+      "kind": "block",
+      "tag": "装修推销"
+    },
+    {
+      "n": "17000000008",
+      "kind": "block",
+      "tag": "理财推销"
+    },
+    {
+      "n": "17000000009",
+      "kind": "block",
+      "tag": "骚扰电话"
+    },
+    {
       "n": "17100000000",
       "kind": "block",
       "tag": "骚扰电话"
@@ -211,6 +347,16 @@
       "tag": "诈骗电话"
     },
     {
+      "n": "17100000003",
+      "kind": "block",
+      "tag": "房产中介"
+    },
+    {
+      "n": "17100000004",
+      "kind": "block",
+      "tag": "贷款推销"
+    },
+    {
       "n": "16200000000",
       "kind": "block",
       "tag": "诈骗电话"
@@ -219,6 +365,11 @@
       "n": "16200000001",
       "kind": "block",
       "tag": "骚扰电话"
+    },
+    {
+      "n": "16200000002",
+      "kind": "block",
+      "tag": "广告推销"
     },
     {
       "n": "16500000000",
@@ -231,6 +382,11 @@
       "tag": "广告推销"
     },
     {
+      "n": "16500000002",
+      "kind": "block",
+      "tag": "诈骗电话"
+    },
+    {
       "n": "16700000000",
       "kind": "block",
       "tag": "骚扰电话"
@@ -241,9 +397,39 @@
       "tag": "诈骗电话"
     },
     {
+      "n": "16700000002",
+      "kind": "block",
+      "tag": "广告推销"
+    },
+    {
       "n": "16800000000",
       "kind": "block",
       "tag": "骚扰电话"
+    },
+    {
+      "n": "16800000001",
+      "kind": "block",
+      "tag": "保险推销"
+    },
+    {
+      "n": "17200000000",
+      "kind": "block",
+      "tag": "骚扰电话"
+    },
+    {
+      "n": "17200000001",
+      "kind": "block",
+      "tag": "广告推销"
+    },
+    {
+      "n": "17800000000",
+      "kind": "block",
+      "tag": "骚扰电话"
+    },
+    {
+      "n": "17800000001",
+      "kind": "block",
+      "tag": "诈骗电话"
     },
     {
       "n": "14600000000",
@@ -252,6 +438,11 @@
     },
     {
       "n": "14800000000",
+      "kind": "block",
+      "tag": "骚扰电话"
+    },
+    {
+      "n": "14700000000",
       "kind": "block",
       "tag": "骚扰电话"
     },
@@ -271,5 +462,5 @@
   "note": "PREFIX+EXACT dual-write into CallRuleStore and onespam. Virtual prefixes may false-positive delivery/taxi — whitelist as needed. Own OneBlock path only — do not bind Telo CDN.",
   "keyId": "one-cdn-2026r2",
   "sigAlg": "SHA256withECDSA",
-  "signature": "MEQCIGrT3y3EkFXn8xJHnjD7j4OT04mgToK9IPPs8O4JSElsAiBmQ3HPr9tPvMw/iGcDinac360RlJCt2UUh6NBHa5/sBQ=="
+  "signature": "MEUCIB+0lzLd5zcQA+QSKAtTszEtyAqSDdRASMRL8mMssZB5AiEAsIyRJe590E3HHAJNmn50QqgRM8rygaeIk5Xy6lzprf0="
 }
