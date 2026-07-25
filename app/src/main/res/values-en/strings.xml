@@ -1095,7 +1095,7 @@
     <string name="membership_feat_android_follow">Priority notes for Android major releases</string>
     <string name="membership_feat_member_badge">Member badge</string>
     <string name="membership_feat_all_plus">Everything in Plus</string>
-    <string name="membership_feat_exclusive_six">Identity override · signal bars · country ISO · IMS guard · expert editor · config travel pack</string>
+    <string name="membership_feat_exclusive_six">Identity override · country ISO · IMS guard · expert editor · config travel pack · more</string>
     <string name="membership_feat_custom_three">3 exclusive customization tickets</string>
     <string name="membership_feat_nameplate">Exclusive nameplate (About / optional home badge)</string>
     <string name="membership_cta_plus">Get Plus · ¥29.9</string>

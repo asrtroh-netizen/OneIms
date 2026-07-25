@@ -80,8 +80,6 @@ import com.oneims.app.core.IdentityInputPolicy
 
 import com.oneims.app.core.SimCountryIsoManager
 
-import com.oneims.app.core.SimpleFiveGDisplayConfig
-
 import com.oneims.app.core.formatCarrierShortName
 
 

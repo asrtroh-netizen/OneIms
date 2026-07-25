@@ -218,7 +218,6 @@ object OneKukuHomeTools {
             ).ifBlank { context.getString(R.string.onekuku_value_unset) }
         }
         val hasIdentity = snap.entries.any { it.configGroup == "identity" }
-        val fiveGDisplay = bool("five_g_display", "enabled", false)
 
         return buildList {
             add(
@@ -261,14 +260,6 @@ object OneKukuHomeTools {
                     },
                 ),
             )
-            if (fiveGDisplay) {
-                add(
-                    SnapshotLine(
-                        label = context.getString(R.string.onekuku_snapshot_five_g_display),
-                        value = on,
-                    ),
-                )
-            }
             add(
                 SnapshotLine(
                     label = context.getString(R.string.onekuku_snapshot_meta),

@@ -135,18 +135,6 @@
             </intent-filter>
         </service>
 
-        <!-- 控制中心快捷切卡：只委托 DataSimSwitchManager，不触发 IMS/APN/5G。 -->
-        <service
-            android:name=".core.DataSimSwitchTileService"
-            android:exported="true"
-            android:icon="@drawable/ic_qs_data_sim"
-            android:label="@string/qs_tile_service_label"
-            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
-            <intent-filter>
-                <action android:name="android.service.quicksettings.action.QS_TILE" />
-            </intent-filter>
-        </service>
-
         <!-- OneKuku 开机自动检查/恢复：前台短生命周期，避免 BootReceiver 后台 start 被拦 -->
         <service
             android:name=".core.OneKukuBootRestoreService"

@@ -51,7 +51,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.oneims.app.core.CarrierProfiles
 import com.oneims.app.core.ApnCatalogEntry
-import com.oneims.app.core.CompatChecker
 import com.oneims.app.core.ConfigStore
 import com.oneims.app.core.DodoPaySupportClient
 import com.oneims.app.core.DeviceInfo
@@ -69,11 +68,7 @@ import com.oneims.app.core.RootPersistenceSupport
 import com.oneims.app.core.SandboxPersistSupport
 import com.oneims.app.core.SafetyGuard
 import com.oneims.app.core.SystemUpdateShield
-import com.oneims.app.core.DataSimSwitchManagerImpl
-import com.oneims.app.core.DataSimSwitchResult
 import com.oneims.app.core.OneClickDiagnosticsManager
-import com.oneims.app.core.QuickSettingsTileHelper
-import com.oneims.app.core.SimCardInfo
 import com.oneims.app.core.ShizukuSetupHelper
 import com.oneims.app.core.OneKukuCoreComponent
 import com.oneims.app.core.OneKukuEmbeddedAdbActivator
@@ -84,9 +79,7 @@ import com.oneims.app.core.OneKukuActivationPhase
 import com.oneims.app.core.ChannelLine
 import com.oneims.app.core.OneKukuManager
 import com.oneims.app.core.WirelessPairingCodeReceiver
-import com.oneims.app.core.SimpleFiveGDisplayConfig
 import com.oneims.app.core.SystemDisplayOverrideManager
-import com.oneims.app.core.SignalBarSystemStyleManager
 import com.oneims.app.core.SimCountryIsoManager
 import com.oneims.app.core.UpdateChecker
 import com.oneims.app.core.VoWifiNameFormatManager
@@ -316,27 +309,11 @@ private fun AppRoot(
     var sandboxPersistBypass by remember {
         mutableStateOf(ConfigStore.isSandboxPersistBypass(context))
     }
-    var fiveGDisplayConfig by remember {
-        mutableStateOf(ConfigStore.fiveGDisplayConfig(context))
-    }
-    var signalBarDisplayMode by remember {
-        mutableStateOf(ConfigStore.signalBarDisplayMode(context, selectedSubId))
-    }
     var signalStrengthAdjustmentEnabled by remember {
         mutableStateOf(ConfigStore.signalStrengthAdjustmentEnabled(context, selectedSubId))
     }
     var voWifiNameFormatIndex by remember { mutableStateOf<Int?>(null) }
     var voWifiCustomCarrierName by remember { mutableStateOf("") }
-    var activeDataSims by remember { mutableStateOf(emptyList<SimCardInfo>()) }
-
-    fun refreshDataSimStatus() {
-        scope.launch {
-            activeDataSims = withContext(Dispatchers.IO) {
-                DataSimSwitchManagerImpl.getActiveSims(context)
-            }
-        }
-    }
-
     var checkingUpdate by remember { mutableStateOf(false) }
     var updateInfo by remember { mutableStateOf<UpdateInfo?>(null) }
     var phonePermissionResultCount by remember { mutableIntStateOf(0) }
@@ -1065,74 +1042,6 @@ private fun AppRoot(
         confirmation = ConfirmationRequest(title, message, confirmLabel, onConfirm)
     }
 
-    fun switchDataSim(targetSubId: Int) {
-        val sim = activeDataSims.firstOrNull { it.subId == targetSubId }
-            ?: run {
-                publish(context.getString(R.string.data_switch_invalid_target))
-                return
-            }
-        if (targetSubId == DataSimSwitchManagerImpl.getDefaultDataSubId()) {
-            publish(context.getString(R.string.data_switch_already_current))
-            return
-        }
-        if (activeDataSims.size <= 1) {
-            publish(context.getString(R.string.data_switch_single_sim))
-            return
-        }
-        val executeSwitch: () -> Unit = {
-            if (busyLabel != null) {
-                scope.launch {
-                    snackbarHostState.showSnackbar(
-                        context.getString(R.string.operation_already_running),
-                    )
-                }
-            } else {
-                scope.launch {
-                    busyLabel = context.getString(R.string.data_switch_switching)
-                    val result = withContext(Dispatchers.IO) {
-                        runCatching {
-                            DataSimSwitchManagerImpl.switchDefaultDataSubId(context, targetSubId)
-                        }.getOrElse { error ->
-                            DataSimSwitchResult.Failed(
-                                error.message ?: context.getString(R.string.operation_unknown_error),
-                            )
-                        }
-                    }
-                    busyLabel = null
-                    when (result) {
-                        is DataSimSwitchResult.Success -> {
-                            refreshDataSimStatus()
-                            publish(
-                                result.warning ?: context.getString(
-                                    R.string.data_switch_success,
-                                    sim.slotIndex + 1,
-                                ),
-                            )
-                        }
-                        is DataSimSwitchResult.Failed -> {
-                            publish(
-                                context.getString(
-                                    R.string.data_switch_failed,
-                                    result.reason,
-                                ),
-                            )
-                        }
-                    }
-                }
-            }
-        }
-        requestConfirmation(
-            title = context.getString(
-                R.string.data_switch_confirm_title,
-                sim.slotIndex + 1,
-                sim.carrierName,
-            ),
-            message = context.getString(R.string.data_switch_confirm_message),
-            confirmLabel = context.getString(R.string.data_switch_confirm_action),
-            onConfirm = executeSwitch,
-        )
-    }
-
     fun ensurePrivilegedAccess(): Boolean {
         shizukuRunning = OneKukuManager.isRunning()
         shizukuGranted = OneKukuManager.isGranted()
@@ -1163,7 +1072,6 @@ private fun AppRoot(
 
     LaunchedEffect(selectedSubId, shizukuGranted) {
         reapplyStatus = ConfigStore.lastReapplyStatus(context)
-        signalBarDisplayMode = ConfigStore.signalBarDisplayMode(context, selectedSubId)
         signalStrengthAdjustmentEnabled =
             ConfigStore.signalStrengthAdjustmentEnabled(context, selectedSubId)
         if (selectedSubId >= 0 && shizukuGranted) {
@@ -1307,13 +1215,6 @@ private fun AppRoot(
         activeSimCountryIso = runCatching {
             SimCountryIsoManager.readCurrent(context, subId).orEmpty()
         }.getOrDefault("")
-    }
-
-    // 应用内切卡和控制中心磁贴都以同一份活动 SIM 列表为依据。
-    LaunchedEffect(sims) {
-        activeDataSims = withContext(Dispatchers.IO) {
-            DataSimSwitchManagerImpl.getActiveSims(context)
-        }
     }
 
     DisposableEffect(Unit) {
@@ -1633,15 +1534,6 @@ private fun AppRoot(
                                                     it.carrierName,
                                                 )
                                             } ?: context.getString(R.string.onekuku_status_no_sim)
-                                            val fiveG = ConfigStore.fiveGDisplayConfig(context)
-                                            val fiveGLine = context.getString(
-                                                R.string.onekuku_status_5g,
-                                                if (fiveG.enabled) {
-                                                    context.getString(R.string.onekuku_value_on)
-                                                } else {
-                                                    context.getString(R.string.onekuku_value_off)
-                                                },
-                                            )
                                             val imsLine = if (targetSubId >= 0 && granted) {
                                                 OneKukuHomeTools.sanitizeUserText(
                                                     ImsController.queryImsStatus(
@@ -1661,8 +1553,6 @@ private fun AppRoot(
                                                 )
                                                 append('\n')
                                                 append(simLine)
-                                                append('\n')
-                                                append(fiveGLine)
                                                 append('\n')
                                                 append(imsLine)
                                             }
@@ -2021,10 +1911,6 @@ private fun AppRoot(
                         forceTemporaryOverride = forceTemporaryOverride,
                         systemUpdateShield = systemUpdateShield,
                         rootPersistStatusDetail = RootPersistenceSupport.statusDetail(context),
-                        fiveGDisplayConfig = fiveGDisplayConfig,
-                        signalBarDisplayMode = signalBarDisplayMode,
-                        nr5g = nr5g,
-                        activeDataSims = activeDataSims,
                         prerequisitesMet = selectedSubId >= 0 && shizukuGranted,
                         actionsEnabled = selectedSubId >= 0 &&
                             shizukuGranted &&
@@ -2219,49 +2105,6 @@ private fun AppRoot(
                             }
                         },
                         onOpenApnCatalog = { apnCatalogVisible = true },
-                        onFiveGDisplayConfigChange = { config: SimpleFiveGDisplayConfig ->
-                            fiveGDisplayConfig = config
-                        },
-                        onApplyFiveGDisplay = {
-                            val targetSubId = selectedSubId
-                            val configToApply = fiveGDisplayConfig
-                            runOperation(context.getString(R.string.five_g_apply)) {
-                                SystemDisplayOverrideManager.applyFiveGDisplay(
-                                    context = context,
-                                    subId = targetSubId,
-                                    config = configToApply,
-                                )
-                            }
-                        },
-                        onSignalBarDisplayModeChange = { mode ->
-                            signalBarDisplayMode = mode
-                            if (selectedSubId >= 0) {
-                                ConfigStore.setSignalBarDisplayMode(
-                                    context,
-                                    selectedSubId,
-                                    mode,
-                                )
-                            }
-                        },
-                        onApplySignalBarStyle = {
-                            val targetSubId = selectedSubId
-                            val targetMode = signalBarDisplayMode
-                            runOperation(context.getString(R.string.signal_bar_style_apply)) {
-                                // 系统全局尝试：只写 UI 当前 selectedSubId，不默认卡1/数据卡/slot0。
-                                SignalBarSystemStyleManager.apply(
-                                    context = context,
-                                    subId = targetSubId,
-                                    mode = targetMode,
-                                )
-                            }
-                        },
-                        onRefreshDataSims = { refreshDataSimStatus() },
-                        onSwitchDataSim = { targetSubId -> switchDataSim(targetSubId) },
-                        onOpenTileSettings = {
-                            if (!QuickSettingsTileHelper.openTileEditor(context)) {
-                                publish(context.getString(R.string.qs_tile_manual_guide))
-                            }
-                        },
                         onApplyExpertValue = { key, value ->
                             if (ensurePrivilegedAccess()) {
                                 val targetSubId = selectedSubId
