@@ -102,6 +102,73 @@ object SpamPackInstaller {
         rows.size
     }
 
+    /** Incremental upsert — does not wipe the pack (Phase-1 report path). */
+    suspend fun upsertOne(
+        context: Context,
+        phone: String,
+        tag: String,
+        source: String = "report",
+    ): Boolean = withContext(Dispatchers.IO) {
+        val digits = NumberMatcher.digits(phone).removePrefix("86")
+        if (digits.length < 7) return@withContext false
+        val db = openOrCreate(context)
+        try {
+            db.execSQL(
+                "INSERT OR REPLACE INTO spam_numbers(phone_number, tag, source) VALUES(?,?,?)",
+                arrayOf(digits, tag.ifBlank { "骚扰电话" }, source),
+            )
+            db.execSQL(
+                "INSERT OR REPLACE INTO metadata(key, value) VALUES('version', ?)",
+                arrayOf("local-reports"),
+            )
+        } finally {
+            db.close()
+        }
+        OneCallerDirectoryProvider.notifyChanged(context.contentResolver)
+        SpamSyncRepository(context).refreshLocalStats()
+        true
+    }
+
+    suspend fun removeOne(context: Context, phone: String): Boolean = withContext(Dispatchers.IO) {
+        val digits = NumberMatcher.digits(phone).removePrefix("86")
+        if (digits.isEmpty()) return@withContext false
+        val dest = context.getDatabasePath(SpamOfflineDatabase.DB_FILE_NAME)
+        if (!dest.exists()) return@withContext false
+        val db = SQLiteDatabase.openDatabase(dest.path, null, SQLiteDatabase.OPEN_READWRITE)
+        try {
+            db.delete("spam_numbers", "phone_number = ?", arrayOf(digits)) > 0
+        } finally {
+            db.close()
+        }.also {
+            OneCallerDirectoryProvider.notifyChanged(context.contentResolver)
+            SpamSyncRepository(context).refreshLocalStats()
+        }
+    }
+
+    private fun openOrCreate(context: Context): SQLiteDatabase {
+        val dest = context.getDatabasePath(SpamOfflineDatabase.DB_FILE_NAME)
+        dest.parentFile?.mkdirs()
+        val db = SQLiteDatabase.openOrCreateDatabase(dest, null)
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS spam_numbers (
+              phone_number TEXT PRIMARY KEY NOT NULL,
+              tag TEXT NOT NULL,
+              source TEXT NOT NULL
+            )
+            """.trimIndent(),
+        )
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS metadata (
+              key TEXT PRIMARY KEY NOT NULL,
+              value TEXT NOT NULL
+            )
+            """.trimIndent(),
+        )
+        return db
+    }
+
     /** Create a CDN-ready zip (onespam_{version}.db inside). */
     fun zipDatabase(dbFile: File, version: String, zipOut: File) {
         ZipOutputStream(FileOutputStream(zipOut)).use { zos ->

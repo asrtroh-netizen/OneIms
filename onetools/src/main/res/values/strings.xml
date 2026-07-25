@@ -436,4 +436,17 @@
     <string name="caller_notify_only">仅提示不拒接（默认开，对齐 Telo）</string>
     <string name="caller_no_network">仅离线查号（默认开 · 最省钱，不走商业 API）</string>
     <string name="caller_lookup_engine_fmt">引擎：%1$s · 标签「%2$s」</string>
+
+    <string name="caller_report_title">本机举报（Phase 1）</string>
+    <string name="caller_report_note">最省钱回灌第一步：只写本机规则 + onespam，不上云。社区聚合以后再开。</string>
+    <string name="caller_report_phone_hint">要举报的号码</string>
+    <string name="caller_report_submit">举报并本机拦截</string>
+    <string name="caller_report_ok">已举报并写入本机库：%1$s</string>
+    <string name="caller_report_saved_only">已记录举报（未自动拦截）</string>
+    <string name="caller_report_need_phone">请先填有效号码（≥7 位数字）</string>
+    <string name="caller_report_apply_local">举报后立刻本机拦截（默认开）</string>
+    <string name="caller_report_list_title">本机举报记录（%1$d）</string>
+    <string name="caller_report_revoke">撤销</string>
+    <string name="caller_report_revoked">已撤销举报与本机拦截</string>
+    <string name="caller_report_from_lookup">用试查号码</string>
 </resources>

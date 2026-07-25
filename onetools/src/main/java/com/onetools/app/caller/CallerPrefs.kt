@@ -21,6 +21,7 @@ class CallerPrefs(private val context: Context) {
     private val noNetworkKey = booleanPreferencesKey("no_network_query")
     private val timeoutSecKey = intPreferencesKey("network_timeout_sec")
     private val syncManifestKey = stringPreferencesKey("spam_sync_manifest_url")
+    private val applyReportLocalKey = booleanPreferencesKey("apply_report_locally")
 
     val notifyOnlyFlow: Flow<Boolean> = context.callerPrefsStore.data.map {
         it[notifyOnlyKey] ?: true
@@ -43,6 +44,17 @@ class CallerPrefs(private val context: Context) {
     suspend fun spamSyncManifestUrl(): String {
         val custom = context.callerPrefsStore.data.first()[syncManifestKey].orEmpty().trim()
         return custom.ifBlank { com.onetools.app.BuildConfig.ONE_SPAM_SYNC_MANIFEST_URL }
+    }
+
+    /** Phase-1: reporting immediately writes local BLOCK rule + onespam row. Default on. */
+    val applyReportLocallyFlow: Flow<Boolean> = context.callerPrefsStore.data.map {
+        it[applyReportLocalKey] ?: true
+    }
+
+    suspend fun applyReportLocally(): Boolean = applyReportLocallyFlow.first()
+
+    suspend fun setApplyReportLocally(value: Boolean) {
+        context.callerPrefsStore.edit { it[applyReportLocalKey] = value }
     }
 
     suspend fun setNotifyOnly(value: Boolean) {

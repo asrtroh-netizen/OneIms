@@ -12,6 +12,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -62,7 +64,10 @@ import com.onetools.app.caller.CallerPrefs
 import com.onetools.app.caller.CnMobileGeo
 import com.onetools.app.caller.DialerLabelComposer
 import com.onetools.app.caller.NumberMatcher
+import com.onetools.app.caller.LocalReportStore
 import com.onetools.app.caller.OneBlockImporter
+import com.onetools.app.caller.ReportApplier
+import com.onetools.app.caller.ReportTag
 import com.onetools.app.caller.SpamSyncManifest
 import com.onetools.app.caller.SpamSyncRepository
 import com.onetools.app.updates.HttpDownloads
@@ -73,6 +78,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.util.UUID
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun CallerScreen(
     onBack: () -> Unit,
@@ -83,11 +89,14 @@ fun CallerScreen(
     val store = remember { CallRuleStore(context.applicationContext) }
     val prefs = remember { CallerPrefs(context.applicationContext) }
     val spamSync = remember { SpamSyncRepository(context.applicationContext) }
+    val reportStore = remember { LocalReportStore(context.applicationContext) }
     val rules by store.rules.collectAsState(initial = emptyList())
+    val reports by reportStore.reports.collectAsState(initial = emptyList())
     val spamVersion by spamSync.versionFlow.collectAsState()
     val spamRows by spamSync.rowCountFlow.collectAsState()
     val notifyOnly by prefs.notifyOnlyFlow.collectAsState(initial = true)
-    val noNetwork by prefs.noNetworkQueryFlow.collectAsState(initial = false)
+    val noNetwork by prefs.noNetworkQueryFlow.collectAsState(initial = true)
+    val applyReportLocal by prefs.applyReportLocallyFlow.collectAsState(initial = true)
     val lifecycleOwner = LocalLifecycleOwner.current
 
     var number by remember { mutableStateOf("") }
@@ -102,6 +111,8 @@ fun CallerScreen(
     var status by remember { mutableStateOf("") }
     var pendingManifest by remember { mutableStateOf<SpamSyncManifest?>(null) }
     var downloadProgress by remember { mutableIntStateOf(-1) }
+    var reportPhone by remember { mutableStateOf("") }
+    var reportTagIndex by remember { mutableIntStateOf(0) }
     var roleHeld by remember { mutableStateOf(false) }
     var callLogGranted by remember {
         mutableStateOf(
@@ -384,6 +395,23 @@ fun CallerScreen(
                             checked = noNetwork,
                             onCheckedChange = { checked ->
                                 scope.launch { prefs.setNoNetworkQuery(checked) }
+                            },
+                        )
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            stringResource(R.string.caller_report_apply_local),
+                            modifier = Modifier.weight(1f),
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                        Switch(
+                            checked = applyReportLocal,
+                            onCheckedChange = { checked ->
+                                scope.launch { prefs.setApplyReportLocally(checked) }
                             },
                         )
                     }
@@ -704,6 +732,125 @@ fun CallerScreen(
                                 style = MaterialTheme.typography.titleSmall,
                                 color = MaterialTheme.colorScheme.onSecondaryContainer,
                             )
+                        }
+                    }
+                    TextButton(
+                        onClick = {
+                            if (lookupNumber.isNotBlank()) reportPhone = lookupNumber
+                        },
+                    ) {
+                        Text(stringResource(R.string.caller_report_from_lookup))
+                    }
+                }
+            }
+
+            item {
+                CallerSection(title = stringResource(R.string.caller_report_title)) {
+                    Text(
+                        stringResource(R.string.caller_report_note),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    OutlinedTextField(
+                        value = reportPhone,
+                        onValueChange = { reportPhone = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text(stringResource(R.string.caller_report_phone_hint)) },
+                        singleLine = true,
+                        shape = MaterialTheme.shapes.large,
+                    )
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        ReportTag.entries.forEachIndexed { index, tag ->
+                            FilterChip(
+                                selected = reportTagIndex == index,
+                                onClick = { reportTagIndex = index },
+                                label = { Text(tag.labelZh) },
+                            )
+                        }
+                    }
+                    Button(
+                        onClick = {
+                            val phone = ReportApplier.normalizePhoneOrNull(reportPhone)
+                            if (phone == null) {
+                                Toast.makeText(
+                                    context,
+                                    R.string.caller_report_need_phone,
+                                    Toast.LENGTH_SHORT,
+                                ).show()
+                                return@Button
+                            }
+                            val tag = ReportTag.entries.getOrElse(reportTagIndex) { ReportTag.SPAM }
+                            scope.launch {
+                                runCatching {
+                                    val result = ReportApplier.reportAndApply(
+                                        context = context,
+                                        rawPhone = phone,
+                                        tag = tag,
+                                        source = "manual",
+                                    )
+                                    spamSync.refreshLocalStats()
+                                    status = if (result.ruleId != null) {
+                                        context.getString(
+                                            R.string.caller_report_ok,
+                                            tag.labelZh,
+                                        )
+                                    } else {
+                                        context.getString(R.string.caller_report_saved_only)
+                                    }
+                                    reportPhone = ""
+                                }.onFailure {
+                                    status = it.message ?: "report failed"
+                                }
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(stringResource(R.string.caller_report_submit))
+                    }
+                    Text(
+                        stringResource(R.string.caller_report_list_title, reports.size),
+                        style = MaterialTheme.typography.titleSmall,
+                    )
+                    reports.take(20).forEach { r ->
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = MaterialTheme.shapes.large,
+                            color = MaterialTheme.colorScheme.surfaceVariant,
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        r.phone,
+                                        style = MaterialTheme.typography.titleSmall,
+                                    )
+                                    Text(
+                                        ReportTag.fromWire(r.tag).labelZh,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+                                TextButton(
+                                    onClick = {
+                                        scope.launch {
+                                            ReportApplier.revoke(context, r.id, r.phone)
+                                            spamSync.refreshLocalStats()
+                                            status = context.getString(R.string.caller_report_revoked)
+                                        }
+                                    },
+                                ) {
+                                    Text(stringResource(R.string.caller_report_revoke))
+                                }
+                            }
                         }
                     }
                 }
