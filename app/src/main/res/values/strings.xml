@@ -267,24 +267,29 @@
     <string name="support_unsupported">不支持</string>
     <string name="support_need_shizuku">需先激活 OneKuku</string>
     <string name="compat_tensor">① Tensor 芯片: %1$s</string>
+    <string name="compat_soc">② SoC: %1$s（%2$s）</string>
+    <string name="compat_soc_tensor">Google Tensor</string>
+    <string name="compat_soc_mediatek">联发科 / 天玑 — VoWiFi 强开不可用</string>
+    <string name="compat_soc_other">非 Tensor</string>
     <string name="compat_yes">是 ✅</string>
     <string name="compat_tensor_no">否 ❌（本工具面向 Tensor Pixel）</string>
-    <string name="compat_os">② 系统版本: Android %1$s (API %2$d) %3$s</string>
+    <string name="compat_os">③ 系统版本: Android %1$s (API %2$d) %3$s</string>
     <string name="compat_os_bad">❌（需 Android 12+）</string>
-    <string name="compat_shizuku">③ OneKuku: %1$s</string>
+    <string name="compat_shizuku">④ OneKuku: %1$s</string>
     <string name="compat_shizuku_granted">已授权 ✅</string>
     <string name="compat_shizuku_running">已运行未授权 ⚠️</string>
     <string name="compat_shizuku_off">未运行 ❌</string>
-    <string name="compat_strategy">④ 绕过策略: %1$s</string>
+    <string name="compat_strategy">⑤ 绕过策略: %1$s</string>
     <string name="compat_strategy_delegate">支持 Instrumentation 权限代理（新补丁机型）✅</string>
     <string name="compat_strategy_direct">权限代理探测失败；非 root 仍尝试 Instrumentation，root 才走直调 ⚠️</string>
-    <string name="compat_sim">⑤ 激活 SIM: %1$d %2$s</string>
+    <string name="compat_sim">⑥ 激活 SIM: %1$d %2$s</string>
     <string name="compat_sim_no">❌（未检测到 SIM）</string>
     <string name="compat_conclusion">—— 结论：本机%1$s ——</string>
     <string name="compat_advice_full">可放心使用全部功能。</string>
     <string name="compat_advice_degraded">可用性降级：请更新 Hidden/API 兼容层后重试；Root 通道可走直调，非 Root 仍依赖委托。</string>
     <string name="compat_advice_need_shizuku">请先激活 OneKuku 核心服务再来。</string>
     <string name="compat_advice_unsupported">本机不满足前置条件，不建议使用，以免影响通信。</string>
+    <string name="compat_advice_mediatek_vowifi">联发科 / 天玑上 VoWiFi 非主推路径，OEM 可能改不了或不起作用；软件仍允许尝试，最终效果无法左右。主推 Tensor Pixel。</string>
 
     <!-- 设备信息卡 -->
     <string name="dev_unknown">未知</string>
@@ -296,6 +301,8 @@
     <string name="dev_tensor">Tensor 芯片: %1$s</string>
     <string name="dev_tensor_yes">是（受支持）</string>
     <string name="dev_tensor_no">否（非 Tensor，可能不支持）</string>
+    <string name="dev_soc">SoC: %1$s</string>
+    <string name="dev_mediatek_vowifi_note">联发科 / 天玑：VoWiFi 强开已禁用（社区反馈改不了 / 不起作用）</string>
     <string name="dev_sim_count">激活 SIM 数: %1$d</string>
     <string name="dev_delegate">Instrumentation 权限代理: %1$s</string>
     <string name="dev_delegate_yes">支持（新补丁兼容）</string>
@@ -341,6 +348,10 @@
     <string name="msg_health_rollback">检测到基本通信异常（电话/数据/短信），已自动还原配置保命。IMS 未启用。</string>
     <string name="msg_apply_ok">配置已下发（persistent=false，重启后需重应用）。基本通信正常。</string>
     <string name="msg_apply_partial">CarrierConfig 已生效，但以下 provisioning 未完整写入：%1$s</string>
+    <string name="msg_vowifi_mediatek_unsupported">联发科 / 天玑：VoWiFi 非官方主推路径，OEM 可能改不了或不起作用；本工具仍允许尝试写入。</string>
+    <string name="msg_vowifi_non_tensor_unsupported">非 Tensor：VoWiFi 非官方主推路径，OEM 可能不生效；本工具仍允许尝试写入。</string>
+    <string name="msg_vowifi_mediatek_best_effort">提示：联发科 / 天玑上最终是否生效取决于 OEM，本工具无法左右。</string>
+    <string name="msg_vowifi_non_tensor_best_effort">提示：非 Tensor 上最终是否生效取决于 OEM，本工具无法左右。</string>
     <string name="msg_write_not_started">配置未写入：%1$s</string>
     <string name="msg_write_rollback">写入失败，且已确认回滚成功：%1$s</string>
     <string name="msg_write_rollback_failed">写入失败：%1$s；自动回滚也失败：%2$s。请立即重启手机并检查基本通信。</string>

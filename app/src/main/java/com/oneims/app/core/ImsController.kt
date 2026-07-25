@@ -58,6 +58,7 @@ object ImsController {
         enableVonr: Boolean,
         wfcMode: WfcMode = WfcMode.CELLULAR_PREFERRED,
     ): ConfigResult {
+        // 软件侧开门：非 Tensor / 联发科也允许尝试写入。OEM 是否生效无法左右，不在此硬拒。
         // 写前健康快照
         val before = SafetyGuard.healthCheck(context, subId)
         val detail = LinkedHashMap<String, Boolean>()
@@ -145,16 +146,17 @@ object ImsController {
                 ConfigStore.Applied(subId, enableVolte, enableVowifi, enableVonr, wfcMode),
             )
             val failedProvisioning = detail.filterValues { applied -> !applied }.keys
+            val baseMessage = if (failedProvisioning.isEmpty()) {
+                context.getString(R.string.msg_apply_ok)
+            } else {
+                context.getString(
+                    R.string.msg_apply_partial,
+                    failedProvisioning.joinToString(),
+                )
+            }
             ConfigResult(
                 failedProvisioning.isEmpty(),
-                if (failedProvisioning.isEmpty()) {
-                    context.getString(R.string.msg_apply_ok)
-                } else {
-                    context.getString(
-                        R.string.msg_apply_partial,
-                        failedProvisioning.joinToString(),
-                    )
-                },
+                appendVowifiOemCaveat(context, enableVowifi, baseMessage),
                 detail,
             )
         } catch (e: Throwable) {
@@ -212,20 +214,37 @@ object ImsController {
 
     /** 单独设置 WFC（VoWiFi）呼叫模式，写入后回读校验。 */
     fun setWfcMode(context: Context, subId: Int, mode: WfcMode): ConfigResult {
+        // 开门尝试：非 Tensor 不硬拒；是否被 OEM 采纳无法左右。
         return try {
             SystemApiBroker.setProvisioningInt(
                 subId, ProvisioningKeys.KEY_VOICE_OVER_WIFI_MODE, mode.value,
             )
             val readback = SystemApiBroker.getVoWiFiModeSetting(subId)
             val ok = readback == mode.value
-            ConfigResult(
-                ok,
-                if (ok) context.getString(R.string.msg_wfc_set, context.getString(mode.labelRes))
-                else context.getString(R.string.msg_wfc_readback, readback),
-            )
+            val base = if (ok) {
+                context.getString(R.string.msg_wfc_set, context.getString(mode.labelRes))
+            } else {
+                context.getString(R.string.msg_wfc_readback, readback)
+            }
+            ConfigResult(ok, appendVowifiOemCaveat(context, vowifiAttempted = true, base))
         } catch (e: Throwable) {
             ConfigResult(false, context.getString(R.string.msg_set_failed, OperationErrors.describe(e)))
         }
+    }
+
+    /** 非 Tensor 主推路径：写入门已开，仅附加 OEM 可能不生效的提示。 */
+    private fun appendVowifiOemCaveat(
+        context: Context,
+        vowifiAttempted: Boolean,
+        baseMessage: String,
+    ): String {
+        if (!vowifiAttempted || DeviceInfo.supportsVowifiForceEnable()) return baseMessage
+        val caveat = if (DeviceInfo.isMediaTek()) {
+            context.getString(R.string.msg_vowifi_mediatek_best_effort)
+        } else {
+            context.getString(R.string.msg_vowifi_non_tensor_best_effort)
+        }
+        return "$baseMessage\n$caveat"
     }
 
     /**

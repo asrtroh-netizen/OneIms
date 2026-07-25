@@ -33,15 +33,72 @@ data class DeviceSnapshot(
 
 object DeviceInfo {
 
-    /** 是否 Google Tensor 芯片（Pixel 6 起的机型才支持这套 IMS 强开）。 */
-    fun isTensor(): Boolean {
-        val soc = if (Build.VERSION.SDK_INT >= 31) {
-            (Build.SOC_MANUFACTURER + " " + Build.SOC_MODEL).lowercase()
+    /** 供单测注入的 SoC 指纹；生产路径用 [socFingerprint]。 */
+    data class SocFingerprint(
+        val manufacturer: String,
+        val model: String,
+        val hardware: String,
+        val board: String,
+    ) {
+        fun joined(): String =
+            listOf(manufacturer, model, hardware, board)
+                .joinToString(" ")
+                .lowercase()
+    }
+
+    fun socFingerprint(): SocFingerprint {
+        val manufacturer: String
+        val model: String
+        if (Build.VERSION.SDK_INT >= 31) {
+            manufacturer = Build.SOC_MANUFACTURER.orEmpty()
+            model = Build.SOC_MODEL.orEmpty()
         } else {
-            (Build.HARDWARE + " " + Build.BOARD).lowercase()
+            manufacturer = ""
+            model = ""
         }
+        return SocFingerprint(
+            manufacturer = manufacturer,
+            model = model,
+            hardware = Build.HARDWARE.orEmpty(),
+            board = Build.BOARD.orEmpty(),
+        )
+    }
+
+    /** 是否 Google Tensor 芯片（Pixel 6 起的机型才支持这套 IMS 强开）。 */
+    fun isTensor(fp: SocFingerprint = socFingerprint()): Boolean {
+        val soc = fp.joined()
+        val hw = fp.hardware.lowercase()
         return soc.contains("google") || soc.contains("tensor") ||
-            Build.HARDWARE.lowercase().let { it.contains("gs1") || it.contains("gs2") || it.contains("zuma") }
+            hw.contains("gs1") || hw.contains("gs2") || hw.contains("zuma")
+    }
+
+    /**
+     * 是否联发科 / 天玑系 SoC。
+     * 社区反馈：此类机型上 VoWiFi 强开常「改不了 / 不起作用」，必须诚实门禁，禁止假成功。
+     */
+    fun isMediaTek(fp: SocFingerprint = socFingerprint()): Boolean {
+        val soc = fp.joined()
+        return soc.contains("mediatek") ||
+            soc.contains("mtsoc") ||
+            Regex("""\bmtk\b""").containsMatchIn(soc) ||
+            Regex("""\bmt[0-9]{3,4}\b""").containsMatchIn(soc) ||
+            soc.contains("dimensity") ||
+            soc.contains("天玑") ||
+            soc.contains("helio")
+    }
+
+    /** 人类可读 SoC 摘要（排障用）。 */
+    fun socLabel(fp: SocFingerprint = socFingerprint()): String {
+        val primary = listOf(fp.manufacturer, fp.model)
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .joinToString(" ")
+        if (primary.isNotEmpty()) return primary
+        return listOf(fp.hardware, fp.board)
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .joinToString(" ")
+            .ifEmpty { "unknown" }
     }
 
     @SuppressLint("MissingPermission")
@@ -80,6 +137,12 @@ object DeviceInfo {
         )
     }
 
+    /**
+     * 是否为官方主推的 VoWiFi 强开路径（Tensor）。
+     * 仅用于兼容提示 / 文案；**不**再硬拦写入——软件侧开门，OEM 是否生效无法左右。
+     */
+    fun supportsVowifiForceEnable(fp: SocFingerprint = socFingerprint()): Boolean = isTensor(fp)
+
     /** 汇总为可直接展示的多行文本（随系统语言切中/英）。 */
     @SuppressLint("MissingPermission")
     fun summary(context: Context): String {
@@ -97,6 +160,10 @@ object DeviceInfo {
             append(context.getString(R.string.dev_android, snap.androidRelease, snap.sdkInt)).append('\n')
             append(context.getString(R.string.dev_patch, snap.securityPatch)).append('\n')
             append(context.getString(R.string.dev_tensor, snap.tensorLabel)).append('\n')
+            append(context.getString(R.string.dev_soc, socLabel())).append('\n')
+            if (isMediaTek()) {
+                append(context.getString(R.string.dev_mediatek_vowifi_note)).append('\n')
+            }
             append(context.getString(R.string.dev_sim_count, snap.simCount)).append('\n')
             append(context.getString(R.string.dev_delegate, snap.delegateLabel)).append('\n')
             append(context.getString(R.string.dev_last_strategy, snap.strategyLabel))
