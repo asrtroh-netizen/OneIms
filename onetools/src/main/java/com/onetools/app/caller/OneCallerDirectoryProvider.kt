@@ -87,6 +87,9 @@ class OneCallerDirectoryProvider : ContentProvider() {
         val empty = MatrixCursor(columns)
         val hit = resolveLabel(rawNumber) ?: return empty
         val digits = NumberMatcher.digits(rawNumber).ifBlank { rawNumber }
+        // Pixel Phone paints CUSTOM rows as "LABEL + NUMBER". Number is already the
+        // DISPLAY_NAME / in-call primary line — leave NUMBER empty so the subtitle is
+        // geo-only (e.g. "陕西西安 · 联通"), never "… · 联通 185 0926 8666".
         val values = mapOf<String, Any?>(
             Data._ID to hit.idHash,
             Data.MIMETYPE to Phone.CONTENT_ITEM_TYPE,
@@ -96,10 +99,10 @@ class OneCallerDirectoryProvider : ContentProvider() {
             Contacts.DISPLAY_NAME to hit.displayName,
             PhoneLookup._ID to hit.idHash,
             PhoneLookup.DISPLAY_NAME to hit.displayName,
-            PhoneLookup.NUMBER to digits,
+            PhoneLookup.NUMBER to "",
             PhoneLookup.TYPE to Phone.TYPE_CUSTOM,
             PhoneLookup.LABEL to hit.label,
-            Phone.NUMBER to digits,
+            Phone.NUMBER to "",
             Phone.TYPE to Phone.TYPE_CUSTOM,
             Phone.LABEL to hit.label,
         )

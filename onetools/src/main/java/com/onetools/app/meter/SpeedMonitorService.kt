@@ -198,6 +198,7 @@ class SpeedMonitorService : Service() {
         if (useLiveUpdate) {
             // Pixel Meter live-update branch (platform APIs; androidx may lag).
             val live = MeterChipFormat.format(prefs, down, up)
+            // Pixel Meter: static ic_speed + shortCriticalText total + promoted ongoing.
             val platform = Notification.Builder(this, CHANNEL_ID)
                 .setOngoing(true)
                 .setOnlyAlertOnce(true)
@@ -208,10 +209,7 @@ class SpeedMonitorService : Service() {
                 .setContentText(contentText)
                 .setSmallIcon(R.drawable.ic_meter_speed)
                 .setShortCriticalText(live)
-            val nm = getSystemService(NotificationManager::class.java)
-            if (nm?.canPostPromotedNotifications() == true) {
-                platform.setFlag(Notification.FLAG_PROMOTED_ONGOING, true)
-            }
+                .setFlag(Notification.FLAG_PROMOTED_ONGOING, true)
             return platform.build()
         }
         val density = resources.displayMetrics.density

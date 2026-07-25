@@ -6,11 +6,10 @@ import org.junit.Test
 
 class MeterChipFormatTest {
     @Test
-    fun chipStaysWithinSevenChars() {
-        val prefs = MeterPrefsSnapshot(displayMode = MeterDisplayMode.DOWN)
-        val chip = MeterChipFormat.format(prefs, 2 * 1024 * 1024, 0)
-        assertTrue(chip.length <= 7)
-        assertTrue(chip.contains("M"))
+    fun liveBytesMatchesPixelMeterShape() {
+        assertEquals("187B/s", MeterChipFormat.formatLiveBytes(187))
+        assertEquals("2K/s", MeterChipFormat.formatLiveBytes(2048))
+        assertTrue(MeterChipFormat.formatLiveBytes(1_500_000).endsWith("M/s"))
     }
 
     @Test
@@ -20,15 +19,14 @@ class MeterChipFormatTest {
             rateUnit = MeterRateUnit.BITS_PER_SEC,
         )
         val chip = MeterChipFormat.format(prefs, 128 * 1024, 128 * 1024)
-        assertTrue(chip.length <= 7)
-        assertTrue(chip.endsWith("b") || chip.contains("Mb") || chip.contains("Kb"))
+        assertTrue(chip.contains("b") || chip.contains("Mb") || chip.contains("Kb"))
     }
 
     @Test
     fun upModeUsesUpload() {
         val prefs = MeterPrefsSnapshot(displayMode = MeterDisplayMode.UP)
         assertEquals(
-            MeterDynamicIcon.shortLabel(4096),
+            MeterChipFormat.formatLiveBytes(4096),
             MeterChipFormat.format(prefs, 1, 4096),
         )
     }

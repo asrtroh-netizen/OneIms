@@ -1,7 +1,9 @@
 package com.onetools.app.caller
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class DialerLabelComposerTest {
@@ -20,6 +22,8 @@ class DialerLabelComposerTest {
         )
         assertEquals("138 0013 8000", r!!.displayName)
         assertEquals(geo.dialerLine(), r.label)
+        // Label must stay geo-only — never append the phone number again.
+        assertFalse(r.label.contains("138"))
     }
 
     @Test
