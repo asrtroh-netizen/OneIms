@@ -764,7 +764,7 @@
     <string name="force_temporary_on">Force temporary writes enabled</string>
     <string name="force_temporary_off">Force temporary writes disabled</string>
     <string name="system_update_shield_title">Block system updates</string>
-    <string name="system_update_shield_sub">Best-effort block; not guaranteed. Turn off to restore</string>
+    <string name="system_update_shield_sub">Packages + settings + hosts (Root). Best-effort. Off to restore</string>
     <string name="system_update_shield_need_channel">Activate channel first</string>
     <string name="sandbox_persist_title">Persistent VoLTE/NR</string>
     <string name="sandbox_persist_sub"></string>

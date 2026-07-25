@@ -773,7 +773,7 @@
     <string name="force_temporary_on">已开启强制临时写入</string>
     <string name="force_temporary_off">已关闭强制临时写入</string>
     <string name="system_update_shield_title">尽量屏蔽系统更新</string>
-    <string name="system_update_shield_sub">尽量挡住自动更新；不保证百分百。关掉可恢复</string>
+    <string name="system_update_shield_sub">组件+设置+hosts（有 Root 才写）；能用则用。关掉可恢复</string>
     <string name="system_update_shield_need_channel">请先激活通道</string>
     <string name="sandbox_persist_title">持久性VoLTE/NR</string>
     <string name="sandbox_persist_sub"></string>

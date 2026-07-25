@@ -5,16 +5,20 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.IBinder
+import android.provider.Settings
 import android.util.Log
 import com.oneims.app.core.privilege.PrivilegeBridges
 import org.lsposed.hiddenapibypass.HiddenApiBypass
 
 /**
- * 尽量屏蔽系统 OTA / 自动更新（Pixel 常见路径）。
+ * 尽量屏蔽系统 OTA / 自动更新（Pixel 常见路径）——**能用则用、不能则跳过**。
  *
- * - 需要特权通道（OneKuku / Shizuku）包装 `package` 服务
- * - **不保证**挡死所有更新渠道；可能影响 Google Play 系统更新
- * - 关闭开关时按清单恢复为默认启用状态
+ * 层：
+ * 1. `package`：禁用 factoryota / GMS·GSF 更新组件
+ * 2. Settings：`ota_disable_automatic_update=1`（开发者选项「自动系统更新」）
+ * 3. hosts：有 Root/`su` 时写入 Magisk/KSU 模块挡 Google OTA 域名
+ *
+ * 不保证挡死所有渠道；可能影响 Google Play 系统更新。
  */
 object SystemUpdateShield {
     private const val TAG = "OneIMS-UpdateShield"
@@ -24,12 +28,15 @@ object SystemUpdateShield {
     private const val STATE_ENABLED = PackageManager.COMPONENT_ENABLED_STATE_ENABLED
     private const val DONT_KILL_APP = PackageManager.DONT_KILL_APP
 
-    /** 整包禁用（存在才动手）。 */
+    private const val PERM_WRITE_SECURE = "android.permission.WRITE_SECURE_SETTINGS"
+    /** AOSP Settings.Global：关闭「自动系统更新」。 */
+    private const val KEY_OTA_DISABLE = "ota_disable_automatic_update"
+    private const val MAGISK_MODULE_ID = "oneims_ota_block"
+
     private val PACKAGES = listOf(
         "com.google.android.factoryota",
     )
 
-    /** 组件禁用（GMS / GSF 更新相关；不存在则跳过）。 */
     private val COMPONENTS = listOf(
         ComponentName(
             "com.google.android.gms",
@@ -53,6 +60,13 @@ object SystemUpdateShield {
         ),
     )
 
+    /** Pixel / Google OTA 常见域名（hosts 层）。 */
+    private val OTA_HOSTS = listOf(
+        "ota.googlezip.net",
+        "ota-cache1.googlezip.net",
+        "ota-cache2.googlezip.net",
+    )
+
     data class Result(
         val ok: Boolean,
         val message: String,
@@ -67,7 +81,6 @@ object SystemUpdateShield {
         ConfigStore.setSystemUpdateShield(context, enabled)
     }
 
-    /** 按偏好施加或撤销；通道未就绪时返回失败。 */
     fun applyPreference(context: Context): Result {
         return if (isEnabled(context)) apply(context) else clear(context)
     }
@@ -87,6 +100,8 @@ object SystemUpdateShield {
             val pm = packageManagerProxy(bridge.wrapSystemService("package"))
             var touched = 0
             var skipped = 0
+            val layers = mutableListOf<String>()
+
             for (pkg in PACKAGES) {
                 when (setPackageEnabled(pm, context, pkg, enabled = !shield)) {
                     true -> touched++
@@ -101,10 +116,31 @@ object SystemUpdateShield {
                     null -> skipped++
                 }
             }
+            if (touched > 0) layers += "组件"
+
+            when (tryOtaSettings(context, pm, shield)) {
+                true -> {
+                    touched++
+                    layers += "设置"
+                }
+                false -> skipped++
+                null -> skipped++
+            }
+
+            when (tryHostsLayer(shield)) {
+                true -> {
+                    touched++
+                    layers += "hosts"
+                }
+                false -> skipped++
+                null -> { /* 无 su / 无 Magisk，不算失败 */ }
+            }
+
             val action = if (shield) "已尽量屏蔽" else "已恢复"
+            val layerText = if (layers.isEmpty()) "（无有效层）" else "（${layers.joinToString("+")}）"
             Result(
                 ok = touched > 0 || !shield,
-                message = "$action（改动 $touched，跳过 $skipped）",
+                message = "$action$layerText 改动 $touched，跳过 $skipped",
                 touched = touched,
                 skipped = skipped,
             )
@@ -114,15 +150,92 @@ object SystemUpdateShield {
         }
     }
 
+    /**
+     * @return true 成功；false 尝试失败；null 无权限且无法授予（跳过）
+     */
+    private fun tryOtaSettings(context: Context, pm: Any, shield: Boolean): Boolean? {
+        tryGrantWriteSecure(pm, context)
+        val value = if (shield) 1 else 0
+        return runCatching {
+            val ok = Settings.Global.putInt(context.contentResolver, KEY_OTA_DISABLE, value)
+            if (ok) {
+                Log.i(TAG, "$KEY_OTA_DISABLE=$value")
+                true
+            } else {
+                Log.i(TAG, "settings put returned false")
+                false
+            }
+        }.getOrElse {
+            Log.i(TAG, "settings skip: ${it.message}")
+            null
+        }
+    }
+
+    private fun tryGrantWriteSecure(pm: Any, context: Context) {
+        runCatching {
+            val method = pm.javaClass.methods.firstOrNull { candidate ->
+                candidate.name == "grantRuntimePermission" &&
+                    candidate.parameterTypes.size >= 2
+            } ?: return
+            when (method.parameterTypes.size) {
+                2 -> method.invoke(pm, context.packageName, PERM_WRITE_SECURE)
+                3 -> method.invoke(pm, context.packageName, PERM_WRITE_SECURE, context.userIdSafe())
+                else -> method.invoke(pm, context.packageName, PERM_WRITE_SECURE, 0)
+            }
+            Log.i(TAG, "granted $PERM_WRITE_SECURE")
+        }.onFailure {
+            Log.i(TAG, "grant $PERM_WRITE_SECURE skip: ${it.message}")
+        }
+    }
+
+    /**
+     * Magisk/KSU 模块写 hosts；无 `su` 或无 `/data/adb` 则跳过（null）。
+     * @return true 成功；false 执行失败；null 环境不具备
+     */
+    private fun tryHostsLayer(shield: Boolean): Boolean? {
+        val adb = java.io.File("/data/adb")
+        val hasSuHint = java.io.File("/system/bin/su").exists() ||
+            java.io.File("/system/xbin/su").exists() ||
+            java.io.File("/sbin/su").exists()
+        if (!hasSuHint && !adb.exists()) {
+            Log.i(TAG, "hosts skip: no su / Magisk path")
+            return null
+        }
+        val cmd = if (shield) buildHostsInstallScript() else buildHostsRemoveScript()
+        val ok = RootBootStarter.execSu(cmd)
+        return if (ok) {
+            Log.i(TAG, "hosts layer ok shield=$shield")
+            true
+        } else {
+            Log.i(TAG, "hosts layer failed (su missing or denied)")
+            false
+        }
+    }
+
+    private fun buildHostsInstallScript(): String {
+        // 单行 su -c：写 Magisk/KSU 模块，重启后挂载；已有则覆盖
+        val hostEcho = (listOf("127.0.0.1 localhost", "::1 localhost") +
+            OTA_HOSTS.map { "127.0.0.1 $it" })
+            .joinToString("\\n")
+        return listOf(
+            "MOD=/data/adb/modules/$MAGISK_MODULE_ID",
+            "mkdir -p \$MOD/system/etc || exit 1",
+            "printf 'id=$MAGISK_MODULE_ID\\nname=OneIMS OTA Hosts Block\\nversion=1.0\\nversionCode=1\\nauthor=OneIMS\\ndescription=Block Google OTA hosts\\n' > \$MOD/module.prop || exit 1",
+            "printf '$hostEcho\\n' > \$MOD/system/etc/hosts || exit 1",
+            "touch \$MOD/update 2>/dev/null",
+            "exit 0",
+        ).joinToString("; ")
+    }
+
+    private fun buildHostsRemoveScript(): String =
+        "rm -rf /data/adb/modules/$MAGISK_MODULE_ID; exit 0"
+
     private fun packageManagerProxy(binder: IBinder): Any {
         val stub = Class.forName("android.content.pm.IPackageManager\$Stub")
         return stub.getMethod("asInterface", IBinder::class.java).invoke(null, binder)
             ?: error("IPackageManager null")
     }
 
-    /**
-     * @return true=已改；false=目标不存在；null=调用失败
-     */
     private fun setPackageEnabled(
         pm: Any,
         context: Context,
@@ -178,7 +291,6 @@ object SystemUpdateShield {
             Log.i(TAG, "component ${component.flattenToShortString()} -> $state")
             true
         }.getOrElse {
-            // 组件不存在时多数抛 NameNotFound / RemoteException，当作跳过
             Log.i(TAG, "component skip ${component.flattenToShortString()}: ${it.message}")
             false
         }
