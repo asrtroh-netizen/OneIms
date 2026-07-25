@@ -1,0 +1,42 @@
+# Phase-2: aggregate caller community reports → candidate JSON (optional PR merge).
+# Drop onetools.report.v1 files under docs/product/samples/caller-reports/ (or path below).
+name: Ingest caller reports
+
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: "Merge candidates into docs/product/samples/one-blocklist.json"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run ingest-reports.py
+        run: |
+          set -euo pipefail
+          ARGS=(python onetools/scripts/ingest-reports.py docs/product/samples/caller-reports)
+          if [ "${{ inputs.apply }}" = "true" ]; then
+            ARGS+=(--apply --bump-date)
+          fi
+          "${ARGS[@]}"
+          ls -la docs/product/samples/caller-report-candidates.json
+
+      - name: Upload candidates artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: caller-report-candidates
+          path: docs/product/samples/caller-report-candidates.json

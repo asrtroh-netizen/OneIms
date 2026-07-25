@@ -1,0 +1,27 @@
+{
+  "schema": "onetools.report.v1",
+  "appVersion": "0.1.0-lite",
+  "reports": [
+    {
+      "phone": "17009990001",
+      "tag": "spam",
+      "noteHash": null,
+      "createdAt": 1720000001000,
+      "clientId": "client-aaa-0001"
+    },
+    {
+      "phone": "17009990001",
+      "tag": "spam",
+      "noteHash": null,
+      "createdAt": 1720000002000,
+      "clientId": "client-bbb-0002"
+    },
+    {
+      "phone": "10086",
+      "tag": "spam",
+      "noteHash": null,
+      "createdAt": 1720000003000,
+      "clientId": "client-aaa-0001"
+    }
+  ]
+}

@@ -9,6 +9,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import java.util.UUID
 
 private val Context.callerPrefsStore by preferencesDataStore("one_caller_prefs")
 
@@ -22,6 +23,8 @@ class CallerPrefs(private val context: Context) {
     private val timeoutSecKey = intPreferencesKey("network_timeout_sec")
     private val syncManifestKey = stringPreferencesKey("spam_sync_manifest_url")
     private val applyReportLocalKey = booleanPreferencesKey("apply_report_locally")
+    private val communityOptInKey = booleanPreferencesKey("community_report_opt_in")
+    private val clientIdKey = stringPreferencesKey("report_client_id")
 
     val notifyOnlyFlow: Flow<Boolean> = context.callerPrefsStore.data.map {
         it[notifyOnlyKey] ?: true
@@ -55,6 +58,26 @@ class CallerPrefs(private val context: Context) {
 
     suspend fun setApplyReportLocally(value: Boolean) {
         context.callerPrefsStore.edit { it[applyReportLocalKey] = value }
+    }
+
+    /** Phase-2: opt-in to export community report JSON. Default off (privacy). */
+    val communityReportOptInFlow: Flow<Boolean> = context.callerPrefsStore.data.map {
+        it[communityOptInKey] ?: false
+    }
+
+    suspend fun communityReportOptIn(): Boolean = communityReportOptInFlow.first()
+
+    suspend fun setCommunityReportOptIn(value: Boolean) {
+        context.callerPrefsStore.edit { it[communityOptInKey] = value }
+    }
+
+    /** Opaque install id for anti-spam aggregation; never equals device advertising id. */
+    suspend fun reportClientId(): String {
+        val existing = context.callerPrefsStore.data.first()[clientIdKey].orEmpty().trim()
+        if (existing.isNotEmpty()) return existing
+        val created = UUID.randomUUID().toString()
+        context.callerPrefsStore.edit { it[clientIdKey] = created }
+        return created
     }
 
     suspend fun setNotifyOnly(value: Boolean) {

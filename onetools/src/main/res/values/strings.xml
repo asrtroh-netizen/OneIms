@@ -437,8 +437,13 @@
     <string name="caller_no_network">仅离线查号（默认开 · 最省钱，不走商业 API）</string>
     <string name="caller_lookup_engine_fmt">引擎：%1$s · 标签「%2$s」</string>
 
-    <string name="caller_report_title">本机举报（Phase 1）</string>
-    <string name="caller_report_note">最省钱回灌第一步：只写本机规则 + onespam，不上云。社区聚合以后再开。</string>
+    <string name="caller_report_title">本机举报</string>
+    <string name="caller_report_note">默认只写本机规则 + onespam。打开「参与社区回灌」后可导出 JSON，用 ingest-reports.py 聚合进 OneBlock（不上商业 API）。</string>
+    <string name="caller_community_opt_in">参与社区回灌（默认关 · 仅手动导出）</string>
+    <string name="caller_community_export">导出社区举报 JSON</string>
+    <string name="caller_community_export_ok">已导出社区举报包（%1$d 条）</string>
+    <string name="caller_community_export_need_opt_in">请先打开「参与社区回灌」</string>
+    <string name="caller_community_export_empty">暂无本机举报可导出</string>
     <string name="caller_report_phone_hint">要举报的号码</string>
     <string name="caller_report_submit">举报并本机拦截</string>
     <string name="caller_report_ok">已举报并写入本机库：%1$s</string>

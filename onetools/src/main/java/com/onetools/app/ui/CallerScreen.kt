@@ -67,6 +67,7 @@ import com.onetools.app.caller.NumberMatcher
 import com.onetools.app.caller.LocalReportStore
 import com.onetools.app.caller.OneBlockImporter
 import com.onetools.app.caller.ReportApplier
+import com.onetools.app.caller.ReportExport
 import com.onetools.app.caller.ReportTag
 import com.onetools.app.caller.SpamSyncManifest
 import com.onetools.app.caller.SpamSyncRepository
@@ -97,6 +98,7 @@ fun CallerScreen(
     val notifyOnly by prefs.notifyOnlyFlow.collectAsState(initial = true)
     val noNetwork by prefs.noNetworkQueryFlow.collectAsState(initial = true)
     val applyReportLocal by prefs.applyReportLocallyFlow.collectAsState(initial = true)
+    val communityOptIn by prefs.communityReportOptInFlow.collectAsState(initial = false)
     val lifecycleOwner = LocalLifecycleOwner.current
 
     var number by remember { mutableStateOf("") }
@@ -180,6 +182,36 @@ fun CallerScreen(
                 }
                 status = context.getString(R.string.caller_backup_ok)
             }.onFailure { status = it.message ?: "backup failed" }
+        }
+    }
+
+    val communityExportLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json"),
+    ) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        scope.launch {
+            runCatching {
+                if (!prefs.communityReportOptIn()) {
+                    status = context.getString(R.string.caller_community_export_need_opt_in)
+                    return@launch
+                }
+                val snap = reportStore.snapshot()
+                if (snap.isEmpty()) {
+                    status = context.getString(R.string.caller_community_export_empty)
+                    return@launch
+                }
+                val json = ReportExport.buildJson(
+                    reports = snap,
+                    clientId = prefs.reportClientId(),
+                    appVersion = BuildConfig.VERSION_NAME,
+                )
+                withContext(Dispatchers.IO) {
+                    context.contentResolver.openOutputStream(uri)?.use { out ->
+                        out.write(json.toByteArray(Charsets.UTF_8))
+                    } ?: error("openOutputStream failed")
+                }
+                status = context.getString(R.string.caller_community_export_ok, snap.size)
+            }.onFailure { status = it.message ?: "community export failed" }
         }
     }
 
@@ -412,6 +444,23 @@ fun CallerScreen(
                             checked = applyReportLocal,
                             onCheckedChange = { checked ->
                                 scope.launch { prefs.setApplyReportLocally(checked) }
+                            },
+                        )
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            stringResource(R.string.caller_community_opt_in),
+                            modifier = Modifier.weight(1f),
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                        Switch(
+                            checked = communityOptIn,
+                            onCheckedChange = { checked ->
+                                scope.launch { prefs.setCommunityReportOptIn(checked) }
                             },
                         )
                     }
@@ -810,6 +859,23 @@ fun CallerScreen(
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         Text(stringResource(R.string.caller_report_submit))
+                    }
+                    OutlinedButton(
+                        onClick = {
+                            if (!communityOptIn) {
+                                Toast.makeText(
+                                    context,
+                                    R.string.caller_community_export_need_opt_in,
+                                    Toast.LENGTH_SHORT,
+                                ).show()
+                                return@OutlinedButton
+                            }
+                            communityExportLauncher.launch("onetools-reports-v1.json")
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = communityOptIn,
+                    ) {
+                        Text(stringResource(R.string.caller_community_export))
                     }
                     Text(
                         stringResource(R.string.caller_report_list_title, reports.size),

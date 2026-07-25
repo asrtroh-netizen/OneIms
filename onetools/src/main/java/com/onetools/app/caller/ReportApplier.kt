@@ -31,7 +31,7 @@ object ReportApplier {
             source = source,
             applyLocal = applyLocal,
         )
-        if (!applyLocal) {
+        if (!applyLocal || !tag.appliesLocalBlock) {
             return ReportApplyResult(report, ruleId = null, onespamOk = false)
         }
         val label = tag.labelZh

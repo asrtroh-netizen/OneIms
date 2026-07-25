@@ -1,6 +1,6 @@
 # 2026-07-25 · OneCaller 自建举报回灌设计（最省钱）
 
-> 状态：**设计定稿 · 待实现**  
+> 状态：**Phase 1 已落地 · Phase 2 脚本+导出已落地 · Phase 3 可选**  
 > 约束：用户已拍板最省钱 → **不买**商业查号 API；回灌必须可自托管、可断网降级。
 
 ## 1. 目标
@@ -130,12 +130,12 @@
 | 1 | `caller/LocalReportStore.kt` + Room entity | 举报持久化 |
 | 2 | `caller/ReportApplier.kt` | 写 CallRule + onespam upsert（复用 SpamPackInstaller 单行插入或增量 SQL） |
 | 3 | `ui/CallerScreen.kt` | 举报 Sheet + 设置开关 |
-| 4 | `caller/ReportExport.kt` | 导出 `onetools.report.v1`（Phase 2 手动） |
-| 5 | `onetools/scripts/ingest-reports.py` | 读 reports JSON → 计票 → 改 blocklist（Phase 2） |
-| 6 | `.github/workflows/ingest-caller-reports.yml`（可选） | 定时/手动跑 ingest + 开 PR |
-| 7 | 文档 + 字符串 + 单测 | 门槛/规范化/白名单 |
+| 4 | `caller/ReportExport.kt` | ✅ 导出 `onetools.report.v1`（手动） |
+| 5 | `onetools/scripts/ingest-reports.py` | ✅ 读 reports JSON → 计票 → 改 blocklist |
+| 6 | `.github/workflows/ingest-caller-reports.yml` | ✅ workflow_dispatch；开 PR 仍人工 |
+| 7 | 文档 + 字符串 + 单测 | ✅ |
 
-**onespam 增量写入注意：** 今日 `SpamPackInstaller.installRows` 是整库替换；MVP 需补 `upsertOne(phone, tag)`，避免举报冲掉整包。
+**onespam 增量写入注意：** ✅ `SpamPackInstaller.upsertOne` / `removeOne` 已落地（Phase 1）。
 
 ## 7. 安全 / 滥用 / 隐私
 
@@ -158,16 +158,16 @@
 
 ### Phase 1 — MVP（建议下周可做）
 
-- [ ] 举报 → 本地 DB  
-- [ ] 立刻 upsert 规则 + onespam 单号  
-- [ ] 试查可见「骚扰 · tag」  
-- [ ] 可删除举报并撤销  
+- [x] 举报 → 本地 DB  
+- [x] 立刻 upsert 规则 + onespam 单号  
+- [x] 试查可见「骚扰 · tag」  
+- [x] 可删除举报并撤销  
 
 ### Phase 2 — 社区回灌
 
-- [ ] 导出/半自动上传  
-- [ ] `ingest-reports.py` + 门槛  
-- [ ] PR 到 OneBlock + 重建 zip  
+- [x] 导出/半自动上传（手动导出 JSON；「参与社区」默认关）  
+- [x] `ingest-reports.py` + 门槛  
+- [ ] PR 到 OneBlock + 重建 zip（脚本就绪；发布仍人工 / workflow_dispatch `--apply`）  
 
 ### Phase 3 — 自动同步（可选）
 

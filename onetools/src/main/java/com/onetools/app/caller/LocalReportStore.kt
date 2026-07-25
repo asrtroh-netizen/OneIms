@@ -19,12 +19,16 @@ enum class ReportTag(val wire: String, val labelZh: String) {
     AGENT("agent", "中介"),
     SALES("sales", "广告推销"),
     OTHER("other", "其他骚扰"),
+    /** Community correction — demotes candidates; never auto-blocks locally. */
+    WRONG_TAG("wrong_tag", "标签纠错"),
     ;
 
     companion object {
         fun fromWire(raw: String): ReportTag =
             entries.firstOrNull { it.wire == raw || it.labelZh == raw } ?: SPAM
     }
+
+    val appliesLocalBlock: Boolean get() = this != WRONG_TAG
 }
 
 @Entity(tableName = "local_reports")

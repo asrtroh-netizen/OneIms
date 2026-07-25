@@ -1,0 +1,55 @@
+{
+  "schema": "onetools.report.v1",
+  "appVersion": "0.1.0-lite",
+  "reports": [
+    {
+      "phone": "17009990001",
+      "tag": "spam",
+      "noteHash": null,
+      "createdAt": 1720000010000,
+      "clientId": "client-ccc-0003"
+    },
+    {
+      "phone": "17009990002",
+      "tag": "fraud",
+      "noteHash": null,
+      "createdAt": 1720000011000,
+      "clientId": "client-aaa-0001"
+    },
+    {
+      "phone": "17009990002",
+      "tag": "fraud",
+      "noteHash": null,
+      "createdAt": 1720000012000,
+      "clientId": "client-bbb-0002"
+    },
+    {
+      "phone": "17009990002",
+      "tag": "fraud",
+      "noteHash": null,
+      "createdAt": 1720000013000,
+      "clientId": "client-ddd-0004"
+    },
+    {
+      "phone": "17009990003",
+      "tag": "wrong_tag",
+      "noteHash": null,
+      "createdAt": 1720000014000,
+      "clientId": "client-aaa-0001"
+    },
+    {
+      "phone": "17009990003",
+      "tag": "wrong_tag",
+      "noteHash": null,
+      "createdAt": 1720000015000,
+      "clientId": "client-bbb-0002"
+    },
+    {
+      "phone": "17009990003",
+      "tag": "wrong_tag",
+      "noteHash": null,
+      "createdAt": 1720000016000,
+      "clientId": "client-ccc-0003"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "schema": "onetools.report.candidates.v1",
+  "threshold": 3,
+  "maxPerClientDay": 50,
+  "inputReports": 9,
+  "rateLimitedDropped": 0,
+  "promote": [
+    {
+      "phone": "17009990001",
+      "tag": "spam",
+      "distinctClients": 3,
+      "labelZh": "骚扰电话"
+    },
+    {
+      "phone": "17009990002",
+      "tag": "fraud",
+      "distinctClients": 3,
+      "labelZh": "诈骗电话"
+    }
+  ],
+  "demote": [
+    "17009990003"
+  ],
+  "generatedAt": "2026-07-25T06:54:50.122276+00:00"
+}
