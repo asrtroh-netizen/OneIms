@@ -434,6 +434,6 @@
     <string name="caller_spam_deleted">已删除离线骚扰库</string>
     <string name="caller_spam_progress">下载中 %1$d%%</string>
     <string name="caller_notify_only">仅提示不拒接（默认开，对齐 Telo）</string>
-    <string name="caller_no_network">仅离线查号（关闭联网）</string>
+    <string name="caller_no_network">仅离线查号（默认开 · 最省钱，不走商业 API）</string>
     <string name="caller_lookup_engine_fmt">引擎：%1$s · 标签「%2$s」</string>
 </resources>

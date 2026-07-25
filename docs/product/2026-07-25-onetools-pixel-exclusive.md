@@ -26,6 +26,17 @@ Pixel 上 Directory + CallScreening 是正道；其它 ROM 显示好坏 **不纳
 
 对照 Telo：其 Directory 当前 HEAD 主要喂骚扰标签；归属地多靠联网+悬浮。OneCaller **只卷 Directory 原生行**，用自有 `geo_v1` / CDN 把号段喂满。
 
+## 查号成本硬边界（2026-07-25 用户拍板 · 最省钱）
+
+| 走 | 不走 |
+|---|---|
+| MIT `geo.dat` 本地归属 | 采购百度 SPNS / 聚合 / 阿里云查号（暂缓） |
+| OneBlock + `onespam` 本地骚扰（精确/前缀） | 依赖 Telo 或商业云库当主路径 |
+| 默认 **仅离线查号**（`CallerPrefs.noNetworkQuery=true`） | 默认联网扣费查询 |
+| `ONE_CALLER_QUERY_URL` 保持空 | 把 Key 写进 APK |
+
+以后若要联网，再显式关「仅离线」并自建网关；报价调研见 `2026-07-25-onetools-caller-lookup-api-pricing.md`。
+
 ## 文档指针
 
 - 架构：`docs/architecture/2026-07-25-onetools-architecture-blueprint.md`

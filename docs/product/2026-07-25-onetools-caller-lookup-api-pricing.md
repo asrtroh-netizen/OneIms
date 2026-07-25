@@ -15,6 +15,8 @@
 **个人/小规模 OneTools：** 先别买；本地 onespam + geo 够用。  
 **要上「本地未命中再联网标骚扰」：** 优先对接百度 SPNS（价目透明），接到已有 `CallerNetworkQuery` / `ONE_CALLER_QUERY_URL`。
 
+> **2026-07-25 用户拍板：目前走最省钱 → 不买、默认仅离线。** 下表保留作将来选项，不作为当前实施项。
+
 ## 2. 厂商对照
 
 ### A. 百度智能云 · 号码安全服务 SPNS（号码标签查询）⭐推荐采购对象
@@ -89,6 +91,6 @@
 
 ## 6. 建议下一步
 
-1. **不买**：继续 OnesBlock/onespam + geo（当前默认）  
-2. **小买试水**：百度 SPNS **1 万次 ¥200**，后端薄网关 + 接 `CallerNetworkQuery`  
+1. **✅ 已选 · 不买**：OnesBlock/onespam + geo；`noNetworkQuery` 默认 true；`ONE_CALLER_QUERY_URL` 空  
+2. **将来可选**：百度 SPNS **1 万次 ¥200**，后端薄网关 + 接 `CallerNetworkQuery`  
 3. **不做**：Twilio；不为归属地买聚合离线包  

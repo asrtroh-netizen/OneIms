@@ -26,8 +26,9 @@ class CallerPrefs(private val context: Context) {
         it[notifyOnlyKey] ?: true
     }
 
+    /** Default true: cheapest path — local geo + onespam only; no commercial lookup API. */
     val noNetworkQueryFlow: Flow<Boolean> = context.callerPrefsStore.data.map {
-        it[noNetworkKey] ?: false
+        it[noNetworkKey] ?: true
     }
 
     suspend fun notifyOnly(): Boolean = notifyOnlyFlow.first()
