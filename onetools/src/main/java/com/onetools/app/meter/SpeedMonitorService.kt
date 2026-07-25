@@ -216,7 +216,7 @@ class SpeedMonitorService : Service() {
     }
 
     companion object {
-        const val CHANNEL_ID = "onetools_meter_speed_v3"
+        const val CHANNEL_ID = "onetools_meter_speed_v4"
         const val NOTIFICATION_ID = 42
         const val ACTION_STOP = "com.onetools.app.meter.STOP"
         const val ACTION_APPLY_PREFS = "com.onetools.app.meter.APPLY_PREFS"

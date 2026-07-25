@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">OneTools</string>
+    <string name="app_name">One工具</string>
     <string name="home_subtitle">Pixel 专属 · OneIMS 配套小工具 · Shizuku 通道</string>
     <string name="channel_display_name">OneLink</string>
     <string name="tab_updates">更新</string>
@@ -65,7 +65,7 @@
     <string name="home_quick_sub">详情仍在各功能页调整</string>
     <string name="home_toggle_meter">通知栏网速</string>
     <string name="meter_channel_desc">常驻显示实时上下行网速</string>
-    <string name="meter_notification_hint">OneTools · 下拉通知栏可看实时速率 · 点此打开网速页</string>
+    <string name="meter_notification_hint">One工具 · 下拉可看实时速率 · 点此打开网速页</string>
     <string name="home_toggle_overlay">悬浮网速</string>
     <string name="home_toggle_battery">电池跟踪</string>
     <string name="home_toggle_record_prompt">通话录音提示球</string>
@@ -315,9 +315,9 @@
 
     <string name="meter_starting">正在采样…</string>
 
-    <string name="meter_channel_name">通知栏网速</string>
+    <string name="meter_channel_name">One工具 · 网速</string>
 
-    <string name="meter_notification_title">OneTools 网速</string>
+    <string name="meter_notification_title">One工具 · 网速</string>
 
     <string name="meter_notification_body">↓ %1$s · ↑ %2$s</string>
 
