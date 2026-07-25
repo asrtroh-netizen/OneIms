@@ -1,7 +1,9 @@
 package com.onetools.app.ui
 
+import android.app.NotificationManager
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.provider.Settings
 import android.widget.Toast
 import androidx.core.content.ContextCompat
@@ -51,6 +53,10 @@ import com.onetools.app.meter.SpeedMonitorService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+
+/** Settings.ACTION_MANAGE_APP_PROMOTED_NOTIFICATIONS — literal for compileSdk without the constant. */
+private const val ACTION_MANAGE_APP_PROMOTED_NOTIFICATIONS =
+    "android.settings.MANAGE_APP_PROMOTED_NOTIFICATIONS"
 
 @Composable
 fun MeterScreen(
@@ -274,6 +280,46 @@ fun MeterScreen(
                     },
                 )
                 Text(stringResource(R.string.meter_chip_enable))
+            }
+        }
+        if (Build.VERSION.SDK_INT >= 36) {
+            item {
+                Text(
+                    stringResource(R.string.meter_chip_promoted_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            item {
+                TextButton(
+                    onClick = {
+                        val nm = context.getSystemService(NotificationManager::class.java)
+                        val canPost = runCatching {
+                            NotificationManager::class.java
+                                .getMethod("canPostPromotedNotifications")
+                                .invoke(nm) as Boolean
+                        }.getOrDefault(false)
+                        // Settings.ACTION_MANAGE_APP_PROMOTED_NOTIFICATIONS (API 36+) — string for older SDK jars.
+                        val intent = Intent(ACTION_MANAGE_APP_PROMOTED_NOTIFICATIONS).apply {
+                            putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+                            data = Uri.parse("package:${context.packageName}")
+                        }
+                        runCatching { context.startActivity(intent) }
+                            .onFailure {
+                                Toast.makeText(
+                                    context,
+                                    if (canPost) {
+                                        R.string.meter_chip_promoted_hint
+                                    } else {
+                                        R.string.meter_chip_promoted_settings_fail
+                                    },
+                                    Toast.LENGTH_LONG,
+                                ).show()
+                            }
+                    },
+                ) {
+                    Text(stringResource(R.string.meter_chip_promoted_settings))
+                }
             }
         }
         item {

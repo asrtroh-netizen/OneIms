@@ -272,6 +272,9 @@
     <string name="meter_oem_sub">Pixel/AOSP 把网速画进 SystemUI；第三方用 Live Update 芯片（需 Android 16+ 且系统提升通知）+ 贴顶悬浮兜底。仅针对 Pixel 验收。</string>
 
     <string name="meter_chip_enable">状态栏胶囊 / 实时更新（Android 16+）</string>
+    <string name="meter_chip_promoted_settings">打开系统「实时更新」权限</string>
+    <string name="meter_chip_promoted_hint">若状态栏只有 ↑↓ 箭头而无速度数字，请打开上方系统权限，并确认本页开关已勾选。</string>
+    <string name="meter_chip_promoted_settings_fail">请到系统设置 → 通知 → OneTools → 实时更新</string>
 
     <string name="meter_oem_dock">悬浮窗贴到状态栏位（右上）</string>
 

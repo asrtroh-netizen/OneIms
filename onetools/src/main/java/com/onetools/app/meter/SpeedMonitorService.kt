@@ -182,6 +182,11 @@ class SpeedMonitorService : Service() {
     /**
      * Pixel Meter path: Live Update chip (ic + shortCriticalText) on API 36+ when enabled;
      * else bitmap value/unit smallIcon.
+     *
+     * Important: request promotion via [Notification.Builder.setRequestPromotedOngoing] /
+     * [Notification.EXTRA_REQUEST_PROMOTED_ONGOING]. Do **not** set
+     * [Notification.FLAG_PROMOTED_ONGOING] yourself — that flag is system-owned after promotion.
+     * Without the request, the status bar only shows [R.drawable.ic_meter_speed] (↑↓ arrows).
      */
     private fun buildNotification(content: String, down: Long = 0, up: Long = 0): Notification {
         val open = PendingIntent.getActivity(
@@ -196,7 +201,7 @@ class SpeedMonitorService : Service() {
         val useChip = Build.VERSION.SDK_INT >= 36 && prefs.statusBarChipEnabled
         if (useChip) {
             val live = MeterChipFormat.format(prefs, down, up)
-            return Notification.Builder(this, CHANNEL_ID)
+            val builder = Notification.Builder(this, CHANNEL_ID)
                 .setOngoing(true)
                 .setOnlyAlertOnce(true)
                 .setContentIntent(open)
@@ -206,8 +211,11 @@ class SpeedMonitorService : Service() {
                 .setContentText(contentText)
                 .setSmallIcon(R.drawable.ic_meter_speed)
                 .setShortCriticalText(live)
-                .setFlag(Notification.FLAG_PROMOTED_ONGOING, true)
-                .build()
+            // compileSdk 36 may lack Builder#setRequestPromotedOngoing (API 36.1); extras is the
+            // documented request key used by NotificationCompat / Pixel Meter path.
+            builder.extras.putBoolean(EXTRA_REQUEST_PROMOTED_ONGOING, true)
+            invokeRequestPromotedOngoing(builder, true)
+            return builder.build()
         }
         val density = resources.displayMetrics.density
         val silhouette = MeterDynamicIcon.createSilhouette(
@@ -238,6 +246,17 @@ class SpeedMonitorService : Service() {
         const val ACTION_STOP = "com.onetools.app.meter.STOP"
         const val ACTION_APPLY_PREFS = "com.onetools.app.meter.APPLY_PREFS"
         const val ACTION_DOCK_OEM = "com.onetools.app.meter.DOCK_OEM"
+
+        /** Same key as NotificationCompat.EXTRA_REQUEST_PROMOTED_ONGOING / platform 36.1+. */
+        private const val EXTRA_REQUEST_PROMOTED_ONGOING = "android.requestPromotedOngoing"
+
+        private fun invokeRequestPromotedOngoing(builder: Notification.Builder, request: Boolean) {
+            runCatching {
+                Notification.Builder::class.java
+                    .getMethod("setRequestPromotedOngoing", Boolean::class.javaPrimitiveType)
+                    .invoke(builder, request)
+            }
+        }
 
         @Volatile
         var isRunning: Boolean = false
