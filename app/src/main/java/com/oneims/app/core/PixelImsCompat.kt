@@ -130,7 +130,7 @@ object PixelImsCompat {
                 check(write.success) { write.message }
             }
             rollbackIfCommunicationDegraded(context, subId, before)?.let { return it }
-            ConfigStore.saveAdvancedOptions(context, options)
+            ConfigStore.saveAdvancedOptions(context, options, subId)
             ConfigResult(true, context.getString(R.string.msg_pixel_ims_options_applied))
         } catch (error: Throwable) {
             ConfigResult(

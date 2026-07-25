@@ -14,19 +14,16 @@
 
 <br/>
 
-### ⬇️ 下载 APK（最新 · v3.0.2 · 请自选产品线）
-
-> ⚠️ **版本冻结说明（Final）：当前对外最终版本为 v3.0.2。**  
-> 更高版本号的试发包已撤回；请只从本页 **v3.0.2** 链接下载。若设备上仍是 3.0.3/3.0.4，需先卸载再安装 3.0.2。
+### ⬇️ 下载 APK（最新 · v3.0.3 · 请自选产品线）
 
 > **两个包功能相同（IMS/诊断/恢复），差别只在「特权通道怎么激活」——看下方选购指南，**只装其中一个**即可；进阶用户也可同机并存对比。
 
 | 推荐给… | 包 | 下载 |
 |---|---|---|
-| 🟢 **想少装 App、App 内一键配对** | **OneKuku（独立激活）** | [OneIms-OneKuku-standalone-3.0.2.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.0.2/OneIms-OneKuku-standalone-3.0.2.apk) |
-| 🔵 **已有 / 想用 Shizuku 轻壳** | **OneIms Lite（Shizuku）** | [OneIms-Lite-Shizuku-3.0.2.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.0.2/OneIms-Lite-Shizuku-3.0.2.apk) |
+| 🟢 **想少装 App、App 内一键配对** | **OneKuku（独立激活）** | [OneIms-OneKuku-standalone-3.0.3.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.0.3/OneIms-OneKuku-standalone-3.0.3.apk) |
+| 🔵 **已有 / 想用 Shizuku 轻壳** | **OneIms Lite（Shizuku）** | [OneIms-Lite-Shizuku-3.0.3.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.0.3/OneIms-Lite-Shizuku-3.0.3.apk) |
 
-[📦 全部 Release 资产](https://github.com/asrtroh-netizen/OneIms/releases/tag/v3.0.2)
+[📦 全部 Release 资产](https://github.com/asrtroh-netizen/OneIms/releases/tag/v3.0.3)
 
 > 💙 **友情推荐特权通道**：[asrtroh 修缮版 Shizuku V15.0](https://github.com/asrtroh-netizen/shizuku)（配对一次 · 旧 Wi‑Fi 自连 · 开机 FGS 内激活）  
 > 下载正式包：[Releases](https://github.com/asrtroh-netizen/shizuku/releases) · 截图：
@@ -67,10 +64,31 @@
 
 | 对外名称 | 包名 | 特权通道 | Release 文件名 |
 |---|---|---|---|
-| **OneIms · OneKuku** `3.0.2-onekuku` | `com.oneims.app` | 内嵌 OneBridge + 无线调试配对 | `OneIms-OneKuku-standalone-3.0.2.apk`（备注：独立激活） |
-| **OneIms · OneIms Lite** `3.0.2-onelink` | `com.oneims.onelink` | 官方 Shizuku | `OneIms-Lite-Shizuku-3.0.2.apk`（备注：Shizuku） |
+| **OneIms · OneKuku** `3.0.3-onekuku` | `com.oneims.app` | 内嵌 OneBridge + 无线调试配对 | `OneIms-OneKuku-standalone-3.0.3.apk`（备注：独立激活） |
+| **OneIms · OneIms Lite** `3.0.3-onelink` | `com.oneims.onelink` | 官方 Shizuku | `OneIms-Lite-Shizuku-3.0.3.apk`（备注：Shizuku） |
 
 > **双包同版号一起更新**；请只从本页 Release 链接下载，勿混装未知来源包。
+
+---
+
+## ✨ What's New · 3.0.3
+
+**本版主线：系统持久能力探测 + 可选「强制临时写入」（面向 Android 16/17 收紧场景）。**
+
+### 🔎 系统持久能力探测
+
+* 一键体检新增「系统持久能力探测」：只读对照 `CarrierConfigLoader` 是否存在 `isSystemApp` / 沙盒校验
+* 帮助区分「App 能写」与「重启后真持久」——不承诺破解系统身份
+
+### ✍️ 强制临时写入（实验功能，默认关）
+
+* 开启后跳过 `persistent=true`，直接写临时覆盖，减少新系统拒写撞击
+* 重启仍依赖开机重放；关闭时行为与 3.0.2 一致（先试持久，被拒再临时）
+
+### 🔄 升级
+
+* 🟢 OneKuku：覆盖安装 `OneIms-OneKuku-standalone-3.0.3.apk`
+* 🔵 OneIms Lite：覆盖安装 `OneIms-Lite-Shizuku-3.0.3.apk`
 
 ---
 

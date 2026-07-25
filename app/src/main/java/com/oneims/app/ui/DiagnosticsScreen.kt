@@ -19,10 +19,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -33,15 +36,32 @@ import com.oneims.app.R
 import com.oneims.app.core.formatCarrierShortName
 import java.text.DateFormat
 import java.util.Date
+import kotlinx.coroutines.launch
 
 @Composable
 fun DiagnosticsScreen(
     state: DiagnosticsUiState,
     actions: DiagnosticsActions,
 ) {
+    val scope = rememberCoroutineScope()
     var pendingTrial by remember { mutableStateOf<DiagnosticsTrialAction?>(null) }
+    var detailTitle by remember { mutableStateOf<String?>(null) }
+    var detailBody by remember { mutableStateOf<String?>(null) }
+    var detailLoading by remember { mutableStateOf(false) }
     val selectedSim = state.sims.firstOrNull { sim ->
         sim.subscriptionId == state.selectedSubId
+    }
+
+    fun openDetail(title: String, block: suspend () -> String) {
+        detailTitle = title
+        detailBody = null
+        detailLoading = true
+        scope.launch {
+            detailBody = runCatching { block() }.getOrElse { error ->
+                error.message ?: error.javaClass.simpleName
+            }
+            detailLoading = false
+        }
     }
 
     OneImsPage(
@@ -85,35 +105,47 @@ fun DiagnosticsScreen(
                     modifier = Modifier.padding(12.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
+                    val healthTitle = stringResource(R.string.tool_health)
+                    val epdgTitle = stringResource(R.string.tool_epdg)
+                    val diagTitle = stringResource(R.string.tool_diag)
+                    val configTitle = stringResource(R.string.tool_config)
                     ActionGrid(
                         listOf(
                             ActionSpec(
                                 icon = Icons.Filled.Favorite,
-                                title = stringResource(R.string.tool_health),
+                                title = healthTitle,
                                 subtitle = stringResource(R.string.tool_health_sub),
-                                onClick = actions.onHealthCheck,
-                                enabled = state.actionsEnabled,
+                                onClick = {
+                                    openDetail(healthTitle) { actions.onHealthCheck() }
+                                },
+                                enabled = state.actionsEnabled && !detailLoading,
                             ),
                             ActionSpec(
                                 icon = Icons.Filled.Search,
-                                title = stringResource(R.string.tool_epdg),
+                                title = epdgTitle,
                                 subtitle = stringResource(R.string.tool_epdg_sub),
-                                onClick = actions.onCheckEpdg,
-                                enabled = state.actionsEnabled,
+                                onClick = {
+                                    openDetail(epdgTitle) { actions.onCheckEpdg() }
+                                },
+                                enabled = state.actionsEnabled && !detailLoading,
                             ),
                             ActionSpec(
                                 icon = Icons.Filled.Search,
-                                title = stringResource(R.string.tool_diag),
+                                title = diagTitle,
                                 subtitle = stringResource(R.string.tool_diag_sub),
-                                onClick = actions.onQueryIms,
-                                enabled = state.actionsEnabled,
+                                onClick = {
+                                    openDetail(diagTitle) { actions.onQueryIms() }
+                                },
+                                enabled = state.actionsEnabled && !detailLoading,
                             ),
                             ActionSpec(
                                 icon = Icons.AutoMirrored.Filled.List,
-                                title = stringResource(R.string.tool_config),
+                                title = configTitle,
                                 subtitle = stringResource(R.string.tool_config_sub),
-                                onClick = actions.onDumpConfig,
-                                enabled = state.actionsEnabled,
+                                onClick = {
+                                    openDetail(configTitle) { actions.onDumpConfig() }
+                                },
+                                enabled = state.actionsEnabled && !detailLoading,
                             ),
                         ),
                     )
@@ -229,6 +261,44 @@ fun DiagnosticsScreen(
             dismissButton = {
                 TextButton(onClick = { pendingTrial = null }) {
                     Text(stringResource(R.string.diagnostics_trial_cancel))
+                }
+            },
+        )
+    }
+
+    if (detailTitle != null) {
+        AlertDialog(
+            onDismissRequest = {
+                if (!detailLoading) {
+                    detailTitle = null
+                    detailBody = null
+                }
+            },
+            title = { Text(detailTitle.orEmpty()) },
+            text = {
+                SelectionContainer {
+                    Text(
+                        text = when {
+                            detailLoading -> stringResource(R.string.operation_already_running)
+                            else -> detailBody.orEmpty()
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .verticalScroll(rememberScrollState()),
+                        style = MaterialTheme.typography.bodySmall,
+                        fontFamily = FontFamily.Monospace,
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        detailTitle = null
+                        detailBody = null
+                    },
+                    enabled = !detailLoading,
+                ) {
+                    Text(stringResource(R.string.one_click_close))
                 }
             },
         )

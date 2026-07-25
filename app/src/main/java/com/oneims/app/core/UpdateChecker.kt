@@ -37,6 +37,9 @@ object UpdateChecker {
 
     private fun latestApiUrl() = "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/releases/latest"
 
+    /** 公开项目页（关于页作者入口等）。 */
+    fun projectPageUrl(): String = "https://github.com/$REPO_OWNER/$REPO_NAME"
+
     /**
      * 拉取并解析最新 Release，与当前版本比较。阻塞式，请在 IO 线程调用（与项目既有模式一致）。
      * 任何异常都收敛为「失败但不崩」的 [UpdateInfo]，绝不把网络异常抛给 UI。文案随系统语言切中/英。
