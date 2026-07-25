@@ -10,7 +10,6 @@ import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.ContextCompat
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -21,15 +20,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
-import androidx.compose.material3.Checkbox
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -38,7 +43,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import com.onetools.app.BuildConfig
 import com.onetools.app.R
 import com.onetools.app.caller.BlocklistFormat
@@ -63,21 +73,49 @@ fun CallerScreen(
     val scope = rememberCoroutineScope()
     val store = remember { CallRuleStore(context.applicationContext) }
     val rules by store.rules.collectAsState(initial = emptyList())
+    val lifecycleOwner = LocalLifecycleOwner.current
 
     var number by remember { mutableStateOf("") }
     var asPrefix by remember { mutableStateOf(false) }
     var asTag by remember { mutableStateOf(false) }
     /** 0=归属标签 1=拦截 2=白名单 */
-    var ruleAction by remember { mutableStateOf(0) }
+    var ruleAction by remember { mutableIntStateOf(0) }
     var ruleTag by remember { mutableStateOf("") }
     var lookupNumber by remember { mutableStateOf("") }
     var lookupResult by remember { mutableStateOf("") }
     var importText by remember { mutableStateOf("") }
     var status by remember { mutableStateOf("") }
+    var roleHeld by remember { mutableStateOf(false) }
+    var callLogGranted by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CALL_LOG) ==
+                PackageManager.PERMISSION_GRANTED,
+        )
+    }
+
+    fun refreshRole() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            roleHeld = false
+            return
+        }
+        val rm = context.getSystemService(RoleManager::class.java)
+        roleHeld = rm?.isRoleHeld(RoleManager.ROLE_CALL_SCREENING) == true
+    }
+
+    LaunchedEffect(lifecycleOwner) {
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            refreshRole()
+            callLogGranted = ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.READ_CALL_LOG,
+            ) == PackageManager.PERMISSION_GRANTED
+        }
+    }
 
     val roleLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult(),
     ) { result ->
+        refreshRole()
         status = if (result.resultCode == Activity.RESULT_OK) {
             context.getString(R.string.caller_role_granted)
         } else {
@@ -88,8 +126,9 @@ fun CallerScreen(
     val callLogLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission(),
     ) { granted ->
+        callLogGranted = granted
         status = if (granted) {
-            "通话记录权限已授予 · Directory 可参与查号"
+            context.getString(R.string.caller_call_log_ok)
         } else {
             context.getString(R.string.caller_need_call_log)
         }
@@ -157,6 +196,7 @@ fun CallerScreen(
             return
         }
         if (rm.isRoleHeld(RoleManager.ROLE_CALL_SCREENING)) {
+            roleHeld = true
             status = context.getString(R.string.caller_role_held)
             return
         }
@@ -178,356 +218,495 @@ fun CallerScreen(
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        TextButton(onClick = onBack) { Text("← ${stringResource(R.string.caller_title)}") }
+        TextButton(onClick = onBack) {
+            Text("← ${stringResource(R.string.caller_title)}")
+        }
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 20.dp),
-            contentPadding = PaddingValues(bottom = 36.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(bottom = 40.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             item {
-                Text(
-                    stringResource(R.string.caller_intro),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            item {
-                Text(
-                    stringResource(R.string.caller_gap_note),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            item {
-                Button(onClick = { requestScreeningRole() }, modifier = Modifier.fillMaxWidth()) {
-                    Text(stringResource(R.string.caller_set_default))
-                }
-            }
-            item {
-                OutlinedButton(onClick = { openDefaultApps() }, modifier = Modifier.fillMaxWidth()) {
-                    Text(stringResource(R.string.caller_open_defaults))
-                }
-            }
-            item {
-                OutlinedButton(
-                    onClick = {
-                        val granted = ContextCompat.checkSelfPermission(
-                            context,
-                            Manifest.permission.READ_CALL_LOG,
-                        ) == PackageManager.PERMISSION_GRANTED
-                        if (granted) {
-                            status = "通话记录权限已具备"
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.extraLarge,
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                ) {
+                    Column(
+                        modifier = Modifier.padding(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        Text(
+                            stringResource(R.string.caller_hero_eyebrow),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
+                        )
+                        Text(
+                            stringResource(R.string.caller_title),
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        )
+                        Text(
+                            stringResource(R.string.caller_intro),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.88f),
+                        )
+                        Text(
+                            if (roleHeld) {
+                                stringResource(R.string.caller_status_ready)
+                            } else {
+                                stringResource(R.string.caller_status_need_role)
+                            },
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        )
+                        if (!roleHeld) {
+                            Button(
+                                onClick = { requestScreeningRole() },
+                                modifier = Modifier.fillMaxWidth(),
+                            ) {
+                                Text(stringResource(R.string.caller_set_default))
+                            }
                         } else {
-                            callLogLauncher.launch(Manifest.permission.READ_CALL_LOG)
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text(stringResource(R.string.caller_need_call_log))
-                }
-            }
-            if (status.isNotBlank()) {
-                item {
-                    Text(status, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
-                }
-            }
-            item {
-                Text(stringResource(R.string.caller_add_title), style = MaterialTheme.typography.titleMedium)
-            }
-            item {
-                Text(
-                    stringResource(R.string.caller_action_hint),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            item {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    listOf(
-                        0 to R.string.caller_action_label,
-                        1 to R.string.caller_action_block,
-                        2 to R.string.caller_action_allow,
-                    ).forEach { (idx, res) ->
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Checkbox(
-                                checked = ruleAction == idx,
-                                onCheckedChange = { if (it) ruleAction = idx },
-                            )
-                            Text(stringResource(res), style = MaterialTheme.typography.bodySmall)
+                            OutlinedButton(
+                                onClick = { requestScreeningRole() },
+                                modifier = Modifier.fillMaxWidth(),
+                            ) {
+                                Text(stringResource(R.string.caller_role_held))
+                            }
                         }
                     }
                 }
             }
-            item {
-                OutlinedTextField(
-                    value = number,
-                    onValueChange = { number = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    label = { Text(stringResource(R.string.caller_number_hint)) },
-                    singleLine = true,
-                )
-            }
-            item {
-                OutlinedTextField(
-                    value = ruleTag,
-                    onValueChange = { ruleTag = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    label = { Text(stringResource(R.string.caller_tag_hint)) },
-                    singleLine = true,
-                )
-            }
-            item {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(
-                        checked = asPrefix,
-                        onCheckedChange = {
-                            asPrefix = it
-                            if (it) asTag = false
-                        },
-                    )
-                    Text(stringResource(R.string.caller_prefix))
-                }
-            }
-            item {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(
-                        checked = asTag,
-                        onCheckedChange = {
-                            asTag = it
-                            if (it) asPrefix = false
-                        },
-                    )
-                    Text(stringResource(R.string.caller_tag_mode))
-                }
-            }
-            item {
-                Button(
-                    onClick = {
-                        val pattern = if (asTag) {
-                            ruleTag.ifBlank { number }.trim()
-                        } else {
-                            NumberMatcher.digits(number)
-                        }
-                        if (pattern.isEmpty()) {
-                            Toast.makeText(context, R.string.caller_number_invalid, Toast.LENGTH_SHORT).show()
-                            return@Button
-                        }
-                        if (ruleAction == 0 && ruleTag.isBlank() && !asTag) {
-                            Toast.makeText(context, R.string.caller_label_need_tag, Toast.LENGTH_SHORT).show()
-                            return@Button
-                        }
-                        val kind = when (ruleAction) {
-                            2 -> CallRuleKind.ALLOW
-                            1 -> CallRuleKind.BLOCK
-                            else -> CallRuleKind.LABEL
-                        }
-                        scope.launch {
-                            store.upsert(
-                                CallRule(
-                                    id = UUID.randomUUID().toString(),
-                                    pattern = pattern,
-                                    kind = kind,
-                                    mode = when {
-                                        asTag -> CallMatchMode.TAG
-                                        asPrefix -> CallMatchMode.PREFIX
-                                        else -> CallMatchMode.EXACT
-                                    },
-                                    tag = ruleTag,
-                                ),
-                            )
-                            number = ""
-                            status = context.getString(R.string.caller_added)
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text(stringResource(R.string.caller_add))
-                }
-            }
-            item {
-                Text(stringResource(R.string.caller_lookup_title), style = MaterialTheme.typography.titleMedium)
-            }
-            item {
-                OutlinedTextField(
-                    value = lookupNumber,
-                    onValueChange = { lookupNumber = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    label = { Text(stringResource(R.string.caller_lookup_hint)) },
-                    singleLine = true,
-                )
-            }
-            item {
-                Button(
-                    onClick = {
-                        scope.launch {
-                            val r = store.lookup(lookupNumber)
-                            val decisionText = when (r.decision) {
-                                NumberMatcher.Decision.BLOCK ->
-                                    context.getString(R.string.caller_lookup_decision_block)
-                                NumberMatcher.Decision.ALLOW_LIST ->
-                                    context.getString(R.string.caller_lookup_decision_allow)
-                                NumberMatcher.Decision.ALLOW_UNKNOWN ->
-                                    context.getString(R.string.caller_lookup_decision_pass)
-                            }
-                            val label = r.matchedRules
-                                .firstOrNull { it.kind == CallRuleKind.ALLOW }
-                                ?: r.matchedRules.firstOrNull { it.kind == CallRuleKind.LABEL }
-                                ?: r.matchedRules.firstOrNull { it.kind == CallRuleKind.BLOCK }
-                            val tagPart = label?.tag?.takeIf { it.isNotBlank() }
-                                ?: r.tags.firstOrNull()
-                            lookupResult = buildString {
-                                append(decisionText)
-                                if (!tagPart.isNullOrBlank()) {
-                                    append(" · ")
-                                    append(context.getString(R.string.caller_lookup_label_fmt, tagPart))
-                                } else if (r.matchedRules.isEmpty()) {
-                                    append(" · ")
-                                    append(context.getString(R.string.caller_lookup_no_label))
-                                }
-                            }
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                ) { Text(stringResource(R.string.caller_lookup)) }
-            }
-            if (lookupResult.isNotBlank()) {
+
+            if (status.isNotBlank()) {
                 item {
-                    Text(lookupResult, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.large,
+                        color = MaterialTheme.colorScheme.tertiaryContainer,
+                    ) {
+                        Text(
+                            status,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer,
+                        )
+                    }
                 }
             }
+
             item {
-                Text(stringResource(R.string.caller_import_title), style = MaterialTheme.typography.titleMedium)
-            }
-            item {
-                OutlinedTextField(
-                    value = importText,
-                    onValueChange = { importText = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    label = { Text(stringResource(R.string.caller_import_hint)) },
-                    minLines = 3,
-                )
-            }
-            item {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                CallerSection(title = stringResource(R.string.caller_setup_title)) {
+                    Text(
+                        stringResource(R.string.caller_gap_note),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    OutlinedButton(onClick = { openDefaultApps() }, modifier = Modifier.fillMaxWidth()) {
+                        Text(stringResource(R.string.caller_open_defaults))
+                    }
                     OutlinedButton(
-                        onClick = { importText = BlocklistFormat.sampleJson() },
-                        modifier = Modifier.weight(1f),
-                    ) { Text(stringResource(R.string.caller_sample)) }
+                        onClick = {
+                            if (callLogGranted) {
+                                status = context.getString(R.string.caller_call_log_ok)
+                            } else {
+                                callLogLauncher.launch(Manifest.permission.READ_CALL_LOG)
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(
+                            if (callLogGranted) {
+                                stringResource(R.string.caller_call_log_ok)
+                            } else {
+                                stringResource(R.string.caller_need_call_log)
+                            },
+                        )
+                    }
+                }
+            }
+
+            item {
+                CallerSection(title = stringResource(R.string.caller_add_title)) {
+                    Text(
+                        stringResource(R.string.caller_action_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                        val labels = listOf(
+                            stringResource(R.string.caller_action_label),
+                            stringResource(R.string.caller_action_block),
+                            stringResource(R.string.caller_action_allow),
+                        )
+                        labels.forEachIndexed { index, label ->
+                            SegmentedButton(
+                                selected = ruleAction == index,
+                                onClick = { ruleAction = index },
+                                shape = SegmentedButtonDefaults.itemShape(index, labels.size),
+                            ) {
+                                Text(label)
+                            }
+                        }
+                    }
+                    OutlinedTextField(
+                        value = number,
+                        onValueChange = { number = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text(stringResource(R.string.caller_number_hint)) },
+                        singleLine = true,
+                        shape = MaterialTheme.shapes.large,
+                    )
+                    OutlinedTextField(
+                        value = ruleTag,
+                        onValueChange = { ruleTag = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text(stringResource(R.string.caller_tag_hint)) },
+                        singleLine = true,
+                        shape = MaterialTheme.shapes.large,
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FilterChip(
+                            selected = asPrefix,
+                            onClick = {
+                                asPrefix = !asPrefix
+                                if (asPrefix) asTag = false
+                            },
+                            label = { Text(stringResource(R.string.caller_prefix)) },
+                        )
+                        FilterChip(
+                            selected = asTag,
+                            onClick = {
+                                asTag = !asTag
+                                if (asTag) asPrefix = false
+                            },
+                            label = { Text(stringResource(R.string.caller_tag_mode_short)) },
+                        )
+                    }
+                    Button(
+                        onClick = {
+                            val pattern = if (asTag) {
+                                ruleTag.ifBlank { number }.trim()
+                            } else {
+                                NumberMatcher.digits(number)
+                            }
+                            if (pattern.isEmpty()) {
+                                Toast.makeText(context, R.string.caller_number_invalid, Toast.LENGTH_SHORT).show()
+                                return@Button
+                            }
+                            if (ruleAction == 0 && ruleTag.isBlank() && !asTag) {
+                                Toast.makeText(context, R.string.caller_label_need_tag, Toast.LENGTH_SHORT).show()
+                                return@Button
+                            }
+                            val kind = when (ruleAction) {
+                                2 -> CallRuleKind.ALLOW
+                                1 -> CallRuleKind.BLOCK
+                                else -> CallRuleKind.LABEL
+                            }
+                            scope.launch {
+                                store.upsert(
+                                    CallRule(
+                                        id = UUID.randomUUID().toString(),
+                                        pattern = pattern,
+                                        kind = kind,
+                                        mode = when {
+                                            asTag -> CallMatchMode.TAG
+                                            asPrefix -> CallMatchMode.PREFIX
+                                            else -> CallMatchMode.EXACT
+                                        },
+                                        tag = ruleTag,
+                                    ),
+                                )
+                                number = ""
+                                status = context.getString(R.string.caller_added)
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(stringResource(R.string.caller_add))
+                    }
+                }
+            }
+
+            item {
+                CallerSection(title = stringResource(R.string.caller_lookup_title)) {
+                    OutlinedTextField(
+                        value = lookupNumber,
+                        onValueChange = { lookupNumber = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text(stringResource(R.string.caller_lookup_hint)) },
+                        singleLine = true,
+                        shape = MaterialTheme.shapes.large,
+                    )
                     Button(
                         onClick = {
                             scope.launch {
-                                runCatching {
-                                    val parsed = BlocklistFormat.parse(importText)
-                                    store.mergeImport(parsed)
-                                    status = context.getString(R.string.caller_imported, parsed.size)
-                                }.onFailure {
-                                    status = it.message ?: "import failed"
+                                val r = store.lookup(lookupNumber)
+                                val decisionText = when (r.decision) {
+                                    NumberMatcher.Decision.BLOCK ->
+                                        context.getString(R.string.caller_lookup_decision_block)
+                                    NumberMatcher.Decision.ALLOW_LIST ->
+                                        context.getString(R.string.caller_lookup_decision_allow)
+                                    NumberMatcher.Decision.ALLOW_UNKNOWN ->
+                                        context.getString(R.string.caller_lookup_decision_pass)
+                                }
+                                val label = r.matchedRules
+                                    .firstOrNull { it.kind == CallRuleKind.ALLOW }
+                                    ?: r.matchedRules.firstOrNull { it.kind == CallRuleKind.LABEL }
+                                    ?: r.matchedRules.firstOrNull { it.kind == CallRuleKind.BLOCK }
+                                val tagPart = label?.tag?.takeIf { it.isNotBlank() }
+                                    ?: r.tags.firstOrNull()
+                                lookupResult = buildString {
+                                    append(decisionText)
+                                    if (!tagPart.isNullOrBlank()) {
+                                        append(" · ")
+                                        append(context.getString(R.string.caller_lookup_label_fmt, tagPart))
+                                    } else if (r.matchedRules.isEmpty()) {
+                                        append(" · ")
+                                        append(context.getString(R.string.caller_lookup_no_label))
+                                    }
                                 }
                             }
                         },
-                        modifier = Modifier.weight(1f),
-                    ) { Text(stringResource(R.string.caller_import)) }
-                }
-            }
-            item {
-                OutlinedButton(
-                    onClick = {
-                        scope.launch {
-                            status = context.getString(R.string.caller_fetching)
-                            val result = withContext(Dispatchers.IO) {
-                                runCatching { fetchBlocklist() }
-                            }
-                            result.onSuccess { body ->
-                                runCatching {
-                                    val parsed = BlocklistFormat.parse(body)
-                                    store.mergeImport(parsed)
-                                    importText = body.take(2000)
-                                    status = context.getString(R.string.caller_batch_ok, parsed.size)
-                                }.onFailure { status = it.message ?: "parse failed" }
-                            }.onFailure {
-                                status = context.getString(R.string.caller_fetch_fail, it.message ?: "")
-                            }
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(stringResource(R.string.caller_lookup))
+                    }
+                    if (lookupResult.isNotBlank()) {
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = MaterialTheme.shapes.large,
+                            color = MaterialTheme.colorScheme.secondaryContainer,
+                        ) {
+                            Text(
+                                lookupResult,
+                                modifier = Modifier.padding(14.dp),
+                                style = MaterialTheme.typography.titleSmall,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                            )
                         }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text(stringResource(R.string.caller_batch_cdn))
+                    }
                 }
             }
+
             item {
-                OutlinedButton(
-                    onClick = { importFileLauncher.launch(arrayOf("application/json", "text/*", "*/*")) },
-                    modifier = Modifier.fillMaxWidth(),
-                ) { Text(stringResource(R.string.caller_batch_file)) }
-            }
-            item {
-                Text(stringResource(R.string.caller_backup_title), style = MaterialTheme.typography.titleMedium)
-            }
-            item {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                    Button(
-                        onClick = { exportLauncher.launch("onecaller-backup.json") },
-                        modifier = Modifier.weight(1f),
-                    ) { Text(stringResource(R.string.caller_backup)) }
+                CallerSection(title = stringResource(R.string.caller_import_title)) {
+                    OutlinedTextField(
+                        value = importText,
+                        onValueChange = { importText = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text(stringResource(R.string.caller_import_hint)) },
+                        minLines = 3,
+                        shape = MaterialTheme.shapes.large,
+                    )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        OutlinedButton(
+                            onClick = { importText = BlocklistFormat.sampleJson() },
+                            modifier = Modifier.weight(1f),
+                        ) { Text(stringResource(R.string.caller_sample)) }
+                        Button(
+                            onClick = {
+                                scope.launch {
+                                    runCatching {
+                                        val parsed = BlocklistFormat.parse(importText)
+                                        store.mergeImport(parsed)
+                                        status = context.getString(R.string.caller_imported, parsed.size)
+                                    }.onFailure {
+                                        status = it.message ?: "import failed"
+                                    }
+                                }
+                            },
+                            modifier = Modifier.weight(1f),
+                        ) { Text(stringResource(R.string.caller_import)) }
+                    }
                     OutlinedButton(
-                        onClick = { restoreLauncher.launch(arrayOf("application/json", "text/*", "*/*")) },
-                        modifier = Modifier.weight(1f),
-                    ) { Text(stringResource(R.string.caller_restore)) }
+                        onClick = {
+                            scope.launch {
+                                status = context.getString(R.string.caller_fetching)
+                                val result = withContext(Dispatchers.IO) {
+                                    runCatching { fetchBlocklist() }
+                                }
+                                result.onSuccess { body ->
+                                    runCatching {
+                                        val parsed = BlocklistFormat.parse(body)
+                                        store.mergeImport(parsed)
+                                        importText = body.take(2000)
+                                        status = context.getString(R.string.caller_batch_ok, parsed.size)
+                                    }.onFailure { status = it.message ?: "parse failed" }
+                                }.onFailure {
+                                    status = context.getString(R.string.caller_fetch_fail, it.message ?: "")
+                                }
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(stringResource(R.string.caller_batch_cdn))
+                    }
+                    OutlinedButton(
+                        onClick = { importFileLauncher.launch(arrayOf("application/json", "text/*", "*/*")) },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) { Text(stringResource(R.string.caller_batch_file)) }
+                    Text(
+                        stringResource(R.string.caller_backup_title),
+                        style = MaterialTheme.typography.titleSmall,
+                    )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Button(
+                            onClick = { exportLauncher.launch("onecaller-backup.json") },
+                            modifier = Modifier.weight(1f),
+                        ) { Text(stringResource(R.string.caller_backup)) }
+                        OutlinedButton(
+                            onClick = { restoreLauncher.launch(arrayOf("application/json", "text/*", "*/*")) },
+                            modifier = Modifier.weight(1f),
+                        ) { Text(stringResource(R.string.caller_restore)) }
+                    }
                 }
             }
+
             item {
                 Text(
                     stringResource(R.string.caller_rules_title, rules.size),
                     style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
                 )
             }
-            items(rules, key = { it.id }) { rule ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        val kindLabel = when (rule.kind) {
-                            CallRuleKind.LABEL -> stringResource(R.string.caller_action_label)
-                            CallRuleKind.BLOCK -> stringResource(R.string.caller_action_block)
-                            CallRuleKind.ALLOW -> stringResource(R.string.caller_action_allow)
-                        }
-                        val modeLabel = when (rule.mode) {
-                            CallMatchMode.EXACT -> stringResource(R.string.caller_mode_exact)
-                            CallMatchMode.PREFIX -> stringResource(R.string.caller_mode_prefix)
-                            CallMatchMode.TAG -> stringResource(R.string.caller_mode_tag)
-                        }
+            if (rules.isEmpty()) {
+                item {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.large,
+                        color = MaterialTheme.colorScheme.surfaceContainerLow,
+                    ) {
                         Text(
-                            buildString {
-                                append(kindLabel)
-                                append(" · ")
-                                append(modeLabel)
-                                append(" · ")
-                                append(rule.pattern)
-                                if (rule.tag.isNotBlank()) {
-                                    append(" · ")
-                                    append(rule.tag)
-                                }
-                            },
+                            stringResource(R.string.caller_rules_empty),
+                            modifier = Modifier.padding(18.dp),
                             style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                    }
-                    TextButton(onClick = { scope.launch { store.remove(rule.id) } }) {
-                        Text(stringResource(R.string.caller_remove))
                     }
                 }
             }
+            items(rules, key = { it.id }) { rule ->
+                CallerRuleCard(
+                    rule = rule,
+                    onRemove = { scope.launch { store.remove(rule.id) } },
+                )
+            }
+
             item {
                 OutlinedButton(onClick = onOpenRecorder, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.caller_open_recorder))
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CallerSection(
+    title: String,
+    content: @Composable () -> Unit,
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        tonalElevation = 1.dp,
+    ) {
+        Column(
+            modifier = Modifier.padding(18.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(
+                title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+            )
+            content()
+        }
+    }
+}
+
+@Composable
+private fun CallerRuleCard(
+    rule: CallRule,
+    onRemove: () -> Unit,
+) {
+    val kindLabel = when (rule.kind) {
+        CallRuleKind.LABEL -> stringResource(R.string.caller_action_label)
+        CallRuleKind.BLOCK -> stringResource(R.string.caller_action_block)
+        CallRuleKind.ALLOW -> stringResource(R.string.caller_action_allow)
+    }
+    val modeLabel = when (rule.mode) {
+        CallMatchMode.EXACT -> stringResource(R.string.caller_mode_exact)
+        CallMatchMode.PREFIX -> stringResource(R.string.caller_mode_prefix)
+        CallMatchMode.TAG -> stringResource(R.string.caller_mode_tag)
+    }
+    val accent = when (rule.kind) {
+        CallRuleKind.LABEL -> MaterialTheme.colorScheme.secondaryContainer
+        CallRuleKind.BLOCK -> MaterialTheme.colorScheme.errorContainer
+        CallRuleKind.ALLOW -> MaterialTheme.colorScheme.primaryContainer
+    }
+    val onAccent = when (rule.kind) {
+        CallRuleKind.LABEL -> MaterialTheme.colorScheme.onSecondaryContainer
+        CallRuleKind.BLOCK -> MaterialTheme.colorScheme.onErrorContainer
+        CallRuleKind.ALLOW -> MaterialTheme.colorScheme.onPrimaryContainer
+    }
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Surface(
+                shape = MaterialTheme.shapes.small,
+                color = accent,
+            ) {
+                Text(
+                    kindLabel,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = onAccent,
+                    fontWeight = FontWeight.Medium,
+                )
+            }
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    rule.pattern,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Medium,
+                )
+                Text(
+                    buildString {
+                        append(modeLabel)
+                        if (rule.tag.isNotBlank()) {
+                            append(" · ")
+                            append(rule.tag)
+                        }
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            TextButton(onClick = onRemove) {
+                Text(stringResource(R.string.caller_remove))
             }
         }
     }
@@ -565,11 +744,7 @@ private fun fetchBlocklist(url: String): String {
 private fun fetchBlocklist(): String {
     var last: Throwable? = null
     for (url in blocklistUrls()) {
-        try {
-            return fetchBlocklist(url)
-        } catch (t: Throwable) {
-            last = t
-        }
+        runCatching { return fetchBlocklist(url) }.onFailure { last = it }
     }
-    throw last ?: IllegalStateException("no blocklist URL")
+    throw last ?: IllegalStateException("no blocklist url")
 }

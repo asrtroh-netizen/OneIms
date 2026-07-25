@@ -282,11 +282,25 @@
 
     <string name="caller_title">来电归属与拦截</string>
 
-    <string name="caller_intro">Pixel 专属干净室：CallScreeningService + 本地规则。可打「归属」标签（只显示、不拒接），或设拦截/白名单。请在 Pixel 上设为默认「来电显示与骚扰拦截」后生效。</string>
+    <string name="caller_hero_eyebrow">Pixel · OneCaller</string>
 
-    <string name="caller_gap_note">面向 Google Pixel / 默认 Phone。可导入拦截库、备份规则；与录音联动。Directory 归属显示需通话记录权限。</string>
+    <string name="caller_intro">干净室自研，专为 Pixel Phone：归属标签、骚扰拦截、白名单。设为默认「来电显示与骚扰拦截」后生效。</string>
 
-    <string name="caller_set_default">申请设为默认来电拦截应用</string>
+    <string name="caller_status_ready">已是默认来电筛选 · 规则即时生效</string>
+
+    <string name="caller_status_need_role">还差一步：设为默认来电筛选应用</string>
+
+    <string name="caller_setup_title">权限与系统设置</string>
+
+    <string name="caller_gap_note">面向 Google Pixel / 系统 Phone。导入拦截库、备份规则；与录音联动。Directory 归属需通话记录权限。</string>
+
+    <string name="caller_set_default">设为默认来电筛选</string>
+
+    <string name="caller_call_log_ok">通话记录权限已就绪</string>
+
+    <string name="caller_rules_empty">还没有规则。先加一条归属标签试试，例如 95588 → 工商银行客服。</string>
+
+    <string name="caller_tag_mode_short">标签组</string>
 
     <string name="caller_open_defaults">打开系统默认应用设置</string>
 
