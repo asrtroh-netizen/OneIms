@@ -62,7 +62,7 @@ import com.onetools.app.caller.CallerPrefs
 import com.onetools.app.caller.CnMobileGeo
 import com.onetools.app.caller.DialerLabelComposer
 import com.onetools.app.caller.NumberMatcher
-import com.onetools.app.caller.SpamPackInstaller
+import com.onetools.app.caller.OneBlockImporter
 import com.onetools.app.caller.SpamSyncManifest
 import com.onetools.app.caller.SpamSyncRepository
 import com.onetools.app.updates.HttpDownloads
@@ -182,9 +182,13 @@ fun CallerScreen(
                     context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
                         ?: error("read failed")
                 }
-                val parsed = BlocklistFormat.parse(body)
-                store.mergeImport(parsed)
-                status = context.getString(R.string.caller_batch_ok, parsed.size)
+                val imported = OneBlockImporter.importJson(context, body)
+                spamSync.refreshLocalStats()
+                status = context.getString(
+                    R.string.caller_spam_dual_ok,
+                    imported.rulesMerged,
+                    imported.spamExactInstalled,
+                )
             }.onFailure { status = it.message ?: "import file failed" }
         }
     }
@@ -479,10 +483,17 @@ fun CallerScreen(
                                 status = context.getString(R.string.caller_fetching)
                                 runCatching {
                                     val json = withContext(Dispatchers.IO) {
-                                        HttpDownloads.get(BuildConfig.ONE_BLOCKLIST_URL)
+                                        runCatching {
+                                            HttpDownloads.get(BuildConfig.ONE_BLOCKLIST_URL)
+                                        }.getOrElse { fetchBlocklist() }
                                     }
-                                    val n = SpamPackInstaller.installFromBlocklistJson(context, json)
-                                    status = context.getString(R.string.caller_spam_installed, n)
+                                    val result = OneBlockImporter.importJson(context, json)
+                                    spamSync.refreshLocalStats()
+                                    status = context.getString(
+                                        R.string.caller_spam_dual_ok,
+                                        result.rulesMerged,
+                                        result.spamExactInstalled,
+                                    )
                                 }.onFailure {
                                     status = context.getString(
                                         R.string.caller_fetch_fail,
@@ -735,18 +746,21 @@ fun CallerScreen(
                         onClick = {
                             scope.launch {
                                 status = context.getString(R.string.caller_fetching)
-                                val result = withContext(Dispatchers.IO) {
-                                    runCatching { fetchBlocklist() }
-                                }
-                                result.onSuccess { body ->
-                                    runCatching {
-                                        val parsed = BlocklistFormat.parse(body)
-                                        store.mergeImport(parsed)
-                                        importText = body.take(2000)
-                                        status = context.getString(R.string.caller_batch_ok, parsed.size)
-                                    }.onFailure { status = it.message ?: "parse failed" }
+                                runCatching {
+                                    val body = withContext(Dispatchers.IO) { fetchBlocklist() }
+                                    val imported = OneBlockImporter.importJson(context, body)
+                                    spamSync.refreshLocalStats()
+                                    importText = body.take(2000)
+                                    status = context.getString(
+                                        R.string.caller_spam_dual_ok,
+                                        imported.rulesMerged,
+                                        imported.spamExactInstalled,
+                                    )
                                 }.onFailure {
-                                    status = context.getString(R.string.caller_fetch_fail, it.message ?: "")
+                                    status = context.getString(
+                                        R.string.caller_fetch_fail,
+                                        it.message ?: "",
+                                    )
                                 }
                             }
                         },

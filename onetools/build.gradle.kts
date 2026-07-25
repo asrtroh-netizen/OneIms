@@ -30,7 +30,7 @@ android {
         buildConfigField(
             "String",
             "ONE_SPAM_SYNC_MANIFEST_URL",
-            "\"https://cdn.oneims.app/onetools/caller/spam-sync.json\"",
+            "\"https://github.com/asrtroh-netizen/OneBlock/releases/download/onetools-cdn-assets/spam-sync.json\"",
         )
         // Optional live query endpoint; blank disables network spam lookup.
         buildConfigField("String", "ONE_CALLER_QUERY_URL", "\"\"")

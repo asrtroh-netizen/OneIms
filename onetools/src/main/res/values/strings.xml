@@ -425,7 +425,8 @@
     <string name="caller_spam_stats">版本 %1$s · %2$d 条</string>
     <string name="caller_spam_check">检查云端更新</string>
     <string name="caller_spam_download">下载并安装</string>
-    <string name="caller_spam_from_oneblock">从 OneBlock JSON 灌入离线库</string>
+    <string name="caller_spam_from_oneblock">从 OneBlock 双写灌库（规则+onespam）</string>
+    <string name="caller_spam_dual_ok">已灌入：规则 %1$d 条 · onespam 精确号 %2$d 条</string>
     <string name="caller_spam_delete">删除离线库</string>
     <string name="caller_spam_up_to_date">已是最新（%1$s）</string>
     <string name="caller_spam_update_available">发现新版本 %1$s（%2$d 条）</string>
