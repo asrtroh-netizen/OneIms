@@ -94,6 +94,13 @@ object ImsController {
                         ProvisioningKeys.PROVISIONING_VALUE_ENABLED,
                     )
                 }.isSuccess
+                // 对齐南宫 3.1：VoIMS opt-in，强制设置页露出 VoLTE（不替代 carrier_config 覆盖）。
+                detail["provision_voims_opt_in"] = runCatching {
+                    SystemApiBroker.setProvisioningInt(
+                        subId, ProvisioningKeys.KEY_VOIMS_OPT_IN_STATUS,
+                        ProvisioningKeys.PROVISIONING_VALUE_ENABLED,
+                    )
+                }.isSuccess
             }
             if (enableVowifi) {
                 detail["provision_vowifi"] = runCatching {

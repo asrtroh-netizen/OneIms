@@ -119,6 +119,11 @@ object ProvisioningKeys {
     const val KEY_VOICE_OVER_WIFI_ROAMING = 26
     const val KEY_VOICE_OVER_WIFI_MODE = 27
     const val KEY_VOICE_OVER_WIFI_ENABLED = 28
+    /**
+     * AOSP `ProvisioningManager.KEY_VOIMS_OPT_IN_STATUS`。
+     * 对齐 vvb2060/Ims 3.1：强制露出 VoLTE 选项，即使运营商配置试图隐藏。
+     */
+    const val KEY_VOIMS_OPT_IN_STATUS = 68
 
     const val PROVISIONING_VALUE_ENABLED = 1
     const val PROVISIONING_VALUE_DISABLED = 0
