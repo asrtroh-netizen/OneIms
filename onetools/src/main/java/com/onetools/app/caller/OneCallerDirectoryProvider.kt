@@ -6,19 +6,20 @@ import android.content.UriMatcher
 import android.database.Cursor
 import android.database.MatrixCursor
 import android.net.Uri
-import android.provider.ContactsContract
+import android.provider.ContactsContract.CommonDataKinds.Phone
+import android.provider.ContactsContract.Contacts
+import android.provider.ContactsContract.Data
 import android.provider.ContactsContract.Directory
 import android.provider.ContactsContract.PhoneLookup
+import com.onetools.app.BuildConfig
 import com.onetools.app.R
 import kotlinx.coroutines.runBlocking
 
 /**
- * Clean-room Contacts Directory — paints labels into Pixel Phone / caller-ID UI.
- * Public ContactsContract.Directory contract only — not derived from Pixel Telo.
+ * Contacts Directory for Pixel Phone — aligned with public Directory / PhoneLookup
+ * contract used by Pixel Telo (clean-room; not a source copy).
  *
- * Shows:
- * - CN mobile geo (onetools.geo.v1) for unknown numbers
- * - Custom LABEL / ALLOW / BLOCK tags composed into a single native-looking line
+ * Goal: system dialer native line only (no incoming-call overlay).
  */
 class OneCallerDirectoryProvider : ContentProvider() {
     private val matcher = UriMatcher(UriMatcher.NO_MATCH)
@@ -29,8 +30,10 @@ class OneCallerDirectoryProvider : ContentProvider() {
         authority = ctx.getString(R.string.caller_directory_authority)
         matcher.addURI(authority, "directories", CODE_DIRECTORIES)
         matcher.addURI(authority, "phone_lookup/*", CODE_PHONE_LOOKUP)
+        matcher.addURI(authority, "data/phones/filter/*", CODE_PHONE_LOOKUP)
         matcher.addURI(authority, "contacts/filter/*", CODE_CONTACTS_FILTER)
-        matcher.addURI(authority, "data/phones/filter/*", CODE_PHONE_FILTER)
+        matcher.addURI(authority, "contacts/lookup/*", CODE_CONTACT_LOOKUP)
+        matcher.addURI(authority, "contacts/lookup/*/#", CODE_CONTACT_LOOKUP)
         CnMobileGeo.warm(ctx)
         return true
     }
@@ -42,74 +45,65 @@ class OneCallerDirectoryProvider : ContentProvider() {
         selectionArgs: Array<out String>?,
         sortOrder: String?,
     ): Cursor? {
-        val proj = projection ?: return MatrixCursor(emptyArray())
         return when (matcher.match(uri)) {
-            CODE_DIRECTORIES -> directoriesCursor(proj)
-            CODE_PHONE_LOOKUP,
-            CODE_PHONE_FILTER,
-            -> lookupCursor(proj, uri.lastPathSegment.orEmpty())
-            CODE_CONTACTS_FILTER -> contactsFilterCursor(proj, uri.lastPathSegment.orEmpty())
+            CODE_DIRECTORIES -> directoriesCursor(projection)
+            CODE_PHONE_LOOKUP -> {
+                val number = uri.lastPathSegment.orEmpty()
+                phoneLookupCursor(number, projection)
+            }
+            CODE_CONTACT_LOOKUP -> {
+                // Dialer may re-query with LOOKUP_KEY we returned (prefix onecaller:).
+                val key = uri.pathSegments.getOrNull(2).orEmpty()
+                val number = key.removePrefix(LOOKUP_PREFIX)
+                phoneLookupCursor(number, projection)
+            }
+            CODE_CONTACTS_FILTER -> {
+                val filter = uri.lastPathSegment.orEmpty()
+                phoneLookupCursor(filter, projection)
+            }
             else -> null
         }
     }
 
-    private fun directoriesCursor(projection: Array<out String>): Cursor {
-        val label = context?.getString(R.string.caller_directory_display) ?: "OneCaller"
-        val cursor = MatrixCursor(projection)
-        cursor.addRow(
-            projection.map { column ->
-                when (column) {
-                    Directory.ACCOUNT_NAME -> ACCOUNT_NAME
-                    Directory.ACCOUNT_TYPE -> ACCOUNT_TYPE
-                    Directory.DISPLAY_NAME -> label
-                    Directory.TYPE_RESOURCE_ID -> R.string.caller_directory_display
-                    Directory.EXPORT_SUPPORT -> Directory.EXPORT_SUPPORT_NONE
-                    Directory.SHORTCUT_SUPPORT -> Directory.SHORTCUT_SUPPORT_NONE
-                    Directory.PHOTO_SUPPORT -> Directory.PHOTO_SUPPORT_NONE
-                    else -> null
-                }
-            }.toTypedArray(),
+    private fun directoriesCursor(projection: Array<out String>?): Cursor {
+        val columns = projection ?: DEFAULT_DIRECTORY_COLUMNS
+        val display = context?.getString(R.string.caller_directory_display) ?: "OneCaller"
+        val values = mapOf<String, Any?>(
+            Directory.ACCOUNT_NAME to ACCOUNT_NAME,
+            Directory.ACCOUNT_TYPE to ACCOUNT_TYPE,
+            Directory.DISPLAY_NAME to display,
+            Directory.PACKAGE_NAME to BuildConfig.APPLICATION_ID,
+            Directory.TYPE_RESOURCE_ID to R.string.caller_directory_display,
+            Directory.EXPORT_SUPPORT to Directory.EXPORT_SUPPORT_ANY_ACCOUNT,
+            Directory.SHORTCUT_SUPPORT to Directory.SHORTCUT_SUPPORT_NONE,
+            Directory.PHOTO_SUPPORT to Directory.PHOTO_SUPPORT_NONE,
+            Directory.DIRECTORY_AUTHORITY to authority,
         )
-        return cursor
+        return MatrixCursor(columns).also { it.addProjectionAwareRow(columns, values) }
     }
 
-    private fun lookupCursor(projection: Array<out String>, rawNumber: String): Cursor {
-        val cursor = MatrixCursor(projection)
-        val hit = resolveLabel(rawNumber) ?: return cursor
-        cursor.addRow(
-            projection.map { column ->
-                when (column) {
-                    PhoneLookup._ID,
-                    ContactsContract.Contacts._ID,
-                    -> hit.idHash
-                    PhoneLookup.DISPLAY_NAME,
-                    ContactsContract.Contacts.DISPLAY_NAME,
-                    -> hit.displayName
-                    PhoneLookup.LABEL -> hit.label
-                    PhoneLookup.NUMBER -> NumberMatcher.digits(rawNumber)
-                    PhoneLookup.TYPE -> ContactsContract.CommonDataKinds.Phone.TYPE_CUSTOM
-                    else -> null
-                }
-            }.toTypedArray(),
+    private fun phoneLookupCursor(rawNumber: String, projection: Array<out String>?): Cursor {
+        val columns = projection ?: DEFAULT_PHONE_COLUMNS
+        val empty = MatrixCursor(columns)
+        val hit = resolveLabel(rawNumber) ?: return empty
+        val digits = NumberMatcher.digits(rawNumber).ifBlank { rawNumber }
+        val values = mapOf<String, Any?>(
+            Data._ID to hit.idHash,
+            Data.MIMETYPE to Phone.CONTENT_ITEM_TYPE,
+            Data.CONTACT_ID to hit.idHash,
+            Contacts._ID to hit.idHash,
+            Contacts.LOOKUP_KEY to "$LOOKUP_PREFIX$digits",
+            Contacts.DISPLAY_NAME to hit.displayName,
+            PhoneLookup._ID to hit.idHash,
+            PhoneLookup.DISPLAY_NAME to hit.displayName,
+            PhoneLookup.NUMBER to digits,
+            PhoneLookup.TYPE to Phone.TYPE_CUSTOM,
+            PhoneLookup.LABEL to hit.label,
+            Phone.NUMBER to digits,
+            Phone.TYPE to Phone.TYPE_CUSTOM,
+            Phone.LABEL to hit.label,
         )
-        return cursor
-    }
-
-    private fun contactsFilterCursor(projection: Array<out String>, filter: String): Cursor {
-        val cursor = MatrixCursor(projection)
-        val digits = NumberMatcher.digits(filter)
-        if (digits.isEmpty()) return cursor
-        val hit = resolveLabel(digits) ?: return cursor
-        cursor.addRow(
-            projection.map { column ->
-                when (column) {
-                    ContactsContract.Contacts._ID -> hit.idHash
-                    ContactsContract.Contacts.DISPLAY_NAME -> hit.displayName
-                    else -> null
-                }
-            }.toTypedArray(),
-        )
-        return cursor
+        return MatrixCursor(columns).also { it.addProjectionAwareRow(columns, values) }
     }
 
     private fun resolveLabel(rawNumber: String): LabelHit? {
@@ -122,6 +116,8 @@ class OneCallerDirectoryProvider : ContentProvider() {
         val chosen = result.matchedRules.firstOrNull { it.kind == CallRuleKind.ALLOW }
             ?: result.matchedRules.firstOrNull { it.kind == CallRuleKind.LABEL }
             ?: result.matchedRules.firstOrNull { it.kind == CallRuleKind.BLOCK }
+        // Align with Telo Directory: paint a dialer row when we have something to show
+        // (rule tag and/or geo). Telo HEAD only paints on spam hit; we also paint LABEL/geo.
         val composed = DialerLabelComposer.compose(
             geo = geo,
             ruleKind = chosen?.kind,
@@ -132,23 +128,28 @@ class OneCallerDirectoryProvider : ContentProvider() {
             spamFmt = { tag -> ctx.getString(R.string.caller_label_spam_fmt, tag) },
         ) ?: return null
         return LabelHit(
-            idHash = digits.hashCode().toLong().and(0x7fff_ffffL),
+            idHash = (digits.hashCode().toLong() and 0x7fff_ffffL) + 1L,
             displayName = composed.displayName,
             label = composed.label,
         )
     }
 
+    private fun MatrixCursor.addProjectionAwareRow(
+        columns: Array<out String>,
+        values: Map<String, Any?>,
+    ) {
+        addRow(columns.map { values[it] }.toTypedArray())
+    }
+
     override fun getType(uri: Uri): String? = null
-    override fun insert(uri: Uri, values: ContentValues?): Uri? =
-        throw UnsupportedOperationException()
-    override fun delete(uri: Uri, selection: String?, selectionArgs: Array<out String>?): Int =
-        throw UnsupportedOperationException()
+    override fun insert(uri: Uri, values: ContentValues?): Uri? = null
+    override fun delete(uri: Uri, selection: String?, selectionArgs: Array<out String>?): Int = 0
     override fun update(
         uri: Uri,
         values: ContentValues?,
         selection: String?,
         selectionArgs: Array<out String>?,
-    ): Int = throw UnsupportedOperationException()
+    ): Int = 0
 
     private data class LabelHit(val idHash: Long, val displayName: String, val label: String)
 
@@ -156,9 +157,38 @@ class OneCallerDirectoryProvider : ContentProvider() {
         private const val CODE_DIRECTORIES = 1
         private const val CODE_PHONE_LOOKUP = 2
         private const val CODE_CONTACTS_FILTER = 3
-        private const val CODE_PHONE_FILTER = 4
-        const val ACCOUNT_NAME = "OneCaller"
-        const val ACCOUNT_TYPE = "com.onetools.app.caller"
+        private const val CODE_CONTACT_LOOKUP = 4
+        private const val LOOKUP_PREFIX = "onecaller:"
+
+        const val ACCOUNT_NAME = "OneCallerLocal"
+        val ACCOUNT_TYPE: String get() = BuildConfig.APPLICATION_ID
+
+        private val DEFAULT_DIRECTORY_COLUMNS = arrayOf(
+            Directory.ACCOUNT_NAME,
+            Directory.ACCOUNT_TYPE,
+            Directory.DISPLAY_NAME,
+            Directory.PACKAGE_NAME,
+            Directory.TYPE_RESOURCE_ID,
+            Directory.EXPORT_SUPPORT,
+            Directory.SHORTCUT_SUPPORT,
+            Directory.PHOTO_SUPPORT,
+            Directory.DIRECTORY_AUTHORITY,
+        )
+
+        private val DEFAULT_PHONE_COLUMNS = arrayOf(
+            Data._ID,
+            Data.MIMETYPE,
+            Data.CONTACT_ID,
+            Contacts.LOOKUP_KEY,
+            Contacts.DISPLAY_NAME,
+            PhoneLookup.DISPLAY_NAME,
+            PhoneLookup.NUMBER,
+            PhoneLookup.TYPE,
+            PhoneLookup.LABEL,
+            Phone.NUMBER,
+            Phone.TYPE,
+            Phone.LABEL,
+        )
 
         fun notifyChanged(resolver: android.content.ContentResolver) {
             Directory.notifyDirectoryChange(resolver)

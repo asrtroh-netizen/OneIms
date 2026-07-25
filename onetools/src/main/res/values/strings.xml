@@ -407,6 +407,7 @@
     <string name="caller_directory_authority">com.onetools.app.caller.directory</string>
 
     <string name="caller_directory_display">OneCaller</string>
+    <!-- Display name shown in Contacts Directory list; keep short like Telo's "Pixel Telo". -->
 
     <string name="caller_label_allow">白名单</string>
 
