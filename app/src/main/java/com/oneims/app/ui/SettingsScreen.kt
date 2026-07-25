@@ -119,6 +119,21 @@ fun SettingsScreen(
         }
 
         item {
+            SectionBlock(
+                title = stringResource(R.string.membership_settings_section),
+                description = stringResource(R.string.membership_settings_section_sub),
+            ) {
+                SettingsActionRow(
+                    icon = Icons.Filled.Star,
+                    title = stringResource(R.string.membership_settings_entry),
+                    subtitle = stringResource(R.string.membership_settings_entry_sub),
+                    onClick = actions.onOpenMembership,
+                    trailingText = stringResource(R.string.membership_settings_entry_badge),
+                )
+            }
+        }
+
+        item {
             SectionBlock(title = stringResource(R.string.about_title)) {
                 SettingsActionRow(
                     icon = Icons.Filled.Info,
@@ -157,7 +172,7 @@ fun SettingsScreen(
                             context.startActivity(
                                 Intent(
                                     Intent.ACTION_VIEW,
-                                    Uri.parse("https://github.com/asrtroh-netizen/shizuku"),
+                                    Uri.parse("https://github.com/OneCatx/shizuku"),
                                 ),
                             )
                         }

@@ -7,8 +7,8 @@ import org.junit.Test
 class GitHubRepoParserTest {
     @Test
     fun parsesOwnerRepo() {
-        val app = GitHubRepoParser.parse("asrtroh-netizen/OneIms").getOrThrow()
-        assertEquals("asrtroh-netizen", app.githubOwner)
+        val app = GitHubRepoParser.parse("OneCatx/OneIms").getOrThrow()
+        assertEquals("OneCatx", app.githubOwner)
         assertEquals("OneIms", app.githubRepo)
         assertTrue(app.id.contains("oneims"))
     }
