@@ -772,11 +772,11 @@
     <string name="force_temporary_sub">跳过 persistent=true，直接写临时覆盖；默认关。部分新系统可减少拒写；重启仍靠开机重放</string>
     <string name="force_temporary_on">已开启强制临时写入</string>
     <string name="force_temporary_off">已关闭强制临时写入</string>
-    <string name="sandbox_persist_title">沙盒持久旁路</string>
-    <string name="sandbox_persist_sub">对齐南宫 3.1：平台探测仍允许时经 SDK Sandbox 尝试真持久。默认开；失败回落；与「强制临时」互斥（临时优先）</string>
-    <string name="sandbox_persist_home_sub">默认开：平台仍允许时走 SDK 沙盒尽量真持久（对齐 VoLTE 免 Shizuku 过重启）；失败回落；「强制临时」优先</string>
-    <string name="sandbox_persist_on">已开启沙盒持久旁路</string>
-    <string name="sandbox_persist_off">已关闭沙盒持久旁路</string>
+    <string name="sandbox_persist_title">重启后尽量记住设置</string>
+    <string name="sandbox_persist_sub">打开后，尽量让通话相关设置重启后还在；手机不允许时会自动换别的办法。默认建议开着。</string>
+    <string name="sandbox_persist_home_sub">默认开着：尽量让设置重启后还在，不用每次再连无线。不行就等连上无线后自动补。</string>
+    <string name="sandbox_persist_on">已开启：重启后尽量记住设置</string>
+    <string name="sandbox_persist_off">已关闭：重启后尽量记住设置</string>
     <string name="diagnostic_check_platform_persistent">系统持久能力探测</string>
     <string name="diagnostic_check_platform_persistent_guidance">对照 phone 进程 CarrierConfigLoader 是否存在 isSystemApp / 沙盒校验。探测失败或显示「平台已收紧」时，请依赖开机重放，或开启「实验功能 → 强制临时写入」。</string>
     <string name="diagnostic_platform_persistent_allowed">平台仍可能允许尝试系统持久</string>

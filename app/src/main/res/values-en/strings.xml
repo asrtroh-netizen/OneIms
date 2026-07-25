@@ -763,11 +763,11 @@
     <string name="force_temporary_sub">Skip persistent=true and write temporary overrides only. Off by default. May reduce denials on newer builds; reboot still needs reapply</string>
     <string name="force_temporary_on">Force temporary writes enabled</string>
     <string name="force_temporary_off">Force temporary writes disabled</string>
-    <string name="sandbox_persist_title">Sandbox persist bypass</string>
-    <string name="sandbox_persist_sub">Nangong 3.1-style: when the platform probe still allows it, try true persistence via SDK Sandbox Instrumentation. On by default; falls back automatically; force-temporary wins if both are on</string>
-    <string name="sandbox_persist_home_sub">On by default: try SDK sandbox true persistence when the platform allows (VoLTE-like reboot without Shizuku). Auto fallback; force-temporary wins</string>
-    <string name="sandbox_persist_on">Sandbox persist bypass enabled</string>
-    <string name="sandbox_persist_off">Sandbox persist bypass disabled</string>
+    <string name="sandbox_persist_title">Keep settings after reboot</string>
+    <string name="sandbox_persist_sub">When on, try to keep call-related settings after reboot. If the phone won’t allow it, we fall back automatically. Recommended on.</string>
+    <string name="sandbox_persist_home_sub">On by default: keep settings after reboot when possible, without reconnecting wireless each time. If not, we’ll reapply after wireless is back.</string>
+    <string name="sandbox_persist_on">Keep-settings-after-reboot is on</string>
+    <string name="sandbox_persist_off">Keep-settings-after-reboot is off</string>
     <string name="diagnostic_check_platform_persistent">Platform persistence probe</string>
     <string name="diagnostic_check_platform_persistent_guidance">Checks whether CarrierConfigLoader exposes isSystemApp / sandbox gates. If the probe fails or says the platform is tightened, rely on boot reapply, or enable Experimental → Force temporary writes.</string>
     <string name="diagnostic_platform_persistent_allowed">Platform may still allow persistent attempts</string>
