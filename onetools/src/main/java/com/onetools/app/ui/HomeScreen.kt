@@ -25,6 +25,7 @@ fun HomeScreen(
     channelState: ChannelCardState,
     onActivateOrCheck: () -> Unit,
     onOpenBattery: () -> Unit,
+    onOpenMeter: () -> Unit,
     onOpenUpdates: () -> Unit,
     onOpenRecorder: () -> Unit,
     onExportDiag: () -> Unit,
@@ -68,6 +69,14 @@ fun HomeScreen(
                 title = stringResource(R.string.battery_card_title),
                 subtitle = stringResource(R.string.battery_card_sub),
                 onClick = onOpenBattery,
+            )
+        }
+
+        item {
+            InfoCard(
+                title = stringResource(R.string.meter_card_title),
+                subtitle = stringResource(R.string.meter_card_sub),
+                onClick = onOpenMeter,
             )
         }
 
