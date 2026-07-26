@@ -2,6 +2,9 @@ package com.onetools.app.live
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.onetools.app.live.capsule.CapsuleGestureAction
+import com.onetools.app.live.capsule.CapsuleGestureDefaults
+import com.onetools.app.live.capsule.CapsuleGestureSlot
 
 class LiveStatusPrefs(context: Context) {
     private val prefs: SharedPreferences =
@@ -42,6 +45,17 @@ class LiveStatusPrefs(context: Context) {
         set(value) = prefs.edit().putInt(KEY_OFFSET_Y, value.coerceIn(-40, 120)).apply()
 
     /**
+     * 挖孔校准：叠在系统检测到的摄像头中心上（对照 OneCapsule overlayOffset）。
+     */
+    var cutoutCalibXDp: Int
+        get() = prefs.getInt(KEY_CUTOUT_X, 0).coerceIn(-24, 24)
+        set(value) = prefs.edit().putInt(KEY_CUTOUT_X, value.coerceIn(-24, 24)).apply()
+
+    var cutoutCalibYDp: Int
+        get() = prefs.getInt(KEY_CUTOUT_Y, 0).coerceIn(-16, 16)
+        set(value) = prefs.edit().putInt(KEY_CUTOUT_Y, value.coerceIn(-16, 16)).apply()
+
+    /**
      * 避摄策略：默认 BELOW（不挡摄）；CAMERA_CENTER 对齐挖孔（更像 MT 岛）。
      */
     var cameraExclusionMode: String
@@ -50,6 +64,41 @@ class LiveStatusPrefs(context: Context) {
             KEY_EXCLUSION,
             if (value == "CAMERA_CENTER") "CAMERA_CENTER" else "BELOW",
         ).apply()
+
+    /** Material You / 壁纸动态色。 */
+    var dynamicColorEnabled: Boolean
+        get() = prefs.getBoolean(KEY_DYNAMIC_COLOR, true)
+        set(value) = prefs.edit().putBoolean(KEY_DYNAMIC_COLOR, value).apply()
+
+    /** 展开 / 切会话轻触反馈。 */
+    var hapticEnabled: Boolean
+        get() = prefs.getBoolean(KEY_HAPTIC, true)
+        set(value) = prefs.edit().putBoolean(KEY_HAPTIC, value).apply()
+
+    fun gestureAction(slot: CapsuleGestureSlot): CapsuleGestureAction =
+        CapsuleGestureAction.fromPref(
+            prefs.getString(slot.prefKey, null),
+            CapsuleGestureDefaults.actionFor(slot),
+        )
+
+    fun setGestureAction(slot: CapsuleGestureSlot, action: CapsuleGestureAction) {
+        prefs.edit().putString(slot.prefKey, action.name).apply()
+    }
+
+    fun resetCutoutCalibration() {
+        prefs.edit()
+            .putInt(KEY_CUTOUT_X, 0)
+            .putInt(KEY_CUTOUT_Y, 0)
+            .apply()
+    }
+
+    fun resetGesturesToDefaults() {
+        val editor = prefs.edit()
+        CapsuleGestureSlot.entries.forEach { slot ->
+            editor.putString(slot.prefKey, CapsuleGestureDefaults.actionFor(slot).name)
+        }
+        editor.apply()
+    }
 
     fun isSourceEnabled(source: LiveStatusSource): Boolean =
         prefs.getBoolean(keySource(source), true)
@@ -84,7 +133,11 @@ class LiveStatusPrefs(context: Context) {
         private const val KEY_HEIGHT = "capsule_height_scale"
         private const val KEY_OFFSET_X = "capsule_offset_x"
         private const val KEY_OFFSET_Y = "capsule_offset_y"
+        private const val KEY_CUTOUT_X = "cutout_calib_x"
+        private const val KEY_CUTOUT_Y = "cutout_calib_y"
         private const val KEY_EXCLUSION = "camera_exclusion_mode"
+        private const val KEY_DYNAMIC_COLOR = "dynamic_color"
+        private const val KEY_HAPTIC = "haptic_enabled"
     }
 }
 

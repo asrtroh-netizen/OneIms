@@ -66,25 +66,38 @@ class OneCapsuleOverlay private constructor(context: Context) {
                     if (e1 == null) return false
                     val dx = e2.x - e1.x
                     val dy = e2.y - e1.y
-                    if (abs(dx) > abs(dy) && abs(dx) > min) {
-                        if (dx < 0) OneCapsuleStore.next() else OneCapsuleStore.prev()
-                        return true
+                    val slot = when {
+                        abs(dx) > abs(dy) && abs(dx) > min ->
+                            if (dx < 0) CapsuleGestureSlot.SWIPE_LEFT else CapsuleGestureSlot.SWIPE_RIGHT
+                        abs(dy) > abs(dx) && abs(dy) > min ->
+                            if (dy > 0) CapsuleGestureSlot.SWIPE_DOWN else CapsuleGestureSlot.SWIPE_UP
+                        else -> return false
                     }
-                    if (abs(dy) > abs(dx) && abs(dy) > min) {
-                        if (dy > 0) OneCapsuleStore.expand() else OneCapsuleStore.collapse()
-                        return true
-                    }
-                    return false
+                    return runGesture(slot)
                 }
 
-                override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
-                    val mode = OneCapsuleStore.snapshot().mode
-                    if (mode == CapsuleDisplayMode.PILL) OneCapsuleStore.expand()
-                    else if (mode == CapsuleDisplayMode.EXPANDED) OneCapsuleStore.collapse()
-                    return true
-                }
+                override fun onSingleTapConfirmed(e: MotionEvent): Boolean =
+                    runGesture(CapsuleGestureSlot.TAP)
             },
         )
+    }
+
+    private fun runGesture(slot: CapsuleGestureSlot): Boolean {
+        val action = prefs.gestureAction(slot)
+        val ok = CapsuleGestureDispatcher.dispatch(action)
+        if (ok) {
+            when (action) {
+                CapsuleGestureAction.EXPAND,
+                CapsuleGestureAction.COLLAPSE,
+                CapsuleGestureAction.TOGGLE,
+                -> CapsuleHaptics.confirm(root, prefs.hapticEnabled)
+                CapsuleGestureAction.NEXT,
+                CapsuleGestureAction.PREV,
+                -> CapsuleHaptics.tick(root, prefs.hapticEnabled)
+                CapsuleGestureAction.NONE -> Unit
+            }
+        }
+        return ok
     }
 
     fun canDraw(): Boolean = Settings.canDrawOverlays(app)
@@ -260,11 +273,13 @@ class OneCapsuleOverlay private constructor(context: Context) {
         val textSp = (11f * ((w + h) * 0.5f)).coerceIn(9f, 15f)
         val minH = dp((22f * h).toInt().coerceIn(18, 40)).coerceAtLeast(dp(32))
         val radius = dp((14f * h).toInt().coerceIn(10, 22)).toFloat()
+        val fill = CapsuleThemeColors.pillFill(app, prefs.dynamicColorEnabled)
+        val stroke = CapsuleThemeColors.stroke(prefs.dynamicColorEnabled, session.accentColor)
         fun pillBg(): GradientDrawable = GradientDrawable().apply {
             shape = GradientDrawable.RECTANGLE
             cornerRadius = radius
-            setColor(Color.parseColor("#F2000000"))
-            setStroke(dp(1), Color.parseColor("#22FFFFFF"))
+            setColor(fill)
+            setStroke(dp(1), stroke)
         }
         val slots = session.toSlots()
         val split = exclusionMode() == CameraExclusionMode.CAMERA_CENTER &&
@@ -363,8 +378,11 @@ class OneCapsuleOverlay private constructor(context: Context) {
         box.background = GradientDrawable().apply {
             shape = GradientDrawable.RECTANGLE
             cornerRadius = dp(22).toFloat()
-            setColor(Color.parseColor("#F214161C"))
-            setStroke(dp(1), Color.parseColor("#33FFFFFF"))
+            setColor(CapsuleThemeColors.cardFill(app, prefs.dynamicColorEnabled))
+            setStroke(
+                dp(1),
+                CapsuleThemeColors.stroke(prefs.dynamicColorEnabled, session.accentColor),
+            )
         }
         box.addView(label(session.title, 15f, true, Color.WHITE))
         if (session.subtitle.isNotBlank()) {
@@ -436,7 +454,7 @@ class OneCapsuleOverlay private constructor(context: Context) {
                 box.addView(actions, alp)
             }
         }
-        val tip = label("上滑收起 · 点按切换", 10f, false, Color.parseColor("#66FFFFFF"))
+        val tip = label(gestureHintText(), 10f, false, Color.parseColor("#66FFFFFF"))
         (tip.layoutParams as LinearLayout.LayoutParams).topMargin = dp(12)
         box.addView(tip)
 
@@ -521,6 +539,13 @@ class OneCapsuleOverlay private constructor(context: Context) {
         lp.x = (bounds.centerXPx - screenW / 2) + dp(prefs.capsuleOffsetXDp)
         lp.y = bounds.topPx
         runCatching { wm?.updateViewLayout(r, lp) }
+    }
+
+    private fun gestureHintText(): String {
+        val down = prefs.gestureAction(CapsuleGestureSlot.SWIPE_DOWN).labelZh
+        val up = prefs.gestureAction(CapsuleGestureSlot.SWIPE_UP).labelZh
+        val tap = prefs.gestureAction(CapsuleGestureSlot.TAP).labelZh
+        return "下滑$down · 上滑$up · 点按$tap"
     }
 
     private fun dp(v: Int): Int =

@@ -56,4 +56,17 @@ class CameraAwareCapsuleLayoutTest {
         )
         assertEquals(pill.topPx, expanded.topPx)
     }
+
+    @Test
+    fun cutoutCalibrationShiftsAnchorCenter() {
+        val calibrated = CameraAnchorResolver.applyCalibration(
+            raw = anchor,
+            calibXDp = 10,
+            calibYDp = -4,
+            density = 2f,
+        )
+        assertEquals(560, calibrated.centerX)
+        assertEquals(72, calibrated.centerY)
+        assertEquals(anchor.width, calibrated.width)
+    }
 }

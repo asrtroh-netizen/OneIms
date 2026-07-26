@@ -27,10 +27,10 @@
 | # | 能力 | 说明 |
 |---|---|---|
 | 6 | DOT / MINI / COMPACT 多档高度 | MT 三级折叠；我们现只有 PILL/EXPANDED |
-| 7 | 主题 token / 动态色 | `ui/theme`；壁纸取色可后置 |
-| 8 | 震动反馈节奏 | MT Vibration CompositionLocal；展开轻触 |
-| 9 | 手势可配置表 | `feature/gestures`；默认手势可先写死 |
-| 10 | 预览/校准页 | OneCapsule `feature/calibration`；真机对挖孔调参 |
+| 7 | ~~主题 token / 动态色~~ | **0.7.1 已做** `CapsuleThemeColors` + Live Lab 开关 |
+| 8 | ~~震动反馈节奏~~ | **0.7.1 已做** `CapsuleHaptics` |
+| 9 | ~~手势可配置表~~ | **0.7.1 已做** `CapsuleGestureMap` + Live Lab 映射 |
+| 10 | ~~预览/校准页~~ | **0.7.1 已做** 挖孔校准滑条（精简版，非独立页） |
 
 ## 低优先 / 刻意不做（P2 / 禁区）
 

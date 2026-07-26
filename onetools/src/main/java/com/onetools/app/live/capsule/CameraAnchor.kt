@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Build
 import android.util.TypedValue
 import android.view.WindowManager
+import com.onetools.app.live.LiveStatusPrefs
 import kotlin.math.abs
 
 data class CameraAnchor(
@@ -25,7 +26,21 @@ enum class CameraExclusionMode {
  * 干净室：借鉴 OneCapsule/MT「以挖孔为锚」的心智，自写实现。
  */
 object CameraAnchorResolver {
+    /** 含用户挖孔校准偏移（对照 OneCapsule overlayOffset）。 */
     fun resolve(context: Context): CameraAnchor {
+        val raw = resolveRaw(context)
+        val prefs = LiveStatusPrefs(context)
+        val density = context.applicationContext.resources.displayMetrics.density.coerceAtLeast(0.5f)
+        return applyCalibration(
+            raw,
+            calibXDp = prefs.cutoutCalibXDp,
+            calibYDp = prefs.cutoutCalibYDp,
+            density = density,
+        )
+    }
+
+    /** 系统原始挖孔，不含用户校准（校准页展示用）。 */
+    fun resolveRaw(context: Context): CameraAnchor {
         val app = context.applicationContext
         val wm = app.getSystemService(WindowManager::class.java)
         val density = app.resources.displayMetrics.density.coerceAtLeast(0.5f)
@@ -50,6 +65,17 @@ object CameraAnchorResolver {
         val w = app.resources.displayMetrics.widthPixels
         val bar = statusBarHeight(app)
         return CameraAnchor(w / 2, (bar * 0.55f).toInt().coerceAtLeast(fallbackH / 2), fallbackW, fallbackH)
+    }
+
+    fun applyCalibration(
+        raw: CameraAnchor,
+        calibXDp: Int,
+        calibYDp: Int,
+        density: Float,
+    ): CameraAnchor {
+        val dx = (calibXDp * density).toInt()
+        val dy = (calibYDp * density).toInt()
+        return raw.copy(centerX = raw.centerX + dx, centerY = raw.centerY + dy)
     }
 
     private fun statusBarHeight(context: Context): Int {

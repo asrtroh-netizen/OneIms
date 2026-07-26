@@ -4,6 +4,8 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
@@ -27,6 +29,9 @@ import com.onetools.app.live.LiveStatusCapsuleOverlay
 import com.onetools.app.live.LiveStatusHub
 import com.onetools.app.live.LiveStatusPrefs
 import com.onetools.app.live.LiveStatusSource
+import com.onetools.app.live.capsule.CameraAnchorResolver
+import com.onetools.app.live.capsule.CapsuleGestureDefaults
+import com.onetools.app.live.capsule.CapsuleGestureSlot
 import kotlin.math.roundToInt
 
 @Composable
@@ -47,6 +52,14 @@ fun LiveLabScreen() {
     var offsetY by remember { mutableIntStateOf(prefs.capsuleOffsetYDp) }
     var exclusionCenter by remember {
         mutableStateOf(prefs.cameraExclusionMode == "CAMERA_CENTER")
+    }
+    var dynamicColor by remember { mutableStateOf(prefs.dynamicColorEnabled) }
+    var haptic by remember { mutableStateOf(prefs.hapticEnabled) }
+    var cutoutX by remember { mutableIntStateOf(prefs.cutoutCalibXDp) }
+    var cutoutY by remember { mutableIntStateOf(prefs.cutoutCalibYDp) }
+    var gestureEpoch by remember { mutableIntStateOf(0) }
+    val cutoutRaw = remember(cutoutX, cutoutY, gestureEpoch) {
+        CameraAnchorResolver.resolveRaw(context)
     }
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -79,6 +92,10 @@ fun LiveLabScreen() {
                 offsetX = prefs.capsuleOffsetXDp
                 offsetY = prefs.capsuleOffsetYDp
                 exclusionCenter = prefs.cameraExclusionMode == "CAMERA_CENTER"
+                dynamicColor = prefs.dynamicColorEnabled
+                haptic = prefs.hapticEnabled
+                cutoutX = prefs.cutoutCalibXDp
+                cutoutY = prefs.cutoutCalibYDp
                 sourceEnabled = LiveStatusSource.entries.associateWith { prefs.isSourceEnabled(it) }
                 LiveStatusHub.refreshCapsuleVisibility(context)
             }
@@ -261,6 +278,143 @@ fun LiveLabScreen() {
                         },
                         valueRange = -40f..120f,
                         enabled = master && capsule,
+                    )
+                }
+            }
+        }
+        item {
+            OneToolsSection(title = stringResource(R.string.live_status_section_feel)) {
+                OneToolsSettingsSwitchRow(
+                    title = stringResource(R.string.live_status_dynamic_color),
+                    subtitle = stringResource(R.string.live_status_dynamic_color_sub),
+                    checked = dynamicColor,
+                    enabled = master && capsule,
+                    onCheckedChange = {
+                        dynamicColor = it
+                        prefs.dynamicColorEnabled = it
+                        applyCapsuleLayout()
+                    },
+                )
+                OneToolsGroupDivider()
+                OneToolsSettingsSwitchRow(
+                    title = stringResource(R.string.live_status_haptic),
+                    subtitle = stringResource(R.string.live_status_haptic_sub),
+                    checked = haptic,
+                    enabled = master && capsule,
+                    onCheckedChange = {
+                        haptic = it
+                        prefs.hapticEnabled = it
+                    },
+                )
+            }
+        }
+        item {
+            OneToolsSection(title = stringResource(R.string.live_status_section_gestures)) {
+                Column(
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.live_status_gesture_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                @Suppress("UNUSED_EXPRESSION")
+                gestureEpoch
+                CapsuleGestureSlot.entries.forEachIndexed { index, slot ->
+                    if (index > 0) OneToolsGroupDivider()
+                    val action = prefs.gestureAction(slot)
+                    OneToolsSettingsActionRow(
+                        icon = Icons.Filled.Star,
+                        title = slot.labelZh,
+                        subtitle = action.labelZh,
+                        enabled = master && capsule,
+                        onClick = {
+                            val next = CapsuleGestureDefaults.cycle(action)
+                            prefs.setGestureAction(slot, next)
+                            gestureEpoch += 1
+                            applyCapsuleLayout()
+                        },
+                    )
+                }
+                OneToolsGroupDivider()
+                Column(modifier = Modifier.padding(20.dp)) {
+                    OneToolsPrimaryButton(
+                        text = stringResource(R.string.live_status_gesture_reset),
+                        enabled = master && capsule,
+                        onClick = {
+                            prefs.resetGesturesToDefaults()
+                            gestureEpoch += 1
+                            applyCapsuleLayout()
+                        },
+                    )
+                }
+            }
+        }
+        item {
+            OneToolsSection(title = stringResource(R.string.live_status_section_cutout)) {
+                Column(
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Text(
+                        text = stringResource(
+                            R.string.live_status_cutout_info,
+                            cutoutRaw.centerX,
+                            cutoutRaw.centerY,
+                            cutoutRaw.width,
+                            cutoutRaw.height,
+                        ),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Text(
+                        text = stringResource(R.string.live_status_cutout_note),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        text = stringResource(R.string.live_status_cutout_x, cutoutX),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Slider(
+                        value = cutoutX.toFloat(),
+                        onValueChange = {
+                            val v = it.roundToInt()
+                            cutoutX = v
+                            prefs.cutoutCalibXDp = v
+                            applyCapsuleLayout()
+                        },
+                        valueRange = -24f..24f,
+                        enabled = master && capsule,
+                    )
+                    Text(
+                        text = stringResource(R.string.live_status_cutout_y, cutoutY),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Slider(
+                        value = cutoutY.toFloat(),
+                        onValueChange = {
+                            val v = it.roundToInt()
+                            cutoutY = v
+                            prefs.cutoutCalibYDp = v
+                            applyCapsuleLayout()
+                        },
+                        valueRange = -16f..16f,
+                        enabled = master && capsule,
+                    )
+                    OneToolsPrimaryButton(
+                        text = stringResource(R.string.live_status_cutout_reset),
+                        enabled = master && capsule,
+                        onClick = {
+                            prefs.resetCutoutCalibration()
+                            cutoutX = 0
+                            cutoutY = 0
+                            applyCapsuleLayout()
+                        },
                     )
                 }
             }
