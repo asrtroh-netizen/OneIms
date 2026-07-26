@@ -38,8 +38,10 @@ class OneCapsuleOverlay private constructor(context: Context) {
 
     private var root: LinearLayout? = null
     private var params: WindowManager.LayoutParams? = null
-    /** 一体壳：单一背景，内部可排 icon / 主文 / 避摄缝 / 副文。 */
+    /** 一体壳：单一背景；左簇靠左、右簇靠右，中间挖孔缝。 */
     private var pillShell: LinearLayout? = null
+    private var pillLeftCluster: LinearLayout? = null
+    private var pillRightCluster: LinearLayout? = null
     private var pillIcon: ImageView? = null
     private var pillPrimary: TextView? = null
     private var pillTextGap: Space? = null
@@ -138,31 +140,40 @@ class OneCapsuleOverlay private constructor(context: Context) {
         val shell = LinearLayout(app).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            // 触控热区在 root；视觉壳保持扁胶囊高度，勿硬抬到 48dp 变「圆角矩形」。
+        }
+        val left = LinearLayout(app).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.START or Gravity.CENTER_VERTICAL
         }
         val icon = ImageView(app).apply {
             scaleType = ImageView.ScaleType.CENTER_CROP
             importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
         }
-        val primary = pillTextView()
-        val gap = Space(app)
-        val secondary = pillTextView()
-        shell.addView(icon, LinearLayout.LayoutParams(dp(18), dp(18)).apply { marginEnd = dp(6) })
-        shell.addView(
+        val primary = pillTextView().apply { gravity = Gravity.START or Gravity.CENTER_VERTICAL }
+        left.addView(icon, LinearLayout.LayoutParams(dp(18), dp(18)).apply { marginEnd = dp(6) })
+        left.addView(
             primary,
             LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT,
             ),
         )
-        shell.addView(gap, LinearLayout.LayoutParams(0, 1))
-        shell.addView(
+        val gap = Space(app)
+        val right = LinearLayout(app).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.END or Gravity.CENTER_VERTICAL
+        }
+        val secondary = pillTextView().apply { gravity = Gravity.END or Gravity.CENTER_VERTICAL }
+        right.addView(
             secondary,
             LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT,
             ),
         )
+        shell.addView(left, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+        shell.addView(gap, LinearLayout.LayoutParams(dp(24), 1))
+        shell.addView(right, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
 
         val hint = TextView(app).apply {
             setTextColor(Color.parseColor("#88FFFFFF"))
@@ -224,6 +235,8 @@ class OneCapsuleOverlay private constructor(context: Context) {
             wm.addView(rootLl, lp)
             root = rootLl
             pillShell = shell
+            pillLeftCluster = left
+            pillRightCluster = right
             pillIcon = icon
             pillPrimary = primary
             pillTextGap = gap
@@ -250,6 +263,8 @@ class OneCapsuleOverlay private constructor(context: Context) {
         root = null
         params = null
         pillShell = null
+        pillLeftCluster = null
+        pillRightCluster = null
         pillIcon = null
         pillPrimary = null
         pillTextGap = null
@@ -300,61 +315,59 @@ class OneCapsuleOverlay private constructor(context: Context) {
         }
         shell.setPadding(padH, padV, padH, padV)
         shell.minimumHeight = visualH
-        shell.minimumWidth = dp((140f * w).toInt().coerceIn(110, 340))
-        // 固定视觉高度，避免内容撑高后圆角相对变钝。
+        val anchor = CameraAnchorResolver.resolve(app)
+        // 对齐挖孔时：中间缝 ≈ 挖孔宽，左右文字用 weight 顶到两端。
+        val avoidCamera = exclusionMode() == CameraExclusionMode.CAMERA_CENTER
+        val gapW = if (avoidCamera) {
+            (anchor.width + dp(16)).coerceIn(dp(28), dp(96))
+        } else {
+            dp(8)
+        }
+        val sideMin = dp((72f * w).toInt().coerceIn(56, 120))
+        val shellW = (gapW + sideMin * 2 + padH * 2).coerceAtLeast(dp((168f * w).toInt().coerceIn(140, 360)))
+        shell.minimumHeight = visualH
         shell.layoutParams = (shell.layoutParams as? LinearLayout.LayoutParams)?.apply {
-            height = visualH + padV * 2
-            width = LinearLayout.LayoutParams.WRAP_CONTENT
-        } ?: LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.WRAP_CONTENT,
-            visualH + padV * 2,
-        )
+            height = LinearLayout.LayoutParams.WRAP_CONTENT
+            width = shellW
+        } ?: LinearLayout.LayoutParams(shellW, LinearLayout.LayoutParams.WRAP_CONTENT)
 
         val slots = session.toSlots()
+        val leftText = slots.primary
+        val rightText = slots.secondary?.takeIf { it.isNotBlank() }
+            ?: if (avoidCamera) "" else null
+
         bindAppIcon(pillIcon, session.source, dp(18))
         pillPrimary?.apply {
             setTextSize(TypedValue.COMPLEX_UNIT_SP, textSp)
             setTextColor(Color.WHITE)
-            // 主文含品牌短称；副文单独放右侧（壳仍一体）。
-            text = if (slots.secondary.isNullOrBlank()) {
-                slots.primary
-            } else {
-                slots.primary
-            }
+            text = leftText
+            maxWidth = sideMin + dp(24)
         }
-
-        val useTextGap = exclusionMode() == CameraExclusionMode.CAMERA_CENTER &&
-            !slots.secondary.isNullOrBlank()
-        val gapLp = pillTextGap?.layoutParams as? LinearLayout.LayoutParams
-        if (useTextGap) {
-            val gapW = CameraAnchorResolver.resolve(app).let {
-                (it.width + dp(10)).coerceAtLeast(dp(18))
-            }
-            gapLp?.width = gapW
-            gapLp?.height = 1
-            pillTextGap?.layoutParams = gapLp
-            pillTextGap?.visibility = View.VISIBLE
-            pillSecondary?.visibility = View.VISIBLE
-            pillSecondary?.apply {
-                setTextSize(TypedValue.COMPLEX_UNIT_SP, textSp)
-                setTextColor(Color.WHITE)
-                text = slots.secondary
-            }
-        } else {
-            gapLp?.width = 0
-            pillTextGap?.layoutParams = gapLp
-            pillTextGap?.visibility = View.GONE
-            if (slots.secondary.isNullOrBlank()) {
-                pillSecondary?.visibility = View.GONE
-            } else {
-                pillSecondary?.visibility = View.VISIBLE
-                pillSecondary?.apply {
-                    setTextSize(TypedValue.COMPLEX_UNIT_SP, textSp)
-                    setTextColor(Color.parseColor("#CCFFFFFF"))
-                    text = " · ${slots.secondary}"
-                }
-            }
+        pillSecondary?.apply {
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, textSp)
+            setTextColor(Color.WHITE)
+            text = rightText.orEmpty()
+            visibility = if (rightText.isNullOrBlank()) View.INVISIBLE else View.VISIBLE
+            maxWidth = sideMin + dp(24)
         }
+        pillTextGap?.visibility = View.VISIBLE
+        (pillTextGap?.layoutParams as? LinearLayout.LayoutParams)?.apply {
+            width = gapW
+            height = 1
+            weight = 0f
+        }
+        (pillLeftCluster?.layoutParams as? LinearLayout.LayoutParams)?.apply {
+            width = 0
+            weight = 1f
+            gravity = Gravity.START or Gravity.CENTER_VERTICAL
+        }
+        (pillRightCluster?.layoutParams as? LinearLayout.LayoutParams)?.apply {
+            width = 0
+            weight = 1f
+            gravity = Gravity.END or Gravity.CENTER_VERTICAL
+        }
+        pillLeftCluster?.gravity = Gravity.START or Gravity.CENTER_VERTICAL
+        pillRightCluster?.gravity = Gravity.END or Gravity.CENTER_VERTICAL
 
         val hint = pageHint ?: return
         if (snap.sessions.size > 1) {

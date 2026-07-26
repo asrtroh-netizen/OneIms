@@ -59,10 +59,11 @@ class LiveStatusPrefs(context: Context) {
      * 避摄策略：默认 BELOW（不挡摄）；CAMERA_CENTER 对齐挖孔（更像 MT 岛）。
      */
     var cameraExclusionMode: String
-        get() = prefs.getString(KEY_EXCLUSION, "BELOW") ?: "BELOW"
+        // 默认对齐挖孔：一体壳 + 左右文字避摄（海报轻提醒态）。
+        get() = prefs.getString(KEY_EXCLUSION, "CAMERA_CENTER") ?: "CAMERA_CENTER"
         set(value) = prefs.edit().putString(
             KEY_EXCLUSION,
-            if (value == "CAMERA_CENTER") "CAMERA_CENTER" else "BELOW",
+            if (value == "BELOW") "BELOW" else "CAMERA_CENTER",
         ).apply()
 
     /** Material You / 壁纸动态色。 */
