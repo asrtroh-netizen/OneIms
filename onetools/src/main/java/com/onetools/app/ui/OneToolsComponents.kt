@@ -1,6 +1,8 @@
 package com.onetools.app.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,22 +20,33 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.onetools.app.ui.theme.OneToolsTokens
 
@@ -271,5 +284,271 @@ fun OneToolsPrimaryButton(
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.SemiBold,
         )
+    }
+}
+
+@Composable
+fun OneToolsGroupDivider() {
+    HorizontalDivider(
+        modifier = Modifier.padding(start = 76.dp),
+        color = OneToolsTokens.dividerColor(),
+    )
+}
+
+@Composable
+fun OneToolsSettingsSwitchRow(
+    title: String,
+    subtitle: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    enabled: Boolean = true,
+    icon: ImageVector? = null,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = OneToolsTokens.rowMinHeight)
+            .toggleable(
+                value = checked,
+                enabled = enabled,
+                role = Role.Switch,
+                interactionSource = interactionSource,
+                indication = ripple(color = OneToolsTokens.pressedOverlay()),
+                onValueChange = onCheckedChange,
+            )
+            .padding(horizontal = OneToolsTokens.cardPaddingHorizontal, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        if (icon != null) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = if (enabled) {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+                },
+            )
+        }
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = if (enabled) {
+                    MaterialTheme.colorScheme.onSurface
+                } else {
+                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                },
+            )
+            if (subtitle.isNotBlank()) {
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (enabled) {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+                    },
+                )
+            }
+        }
+        Switch(
+            checked = checked,
+            onCheckedChange = null,
+            enabled = enabled,
+        )
+    }
+}
+
+@Composable
+fun OneToolsSettingsChoiceRow(
+    title: String,
+    subtitle: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    enabled: Boolean = true,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 68.dp)
+            .selectable(
+                selected = selected,
+                enabled = enabled,
+                role = Role.RadioButton,
+                interactionSource = interactionSource,
+                indication = ripple(color = OneToolsTokens.pressedOverlay()),
+                onClick = onClick,
+            )
+            .padding(horizontal = OneToolsTokens.cardPaddingHorizontal, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        RadioButton(selected = selected, onClick = null, enabled = enabled)
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = if (enabled) {
+                    MaterialTheme.colorScheme.onSurface
+                } else {
+                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                },
+            )
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                    alpha = if (enabled) 1f else 0.38f,
+                ),
+            )
+        }
+    }
+}
+
+@Composable
+fun OneToolsSettingsActionRow(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    onClick: (() -> Unit)?,
+    enabled: Boolean = true,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val interaction = if (onClick != null) {
+        Modifier.clickable(
+            enabled = enabled,
+            role = Role.Button,
+            interactionSource = interactionSource,
+            indication = ripple(color = OneToolsTokens.pressedOverlay()),
+            onClick = onClick,
+        )
+    } else {
+        Modifier
+    }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = OneToolsTokens.rowMinHeight)
+            .then(interaction)
+            .padding(horizontal = OneToolsTokens.cardPaddingHorizontal, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = if (enabled) {
+                MaterialTheme.colorScheme.onSecondaryContainer
+            } else {
+                MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.38f)
+            },
+            modifier = Modifier
+                .size(40.dp)
+                .background(
+                    color = MaterialTheme.colorScheme.secondaryContainer.copy(
+                        alpha = if (enabled) 1f else 0.38f,
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                )
+                .padding(10.dp),
+        )
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = if (enabled) {
+                    MaterialTheme.colorScheme.onSurface
+                } else {
+                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                },
+            )
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                    alpha = if (enabled) 1f else 0.38f,
+                ),
+            )
+        }
+    }
+}
+
+/** 选卡胶囊：对齐 OneIMS SelectedSimPill。 */
+@Composable
+fun OneToolsSelectedSimPill(
+    labels: List<Pair<Int, String>>,
+    selectedSubId: Int,
+    onSelectSim: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+) {
+    if (labels.isEmpty()) return
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+        horizontalAlignment = Alignment.End,
+    ) {
+        labels.forEach { (subId, label) ->
+            val selected = subId == selectedSubId
+            val containerColor = if (selected) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.surfaceContainerHigh
+            }
+            val contentColor = if (selected) {
+                MaterialTheme.colorScheme.onPrimary
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            }
+            val interactionSource = remember(subId) { MutableInteractionSource() }
+            Surface(
+                modifier = Modifier
+                    .heightIn(min = 32.dp, max = 32.dp)
+                    .selectable(
+                        selected = selected,
+                        enabled = enabled,
+                        role = Role.RadioButton,
+                        interactionSource = interactionSource,
+                        indication = ripple(color = OneToolsTokens.pressedOverlay()),
+                        onClick = { onSelectSim(subId) },
+                    ),
+                shape = RoundedCornerShape(percent = 50),
+                color = containerColor,
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    if (selected) {
+                        Box(
+                            modifier = Modifier
+                                .size(6.dp)
+                                .background(contentColor, CircleShape),
+                        )
+                    }
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = contentColor.copy(alpha = if (enabled) 1f else 0.38f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+        }
     }
 }

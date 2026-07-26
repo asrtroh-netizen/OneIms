@@ -5,9 +5,13 @@ import android.content.SharedPreferences
 
 /**
  * OneTools 特色功能本地偏好（与 OneIMS ConfigStore 解耦）。
+ * 5G 四个阈值字段对齐 OneIMS [SimpleFiveGDisplayConfig]，供 UI 完整复刻与后续站内展示复用；
+ * 系统图标串仍由 [FiveGDisplayController] 按 mode 写入 CarrierConfig。
  */
 object SpecialFeatureStore {
     private const val PREFS = "onetools_special_features"
+    private const val THRESHOLD_MIN = 1
+    private const val THRESHOLD_MAX = 10_000
 
     enum class SignalBarMode {
         AUTO, FOUR_BARS, FIVE_BARS;
@@ -21,6 +25,10 @@ object SpecialFeatureStore {
     data class FiveGConfig(
         val enabled: Boolean = false,
         val mode: String = Mode.CN_SPEED,
+        val plusDlThresholdMbps: Int = 300,
+        val fiveGaDlThresholdMbps: Int = 1000,
+        val uplinkEnhancedThresholdMbps: Int = 50,
+        val superUplinkThresholdMbps: Int = 300,
         val systemIconConfigString: String = DEFAULT_SYSTEM_ICON_CONFIG,
     ) {
         object Mode {
@@ -51,10 +59,23 @@ object SpecialFeatureStore {
 
     fun fiveGConfig(context: Context): FiveGConfig {
         val p = prefs(context)
+        val defaults = FiveGConfig()
         return FiveGConfig(
             enabled = p.getBoolean("five_g_enabled", false),
             mode = p.getString("five_g_mode", FiveGConfig.Mode.CN_SPEED)
                 ?: FiveGConfig.Mode.CN_SPEED,
+            plusDlThresholdMbps = p.getInt("five_g_plus_dl", defaults.plusDlThresholdMbps)
+                .coerceIn(THRESHOLD_MIN, THRESHOLD_MAX),
+            fiveGaDlThresholdMbps = p.getInt("five_g_a_dl", defaults.fiveGaDlThresholdMbps)
+                .coerceIn(THRESHOLD_MIN, THRESHOLD_MAX),
+            uplinkEnhancedThresholdMbps = p.getInt(
+                "five_g_ul_enhanced",
+                defaults.uplinkEnhancedThresholdMbps,
+            ).coerceIn(THRESHOLD_MIN, THRESHOLD_MAX),
+            superUplinkThresholdMbps = p.getInt(
+                "five_g_ul_super",
+                defaults.superUplinkThresholdMbps,
+            ).coerceIn(THRESHOLD_MIN, THRESHOLD_MAX),
             systemIconConfigString = p.getString(
                 "five_g_icon",
                 FiveGConfig.DEFAULT_SYSTEM_ICON_CONFIG,
@@ -66,7 +87,23 @@ object SpecialFeatureStore {
         prefs(context).edit()
             .putBoolean("five_g_enabled", config.enabled)
             .putString("five_g_mode", config.mode)
-            .putString("five_g_icon", config.systemIconConfigString)
+            .putInt(
+                "five_g_plus_dl",
+                config.plusDlThresholdMbps.coerceIn(THRESHOLD_MIN, THRESHOLD_MAX),
+            )
+            .putInt(
+                "five_g_a_dl",
+                config.fiveGaDlThresholdMbps.coerceIn(THRESHOLD_MIN, THRESHOLD_MAX),
+            )
+            .putInt(
+                "five_g_ul_enhanced",
+                config.uplinkEnhancedThresholdMbps.coerceIn(THRESHOLD_MIN, THRESHOLD_MAX),
+            )
+            .putInt(
+                "five_g_ul_super",
+                config.superUplinkThresholdMbps.coerceIn(THRESHOLD_MIN, THRESHOLD_MAX),
+            )
+            .putString("five_g_icon", config.systemIconConfigString.take(1024))
             .apply()
     }
 
