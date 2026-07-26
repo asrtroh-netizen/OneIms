@@ -15,7 +15,8 @@ import android.view.WindowManager
 import android.widget.TextView
 
 /**
- * 顶栏「灵动岛」胶囊：可调大小 / 左右 / 高度。
+ * 顶栏「轻提醒」扁胶囊：对齐 One Capsule 概念图的轻提醒态。
+ * 长度 / 高低独立缩放；默认落在状态栏下方，避开前置摄像头。
  */
 class LiveStatusCapsuleOverlay(private val context: Context) {
     private val app = context.applicationContext
@@ -39,10 +40,12 @@ class LiveStatusCapsuleOverlay(private val context: Context) {
             }
             val tv = TextView(app).apply {
                 setTextColor(Color.WHITE)
-                typeface = Typeface.create("sans-serif-medium", Typeface.BOLD)
+                typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
                 includeFontPadding = false
-                letterSpacing = 0.04f
+                letterSpacing = 0.02f
                 gravity = Gravity.CENTER
+                maxLines = 1
+                isSingleLine = true
             }
             val type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
@@ -100,19 +103,25 @@ class LiveStatusCapsuleOverlay(private val context: Context) {
 
     private fun applyAppearanceLocked() {
         val tv = view ?: return
-        val scale = prefs.capsuleScale.coerceIn(0.7f, 1.6f)
-        val padH = dp((18f * scale).toInt().coerceAtLeast(10))
-        val padV = dp((8f * scale).toInt().coerceAtLeast(4))
+        val w = prefs.capsuleWidthScale
+        val h = prefs.capsuleHeightScale
+        // 截图轻提醒：扁长黑胶囊，字小、左右留白多、上下紧。
+        val padH = dp((16f * w).toInt().coerceIn(10, 36))
+        val padV = dp((4f * h).toInt().coerceIn(2, 12))
+        val textSp = (11f * ((w + h) * 0.5f)).coerceIn(9f, 15f)
+        val minW = dp((120f * w).toInt().coerceIn(72, 280))
+        val radius = dp((14f * h).toInt().coerceIn(10, 22)).toFloat()
         tv.text = lastText
-        tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f * scale)
+        tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, textSp)
         tv.setPadding(padH, padV, padH, padV)
-        tv.minWidth = dp((88f * scale).toInt().coerceAtLeast(56))
-        tv.elevation = dp((10f * scale).toInt().coerceAtLeast(4)).toFloat()
+        tv.minWidth = minW
+        tv.minHeight = dp((22f * h).toInt().coerceIn(18, 40))
+        tv.elevation = dp(6).toFloat()
         tv.background = GradientDrawable().apply {
             shape = GradientDrawable.RECTANGLE
-            cornerRadius = dp((20f * scale).toInt().coerceAtLeast(12)).toFloat()
-            setColor(Color.parseColor("#E6111318"))
-            setStroke(dp(1), Color.parseColor("#33FFFFFF"))
+            cornerRadius = radius
+            setColor(Color.parseColor("#F2000000"))
+            setStroke(dp(1), Color.parseColor("#22FFFFFF"))
         }
     }
 
@@ -122,14 +131,14 @@ class LiveStatusCapsuleOverlay(private val context: Context) {
         val wmRef = wm ?: return
         lp.gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
         lp.x = dp(prefs.capsuleOffsetXDp)
-        lp.y = statusBarInset() + dp(prefs.capsuleOffsetYDp)
+        // 基准落在状态栏底边下方，默认 +6dp，减少压住前置摄像头。
+        lp.y = statusBarHeight() + dp(prefs.capsuleOffsetYDp)
         runCatching { wmRef.updateViewLayout(v, lp) }
     }
 
-    private fun statusBarInset(): Int {
+    private fun statusBarHeight(): Int {
         val resId = app.resources.getIdentifier("status_bar_height", "dimen", "android")
-        val bar = if (resId > 0) app.resources.getDimensionPixelSize(resId) else dp(28)
-        return (bar * 0.35f).toInt().coerceAtLeast(dp(6))
+        return if (resId > 0) app.resources.getDimensionPixelSize(resId) else dp(28)
     }
 
     private fun dp(v: Int): Int =

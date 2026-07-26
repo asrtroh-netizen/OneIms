@@ -41,7 +41,8 @@ fun LiveLabScreen() {
     var didi by remember { mutableStateOf(prefs.isSourceEnabled(LiveStatusSource.DIDI)) }
     var cainiao by remember { mutableStateOf(prefs.isSourceEnabled(LiveStatusSource.CAINIAO)) }
     var preview by remember { mutableStateOf(LiveStatusHub.lastChipText()) }
-    var scale by remember { mutableFloatStateOf(prefs.capsuleScale) }
+    var widthScale by remember { mutableFloatStateOf(prefs.capsuleWidthScale) }
+    var heightScale by remember { mutableFloatStateOf(prefs.capsuleHeightScale) }
     var offsetX by remember { mutableIntStateOf(prefs.capsuleOffsetXDp) }
     var offsetY by remember { mutableIntStateOf(prefs.capsuleOffsetYDp) }
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -58,7 +59,8 @@ fun LiveLabScreen() {
                 preview = LiveStatusHub.lastChipText()
                 master = prefs.masterEnabled
                 capsule = prefs.capsuleEnabled
-                scale = prefs.capsuleScale
+                widthScale = prefs.capsuleWidthScale
+                heightScale = prefs.capsuleHeightScale
                 offsetX = prefs.capsuleOffsetXDp
                 offsetY = prefs.capsuleOffsetYDp
                 LiveStatusHub.refreshCapsuleVisibility(context)
@@ -160,20 +162,39 @@ fun LiveLabScreen() {
                 ) {
                     Text(
                         text = stringResource(
-                            R.string.live_status_adjust_size,
-                            (scale * 100f),
+                            R.string.live_status_adjust_width,
+                            (widthScale * 100f),
                         ),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface,
                     )
                     Slider(
-                        value = scale,
+                        value = widthScale,
                         onValueChange = {
-                            scale = it
-                            prefs.capsuleScale = it
+                            widthScale = it
+                            prefs.capsuleWidthScale = it
                             applyCapsuleLayout()
                         },
-                        valueRange = 0.7f..1.6f,
+                        valueRange = 0.7f..1.8f,
+                        steps = 10,
+                        enabled = master && capsule,
+                    )
+                    Text(
+                        text = stringResource(
+                            R.string.live_status_adjust_height,
+                            (heightScale * 100f),
+                        ),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Slider(
+                        value = heightScale,
+                        onValueChange = {
+                            heightScale = it
+                            prefs.capsuleHeightScale = it
+                            applyCapsuleLayout()
+                        },
+                        valueRange = 0.6f..1.5f,
                         steps = 8,
                         enabled = master && capsule,
                     )
@@ -281,10 +302,10 @@ fun LiveLabScreen() {
                             LiveStatusHub.publish(
                                 context,
                                 LiveStatusSource.MEITUAN,
-                                "美配送中",
+                                "配送中 · 18分钟",
                                 "演示：美团配送进度（非正式订单）",
                             )
-                            preview = "美配送中"
+                            preview = "配送中 · 18分钟"
                         },
                     )
                 }
