@@ -5,10 +5,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -24,6 +27,7 @@ import com.onetools.app.live.LiveStatusCapsuleOverlay
 import com.onetools.app.live.LiveStatusHub
 import com.onetools.app.live.LiveStatusPrefs
 import com.onetools.app.live.LiveStatusSource
+import kotlin.math.roundToInt
 
 @Composable
 fun LiveLabScreen() {
@@ -37,7 +41,14 @@ fun LiveLabScreen() {
     var didi by remember { mutableStateOf(prefs.isSourceEnabled(LiveStatusSource.DIDI)) }
     var cainiao by remember { mutableStateOf(prefs.isSourceEnabled(LiveStatusSource.CAINIAO)) }
     var preview by remember { mutableStateOf(LiveStatusHub.lastChipText()) }
+    var scale by remember { mutableFloatStateOf(prefs.capsuleScale) }
+    var offsetX by remember { mutableIntStateOf(prefs.capsuleOffsetXDp) }
+    var offsetY by remember { mutableIntStateOf(prefs.capsuleOffsetYDp) }
     val lifecycleOwner = LocalLifecycleOwner.current
+
+    fun applyCapsuleLayout() {
+        LiveStatusCapsuleOverlay.get(context).applyLayoutFromPrefs()
+    }
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -47,6 +58,9 @@ fun LiveLabScreen() {
                 preview = LiveStatusHub.lastChipText()
                 master = prefs.masterEnabled
                 capsule = prefs.capsuleEnabled
+                scale = prefs.capsuleScale
+                offsetX = prefs.capsuleOffsetXDp
+                offsetY = prefs.capsuleOffsetYDp
                 LiveStatusHub.refreshCapsuleVisibility(context)
             }
         }
@@ -135,6 +149,66 @@ fun LiveLabScreen() {
                             )
                         }
                     }
+                }
+            }
+        }
+        item {
+            OneToolsSection(title = stringResource(R.string.live_status_adjust)) {
+                Column(
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Text(
+                        text = stringResource(
+                            R.string.live_status_adjust_size,
+                            (scale * 100f),
+                        ),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Slider(
+                        value = scale,
+                        onValueChange = {
+                            scale = it
+                            prefs.capsuleScale = it
+                            applyCapsuleLayout()
+                        },
+                        valueRange = 0.7f..1.6f,
+                        steps = 8,
+                        enabled = master && capsule,
+                    )
+                    Text(
+                        text = stringResource(R.string.live_status_adjust_x, offsetX),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Slider(
+                        value = offsetX.toFloat(),
+                        onValueChange = {
+                            val v = it.roundToInt()
+                            offsetX = v
+                            prefs.capsuleOffsetXDp = v
+                            applyCapsuleLayout()
+                        },
+                        valueRange = -120f..120f,
+                        enabled = master && capsule,
+                    )
+                    Text(
+                        text = stringResource(R.string.live_status_adjust_y, offsetY),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Slider(
+                        value = offsetY.toFloat(),
+                        onValueChange = {
+                            val v = it.roundToInt()
+                            offsetY = v
+                            prefs.capsuleOffsetYDp = v
+                            applyCapsuleLayout()
+                        },
+                        valueRange = -40f..120f,
+                        enabled = master && capsule,
+                    )
                 }
             }
         }

@@ -72,6 +72,10 @@
     <string name="live_status_overlay_need">需要悬浮窗权限才能显示胶囊</string>
     <string name="live_status_overlay_action">打开悬浮窗权限设置</string>
     <string name="live_status_demo">预览胶囊（演示文案）</string>
+    <string name="live_status_adjust">胶囊调节</string>
+    <string name="live_status_adjust_size">大小 %1$.0f%%</string>
+    <string name="live_status_adjust_x">左右 %1$d dp</string>
+    <string name="live_status_adjust_y">高度 %1$d dp</string>
     <string name="live_status_access_need">需要打开「通知使用权」才能读取美团/滴滴/菜鸟进度通知</string>
     <string name="live_status_access_ready">通知使用权已开启</string>
     <string name="live_status_access_action">打开通知使用权设置</string>

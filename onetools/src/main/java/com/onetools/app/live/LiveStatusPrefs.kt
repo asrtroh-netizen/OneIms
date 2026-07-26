@@ -16,6 +16,21 @@ class LiveStatusPrefs(context: Context) {
         get() = prefs.getBoolean(KEY_CAPSULE, true)
         set(value) = prefs.edit().putBoolean(KEY_CAPSULE, value).apply()
 
+    /** 胶囊缩放 0.7～1.6，默认 1.0 */
+    var capsuleScale: Float
+        get() = prefs.getFloat(KEY_SCALE, 1f).coerceIn(0.7f, 1.6f)
+        set(value) = prefs.edit().putFloat(KEY_SCALE, value.coerceIn(0.7f, 1.6f)).apply()
+
+    /** 相对屏幕中心的左右偏移（dp，负左正右） */
+    var capsuleOffsetXDp: Int
+        get() = prefs.getInt(KEY_OFFSET_X, 0).coerceIn(-120, 120)
+        set(value) = prefs.edit().putInt(KEY_OFFSET_X, value.coerceIn(-120, 120)).apply()
+
+    /** 相对默认顶栏位置的上下偏移（dp，负上正下） */
+    var capsuleOffsetYDp: Int
+        get() = prefs.getInt(KEY_OFFSET_Y, 0).coerceIn(-40, 120)
+        set(value) = prefs.edit().putInt(KEY_OFFSET_Y, value.coerceIn(-40, 120)).apply()
+
     fun isSourceEnabled(source: LiveStatusSource): Boolean =
         prefs.getBoolean(keySource(source), true)
 
@@ -35,6 +50,9 @@ class LiveStatusPrefs(context: Context) {
         private const val PREFS = "onetools_live_status"
         private const val KEY_MASTER = "master_enabled"
         private const val KEY_CAPSULE = "capsule_enabled"
+        private const val KEY_SCALE = "capsule_scale"
+        private const val KEY_OFFSET_X = "capsule_offset_x"
+        private const val KEY_OFFSET_Y = "capsule_offset_y"
     }
 }
 
