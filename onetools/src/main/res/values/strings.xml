@@ -81,8 +81,10 @@
     <string name="live_status_cutout_info">识别挖孔：中心 (%1$d, %2$d) · 尺寸 %3$d×%4$d</string>
     <string name="live_status_cutout_x">挖孔水平校准 %1$d dp</string>
     <string name="live_status_cutout_y">挖孔垂直校准 %1$d dp</string>
-    <string name="live_status_cutout_reset">恢复挖孔校准默认</string>
-    <string name="live_status_cutout_note">校准叠在系统挖孔中心上，双叶缝与避摄锚点会一起跟动</string>
+    <string name="live_status_cutout_auto">自动识别挖孔位置</string>
+    <string name="live_status_cutout_auto_done">已识别挖孔：中心 (%1$d, %2$d) · %3$d×%4$d</string>
+    <string name="live_status_cutout_reset">清零手工偏移</string>
+    <string name="live_status_cutout_note">装后首次开胶囊会自动读系统 DisplayCutout；仍可手工微调。中间文字缝跟挖孔宽度走。</string>
     <string name="live_status_master">启用实时状况</string>
     <string name="live_status_master_sub">监听白名单 App 通知 → 厂商适配器 → 状态栏芯片 + One Capsule</string>
     <string name="live_status_capsule">One Capsule 服务岛</string>

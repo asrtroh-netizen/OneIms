@@ -2,6 +2,7 @@ package com.onetools.app.live
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.onetools.app.live.capsule.CameraAnchor
 import com.onetools.app.live.capsule.CapsuleGestureAction
 import com.onetools.app.live.capsule.CapsuleGestureDefaults
 import com.onetools.app.live.capsule.CapsuleGestureSlot
@@ -27,10 +28,10 @@ class LiveStatusPrefs(context: Context) {
         get() = prefs.getFloat(KEY_WIDTH, legacyScaleOr(1.15f)).coerceIn(0.7f, 1.8f)
         set(value) = prefs.edit().putFloat(KEY_WIDTH, value.coerceIn(0.7f, 1.8f)).apply()
 
-    /** 高低（纵向）缩放 0.6～1.5，默认 0.85（扁胶囊，少挡摄像头）。 */
+    /** 高低（纵向）缩放 0.5～2.2，默认 1.05（扁胶囊可再拉高）。 */
     var capsuleHeightScale: Float
-        get() = prefs.getFloat(KEY_HEIGHT, legacyScaleOr(0.85f)).coerceIn(0.6f, 1.5f)
-        set(value) = prefs.edit().putFloat(KEY_HEIGHT, value.coerceIn(0.6f, 1.5f)).apply()
+        get() = prefs.getFloat(KEY_HEIGHT, legacyScaleOr(1.05f)).coerceIn(0.5f, 2.2f)
+        set(value) = prefs.edit().putFloat(KEY_HEIGHT, value.coerceIn(0.5f, 2.2f)).apply()
 
     /** 相对屏幕中心的左右偏移（dp，负左正右） */
     var capsuleOffsetXDp: Int
@@ -93,6 +94,39 @@ class LiveStatusPrefs(context: Context) {
             .apply()
     }
 
+    /** 是否已做过一次系统挖孔自动识别（装后首次 / 手动重识别）。 */
+    var cutoutAutoDetected: Boolean
+        get() = prefs.getBoolean(KEY_CUTOUT_AUTO, false)
+        set(value) = prefs.edit().putBoolean(KEY_CUTOUT_AUTO, value).apply()
+
+    var lastCutoutCenterX: Int
+        get() = prefs.getInt(KEY_CUTOUT_CX, 0)
+        set(value) = prefs.edit().putInt(KEY_CUTOUT_CX, value).apply()
+
+    var lastCutoutCenterY: Int
+        get() = prefs.getInt(KEY_CUTOUT_CY, 0)
+        set(value) = prefs.edit().putInt(KEY_CUTOUT_CY, value).apply()
+
+    var lastCutoutWidth: Int
+        get() = prefs.getInt(KEY_CUTOUT_W, 0)
+        set(value) = prefs.edit().putInt(KEY_CUTOUT_W, value).apply()
+
+    var lastCutoutHeight: Int
+        get() = prefs.getInt(KEY_CUTOUT_H, 0)
+        set(value) = prefs.edit().putInt(KEY_CUTOUT_H, value).apply()
+
+    fun saveDetectedCutout(anchor: CameraAnchor) {
+        prefs.edit()
+            .putBoolean(KEY_CUTOUT_AUTO, true)
+            .putInt(KEY_CUTOUT_CX, anchor.centerX)
+            .putInt(KEY_CUTOUT_CY, anchor.centerY)
+            .putInt(KEY_CUTOUT_W, anchor.width)
+            .putInt(KEY_CUTOUT_H, anchor.height)
+            .putInt(KEY_CUTOUT_X, 0)
+            .putInt(KEY_CUTOUT_Y, 0)
+            .apply()
+    }
+
     fun resetGesturesToDefaults() {
         val editor = prefs.edit()
         CapsuleGestureSlot.entries.forEach { slot ->
@@ -136,6 +170,11 @@ class LiveStatusPrefs(context: Context) {
         private const val KEY_OFFSET_Y = "capsule_offset_y"
         private const val KEY_CUTOUT_X = "cutout_calib_x"
         private const val KEY_CUTOUT_Y = "cutout_calib_y"
+        private const val KEY_CUTOUT_AUTO = "cutout_auto_detected"
+        private const val KEY_CUTOUT_CX = "cutout_last_cx"
+        private const val KEY_CUTOUT_CY = "cutout_last_cy"
+        private const val KEY_CUTOUT_W = "cutout_last_w"
+        private const val KEY_CUTOUT_H = "cutout_last_h"
         private const val KEY_EXCLUSION = "camera_exclusion_mode"
         private const val KEY_DYNAMIC_COLOR = "dynamic_color"
         private const val KEY_HAPTIC = "haptic_enabled"

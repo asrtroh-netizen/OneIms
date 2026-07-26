@@ -39,28 +39,48 @@ object CameraAnchorResolver {
         )
     }
 
+    /**
+     * 装后 / 手动：读系统 DisplayCutout，清零手工偏移并缓存识别结果。
+     * Overlay 窗口同样走 WindowMetrics，无需额外权限。
+     */
+    fun detectAndPersist(context: Context): CameraAnchor {
+        val raw = resolveRaw(context)
+        LiveStatusPrefs(context).saveDetectedCutout(raw)
+        return resolve(context)
+    }
+
     /** 系统原始挖孔，不含用户校准（校准页展示用）。 */
     fun resolveRaw(context: Context): CameraAnchor {
         val app = context.applicationContext
         val wm = app.getSystemService(WindowManager::class.java)
         val density = app.resources.displayMetrics.density.coerceAtLeast(0.5f)
-        val fallbackW = (24 * density).toInt().coerceAtLeast(16)
-        val fallbackH = (24 * density).toInt().coerceAtLeast(16)
+        val fallbackW = (28 * density).toInt().coerceAtLeast(20)
+        val fallbackH = (28 * density).toInt().coerceAtLeast(20)
         if (wm == null) {
             val w = app.resources.displayMetrics.widthPixels
             val bar = statusBarHeight(app)
             return CameraAnchor(w / 2, bar / 2, fallbackW, fallbackH)
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            val bounds = wm.currentWindowMetrics.bounds
-            val cutout = wm.currentWindowMetrics.windowInsets.displayCutout
+            val metrics = wm.currentWindowMetrics
+            val bounds = metrics.bounds
+            val cutout = metrics.windowInsets.displayCutout
+            // 优先顶边靠近屏幕水平中心的挖孔（刘海/灵动岛/居中打孔）。
             val rect = cutout?.boundingRects
-                ?.minByOrNull { abs(it.centerX() - bounds.centerX()) }
-            if (rect != null && rect.width() > 0 && rect.height() > 0) {
+                ?.filter { it.width() > 0 && it.height() > 0 }
+                ?.minByOrNull { r ->
+                    abs(r.centerX() - bounds.centerX()) * 2 + r.top
+                }
+            if (rect != null) {
                 return CameraAnchor(rect.centerX(), rect.centerY(), rect.width(), rect.height())
             }
             val bar = statusBarHeight(app)
-            return CameraAnchor(bounds.centerX(), (bar * 0.55f).toInt().coerceAtLeast(fallbackH / 2), fallbackW, fallbackH)
+            return CameraAnchor(
+                bounds.centerX(),
+                (bar * 0.55f).toInt().coerceAtLeast(fallbackH / 2),
+                fallbackW,
+                fallbackH,
+            )
         }
         val w = app.resources.displayMetrics.widthPixels
         val bar = statusBarHeight(app)

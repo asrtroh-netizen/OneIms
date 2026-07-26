@@ -109,6 +109,9 @@ class OneCapsuleOverlay private constructor(context: Context) {
 
     fun start() {
         runOnMain {
+            if (!prefs.cutoutAutoDetected) {
+                CameraAnchorResolver.detectAndPersist(app)
+            }
             OneCapsuleStore.observe(storeListener)
             render(OneCapsuleStore.snapshot())
         }
@@ -304,7 +307,7 @@ class OneCapsuleOverlay private constructor(context: Context) {
         val padV = dp((4f * h).toInt().coerceIn(2, 10))
         val textSp = (11f * ((w + h) * 0.5f)).coerceIn(9f, 14f)
         // 扁胶囊高度（视觉）；超大 cornerRadius 会被系统钳成「短边一半」= 正胶囊/跑道形。
-        val visualH = dp((22f * h).toInt().coerceIn(20, 36))
+        val visualH = dp((26f * h).toInt().coerceIn(18, 64))
         val fill = CapsuleThemeColors.pillFill(app, prefs.dynamicColorEnabled)
         val stroke = CapsuleThemeColors.stroke(prefs.dynamicColorEnabled, session.accentColor)
         shell.background = GradientDrawable().apply {
@@ -713,7 +716,7 @@ class OneCapsuleOverlay private constructor(context: Context) {
     private fun applyPosition(mode: CapsuleDisplayMode) {
         val lp = params ?: return
         val r = root ?: return
-        val pillH = ((24f * prefs.capsuleHeightScale).toInt().coerceIn(22, 44)).let { dp(it) }
+        val pillH = ((26f * prefs.capsuleHeightScale).toInt().coerceIn(18, 64)).let { dp(it) }
         val exclusion = exclusionMode()
         val anchor = CameraAnchorResolver.resolve(app)
         val bounds = CameraAwareCapsuleLayout.compute(

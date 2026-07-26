@@ -243,8 +243,8 @@ fun LiveLabScreen() {
                             prefs.capsuleHeightScale = it
                             applyCapsuleLayout()
                         },
-                        valueRange = 0.6f..1.5f,
-                        steps = 8,
+                        valueRange = 0.5f..2.2f,
+                        steps = 16,
                         enabled = master && capsule,
                     )
                     Text(
@@ -405,6 +405,27 @@ fun LiveLabScreen() {
                         },
                         valueRange = -16f..16f,
                         enabled = master && capsule,
+                    )
+                    OneToolsPrimaryButton(
+                        text = stringResource(R.string.live_status_cutout_auto),
+                        enabled = master && capsule,
+                        onClick = {
+                            val detected = CameraAnchorResolver.detectAndPersist(context)
+                            cutoutX = 0
+                            cutoutY = 0
+                            applyCapsuleLayout()
+                            Toast.makeText(
+                                context,
+                                context.getString(
+                                    R.string.live_status_cutout_auto_done,
+                                    detected.centerX,
+                                    detected.centerY,
+                                    detected.width,
+                                    detected.height,
+                                ),
+                                Toast.LENGTH_LONG,
+                            ).show()
+                        },
                     )
                     OneToolsPrimaryButton(
                         text = stringResource(R.string.live_status_cutout_reset),
