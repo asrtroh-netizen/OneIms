@@ -75,26 +75,6 @@ class LiveStatusPrefs(context: Context) {
         get() = prefs.getBoolean(KEY_HAPTIC, true)
         set(value) = prefs.edit().putBoolean(KEY_HAPTIC, value).apply()
 
-    /**
-     * 安静档 / 收起落点：DOT / MINI / COMPACT（默认 COMPACT，兼容旧 PILL）。
-     */
-    var quietCapsuleMode: String
-        get() {
-            val raw = prefs.getString(KEY_QUIET_MODE, "COMPACT") ?: "COMPACT"
-            return when (raw) {
-                "DOT", "MINI", "COMPACT" -> raw
-                "PILL" -> "COMPACT"
-                else -> "COMPACT"
-            }
-        }
-        set(value) = prefs.edit().putString(
-            KEY_QUIET_MODE,
-            when (value) {
-                "DOT", "MINI" -> value
-                else -> "COMPACT"
-            },
-        ).apply()
-
     fun gestureAction(slot: CapsuleGestureSlot): CapsuleGestureAction =
         CapsuleGestureAction.fromPref(
             prefs.getString(slot.prefKey, null),
@@ -158,7 +138,6 @@ class LiveStatusPrefs(context: Context) {
         private const val KEY_EXCLUSION = "camera_exclusion_mode"
         private const val KEY_DYNAMIC_COLOR = "dynamic_color"
         private const val KEY_HAPTIC = "haptic_enabled"
-        private const val KEY_QUIET_MODE = "quiet_capsule_mode"
     }
 }
 

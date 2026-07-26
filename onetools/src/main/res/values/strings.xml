@@ -67,12 +67,6 @@
     <string name="live_status_channel_desc">把美团 / 滴滴 / 菜鸟进度通知提升到状态栏芯片（Android 16+）</string>
     <string name="live_status_section_power">总开关与权限</string>
     <string name="live_status_section_display">显示与避摄</string>
-    <string name="live_status_section_modes">形态档位</string>
-    <string name="live_status_quiet_mode">安静档（收起落点）</string>
-    <string name="live_status_quiet_dot">DOT · 仅圆点图标</string>
-    <string name="live_status_quiet_mini">MINI · 短胶囊</string>
-    <string name="live_status_quiet_compact">COMPACT · 完整轻提醒</string>
-    <string name="live_status_demo_ladder">预览 · 档位阶梯（点一下升一档）</string>
     <string name="live_status_section_feel">动态色与触感</string>
     <string name="live_status_section_gestures">手势映射</string>
     <string name="live_status_section_cutout">挖孔校准</string>

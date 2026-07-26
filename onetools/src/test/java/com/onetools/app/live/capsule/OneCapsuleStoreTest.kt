@@ -26,25 +26,10 @@ class OneCapsuleStoreTest {
 
     @Test
     fun expandCollapseModes() {
-        OneCapsuleStore.configure(CapsuleDisplayMode.COMPACT)
         OneCapsuleStore.upsert(OneCapsuleTemplates.cainiaoParcel())
-        assertEquals(CapsuleDisplayMode.COMPACT, OneCapsuleStore.snapshot().mode)
         OneCapsuleStore.expand()
         assertEquals(CapsuleDisplayMode.EXPANDED, OneCapsuleStore.snapshot().mode)
         OneCapsuleStore.collapse()
-        assertEquals(CapsuleDisplayMode.COMPACT, OneCapsuleStore.snapshot().mode)
-    }
-
-    @Test
-    fun expandStepsThroughLadderFromDot() {
-        OneCapsuleStore.configure(CapsuleDisplayMode.DOT)
-        OneCapsuleStore.upsert(OneCapsuleTemplates.meituanDelivering())
-        assertEquals(CapsuleDisplayMode.DOT, OneCapsuleStore.snapshot().mode)
-        OneCapsuleStore.expand()
-        assertEquals(CapsuleDisplayMode.MINI, OneCapsuleStore.snapshot().mode)
-        OneCapsuleStore.expand()
-        assertEquals(CapsuleDisplayMode.COMPACT, OneCapsuleStore.snapshot().mode)
-        OneCapsuleStore.expand()
-        assertEquals(CapsuleDisplayMode.EXPANDED, OneCapsuleStore.snapshot().mode)
+        assertEquals(CapsuleDisplayMode.PILL, OneCapsuleStore.snapshot().mode)
     }
 }

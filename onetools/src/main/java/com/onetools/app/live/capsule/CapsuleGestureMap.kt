@@ -50,11 +50,8 @@ object CapsuleGestureDispatcher {
             CapsuleGestureAction.COLLAPSE -> OneCapsuleStore.collapse()
             CapsuleGestureAction.TOGGLE -> {
                 val mode = OneCapsuleStore.snapshot().mode
-                if (mode == CapsuleDisplayMode.EXPANDED) {
-                    OneCapsuleStore.setMode(OneCapsuleStore.quietFloor())
-                } else if (mode != CapsuleDisplayMode.HIDDEN) {
-                    OneCapsuleStore.setMode(CapsuleDisplayMode.EXPANDED)
-                }
+                if (mode == CapsuleDisplayMode.PILL) OneCapsuleStore.expand()
+                else if (mode == CapsuleDisplayMode.EXPANDED) OneCapsuleStore.collapse()
             }
             CapsuleGestureAction.NEXT -> OneCapsuleStore.next()
             CapsuleGestureAction.PREV -> OneCapsuleStore.prev()

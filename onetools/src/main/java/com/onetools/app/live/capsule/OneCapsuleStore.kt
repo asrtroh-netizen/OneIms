@@ -9,19 +9,10 @@ object OneCapsuleStore {
     private val sessions = CopyOnWriteArrayList<CapsuleSession>()
     private var activeIndex: Int = 0
     private var mode: CapsuleDisplayMode = CapsuleDisplayMode.HIDDEN
-    /** 收起时不再低于该档（DOT/MINI/COMPACT）。 */
-    @Volatile
-    private var quietFloor: CapsuleDisplayMode = CapsuleDisplayMode.COMPACT
     private val listeners = CopyOnWriteArrayList<(CapsuleUiSnapshot) -> Unit>()
 
     fun snapshot(): CapsuleUiSnapshot =
         CapsuleUiSnapshot(mode, sessions.toList(), activeIndex)
-
-    fun quietFloor(): CapsuleDisplayMode = quietFloor
-
-    fun configure(quietFloor: CapsuleDisplayMode) {
-        this.quietFloor = CapsuleModeLadder.clampQuiet(quietFloor)
-    }
 
     fun observe(listener: (CapsuleUiSnapshot) -> Unit) {
         listeners.add(listener)
@@ -37,7 +28,7 @@ object OneCapsuleStore {
         val idx = sessions.indexOfFirst { it.id == refreshed.id }
         if (idx >= 0) sessions[idx] = refreshed else sessions.add(refreshed)
         activeIndex = sessions.indexOfFirst { it.id == refreshed.id }.coerceAtLeast(0)
-        mode = if (expand) CapsuleDisplayMode.EXPANDED else quietFloor
+        mode = if (expand) CapsuleDisplayMode.EXPANDED else CapsuleDisplayMode.PILL
         if (sessions.isEmpty()) mode = CapsuleDisplayMode.HIDDEN
         CapsuleLifecycle.onSessionTouched()
         emit()
@@ -51,7 +42,7 @@ object OneCapsuleStore {
             mode = CapsuleDisplayMode.HIDDEN
         } else {
             if (removedActive) activeIndex = activeIndex.coerceIn(0, sessions.lastIndex)
-            if (mode == CapsuleDisplayMode.HIDDEN) mode = quietFloor
+            if (mode == CapsuleDisplayMode.HIDDEN) mode = CapsuleDisplayMode.PILL
         }
         emit()
     }
@@ -72,16 +63,12 @@ object OneCapsuleStore {
         emit()
     }
 
-    /** 升一档：DOT→MINI→COMPACT→EXPANDED */
     fun expand() {
-        if (sessions.isEmpty()) return
-        setMode(CapsuleModeLadder.stepUp(mode))
+        if (sessions.isNotEmpty()) setMode(CapsuleDisplayMode.EXPANDED)
     }
 
-    /** 降一档，不低于 quietFloor */
     fun collapse() {
-        if (sessions.isEmpty()) return
-        setMode(CapsuleModeLadder.stepDown(mode, quietFloor))
+        if (sessions.isNotEmpty()) setMode(CapsuleDisplayMode.PILL)
     }
 
     fun next() {

@@ -14,13 +14,11 @@
 | Live Lab UI | 开关、调节、四类预览 | `LiveLabScreen.kt` |
 
 ## 状态
-`HIDDEN` → `DOT` → `MINI` → `COMPACT`（旧 PILL）→ `EXPANDED`
-
-安静档（收起落点）可在 Live Lab 选 DOT / MINI / COMPACT；`expand`/`collapse` 按阶梯升降一档。
+`HIDDEN` → `PILL`（轻提醒）→ `EXPANDED`（进度卡 / 详情卡）
 
 ## 手势
-- 下滑：升一档 · 上滑：降一档（不低于安静档）
-- 点按（默认 TOGGLE）：安静档 ↔ EXPANDED
+- 下滑 / 点按：展开
+- 上滑 / 再点按：收起
 - 左右滑：切会话
 
 ## 边界（诚实）

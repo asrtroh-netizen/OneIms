@@ -30,11 +30,8 @@ import com.onetools.app.live.LiveStatusHub
 import com.onetools.app.live.LiveStatusPrefs
 import com.onetools.app.live.LiveStatusSource
 import com.onetools.app.live.capsule.CameraAnchorResolver
-import com.onetools.app.live.capsule.CapsuleDisplayMode
 import com.onetools.app.live.capsule.CapsuleGestureDefaults
 import com.onetools.app.live.capsule.CapsuleGestureSlot
-import com.onetools.app.live.capsule.CapsuleModeLadder
-import com.onetools.app.live.capsule.OneCapsuleStore
 import kotlin.math.roundToInt
 
 @Composable
@@ -61,7 +58,6 @@ fun LiveLabScreen() {
     var cutoutX by remember { mutableIntStateOf(prefs.cutoutCalibXDp) }
     var cutoutY by remember { mutableIntStateOf(prefs.cutoutCalibYDp) }
     var gestureEpoch by remember { mutableIntStateOf(0) }
-    var quietMode by remember { mutableStateOf(prefs.quietCapsuleMode) }
     val cutoutRaw = remember(cutoutX, cutoutY, gestureEpoch) {
         CameraAnchorResolver.resolveRaw(context)
     }
@@ -69,22 +65,6 @@ fun LiveLabScreen() {
 
     fun applyCapsuleLayout() {
         LiveStatusCapsuleOverlay.get(context).applyLayoutFromPrefs()
-    }
-
-    fun applyQuietMode(mode: String) {
-        quietMode = mode
-        prefs.quietCapsuleMode = mode
-        OneCapsuleStore.configure(
-            CapsuleModeLadder.clampQuiet(
-                CapsuleDisplayMode.entries.find { it.name == mode } ?: CapsuleDisplayMode.COMPACT,
-            ),
-        )
-        if (OneCapsuleStore.snapshot().sessions.isNotEmpty() &&
-            OneCapsuleStore.snapshot().mode != CapsuleDisplayMode.EXPANDED
-        ) {
-            OneCapsuleStore.setMode(OneCapsuleStore.quietFloor())
-        }
-        applyCapsuleLayout()
     }
 
     fun ensureOverlayReady(): Boolean {
@@ -116,7 +96,6 @@ fun LiveLabScreen() {
                 haptic = prefs.hapticEnabled
                 cutoutX = prefs.cutoutCalibXDp
                 cutoutY = prefs.cutoutCalibYDp
-                quietMode = prefs.quietCapsuleMode
                 sourceEnabled = LiveStatusSource.entries.associateWith { prefs.isSourceEnabled(it) }
                 LiveStatusHub.refreshCapsuleVisibility(context)
             }
@@ -301,42 +280,6 @@ fun LiveLabScreen() {
                         enabled = master && capsule,
                     )
                 }
-            }
-        }
-        item {
-            OneToolsSection(title = stringResource(R.string.live_status_section_modes)) {
-                Column(
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
-                ) {
-                    Text(
-                        text = stringResource(R.string.live_status_quiet_mode),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                }
-                OneToolsSettingsChoiceRow(
-                    title = stringResource(R.string.live_status_quiet_dot),
-                    subtitle = CapsuleModeLadder.labelZh(CapsuleDisplayMode.DOT),
-                    selected = quietMode == "DOT",
-                    enabled = master && capsule,
-                    onClick = { applyQuietMode("DOT") },
-                )
-                OneToolsGroupDivider()
-                OneToolsSettingsChoiceRow(
-                    title = stringResource(R.string.live_status_quiet_mini),
-                    subtitle = CapsuleModeLadder.labelZh(CapsuleDisplayMode.MINI),
-                    selected = quietMode == "MINI",
-                    enabled = master && capsule,
-                    onClick = { applyQuietMode("MINI") },
-                )
-                OneToolsGroupDivider()
-                OneToolsSettingsChoiceRow(
-                    title = stringResource(R.string.live_status_quiet_compact),
-                    subtitle = CapsuleModeLadder.labelZh(CapsuleDisplayMode.COMPACT),
-                    selected = quietMode == "COMPACT",
-                    enabled = master && capsule,
-                    onClick = { applyQuietMode("COMPACT") },
-                )
             }
         }
         item {
@@ -545,18 +488,6 @@ fun LiveLabScreen() {
                             if (!ensureOverlayReady()) return@OneToolsPrimaryButton
                             LiveStatusHub.publishDemoMulti(context)
                             preview = "多任务 · 左右切换"
-                        },
-                    )
-                    OneToolsPrimaryButton(
-                        text = stringResource(R.string.live_status_demo_ladder),
-                        enabled = master && capsule,
-                        onClick = {
-                            if (!ensureOverlayReady()) return@OneToolsPrimaryButton
-                            if (OneCapsuleStore.snapshot().sessions.isEmpty()) {
-                                LiveStatusHub.publishDemoMeituan(context, expand = false)
-                            }
-                            OneCapsuleStore.expand()
-                            preview = CapsuleModeLadder.labelZh(OneCapsuleStore.snapshot().mode)
                         },
                     )
                 }

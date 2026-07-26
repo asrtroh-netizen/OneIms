@@ -18,7 +18,6 @@ import com.onetools.app.live.adapter.NotificationSnippet
 import com.onetools.app.live.adapter.VendorAdapterRegistry
 import com.onetools.app.live.capsule.CapsuleDisplayMode
 import com.onetools.app.live.capsule.CapsuleLifecycle
-import com.onetools.app.live.capsule.CapsuleModeLadder
 import com.onetools.app.live.capsule.CapsuleSession
 import com.onetools.app.live.capsule.OneCapsuleOverlay
 import com.onetools.app.live.capsule.OneCapsuleStore
@@ -130,14 +129,9 @@ object LiveStatusHub {
         val app = context.applicationContext
         val prefs = LiveStatusPrefs(app)
         if (prefs.masterEnabled && prefs.capsuleEnabled && OneCapsuleStore.snapshot().sessions.isNotEmpty()) {
-            val quiet = CapsuleModeLadder.clampQuiet(
-                CapsuleDisplayMode.entries.find { it.name == prefs.quietCapsuleMode }
-                    ?: CapsuleDisplayMode.COMPACT,
-            )
-            OneCapsuleStore.configure(quiet)
             OneCapsuleStore.setMode(
                 if (OneCapsuleStore.snapshot().mode == CapsuleDisplayMode.HIDDEN) {
-                    quiet
+                    CapsuleDisplayMode.PILL
                 } else {
                     OneCapsuleStore.snapshot().mode
                 },
