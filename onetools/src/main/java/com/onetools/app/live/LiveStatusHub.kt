@@ -13,7 +13,11 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.onetools.app.MainActivity
 import com.onetools.app.R
+import com.onetools.app.live.adapter.AdapterOutcome
+import com.onetools.app.live.adapter.NotificationSnippet
+import com.onetools.app.live.adapter.VendorAdapterRegistry
 import com.onetools.app.live.capsule.CapsuleDisplayMode
+import com.onetools.app.live.capsule.CapsuleLifecycle
 import com.onetools.app.live.capsule.CapsuleSession
 import com.onetools.app.live.capsule.OneCapsuleOverlay
 import com.onetools.app.live.capsule.OneCapsuleStore
@@ -36,16 +40,25 @@ object LiveStatusHub {
     fun lastChipText(): String? = lastChip
 
     fun publish(context: Context, source: LiveStatusSource, chipText: String, detail: String) {
-        val session = OneCapsuleTemplates.fromNotification(
-            source = source,
-            title = null,
-            text = detail,
-            chipFallback = chipText,
-        ).copy(
-            pillPrimary = chipText.substringBefore("·").trim().ifBlank { chipText },
-            pillSecondary = chipText.substringAfter("·", "").trim().ifBlank { null },
-            subtitle = detail.take(48),
+        val pkg = source.packages.firstOrNull().orEmpty()
+        val outcome = VendorAdapterRegistry.parse(
+            NotificationSnippet(
+                packageName = pkg,
+                key = "manual-${source.id}",
+                title = chipText,
+                text = detail,
+                isOngoing = true,
+            ),
         )
+        val session = when (outcome) {
+            is AdapterOutcome.Accepted -> outcome.session
+            AdapterOutcome.Ignored -> OneCapsuleTemplates.fromNotification(
+                source = source,
+                title = chipText,
+                text = detail,
+                chipFallback = chipText,
+            )
+        }
         publishSession(context, session, expand = false)
     }
 
@@ -63,6 +76,7 @@ object LiveStatusHub {
             buildNotification(app, session.source, session.pillText().take(7), session.subtitle),
         )
         val prefs = LiveStatusPrefs(app)
+        CapsuleLifecycle.attach(app)
         OneCapsuleStore.upsert(session, expand = expand)
         if (prefs.masterEnabled && prefs.capsuleEnabled) {
             OneCapsuleOverlay.get(app).start()

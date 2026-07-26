@@ -24,9 +24,11 @@ import kotlin.math.abs
 
 /**
  * One Capsule 悬浮岛。
- * 布局心智借鉴 MT/OneCapsule 干净室：摄像头锚定、展开下挂、避摄模式。
+ * 布局心智借鉴 MT/OneCapsule 干净室：摄像头锚定、展开下挂、避摄模式、触控热区。
  */
 class OneCapsuleOverlay private constructor(context: Context) {
+    /** MT EXTRA_TOUCH 心智：视觉胶囊外扩不可见热区。 */
+    private val extraTouchDp = 12
     private val app = context.applicationContext
     private val prefs = LiveStatusPrefs(app)
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -111,6 +113,9 @@ class OneCapsuleOverlay private constructor(context: Context) {
         val rootLl = LinearLayout(app).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
+            val pad = dp(extraTouchDp)
+            setPadding(pad, pad, pad, pad)
+            minimumHeight = dp(48)
             setOnTouchListener { _, ev -> gestureDetector.onTouchEvent(ev) }
         }
         val row = LinearLayout(app).apply {
@@ -253,7 +258,7 @@ class OneCapsuleOverlay private constructor(context: Context) {
         val padH = dp((14f * w).toInt().coerceIn(8, 36))
         val padV = dp((4f * h).toInt().coerceIn(2, 12))
         val textSp = (11f * ((w + h) * 0.5f)).coerceIn(9f, 15f)
-        val minH = dp((22f * h).toInt().coerceIn(18, 40))
+        val minH = dp((22f * h).toInt().coerceIn(18, 40)).coerceAtLeast(dp(32))
         val radius = dp((14f * h).toInt().coerceIn(10, 22)).toFloat()
         fun pillBg(): GradientDrawable = GradientDrawable().apply {
             shape = GradientDrawable.RECTANGLE
@@ -261,14 +266,23 @@ class OneCapsuleOverlay private constructor(context: Context) {
             setColor(Color.parseColor("#F2000000"))
             setStroke(dp(1), Color.parseColor("#22FFFFFF"))
         }
+        val slots = session.toSlots()
         val split = exclusionMode() == CameraExclusionMode.CAMERA_CENTER &&
-            !session.pillSecondary.isNullOrBlank()
+            !slots.secondary.isNullOrBlank()
 
         if (split) {
             pillRow?.visibility = View.VISIBLE
             pillSingle?.visibility = View.GONE
-            styleSegment(pillLeft, session.pillPrimary, padH, padV, textSp, minH, pillBg())
-            styleSegment(pillRight, session.pillSecondary ?: "", padH, padV, textSp, minH, pillBg())
+            styleSegment(
+                pillLeft,
+                "${slots.iconGlyph} ${slots.primary}",
+                padH,
+                padV,
+                textSp,
+                minH,
+                pillBg(),
+            )
+            styleSegment(pillRight, slots.secondary ?: "", padH, padV, textSp, minH, pillBg())
             val gapLp = pillGap?.layoutParams as? LinearLayout.LayoutParams
             gapLp?.width = CameraAnchorResolver.resolve(app).let {
                 (it.width + dp(12)).coerceAtLeast(dp(20))
@@ -278,9 +292,20 @@ class OneCapsuleOverlay private constructor(context: Context) {
         } else {
             pillRow?.visibility = View.GONE
             pillSingle?.visibility = View.VISIBLE
-            styleSegment(pillSingle, session.pillText(), padH, padV, textSp, minH, pillBg())
+            styleSegment(
+                pillSingle,
+                "${slots.iconGlyph} ${slots.pillText()}",
+                padH,
+                padV,
+                textSp,
+                minH,
+                pillBg(),
+            )
             pillSingle?.minWidth = dp((120f * w).toInt().coerceIn(72, 300))
         }
+        // 触控热区：扁胶囊外扩，避免「看得见点不中」。
+        pillRow?.minimumHeight = dp(48)
+        pillSingle?.minimumHeight = dp(48)
 
         val hint = pageHint ?: return
         if (snap.sessions.size > 1) {

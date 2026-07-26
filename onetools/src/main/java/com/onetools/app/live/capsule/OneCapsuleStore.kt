@@ -24,11 +24,13 @@ object OneCapsuleStore {
     }
 
     fun upsert(session: CapsuleSession, expand: Boolean = false) {
-        val idx = sessions.indexOfFirst { it.id == session.id }
-        if (idx >= 0) sessions[idx] = session else sessions.add(session)
-        activeIndex = sessions.indexOfFirst { it.id == session.id }.coerceAtLeast(0)
+        val refreshed = session.copy(updatedAtMs = System.currentTimeMillis())
+        val idx = sessions.indexOfFirst { it.id == refreshed.id }
+        if (idx >= 0) sessions[idx] = refreshed else sessions.add(refreshed)
+        activeIndex = sessions.indexOfFirst { it.id == refreshed.id }.coerceAtLeast(0)
         mode = if (expand) CapsuleDisplayMode.EXPANDED else CapsuleDisplayMode.PILL
         if (sessions.isEmpty()) mode = CapsuleDisplayMode.HIDDEN
+        CapsuleLifecycle.onSessionTouched()
         emit()
     }
 

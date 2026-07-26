@@ -65,8 +65,12 @@
     <string name="lab_empty_body">这里只放实时动态实验，不与「特色功能」混放。显示与切卡类能力请到「设置 → 特色功能」。</string>
     <string name="live_status_channel">实时状况芯片</string>
     <string name="live_status_channel_desc">把美团 / 滴滴 / 菜鸟进度通知提升到状态栏芯片（Android 16+）</string>
-    <string name="live_status_master">启用实时状况芯片</string>
-    <string name="live_status_master_sub">监听白名单 App 通知，摘要显示到状态栏 Live Update（低版本为常驻通知）</string>
+    <string name="live_status_section_power">总开关与权限</string>
+    <string name="live_status_section_display">显示与避摄</string>
+    <string name="live_status_section_sources">状态来源</string>
+    <string name="live_status_section_preview">预览与演示</string>
+    <string name="live_status_master">启用实时状况</string>
+    <string name="live_status_master_sub">监听白名单 App 通知 → 厂商适配器 → 状态栏芯片 + One Capsule</string>
     <string name="live_status_capsule">One Capsule 服务岛</string>
     <string name="live_status_capsule_sub">顶栏扁胶囊 + 下滑展开卡（需悬浮窗）；点按展开/收起，左右切多任务</string>
     <string name="live_status_overlay_need">需要悬浮窗权限才能显示胶囊</string>

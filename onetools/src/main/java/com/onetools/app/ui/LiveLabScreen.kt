@@ -107,7 +107,7 @@ fun LiveLabScreen() {
             )
         }
         item {
-            OneToolsSection(title = stringResource(R.string.live_status_master)) {
+            OneToolsSection(title = stringResource(R.string.live_status_section_power)) {
                 OneToolsSettingsSwitchRow(
                     title = stringResource(R.string.live_status_master),
                     subtitle = stringResource(R.string.live_status_master_sub),
@@ -171,7 +171,7 @@ fun LiveLabScreen() {
             }
         }
         item {
-            OneToolsSection(title = stringResource(R.string.live_status_adjust)) {
+            OneToolsSection(title = stringResource(R.string.live_status_section_display)) {
                 Column(
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -265,7 +265,7 @@ fun LiveLabScreen() {
             }
         }
         item {
-            OneToolsSection(title = stringResource(R.string.live_status_sources)) {
+            OneToolsSection(title = stringResource(R.string.live_status_section_sources)) {
                 OneToolsSettingsSwitchRow(
                     title = stringResource(R.string.live_source_meituan),
                     subtitle = "com.sankuai.meituan*",
@@ -301,7 +301,7 @@ fun LiveLabScreen() {
             }
         }
         item {
-            OneToolsSection(title = stringResource(R.string.live_status_preview_section)) {
+            OneToolsSection(title = stringResource(R.string.live_status_section_preview)) {
                 Column(
                     modifier = Modifier.padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
