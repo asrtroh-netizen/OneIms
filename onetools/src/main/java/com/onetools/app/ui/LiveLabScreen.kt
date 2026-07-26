@@ -37,9 +37,9 @@ fun LiveLabScreen() {
     var capsule by remember { mutableStateOf(prefs.capsuleEnabled) }
     var access by remember { mutableStateOf(LiveStatusHub.isNotificationAccessEnabled(context)) }
     var canOverlay by remember { mutableStateOf(LiveStatusCapsuleOverlay.get(context).canDraw()) }
-    var meituan by remember { mutableStateOf(prefs.isSourceEnabled(LiveStatusSource.MEITUAN)) }
-    var didi by remember { mutableStateOf(prefs.isSourceEnabled(LiveStatusSource.DIDI)) }
-    var cainiao by remember { mutableStateOf(prefs.isSourceEnabled(LiveStatusSource.CAINIAO)) }
+    var sourceEnabled by remember {
+        mutableStateOf(LiveStatusSource.entries.associateWith { prefs.isSourceEnabled(it) })
+    }
     var preview by remember { mutableStateOf(LiveStatusHub.lastChipText()) }
     var widthScale by remember { mutableFloatStateOf(prefs.capsuleWidthScale) }
     var heightScale by remember { mutableFloatStateOf(prefs.capsuleHeightScale) }
@@ -79,6 +79,7 @@ fun LiveLabScreen() {
                 offsetX = prefs.capsuleOffsetXDp
                 offsetY = prefs.capsuleOffsetYDp
                 exclusionCenter = prefs.cameraExclusionMode == "CAMERA_CENTER"
+                sourceEnabled = LiveStatusSource.entries.associateWith { prefs.isSourceEnabled(it) }
                 LiveStatusHub.refreshCapsuleVisibility(context)
             }
         }
@@ -266,38 +267,19 @@ fun LiveLabScreen() {
         }
         item {
             OneToolsSection(title = stringResource(R.string.live_status_section_sources)) {
-                OneToolsSettingsSwitchRow(
-                    title = stringResource(R.string.live_source_meituan),
-                    subtitle = "com.sankuai.meituan*",
-                    checked = meituan,
-                    enabled = master,
-                    onCheckedChange = {
-                        meituan = it
-                        prefs.setSourceEnabled(LiveStatusSource.MEITUAN, it)
-                    },
-                )
-                OneToolsGroupDivider()
-                OneToolsSettingsSwitchRow(
-                    title = stringResource(R.string.live_source_didi),
-                    subtitle = "com.sdu.didi.psnger",
-                    checked = didi,
-                    enabled = master,
-                    onCheckedChange = {
-                        didi = it
-                        prefs.setSourceEnabled(LiveStatusSource.DIDI, it)
-                    },
-                )
-                OneToolsGroupDivider()
-                OneToolsSettingsSwitchRow(
-                    title = stringResource(R.string.live_source_cainiao),
-                    subtitle = "com.cainiao.wireless",
-                    checked = cainiao,
-                    enabled = master,
-                    onCheckedChange = {
-                        cainiao = it
-                        prefs.setSourceEnabled(LiveStatusSource.CAINIAO, it)
-                    },
-                )
+                LiveStatusSource.entries.forEachIndexed { index, source ->
+                    if (index > 0) OneToolsGroupDivider()
+                    OneToolsSettingsSwitchRow(
+                        title = source.labelZh,
+                        subtitle = source.packages.firstOrNull().orEmpty(),
+                        checked = sourceEnabled[source] == true,
+                        enabled = master,
+                        onCheckedChange = { on ->
+                            sourceEnabled = sourceEnabled.toMutableMap().apply { put(source, on) }
+                            prefs.setSourceEnabled(source, on)
+                        },
+                    )
+                }
             }
         }
         item {

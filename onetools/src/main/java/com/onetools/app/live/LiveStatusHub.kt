@@ -178,11 +178,7 @@ object LiveStatusHub {
                 .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
-        val title = when (source) {
-            LiveStatusSource.MEITUAN -> context.getString(R.string.live_source_meituan)
-            LiveStatusSource.DIDI -> context.getString(R.string.live_source_didi)
-            LiveStatusSource.CAINIAO -> context.getString(R.string.live_source_cainiao)
-        }
+        val title = source.labelZh
         val content = detail.ifBlank { chipText }
         if (Build.VERSION.SDK_INT >= 36) {
             val builder = Notification.Builder(context, CHANNEL_ID)

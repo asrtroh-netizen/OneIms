@@ -28,8 +28,15 @@
         <package android:name="com.oneims.onelink" />
         <package android:name="com.sankuai.meituan" />
         <package android:name="com.sankuai.meituan.takeoutnew" />
+        <package android:name="me.ele" />
         <package android:name="com.sdu.didi.psnger" />
         <package android:name="com.cainiao.wireless" />
+        <package android:name="com.autonavi.minimap" />
+        <package android:name="com.baidu.BaiduMap" />
+        <package android:name="com.tencent.qqmusic" />
+        <package android:name="com.netease.cloudmusic" />
+        <package android:name="com.MobileTicket" />
+        <package android:name="com.umetrip.android.msky.app" />
     </queries>
 
     <!-- 特色功能 CarrierConfig：shell 委托 Instrumentation（全限定类名） -->

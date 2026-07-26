@@ -27,8 +27,15 @@ interface VendorAdapter {
 object VendorAdapterRegistry {
     private val adapters: List<VendorAdapter> = listOf(
         MeituanVendorAdapter,
+        ElemeVendorAdapter,
         DidiVendorAdapter,
         CainiaoVendorAdapter,
+        NavVendorAdapter(LiveStatusSource.AMAP, "高德地图", 0xFF1E88E5.toInt()),
+        NavVendorAdapter(LiveStatusSource.BAIDU_MAP, "百度地图", 0xFF3385FF.toInt()),
+        MusicVendorAdapter(LiveStatusSource.QQ_MUSIC, "QQ音乐", 0xFF00C853.toInt()),
+        MusicVendorAdapter(LiveStatusSource.NETEASE_MUSIC, "网易云音乐", 0xFFE53935.toInt()),
+        Rail12306VendorAdapter,
+        UmetripVendorAdapter,
     )
 
     fun parse(snippet: NotificationSnippet): AdapterOutcome {

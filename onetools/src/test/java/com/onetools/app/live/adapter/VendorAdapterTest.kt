@@ -69,4 +69,33 @@ class VendorAdapterTest {
         assertTrue(out is AdapterOutcome.Accepted)
         assertTrue((out as AdapterOutcome.Accepted).session.pillPrimary.contains("派送"))
     }
+
+    @Test
+    fun elemeAndAmapAndMusicAndRailAccepted() {
+        assertTrue(
+            ElemeVendorAdapter.parse(
+                NotificationSnippet("me.ele", "e1", "饿了么", "骑手配送中预计15分钟", true),
+            ) is AdapterOutcome.Accepted,
+        )
+        assertTrue(
+            VendorAdapterRegistry.parse(
+                NotificationSnippet("com.autonavi.minimap", "a1", "导航", "剩余3公里 预计8分钟", true),
+            ) is AdapterOutcome.Accepted,
+        )
+        assertTrue(
+            VendorAdapterRegistry.parse(
+                NotificationSnippet("com.tencent.qqmusic", "q1", "晴天", "周杰伦", true),
+            ) is AdapterOutcome.Accepted,
+        )
+        assertTrue(
+            Rail12306VendorAdapter.parse(
+                NotificationSnippet("com.MobileTicket", "r1", "G123", "检票口12A 正点", true),
+            ) is AdapterOutcome.Accepted,
+        )
+        assertTrue(
+            UmetripVendorAdapter.parse(
+                NotificationSnippet("com.umetrip.android.msky.app", "u1", "CA1234", "登机口B12 延误", true),
+            ) is AdapterOutcome.Accepted,
+        )
+    }
 }

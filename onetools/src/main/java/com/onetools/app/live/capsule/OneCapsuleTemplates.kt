@@ -79,43 +79,35 @@ object OneCapsuleTemplates {
         )
     }
 
-    /** 从通知文本尽量结构化。 */
+    /** 从通知文本尽量结构化；优先走厂商适配器。 */
     fun fromNotification(
         source: LiveStatusSource,
         title: String?,
         text: String?,
         chipFallback: String,
     ): CapsuleSession {
-        val joined = listOfNotNull(title, text).joinToString(" ")
-        val eta = Regex("(\\d{1,3})\\s*分钟").find(joined)?.groupValues?.getOrNull(1)?.toIntOrNull()
-        return when (source) {
-            LiveStatusSource.MEITUAN -> {
-                val stage = when {
-                    joined.contains("送达") || joined.contains("已完成") -> 3
-                    joined.contains("配送") || joined.contains("骑手") -> 2
-                    joined.contains("出餐") || joined.contains("制作") -> 1
-                    else -> 2
-                }
-                meituanDelivering(etaMinutes = eta ?: 18, stageIndex = stage).copy(
-                    id = "live-meituan",
-                    subtitle = (text ?: title ?: chipFallback).take(48),
-                )
-            }
-            LiveStatusSource.DIDI -> didiOnTrip(etaMinutes = eta ?: 3).copy(
-                id = "live-didi",
-                pillPrimary = if (joined.contains("等待")) "等待接驾" else "行程中",
-                subtitle = (text ?: title ?: chipFallback).take(48),
-            )
-            LiveStatusSource.CAINIAO -> cainiaoParcel(
-                status = when {
-                    joined.contains("签收") -> "已签收"
-                    joined.contains("派") -> "派送中"
-                    else -> "运输中"
-                },
-            ).copy(
-                id = "live-cainiao",
-                subtitle = (text ?: title ?: chipFallback).take(48),
-            )
+        val pkg = source.packages.firstOrNull().orEmpty()
+        val outcome = com.onetools.app.live.adapter.VendorAdapterRegistry.parse(
+            com.onetools.app.live.adapter.NotificationSnippet(
+                packageName = pkg,
+                key = "tpl-${source.id}",
+                title = title ?: chipFallback,
+                text = text,
+                isOngoing = true,
+            ),
+        )
+        if (outcome is com.onetools.app.live.adapter.AdapterOutcome.Accepted) {
+            return outcome.session
         }
+        return CapsuleSession(
+            id = "live-${source.id}",
+            source = source,
+            pillPrimary = chipFallback.take(8).ifBlank { source.labelZh },
+            pillSecondary = null,
+            title = source.labelZh,
+            subtitle = (text ?: title ?: chipFallback).take(48),
+            expandTemplate = CapsuleExpandTemplate.DETAIL_CARD,
+            accentColor = 0xFF90A4AE.toInt(),
+        )
     }
 }
