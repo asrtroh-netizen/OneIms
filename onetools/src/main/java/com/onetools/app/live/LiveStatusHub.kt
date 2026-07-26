@@ -6,15 +6,18 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
+import android.provider.Settings
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.onetools.app.MainActivity
 import com.onetools.app.R
 
 /**
- * 把解析后的国内软件状态发布为 Ongoing 通知；
- * API 36+ 请求 Live Update 芯片（对齐 Meter [SpeedMonitorService] 路径）。
+ * 把解析后的国内软件状态发布为：
+ * 1) Ongoing 通知（API 36+ 请求 Live Update 芯片）
+ * 2) 顶栏灵动岛胶囊悬浮窗（观感可控，需悬浮窗权限）
  */
 object LiveStatusHub {
     const val CHANNEL_ID = "onetools_live_status_v1"
@@ -33,13 +36,36 @@ object LiveStatusHub {
         lastChip = chipText
         val nm = app.getSystemService(NotificationManager::class.java) ?: return
         nm.notify(NOTIFICATION_ID, buildNotification(app, source, chipText, detail))
+        val prefs = LiveStatusPrefs(app)
+        if (prefs.masterEnabled && prefs.capsuleEnabled) {
+            LiveStatusCapsuleOverlay.get(app).update(chipText)
+        }
     }
 
     fun clear(context: Context) {
         lastChip = null
-        context.applicationContext
-            .getSystemService(NotificationManager::class.java)
-            ?.cancel(NOTIFICATION_ID)
+        val app = context.applicationContext
+        app.getSystemService(NotificationManager::class.java)?.cancel(NOTIFICATION_ID)
+        LiveStatusCapsuleOverlay.get(app).hide()
+    }
+
+    fun refreshCapsuleVisibility(context: Context) {
+        val app = context.applicationContext
+        val prefs = LiveStatusPrefs(app)
+        val chip = lastChip
+        if (prefs.masterEnabled && prefs.capsuleEnabled && !chip.isNullOrBlank()) {
+            LiveStatusCapsuleOverlay.get(app).show(chip)
+        } else {
+            LiveStatusCapsuleOverlay.get(app).hide()
+        }
+    }
+
+    fun openOverlaySettings(context: Context) {
+        val intent = Intent(
+            Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+            Uri.parse("package:${context.packageName}"),
+        ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        ContextCompat.startActivity(context, intent, null)
     }
 
     private fun ensureChannel(context: Context) {

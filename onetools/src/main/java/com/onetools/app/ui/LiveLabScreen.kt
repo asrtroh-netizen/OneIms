@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.onetools.app.R
+import com.onetools.app.live.LiveStatusCapsuleOverlay
 import com.onetools.app.live.LiveStatusHub
 import com.onetools.app.live.LiveStatusPrefs
 import com.onetools.app.live.LiveStatusSource
@@ -29,7 +30,9 @@ fun LiveLabScreen() {
     val context = LocalContext.current
     val prefs = remember { LiveStatusPrefs(context) }
     var master by remember { mutableStateOf(prefs.masterEnabled) }
+    var capsule by remember { mutableStateOf(prefs.capsuleEnabled) }
     var access by remember { mutableStateOf(LiveStatusHub.isNotificationAccessEnabled(context)) }
+    var canOverlay by remember { mutableStateOf(LiveStatusCapsuleOverlay.get(context).canDraw()) }
     var meituan by remember { mutableStateOf(prefs.isSourceEnabled(LiveStatusSource.MEITUAN)) }
     var didi by remember { mutableStateOf(prefs.isSourceEnabled(LiveStatusSource.DIDI)) }
     var cainiao by remember { mutableStateOf(prefs.isSourceEnabled(LiveStatusSource.CAINIAO)) }
@@ -40,8 +43,11 @@ fun LiveLabScreen() {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
                 access = LiveStatusHub.isNotificationAccessEnabled(context)
+                canOverlay = LiveStatusCapsuleOverlay.get(context).canDraw()
                 preview = LiveStatusHub.lastChipText()
                 master = prefs.masterEnabled
+                capsule = prefs.capsuleEnabled
+                LiveStatusHub.refreshCapsuleVisibility(context)
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -77,7 +83,11 @@ fun LiveLabScreen() {
                     onCheckedChange = {
                         master = it
                         prefs.masterEnabled = it
-                        if (!it) LiveStatusHub.clear(context)
+                        if (!it) {
+                            LiveStatusHub.clear(context)
+                        } else {
+                            LiveStatusHub.refreshCapsuleVisibility(context)
+                        }
                         if (it && !access) {
                             Toast.makeText(
                                 context,
@@ -87,13 +97,43 @@ fun LiveLabScreen() {
                         }
                     },
                 )
-                if (!access) {
+                OneToolsGroupDivider()
+                OneToolsSettingsSwitchRow(
+                    title = stringResource(R.string.live_status_capsule),
+                    subtitle = stringResource(R.string.live_status_capsule_sub),
+                    checked = capsule,
+                    enabled = master,
+                    onCheckedChange = {
+                        capsule = it
+                        prefs.capsuleEnabled = it
+                        LiveStatusHub.refreshCapsuleVisibility(context)
+                        if (it && !canOverlay) {
+                            Toast.makeText(
+                                context,
+                                R.string.live_status_overlay_need,
+                                Toast.LENGTH_LONG,
+                            ).show()
+                        }
+                    },
+                )
+                if (!access || (capsule && !canOverlay)) {
                     OneToolsGroupDivider()
-                    Column(modifier = Modifier.padding(20.dp)) {
-                        OneToolsPrimaryButton(
-                            text = stringResource(R.string.live_status_access_action),
-                            onClick = { LiveStatusHub.openNotificationAccessSettings(context) },
-                        )
+                    Column(
+                        modifier = Modifier.padding(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        if (!access) {
+                            OneToolsPrimaryButton(
+                                text = stringResource(R.string.live_status_access_action),
+                                onClick = { LiveStatusHub.openNotificationAccessSettings(context) },
+                            )
+                        }
+                        if (capsule && !canOverlay) {
+                            OneToolsPrimaryButton(
+                                text = stringResource(R.string.live_status_overlay_action),
+                                onClick = { LiveStatusHub.openOverlaySettings(context) },
+                            )
+                        }
                     }
                 }
             }
@@ -151,6 +191,27 @@ fun LiveLabScreen() {
                         text = stringResource(R.string.live_status_hint),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    OneToolsPrimaryButton(
+                        text = stringResource(R.string.live_status_demo),
+                        enabled = master && capsule,
+                        onClick = {
+                            if (!canOverlay) {
+                                LiveStatusHub.openOverlaySettings(context)
+                                return@OneToolsPrimaryButton
+                            }
+                            prefs.masterEnabled = true
+                            prefs.capsuleEnabled = true
+                            master = true
+                            capsule = true
+                            LiveStatusHub.publish(
+                                context,
+                                LiveStatusSource.MEITUAN,
+                                "美配送中",
+                                "演示：美团配送进度（非正式订单）",
+                            )
+                            preview = "美配送中"
+                        },
                     )
                 }
             }

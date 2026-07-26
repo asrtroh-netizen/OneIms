@@ -67,6 +67,11 @@
     <string name="live_status_channel_desc">把美团 / 滴滴 / 菜鸟进度通知提升到状态栏芯片（Android 16+）</string>
     <string name="live_status_master">启用实时状况芯片</string>
     <string name="live_status_master_sub">监听白名单 App 通知，摘要显示到状态栏 Live Update（低版本为常驻通知）</string>
+    <string name="live_status_capsule">灵动岛胶囊显示</string>
+    <string name="live_status_capsule_sub">顶栏居中黑底圆角胶囊（需「显示在其他应用上层」）；不依赖 ROM 是否提升系统芯片</string>
+    <string name="live_status_overlay_need">需要悬浮窗权限才能显示胶囊</string>
+    <string name="live_status_overlay_action">打开悬浮窗权限设置</string>
+    <string name="live_status_demo">预览胶囊（演示文案）</string>
     <string name="live_status_access_need">需要打开「通知使用权」才能读取美团/滴滴/菜鸟进度通知</string>
     <string name="live_status_access_ready">通知使用权已开启</string>
     <string name="live_status_access_action">打开通知使用权设置</string>
