@@ -13,11 +13,16 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.onetools.app.MainActivity
 import com.onetools.app.R
+import com.onetools.app.live.capsule.CapsuleDisplayMode
+import com.onetools.app.live.capsule.CapsuleSession
+import com.onetools.app.live.capsule.OneCapsuleOverlay
+import com.onetools.app.live.capsule.OneCapsuleStore
+import com.onetools.app.live.capsule.OneCapsuleTemplates
 
 /**
- * 把解析后的国内软件状态发布为：
- * 1) Ongoing 通知（API 36+ 请求 Live Update 芯片）
- * 2) 顶栏灵动岛胶囊悬浮窗（观感可控，需悬浮窗权限）
+ * 发布国内软件实时状态：
+ * 1) Ongoing 通知（API 36+ Live Update 芯片）
+ * 2) One Capsule 悬浮岛（轻提醒 / 展开卡）
  */
 object LiveStatusHub {
     const val CHANNEL_ID = "onetools_live_status_v1"
@@ -31,32 +36,95 @@ object LiveStatusHub {
     fun lastChipText(): String? = lastChip
 
     fun publish(context: Context, source: LiveStatusSource, chipText: String, detail: String) {
+        val session = OneCapsuleTemplates.fromNotification(
+            source = source,
+            title = null,
+            text = detail,
+            chipFallback = chipText,
+        ).copy(
+            pillPrimary = chipText.substringBefore("·").trim().ifBlank { chipText },
+            pillSecondary = chipText.substringAfter("·", "").trim().ifBlank { null },
+            subtitle = detail.take(48),
+        )
+        publishSession(context, session, expand = false)
+    }
+
+    fun publishSession(
+        context: Context,
+        session: CapsuleSession,
+        expand: Boolean = false,
+    ) {
         val app = context.applicationContext
         ensureChannel(app)
-        lastChip = chipText
+        lastChip = session.pillText()
         val nm = app.getSystemService(NotificationManager::class.java) ?: return
-        nm.notify(NOTIFICATION_ID, buildNotification(app, source, chipText, detail))
+        nm.notify(
+            NOTIFICATION_ID,
+            buildNotification(app, session.source, session.pillText().take(7), session.subtitle),
+        )
         val prefs = LiveStatusPrefs(app)
+        OneCapsuleStore.upsert(session, expand = expand)
         if (prefs.masterEnabled && prefs.capsuleEnabled) {
-            LiveStatusCapsuleOverlay.get(app).update(chipText)
+            OneCapsuleOverlay.get(app).start()
+        } else {
+            OneCapsuleOverlay.get(app).stop()
+            OneCapsuleStore.setMode(CapsuleDisplayMode.HIDDEN)
         }
+    }
+
+    fun publishDemoMeituan(context: Context, expand: Boolean = false) {
+        publishSession(context, OneCapsuleTemplates.meituanDelivering(), expand)
+    }
+
+    fun publishDemoDidi(context: Context, expand: Boolean = true) {
+        publishSession(context, OneCapsuleTemplates.didiOnTrip(), expand)
+    }
+
+    fun publishDemoMulti(context: Context) {
+        val app = context.applicationContext
+        val prefs = LiveStatusPrefs(app)
+        prefs.masterEnabled = true
+        prefs.capsuleEnabled = true
+        OneCapsuleStore.clear()
+        OneCapsuleStore.upsert(OneCapsuleTemplates.meituanDelivering(), expand = false)
+        OneCapsuleStore.upsert(OneCapsuleTemplates.didiOnTrip(), expand = false)
+        OneCapsuleStore.upsert(OneCapsuleTemplates.cainiaoParcel(), expand = false)
+        lastChip = OneCapsuleStore.snapshot().active?.pillText()
+        ensureChannel(app)
+        app.getSystemService(NotificationManager::class.java)?.notify(
+            NOTIFICATION_ID,
+            buildNotification(
+                app,
+                LiveStatusSource.MEITUAN,
+                lastChip?.take(7) ?: "实时",
+                "多任务演示：左右滑动切换",
+            ),
+        )
+        OneCapsuleOverlay.get(app).start()
     }
 
     fun clear(context: Context) {
         lastChip = null
         val app = context.applicationContext
         app.getSystemService(NotificationManager::class.java)?.cancel(NOTIFICATION_ID)
-        LiveStatusCapsuleOverlay.get(app).hide()
+        OneCapsuleStore.clear()
+        OneCapsuleOverlay.get(app).stop()
     }
 
     fun refreshCapsuleVisibility(context: Context) {
         val app = context.applicationContext
         val prefs = LiveStatusPrefs(app)
-        val chip = lastChip
-        if (prefs.masterEnabled && prefs.capsuleEnabled && !chip.isNullOrBlank()) {
-            LiveStatusCapsuleOverlay.get(app).show(chip)
-        } else {
-            LiveStatusCapsuleOverlay.get(app).hide()
+        if (prefs.masterEnabled && prefs.capsuleEnabled && OneCapsuleStore.snapshot().sessions.isNotEmpty()) {
+            OneCapsuleStore.setMode(
+                if (OneCapsuleStore.snapshot().mode == CapsuleDisplayMode.HIDDEN) {
+                    CapsuleDisplayMode.PILL
+                } else {
+                    OneCapsuleStore.snapshot().mode
+                },
+            )
+            OneCapsuleOverlay.get(app).start()
+        } else if (!prefs.masterEnabled || !prefs.capsuleEnabled) {
+            OneCapsuleOverlay.get(app).stop()
         }
     }
 
@@ -135,7 +203,7 @@ object LiveStatusHub {
     }
 
     fun isNotificationAccessEnabled(context: Context): Boolean {
-        val flat = android.provider.Settings.Secure.getString(
+        val flat = Settings.Secure.getString(
             context.contentResolver,
             "enabled_notification_listeners",
         ) ?: return false
@@ -148,7 +216,7 @@ object LiveStatusHub {
     }
 
     fun openNotificationAccessSettings(context: Context) {
-        val intent = Intent(android.provider.Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
+        val intent = Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         ContextCompat.startActivity(context, intent, null)
     }

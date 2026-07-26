@@ -29,21 +29,29 @@ class LiveStatusNotificationListener : NotificationListenerService() {
             .joinToString(" · ")
             .ifBlank { chip }
         Log.d(TAG, "chip source=${source.id} pkg=${sbn.packageName} chip=$chip")
-        LiveStatusHub.publish(this, source, chip, detail.take(120))
+        val session = com.onetools.app.live.capsule.OneCapsuleTemplates.fromNotification(
+            source = source,
+            title = title?.toString(),
+            text = text?.toString(),
+            chipFallback = chip,
+        ).copy(id = "live-${source.id}-${sbn.key}")
+        LiveStatusHub.publishSession(this, session, expand = false)
     }
 
     override fun onNotificationRemoved(sbn: StatusBarNotification?) {
         if (sbn == null) return
         val source = LiveStatusSource.fromPackage(sbn.packageName) ?: return
-        // 简单策略：移除后若没有其它活跃白名单通知则清空芯片。
+        com.onetools.app.live.capsule.OneCapsuleStore.remove("live-${source.id}-${sbn.key}")
         val still = runCatching { activeNotifications }.getOrNull().orEmpty().any { active ->
             val s = LiveStatusSource.fromPackage(active.packageName)
             s != null && prefs.isSourceEnabled(s) && prefs.masterEnabled &&
                 active.key != sbn.key
         }
-        if (!still) {
+        if (!still && com.onetools.app.live.capsule.OneCapsuleStore.snapshot().sessions.isEmpty()) {
             Log.d(TAG, "clear chip after remove source=${source.id}")
             LiveStatusHub.clear(this)
+        } else {
+            LiveStatusHub.refreshCapsuleVisibility(this)
         }
     }
 

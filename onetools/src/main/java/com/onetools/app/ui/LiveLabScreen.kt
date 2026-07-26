@@ -51,6 +51,18 @@ fun LiveLabScreen() {
         LiveStatusCapsuleOverlay.get(context).applyLayoutFromPrefs()
     }
 
+    fun ensureOverlayReady(): Boolean {
+        if (!canOverlay) {
+            LiveStatusHub.openOverlaySettings(context)
+            return false
+        }
+        prefs.masterEnabled = true
+        prefs.capsuleEnabled = true
+        master = true
+        capsule = true
+        return true
+    }
+
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
@@ -291,21 +303,36 @@ fun LiveLabScreen() {
                         text = stringResource(R.string.live_status_demo),
                         enabled = master && capsule,
                         onClick = {
-                            if (!canOverlay) {
-                                LiveStatusHub.openOverlaySettings(context)
-                                return@OneToolsPrimaryButton
-                            }
-                            prefs.masterEnabled = true
-                            prefs.capsuleEnabled = true
-                            master = true
-                            capsule = true
-                            LiveStatusHub.publish(
-                                context,
-                                LiveStatusSource.MEITUAN,
-                                "配送中 · 18分钟",
-                                "演示：美团配送进度（非正式订单）",
-                            )
+                            if (!ensureOverlayReady()) return@OneToolsPrimaryButton
+                            LiveStatusHub.publishDemoMeituan(context, expand = false)
                             preview = "配送中 · 18分钟"
+                        },
+                    )
+                    OneToolsPrimaryButton(
+                        text = stringResource(R.string.live_status_demo_meituan_card),
+                        enabled = master && capsule,
+                        onClick = {
+                            if (!ensureOverlayReady()) return@OneToolsPrimaryButton
+                            LiveStatusHub.publishDemoMeituan(context, expand = true)
+                            preview = "美团展开进度卡"
+                        },
+                    )
+                    OneToolsPrimaryButton(
+                        text = stringResource(R.string.live_status_demo_didi_detail),
+                        enabled = master && capsule,
+                        onClick = {
+                            if (!ensureOverlayReady()) return@OneToolsPrimaryButton
+                            LiveStatusHub.publishDemoDidi(context, expand = true)
+                            preview = "滴滴关键详情"
+                        },
+                    )
+                    OneToolsPrimaryButton(
+                        text = stringResource(R.string.live_status_demo_multi),
+                        enabled = master && capsule,
+                        onClick = {
+                            if (!ensureOverlayReady()) return@OneToolsPrimaryButton
+                            LiveStatusHub.publishDemoMulti(context)
+                            preview = "多任务 · 左右切换"
                         },
                     )
                 }
