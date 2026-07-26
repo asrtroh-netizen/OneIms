@@ -60,8 +60,13 @@
     <string name="tab_lab">实验室</string>
     <string name="lab_title">实时动态实验室</string>
     <string name="lab_subtitle">实时动态类实验 · 与特色功能分开</string>
+    <string name="lab_scope_notice">本页只放实时动态实验；信号格 / 5G / 切卡请到「设置 → 特色功能」。</string>
     <string name="lab_empty_title">实验室筹备中</string>
     <string name="lab_empty_body">这里只放实时动态实验，不与「特色功能」混放。显示与切卡类能力请到「设置 → 特色功能」。</string>
+    <string name="updates_section_about">说明</string>
+    <string name="updates_section_auto">定时检查</string>
+    <string name="updates_section_actions">操作</string>
+    <string name="updates_section_apps">已跟踪应用</string>
     <string name="tab_more">更多</string>
     <string name="home_quick_title">快捷开关</string>
     <string name="home_quick_sub">详情仍在各功能页调整</string>

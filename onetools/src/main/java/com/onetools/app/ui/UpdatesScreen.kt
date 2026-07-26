@@ -24,6 +24,8 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -44,6 +46,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.onetools.app.R
+import com.onetools.app.ui.theme.OneToolsTokens
 import com.onetools.app.updates.MembershipTokenStore
 import com.onetools.app.updates.ApkInstaller
 import com.onetools.app.updates.AppSource
@@ -126,169 +129,212 @@ fun UpdatesScreen(
                 }
             }
             item {
-                Text(
-                    stringResource(R.string.updates_intro_better),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            item {
-                Text(
-                    stringResource(R.string.updates_parity_note),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(stringResource(R.string.updates_auto_check))
+                OneToolsSection(title = stringResource(R.string.updates_section_about)) {
+                    Column(
+                        modifier = Modifier.padding(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
                         Text(
-                            stringResource(
-                                R.string.updates_auto_check_sub,
-                                checkPrefs.intervalHours,
-                            ),
+                            stringResource(R.string.updates_intro_better),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Text(
+                            stringResource(R.string.updates_parity_note),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                    }
-                    Switch(
-                        checked = checkPrefs.enabled,
-                        onCheckedChange = { checked ->
-                            scope.launch { checkPrefsStore.setEnabled(checked) }
-                        },
-                    )
-                }
-            }
-            item {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf(3, 6, 12, 24).forEach { hours ->
-                        FilterChip(
-                            selected = checkPrefs.intervalHours == hours,
-                            onClick = {
-                                scope.launch { checkPrefsStore.setIntervalHours(hours) }
-                            },
-                            label = { Text("${hours}h") },
-                            enabled = checkPrefs.enabled,
-                        )
-                    }
-                }
-            }
-            item {
-                Text(
-                    stringResource(R.string.updates_abi_hint, abis.firstOrNull() ?: "unknown"),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-            }
-            item {
-                Button(
-                    onClick = { showAdd = true },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = busyId == null && !adding,
-                ) {
-                    Text(stringResource(R.string.updates_add))
-                }
-            }
-            item {
-                Text(
-                    stringResource(R.string.updates_cdn_hint, BuildConfig.ONE_CDN_INDEX_URL),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                )
-            }
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    OutlinedButton(
-                        onClick = { showToken = true },
-                        modifier = Modifier.weight(1f),
-                    ) {
                         Text(
-                            if (memberToken.isBlank()) stringResource(R.string.updates_token_set)
-                            else stringResource(R.string.updates_token_edit),
+                            stringResource(R.string.updates_abi_hint, abis.firstOrNull() ?: "unknown"),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                        Text(
+                            stringResource(R.string.updates_cdn_hint, BuildConfig.ONE_CDN_INDEX_URL),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
-                    OutlinedButton(
-                        onClick = {
-                            val json = CatalogExport.toJson(apps)
-                            val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                            cm.setPrimaryClip(ClipData.newPlainText("onetools-catalog", json))
-                            Toast.makeText(context, R.string.updates_exported, Toast.LENGTH_SHORT).show()
-                        },
-                        modifier = Modifier.weight(1f),
-                        enabled = apps.isNotEmpty(),
-                    ) { Text(stringResource(R.string.updates_export)) }
                 }
             }
             item {
-                OutlinedButton(
-                    onClick = { showImport = true },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = busyId == null,
-                ) { Text(stringResource(R.string.updates_import)) }
+                OneToolsSection(title = stringResource(R.string.updates_section_auto)) {
+                    Column {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 20.dp, vertical = 12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(stringResource(R.string.updates_auto_check))
+                                Text(
+                                    stringResource(
+                                        R.string.updates_auto_check_sub,
+                                        checkPrefs.intervalHours,
+                                    ),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                            Switch(
+                                checked = checkPrefs.enabled,
+                                onCheckedChange = { checked ->
+                                    scope.launch { checkPrefsStore.setEnabled(checked) }
+                                },
+                            )
+                        }
+                        OneToolsGroupDivider()
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState())
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            listOf(3, 6, 12, 24).forEach { hours ->
+                                FilterChip(
+                                    selected = checkPrefs.intervalHours == hours,
+                                    onClick = {
+                                        scope.launch { checkPrefsStore.setIntervalHours(hours) }
+                                    },
+                                    label = { Text("${hours}h") },
+                                    enabled = checkPrefs.enabled,
+                                )
+                            }
+                        }
+                    }
+                }
             }
             item {
-                OutlinedButton(
-                    onClick = {
-                        scope.launch {
-                            banner = context.getString(R.string.updates_checking_all)
-                            var ok = 0
-                            var updates = 0
-                            for (app in apps) {
-                                busyId = app.id
-                                val result = withContext(Dispatchers.IO) {
-                                    UpdateFetcher.latestAsset(
-                                        app,
-                                        abis,
-                                        context.applicationContext,
-                                        memberToken,
+                OneToolsSection(title = stringResource(R.string.updates_section_actions)) {
+                    Column(
+                        modifier = Modifier.padding(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        Button(
+                            onClick = { showAdd = true },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = busyId == null && !adding,
+                        ) {
+                            Text(stringResource(R.string.updates_add))
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            OutlinedButton(
+                                onClick = { showToken = true },
+                                modifier = Modifier.weight(1f),
+                            ) {
+                                Text(
+                                    if (memberToken.isBlank()) {
+                                        stringResource(R.string.updates_token_set)
+                                    } else {
+                                        stringResource(R.string.updates_token_edit)
+                                    },
+                                )
+                            }
+                            OutlinedButton(
+                                onClick = {
+                                    val json = CatalogExport.toJson(apps)
+                                    val cm = context.getSystemService(Context.CLIPBOARD_SERVICE)
+                                        as ClipboardManager
+                                    cm.setPrimaryClip(
+                                        ClipData.newPlainText("onetools-catalog", json),
+                                    )
+                                    Toast.makeText(
+                                        context,
+                                        R.string.updates_exported,
+                                        Toast.LENGTH_SHORT,
+                                    ).show()
+                                },
+                                modifier = Modifier.weight(1f),
+                                enabled = apps.isNotEmpty(),
+                            ) { Text(stringResource(R.string.updates_export)) }
+                        }
+                        OutlinedButton(
+                            onClick = { showImport = true },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = busyId == null,
+                        ) { Text(stringResource(R.string.updates_import)) }
+                        OutlinedButton(
+                            onClick = {
+                                scope.launch {
+                                    banner = context.getString(R.string.updates_checking_all)
+                                    var ok = 0
+                                    var updates = 0
+                                    for (app in apps) {
+                                        busyId = app.id
+                                        val result = withContext(Dispatchers.IO) {
+                                            UpdateFetcher.latestAsset(
+                                                app,
+                                                abis,
+                                                context.applicationContext,
+                                                memberToken,
+                                            )
+                                        }
+                                        result.onSuccess { asset ->
+                                            latestById[app.id] = asset
+                                            ok++
+                                            val installed = InstalledVersions.versionName(
+                                                context,
+                                                app.packageName,
+                                            )
+                                            if (VersionCompare.state(installed, asset.tag) ==
+                                                VersionCompare.UpdateState.UPDATE_AVAILABLE
+                                            ) {
+                                                updates++
+                                            }
+                                        }
+                                    }
+                                    busyId = null
+                                    banner = context.getString(
+                                        R.string.updates_check_all_summary,
+                                        ok,
+                                        updates,
                                     )
                                 }
-                                result.onSuccess { asset ->
-                                    latestById[app.id] = asset
-                                    ok++
-                                    val installed = InstalledVersions.versionName(context, app.packageName)
-                                    if (VersionCompare.state(installed, asset.tag) ==
-                                        VersionCompare.UpdateState.UPDATE_AVAILABLE
-                                    ) {
-                                        updates++
-                                    }
-                                }
-                            }
-                            busyId = null
-                            banner = context.getString(R.string.updates_check_all_summary, ok, updates)
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = busyId == null && apps.isNotEmpty(),
+                        ) {
+                            Text(stringResource(R.string.updates_check_all))
                         }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = busyId == null && apps.isNotEmpty(),
-                ) {
-                    Text(stringResource(R.string.updates_check_all))
+                    }
                 }
             }
             if (progress != null) {
                 item {
-                    val (done, total) = progress!!
-                    LinearProgressIndicator(
-                        progress = {
-                            if (total > 0) {
-                                (done.toFloat() / total.toFloat()).coerceIn(0f, 1f)
-                            } else {
-                                0f
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                    )
+                    OneToolsSettingsGroup {
+                        val (done, total) = progress!!
+                        LinearProgressIndicator(
+                            progress = {
+                                if (total > 0) {
+                                    (done.toFloat() / total.toFloat()).coerceIn(0f, 1f)
+                                } else {
+                                    0f
+                                }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(20.dp),
+                        )
+                    }
                 }
             }
             banner?.let { msg ->
-                item { Text(msg, style = MaterialTheme.typography.bodySmall) }
+                item { OneToolsInlineNotice(text = msg, danger = false) }
+            }
+            item {
+                Text(
+                    text = stringResource(R.string.updates_section_apps),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.padding(horizontal = 4.dp),
+                )
             }
             items(sortedApps, key = { it.id }) { app ->
                 val installedVer = InstalledVersions.versionName(context, app.packageName)
@@ -421,6 +467,7 @@ fun UpdatesScreen(
         OneToolsToolPage(
             title = stringResource(R.string.page_oneupdate),
             onBack = onBack,
+            verticalSpacing = 20,
             content = pageBody,
         )
     } else {
@@ -429,7 +476,7 @@ fun UpdatesScreen(
                 .fillMaxSize()
                 .padding(horizontal = 20.dp),
             contentPadding = PaddingValues(top = 28.dp, bottom = 36.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp),
             content = pageBody,
         )
     }
@@ -807,8 +854,10 @@ private fun UpdateAppCard(
     }
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.extraLarge,
+        shape = RoundedCornerShape(OneToolsTokens.cardCornerRadius),
         color = MaterialTheme.colorScheme.surfaceContainerLow,
+        tonalElevation = 2.dp,
+        border = BorderStroke(1.dp, OneToolsTokens.dividerColor()),
     ) {
         Column(
             modifier = Modifier.padding(16.dp),

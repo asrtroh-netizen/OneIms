@@ -1,6 +1,5 @@
 package com.onetools.app.ui
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
@@ -21,20 +20,20 @@ fun LiveLabScreen() {
         subtitle = stringResource(R.string.lab_subtitle),
     ) {
         item {
-            Column(
-                modifier = Modifier.padding(horizontal = 4.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                Text(
-                    text = stringResource(R.string.lab_empty_title),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-                Text(
-                    text = stringResource(R.string.lab_empty_body),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+            OneToolsInlineNotice(
+                text = stringResource(R.string.lab_scope_notice),
+                danger = false,
+            )
+        }
+        item {
+            OneToolsSection(title = stringResource(R.string.lab_empty_title)) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Text(
+                        text = stringResource(R.string.lab_empty_body),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
         }
     }
