@@ -26,6 +26,10 @@
         <package android:name="moe.shizuku.manager" />
         <package android:name="com.oneims.app" />
         <package android:name="com.oneims.onelink" />
+        <package android:name="com.sankuai.meituan" />
+        <package android:name="com.sankuai.meituan.takeoutnew" />
+        <package android:name="com.sdu.didi.psnger" />
+        <package android:name="com.cainiao.wireless" />
     </queries>
 
     <!-- 特色功能 CarrierConfig：shell 委托 Instrumentation（全限定类名） -->
@@ -72,6 +76,16 @@
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="network_speed_monitor" />
+        </service>
+
+        <service
+            android:name=".live.LiveStatusNotificationListener"
+            android:exported="true"
+            android:label="@string/live_status_channel"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
         </service>
 
         <service
