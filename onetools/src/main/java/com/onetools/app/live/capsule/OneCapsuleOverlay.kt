@@ -385,10 +385,10 @@ class OneCapsuleOverlay private constructor(context: Context) {
             return
         }
         box.removeAllViews()
-        // 参考海报：浅色圆角大卡 + 品牌色点缀。
+        // 海报浅色大卡：不用动态色压成黑底。
         val softFill = ColorUtils.setAlphaComponent(
-            ColorUtils.blendARGB(session.accentColor, Color.WHITE, 0.86f),
-            0xF8,
+            ColorUtils.blendARGB(session.accentColor, Color.WHITE, 0.90f),
+            0xFA,
         )
         val onCard = Color.parseColor("#FF1A1C1E")
         val onCardMuted = Color.parseColor("#99000000")
@@ -396,107 +396,17 @@ class OneCapsuleOverlay private constructor(context: Context) {
             shape = GradientDrawable.RECTANGLE
             cornerRadius = dp(28).toFloat()
             setColor(softFill)
-            setStroke(dp(1), ColorUtils.setAlphaComponent(session.accentColor, 0x33))
+            setStroke(dp(1), ColorUtils.setAlphaComponent(session.accentColor, 0x40))
         }
-
-        val header = LinearLayout(app).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-        }
-        val headerIcon = ImageView(app).apply {
-            scaleType = ImageView.ScaleType.CENTER_CROP
-        }
-        bindAppIcon(headerIcon, session.source, dp(28))
-        header.addView(
-            headerIcon,
-            LinearLayout.LayoutParams(dp(28), dp(28)).apply { marginEnd = dp(10) },
-        )
-        val titles = LinearLayout(app).apply {
-            orientation = LinearLayout.VERTICAL
-            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-        }
-        titles.addView(label(session.title, 16f, true, onCard))
-        if (session.subtitle.isNotBlank()) {
-            val sub = label(session.subtitle, 13f, false, onCardMuted)
-            (sub.layoutParams as LinearLayout.LayoutParams).topMargin = dp(2)
-            titles.addView(sub)
-        }
-        header.addView(titles)
-        box.addView(header)
 
         when (session.expandTemplate) {
-            CapsuleExpandTemplate.PROGRESS_CARD -> {
-                val row = LinearLayout(app).apply {
-                    orientation = LinearLayout.HORIZONTAL
-                    gravity = Gravity.CENTER_VERTICAL
-                }
-                val lpRow = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                ).apply { topMargin = dp(16) }
-                session.stages.forEachIndexed { index, stage ->
-                    val col = LinearLayout(app).apply {
-                        orientation = LinearLayout.VERTICAL
-                        gravity = Gravity.CENTER_HORIZONTAL
-                        layoutParams = LinearLayout.LayoutParams(
-                            0,
-                            LinearLayout.LayoutParams.WRAP_CONTENT,
-                            1f,
-                        )
-                    }
-                    val filled = index <= session.activeStageIndex || stage.done
-                    col.addView(
-                        View(app).apply {
-                            background = GradientDrawable().apply {
-                                shape = GradientDrawable.OVAL
-                                setColor(
-                                    if (filled) session.accentColor
-                                    else ColorUtils.setAlphaComponent(onCard, 0x33),
-                                )
-                            }
-                            layoutParams = LinearLayout.LayoutParams(dp(10), dp(10))
-                        },
-                    )
-                    val stageLabel = label(stage.label, 10f, false, onCardMuted)
-                    (stageLabel.layoutParams as LinearLayout.LayoutParams).topMargin = dp(6)
-                    col.addView(stageLabel)
-                    row.addView(col)
-                }
-                box.addView(row, lpRow)
-            }
-            CapsuleExpandTemplate.DETAIL_CARD -> {
-                session.detailRows.forEach { (k, v) ->
-                    val line = label("$k  $v", 13f, false, onCard)
-                    (line.layoutParams as LinearLayout.LayoutParams).topMargin = dp(10)
-                    box.addView(line)
-                }
-                val actions = LinearLayout(app).apply {
-                    orientation = LinearLayout.HORIZONTAL
-                    gravity = Gravity.END
-                }
-                val alp = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                ).apply { topMargin = dp(16) }
-                listOfNotNull(session.actionSecondary, session.actionPrimary).forEach { text ->
-                    val chip = label(text, 12f, true, Color.WHITE)
-                    chip.setPadding(dp(14), dp(10), dp(14), dp(10))
-                    chip.background = GradientDrawable().apply {
-                        cornerRadius = dp(18).toFloat()
-                        setColor(session.accentColor)
-                    }
-                    val mlp = LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                    ).apply { marginStart = dp(8) }
-                    chip.layoutParams = mlp
-                    actions.addView(chip)
-                }
-                box.addView(actions, alp)
-            }
+            CapsuleExpandTemplate.PROGRESS_CARD ->
+                buildProgressExpand(box, session, onCard, onCardMuted)
+            CapsuleExpandTemplate.DETAIL_CARD ->
+                buildDetailExpand(box, session, onCard, onCardMuted)
         }
         val tip = label(gestureHintText(), 10f, false, onCardMuted)
-        (tip.layoutParams as LinearLayout.LayoutParams).topMargin = dp(12)
+        (tip.layoutParams as LinearLayout.LayoutParams).topMargin = dp(10)
         box.addView(tip)
 
         val animatingIn = lastMode != CapsuleDisplayMode.EXPANDED
@@ -521,6 +431,191 @@ class OneCapsuleOverlay private constructor(context: Context) {
             box.scaleX = 1f
             box.scaleY = 1f
         }
+    }
+
+    private fun buildProgressExpand(
+        box: LinearLayout,
+        session: CapsuleSession,
+        onCard: Int,
+        onCardMuted: Int,
+    ) {
+        val top = LinearLayout(app).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        val texts = LinearLayout(app).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+        }
+        val brandRow = LinearLayout(app).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        val brandIcon = ImageView(app).apply { scaleType = ImageView.ScaleType.CENTER_CROP }
+        bindAppIcon(brandIcon, session.source, dp(22))
+        brandRow.addView(brandIcon, LinearLayout.LayoutParams(dp(22), dp(22)).apply { marginEnd = dp(8) })
+        brandRow.addView(label(session.title, 14f, true, onCard))
+        texts.addView(brandRow)
+        val status = label(
+            session.subtitle.substringBefore('·').trim().ifBlank { session.pillPrimary },
+            18f,
+            true,
+            onCard,
+        )
+        (status.layoutParams as LinearLayout.LayoutParams).topMargin = dp(8)
+        texts.addView(status)
+        if (session.subtitle.contains('·') || session.pillSecondary != null) {
+            val eta = label(
+                session.subtitle.substringAfter('·', session.pillSecondary ?: "").trim()
+                    .ifBlank { session.subtitle },
+                13f,
+                false,
+                onCardMuted,
+            )
+            (eta.layoutParams as LinearLayout.LayoutParams).topMargin = dp(4)
+            texts.addView(eta)
+        }
+        top.addView(texts)
+        val hero = ImageView(app).apply { scaleType = ImageView.ScaleType.CENTER_CROP }
+        bindAppIcon(hero, session.source, dp(64))
+        top.addView(hero, LinearLayout.LayoutParams(dp(64), dp(64)).apply { marginStart = dp(8) })
+        box.addView(top)
+
+        val stagesRow = LinearLayout(app).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        val lpRow = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+        ).apply { topMargin = dp(16) }
+        session.stages.forEachIndexed { index, stage ->
+            val col = LinearLayout(app).apply {
+                orientation = LinearLayout.VERTICAL
+                gravity = Gravity.CENTER_HORIZONTAL
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            }
+            val filled = index <= session.activeStageIndex || stage.done
+            col.addView(
+                View(app).apply {
+                    background = GradientDrawable().apply {
+                        shape = GradientDrawable.OVAL
+                        setColor(
+                            if (filled) session.accentColor
+                            else ColorUtils.setAlphaComponent(onCard, 0x28),
+                        )
+                    }
+                    layoutParams = LinearLayout.LayoutParams(dp(11), dp(11))
+                },
+            )
+            val stageLabel = label(stage.label, 10f, filled, if (filled) onCard else onCardMuted)
+            (stageLabel.layoutParams as LinearLayout.LayoutParams).topMargin = dp(6)
+            col.addView(stageLabel)
+            stagesRow.addView(col)
+        }
+        box.addView(stagesRow, lpRow)
+    }
+
+    private fun buildDetailExpand(
+        box: LinearLayout,
+        session: CapsuleSession,
+        onCard: Int,
+        onCardMuted: Int,
+    ) {
+        val header = LinearLayout(app).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        val headerIcon = ImageView(app).apply { scaleType = ImageView.ScaleType.CENTER_CROP }
+        bindAppIcon(headerIcon, session.source, dp(26))
+        header.addView(headerIcon, LinearLayout.LayoutParams(dp(26), dp(26)).apply { marginEnd = dp(10) })
+        header.addView(label(session.title, 15f, true, onCard))
+        box.addView(header)
+
+        val distance = session.detailRows.firstOrNull { it.first.contains("距离") }?.second
+            ?: session.detailRows.firstOrNull()?.second
+        val status = session.detailRows.firstOrNull { it.first.contains("状态") }?.second
+            ?: session.subtitle.substringBefore('·').trim()
+        if (!distance.isNullOrBlank()) {
+            val d = label(distance, 13f, false, onCardMuted)
+            (d.layoutParams as LinearLayout.LayoutParams).topMargin = dp(10)
+            box.addView(d)
+        }
+        val statusTv = label(status.ifBlank { session.pillPrimary }, 18f, true, onCard)
+        (statusTv.layoutParams as LinearLayout.LayoutParams).topMargin = dp(4)
+        box.addView(statusTv)
+
+        val map = CapsuleMapStubView(app).apply { accentColor = session.accentColor }
+        box.addView(
+            map,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(110),
+            ).apply { topMargin = dp(12) },
+        )
+
+        val driverName = session.detailRows.firstOrNull { it.first.contains("司机") }?.second ?: "司机"
+        val plate = session.detailRows.firstOrNull { it.first.contains("车牌") }?.second ?: ""
+        val person = LinearLayout(app).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        val avatar = TextView(app).apply {
+            text = driverName.take(1)
+            gravity = Gravity.CENTER
+            setTextColor(Color.WHITE)
+            textSize = 14f
+            background = GradientDrawable().apply {
+                shape = GradientDrawable.OVAL
+                setColor(session.accentColor)
+            }
+        }
+        person.addView(avatar, LinearLayout.LayoutParams(dp(40), dp(40)).apply { marginEnd = dp(12) })
+        val personText = LinearLayout(app).apply { orientation = LinearLayout.VERTICAL }
+        personText.addView(label(driverName, 15f, true, onCard))
+        if (plate.isNotBlank()) {
+            val p = label(plate, 13f, false, onCardMuted)
+            (p.layoutParams as LinearLayout.LayoutParams).topMargin = dp(2)
+            personText.addView(p)
+        }
+        person.addView(personText)
+        box.addView(
+            person,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+            ).apply { topMargin = dp(14) },
+        )
+
+        val actions = LinearLayout(app).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+        }
+        val actionSpecs = listOfNotNull(
+            session.actionSecondary?.let { "↗ $it" to it },
+            session.actionPrimary?.let { "☎ $it" to it },
+        ).ifEmpty {
+            listOf("☎ 联系" to "联系", "↗ 分享" to "分享")
+        }
+        actionSpecs.forEachIndexed { index, (title, _) ->
+            val chip = label(title, 13f, true, Color.WHITE)
+            chip.gravity = Gravity.CENTER
+            chip.setPadding(dp(16), dp(12), dp(16), dp(12))
+            chip.background = GradientDrawable().apply {
+                cornerRadius = dp(20).toFloat()
+                setColor(session.accentColor)
+            }
+            val mlp = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            if (index > 0) mlp.marginStart = dp(10)
+            actions.addView(chip, mlp)
+        }
+        box.addView(
+            actions,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+            ).apply { topMargin = dp(14) },
+        )
     }
 
     private fun pulsePill(expanding: Boolean) {

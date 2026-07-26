@@ -7,27 +7,27 @@ import com.onetools.app.live.LiveStatusSource
  * 颜色用 ARGB 整型，避免 JVM 单测依赖 android.graphics.Color。
  */
 object OneCapsuleTemplates {
-    private const val ACCENT_MEITUAN = 0xFFFFC107.toInt()
-    private const val ACCENT_DIDI = 0xFFFF7043.toInt()
-    private const val ACCENT_CAINIAO = 0xFF42A5F5.toInt()
+    private const val ACCENT_MEITUAN = 0xFFFF6A00.toInt()
+    private const val ACCENT_DIDI = 0xFF00B87A.toInt()
+    private const val ACCENT_CAINIAO = 0xFF1677FF.toInt()
 
     fun meituanDelivering(
-        etaMinutes: Int = 18,
-        stageIndex: Int = 2,
+        etaMinutes: Int = 12,
+        stageIndex: Int = 1,
     ): CapsuleSession {
         val stages = listOf(
-            CapsuleStage("已下单", true),
-            CapsuleStage("已出餐", true),
+            CapsuleStage("商家接单", true),
+            CapsuleStage("取餐", stageIndex >= 1),
             CapsuleStage("配送中", stageIndex >= 2),
-            CapsuleStage("已送达", stageIndex >= 3),
+            CapsuleStage("即将送达", stageIndex >= 3),
         )
         return CapsuleSession(
             id = "demo-meituan",
             source = LiveStatusSource.MEITUAN,
-            pillPrimary = "配送中",
+            pillPrimary = "骑手已接单",
             pillSecondary = "${etaMinutes}分钟",
-            title = "美团外卖 · 配送中",
-            subtitle = "骑手正在赶来 · 预计 $etaMinutes 分钟",
+            title = "美团外卖",
+            subtitle = "骑手正在取餐 · 预计 12:40 送达",
             stages = stages,
             activeStageIndex = stageIndex.coerceIn(0, stages.lastIndex),
             expandTemplate = CapsuleExpandTemplate.PROGRESS_CARD,
@@ -37,20 +37,21 @@ object OneCapsuleTemplates {
 
     fun didiOnTrip(
         etaMinutes: Int = 3,
-        plate: String = "粤B·D1234",
-        driver: String = "师傅张",
+        plate: String = "粤B·8A23",
+        driver: String = "王师傅",
     ): CapsuleSession {
         return CapsuleSession(
             id = "demo-didi",
             source = LiveStatusSource.DIDI,
-            pillPrimary = "行程中",
+            pillPrimary = "滴滴出行",
             pillSecondary = "${etaMinutes}分钟",
-            title = "滴滴出行 · 行程中",
-            subtitle = "司机已接单，预计 $etaMinutes 分钟到达",
+            title = "滴滴出行",
+            subtitle = "司机已到达 · 距离你 2.1 km",
             detailRows = listOf(
+                "距离" to "2.1 km",
+                "状态" to "司机已到达",
                 "司机" to driver,
                 "车牌" to plate,
-                "预计" to "${etaMinutes} 分钟",
             ),
             actionPrimary = "联系司机",
             actionSecondary = "分享行程",
