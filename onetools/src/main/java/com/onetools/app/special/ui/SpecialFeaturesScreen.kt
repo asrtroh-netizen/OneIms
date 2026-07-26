@@ -47,11 +47,13 @@ import com.onetools.app.special.sim.SpecialSimInfo
 import com.onetools.app.special.sim.SpecialSimSwitchResult
 import com.onetools.app.special.sim.TileHelper
 import com.onetools.app.ui.OneToolsGroupDivider
+import com.onetools.app.ui.OneToolsInlineNotice
 import com.onetools.app.ui.OneToolsPrimaryButton
 import com.onetools.app.ui.OneToolsSection
 import com.onetools.app.ui.OneToolsSelectedSimPill
 import com.onetools.app.ui.OneToolsSettingsActionRow
 import com.onetools.app.ui.OneToolsSettingsChoiceRow
+import com.onetools.app.ui.OneToolsSettingsGroup
 import com.onetools.app.ui.OneToolsSettingsSwitchRow
 import com.onetools.app.ui.OneToolsToolPage
 import kotlinx.coroutines.Dispatchers
@@ -201,48 +203,56 @@ fun SpecialFeaturesScreen(
         title = stringResource(R.string.special_title),
         subtitle = stringResource(R.string.special_subtitle),
         onBack = onBack,
+        verticalSpacing = 20,
     ) {
         item {
-            Text(
+            OneToolsInlineNotice(
                 text = when {
                     !privilegeReady -> stringResource(R.string.special_channel_need)
                     !hasPhonePermission -> stringResource(R.string.special_phone_permission_need)
                     else -> stringResource(R.string.special_channel_ready)
                 },
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                danger = !privilegeReady || !hasPhonePermission,
             )
         }
 
         if (!hasPhonePermission) {
             item {
-                OneToolsPrimaryButton(
-                    text = stringResource(R.string.special_phone_permission_action),
-                    onClick = {
-                        phonePermissionLauncher.launch(Manifest.permission.READ_PHONE_STATE)
-                    },
-                )
+                OneToolsSettingsGroup {
+                    Column(modifier = Modifier.padding(20.dp)) {
+                        OneToolsPrimaryButton(
+                            text = stringResource(R.string.special_phone_permission_action),
+                            onClick = {
+                                phonePermissionLauncher.launch(Manifest.permission.READ_PHONE_STATE)
+                            },
+                        )
+                    }
+                }
             }
         }
 
         if (sims.isNotEmpty()) {
             item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End,
-                ) {
-                    OneToolsSelectedSimPill(
-                        labels = sims.map { sim ->
-                            sim.subId to context.getString(
-                                R.string.special_sim_pill_label,
-                                sim.slotIndex + 1,
-                                sim.shortName,
-                            )
-                        },
-                        selectedSubId = selectedSubId,
-                        onSelectSim = ::selectSim,
-                        enabled = !busy && hasPhonePermission,
-                    )
+                OneToolsSection(title = stringResource(R.string.special_target_preview_section)) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                        horizontalArrangement = Arrangement.End,
+                    ) {
+                        OneToolsSelectedSimPill(
+                            labels = sims.map { sim ->
+                                sim.subId to context.getString(
+                                    R.string.special_sim_pill_label,
+                                    sim.slotIndex + 1,
+                                    sim.shortName,
+                                )
+                            },
+                            selectedSubId = selectedSubId,
+                            onSelectSim = ::selectSim,
+                            enabled = !busy && hasPhonePermission,
+                        )
+                    }
                 }
             }
         }
@@ -577,11 +587,7 @@ fun SpecialFeaturesScreen(
 
         status?.let { msg ->
             item {
-                Text(
-                    text = msg,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary,
-                )
+                OneToolsInlineNotice(text = msg, danger = false)
             }
         }
     }

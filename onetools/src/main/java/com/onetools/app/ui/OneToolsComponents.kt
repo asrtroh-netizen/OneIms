@@ -24,8 +24,11 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -153,7 +156,8 @@ fun OneToolsToolPage(
     title: String,
     onBack: () -> Unit,
     subtitle: String? = null,
-    verticalSpacing: Int = 12,
+    /** 对齐 OneIMS OneImsPage 的 20dp 块间距，避免区块黏连。 */
+    verticalSpacing: Int = 20,
     content: LazyListScope.() -> Unit,
 ) {
     Column(
@@ -175,22 +179,25 @@ fun OneToolsToolPage(
     }
 }
 
+/**
+ * 区块标题 + 容器卡片：对齐 OneIMS [SectionBlock]，用留白与圆角卡片切开不同功能块。
+ */
 @Composable
 fun OneToolsSection(
     title: String,
     description: String? = null,
     content: @Composable () -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Column(
             modifier = Modifier.padding(horizontal = 4.dp),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = MaterialTheme.colorScheme.onBackground,
             )
             if (description != null) {
                 Text(
@@ -204,18 +211,68 @@ fun OneToolsSection(
     }
 }
 
+/**
+ * 设置组容器：surfaceContainerLow + 轻 elevation + 细描边，避免与背景糊成一片。
+ */
 @Composable
 fun OneToolsSettingsGroup(content: @Composable () -> Unit) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(OneToolsTokens.cardCornerRadius),
         color = MaterialTheme.colorScheme.surfaceContainerLow,
+        tonalElevation = 2.dp,
+        shadowElevation = 0.dp,
+        border = BorderStroke(1.dp, OneToolsTokens.dividerColor()),
     ) {
         Column(content = { content() })
     }
 }
 
-/** 首页入口卡：与 One 系列 surfaceContainerLow + 20dp 圆角一致。 */
+/** 状态提示容器：对齐 OneIMS [InlineNotice]。 */
+@Composable
+fun OneToolsInlineNotice(
+    text: String,
+    danger: Boolean = false,
+    modifier: Modifier = Modifier,
+) {
+    val container = if (danger) {
+        MaterialTheme.colorScheme.errorContainer
+    } else {
+        MaterialTheme.colorScheme.secondaryContainer
+    }
+    val contentColor = if (danger) {
+        MaterialTheme.colorScheme.onErrorContainer
+    } else {
+        MaterialTheme.colorScheme.onSecondaryContainer
+    }
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        color = container,
+        tonalElevation = 1.dp,
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 18.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Icon(
+                imageVector = if (danger) Icons.Filled.Warning else Icons.Filled.CheckCircle,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+                tint = contentColor,
+            )
+            Text(
+                text = text,
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.bodyMedium,
+                color = contentColor,
+            )
+        }
+    }
+}
+
+/** 首页入口卡：与设置组同一套容器层次，避免与背景糊成一片。 */
 @Composable
 fun OneToolsInfoCard(
     title: String,
@@ -228,7 +285,8 @@ fun OneToolsInfoCard(
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
         shape = RoundedCornerShape(OneToolsTokens.cardCornerRadius),
         color = MaterialTheme.colorScheme.surfaceContainerLow,
-        tonalElevation = 1.dp,
+        tonalElevation = 2.dp,
+        border = BorderStroke(1.dp, OneToolsTokens.dividerColor()),
     ) {
         Column(
             modifier = Modifier.padding(OneToolsTokens.cardPaddingHorizontal),

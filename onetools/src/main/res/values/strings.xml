@@ -523,6 +523,7 @@
     <string name="special_phone_permission_granted">已获得电话权限，可选择 SIM 卡操作</string>
     <string name="special_phone_permission_denied">未授予电话权限：特色功能无法列出 SIM / 切卡</string>
     <string name="special_sim_pill_label">卡%1$d %2$s</string>
+    <string name="special_target_preview_section">目标 SIM</string>
     <string name="special_target_preview">当前目标：卡%1$d · %2$s</string>
     <string name="special_action_applying">应用中…</string>
     <string name="special_signal_title">信号格显示样式</string>
