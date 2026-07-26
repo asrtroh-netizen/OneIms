@@ -35,12 +35,21 @@ class LiveStatusPrefs(context: Context) {
         set(value) = prefs.edit().putInt(KEY_OFFSET_X, value.coerceIn(-120, 120)).apply()
 
     /**
-     * 上下偏移（dp）。默认 +6：整体压在状态栏下方一点，避开前置摄像头挖孔。
-     * 想贴岛区可往负向拖。
+     * 上下偏移（dp）。配合避摄模式微调；CAMERA_CENTER 时相对摄像头中心，BELOW 时相对挖孔底边。
      */
     var capsuleOffsetYDp: Int
-        get() = prefs.getInt(KEY_OFFSET_Y, 6).coerceIn(-40, 120)
+        get() = prefs.getInt(KEY_OFFSET_Y, 0).coerceIn(-40, 120)
         set(value) = prefs.edit().putInt(KEY_OFFSET_Y, value.coerceIn(-40, 120)).apply()
+
+    /**
+     * 避摄策略：默认 BELOW（不挡摄）；CAMERA_CENTER 对齐挖孔（更像 MT 岛）。
+     */
+    var cameraExclusionMode: String
+        get() = prefs.getString(KEY_EXCLUSION, "BELOW") ?: "BELOW"
+        set(value) = prefs.edit().putString(
+            KEY_EXCLUSION,
+            if (value == "CAMERA_CENTER") "CAMERA_CENTER" else "BELOW",
+        ).apply()
 
     fun isSourceEnabled(source: LiveStatusSource): Boolean =
         prefs.getBoolean(keySource(source), true)
@@ -75,6 +84,7 @@ class LiveStatusPrefs(context: Context) {
         private const val KEY_HEIGHT = "capsule_height_scale"
         private const val KEY_OFFSET_X = "capsule_offset_x"
         private const val KEY_OFFSET_Y = "capsule_offset_y"
+        private const val KEY_EXCLUSION = "camera_exclusion_mode"
     }
 }
 

@@ -3,6 +3,7 @@ package com.onetools.app.live.capsule
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Color
+import android.graphics.PixelFormat
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Build
@@ -16,13 +17,14 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import android.widget.LinearLayout
+import android.widget.Space
 import android.widget.TextView
 import com.onetools.app.live.LiveStatusPrefs
 import kotlin.math.abs
 
 /**
- * One Capsule 悬浮岛：轻提醒扁胶囊 + 展开卡 + 手势。
- * 下展开 / 上收起 / 左右切会话。
+ * One Capsule 悬浮岛。
+ * 布局心智借鉴 MT/OneCapsule 干净室：摄像头锚定、展开下挂、避摄模式。
  */
 class OneCapsuleOverlay private constructor(context: Context) {
     private val app = context.applicationContext
@@ -32,10 +34,15 @@ class OneCapsuleOverlay private constructor(context: Context) {
 
     private var root: LinearLayout? = null
     private var params: WindowManager.LayoutParams? = null
-    private var pillView: TextView? = null
+    private var pillRow: LinearLayout? = null
+    private var pillLeft: TextView? = null
+    private var pillGap: Space? = null
+    private var pillRight: TextView? = null
+    private var pillSingle: TextView? = null
     private var expandedView: LinearLayout? = null
     private var pageHint: TextView? = null
     private var attached = false
+    private var lastMode: CapsuleDisplayMode = CapsuleDisplayMode.HIDDEN
 
     private val storeListener: (CapsuleUiSnapshot) -> Unit = { snap ->
         runOnMain { render(snap) }
@@ -95,9 +102,7 @@ class OneCapsuleOverlay private constructor(context: Context) {
     }
 
     fun applyLayoutFromPrefs() {
-        runOnMain {
-            render(OneCapsuleStore.snapshot())
-        }
+        runOnMain { render(OneCapsuleStore.snapshot()) }
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -108,14 +113,17 @@ class OneCapsuleOverlay private constructor(context: Context) {
             gravity = Gravity.CENTER_HORIZONTAL
             setOnTouchListener { _, ev -> gestureDetector.onTouchEvent(ev) }
         }
-        val pill = TextView(app).apply {
-            setTextColor(Color.WHITE)
-            typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
-            includeFontPadding = false
-            gravity = Gravity.CENTER
-            maxLines = 1
-            isSingleLine = true
+        val row = LinearLayout(app).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
         }
+        val left = pillTextView()
+        val gap = Space(app)
+        val right = pillTextView()
+        val single = pillTextView()
+        row.addView(left)
+        row.addView(gap, LinearLayout.LayoutParams(0, 1))
+        row.addView(right)
         val hint = TextView(app).apply {
             setTextColor(Color.parseColor("#88FFFFFF"))
             textSize = 10f
@@ -126,9 +134,17 @@ class OneCapsuleOverlay private constructor(context: Context) {
             orientation = LinearLayout.VERTICAL
             visibility = View.GONE
             setPadding(dp(16), dp(14), dp(16), dp(14))
+            alpha = 0f
         }
         rootLl.addView(
-            pill,
+            row,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+            ),
+        )
+        rootLl.addView(
+            single,
             LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -167,14 +183,17 @@ class OneCapsuleOverlay private constructor(context: Context) {
                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
                 WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
                 WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
-            android.graphics.PixelFormat.TRANSLUCENT,
-        ).apply {
-            gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
-        }
+            PixelFormat.TRANSLUCENT,
+        ).apply { gravity = Gravity.TOP or Gravity.START }
+
         runCatching {
             wm.addView(rootLl, lp)
             root = rootLl
-            pillView = pill
+            pillRow = row
+            pillLeft = left
+            pillGap = gap
+            pillRight = right
+            pillSingle = single
             pageHint = hint
             expandedView = expanded
             params = lp
@@ -182,15 +201,29 @@ class OneCapsuleOverlay private constructor(context: Context) {
         }
     }
 
+    private fun pillTextView(): TextView = TextView(app).apply {
+        setTextColor(Color.WHITE)
+        typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+        includeFontPadding = false
+        gravity = Gravity.CENTER
+        maxLines = 1
+        isSingleLine = true
+    }
+
     private fun detach() {
         val r = root
         if (r != null) runCatching { wm?.removeView(r) }
         root = null
-        pillView = null
+        params = null
+        pillRow = null
+        pillLeft = null
+        pillGap = null
+        pillRight = null
+        pillSingle = null
         pageHint = null
         expandedView = null
-        params = null
         attached = false
+        lastMode = CapsuleDisplayMode.HIDDEN
     }
 
     private fun render(snap: CapsuleUiSnapshot) {
@@ -203,27 +236,52 @@ class OneCapsuleOverlay private constructor(context: Context) {
         val session = snap.active ?: return
         applyPill(session, snap)
         applyExpanded(session, snap.mode == CapsuleDisplayMode.EXPANDED)
-        applyPosition()
+        applyPosition(snap.mode)
+        lastMode = snap.mode
     }
 
+    private fun exclusionMode(): CameraExclusionMode =
+        if (prefs.cameraExclusionMode == "CAMERA_CENTER") {
+            CameraExclusionMode.CAMERA_CENTER
+        } else {
+            CameraExclusionMode.BELOW
+        }
+
     private fun applyPill(session: CapsuleSession, snap: CapsuleUiSnapshot) {
-        val tv = pillView ?: return
         val w = prefs.capsuleWidthScale
         val h = prefs.capsuleHeightScale
-        val padH = dp((16f * w).toInt().coerceIn(10, 40))
+        val padH = dp((14f * w).toInt().coerceIn(8, 36))
         val padV = dp((4f * h).toInt().coerceIn(2, 12))
         val textSp = (11f * ((w + h) * 0.5f)).coerceIn(9f, 15f)
-        tv.text = session.pillText()
-        tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, textSp)
-        tv.setPadding(padH, padV, padH, padV)
-        tv.minWidth = dp((120f * w).toInt().coerceIn(72, 300))
-        tv.minHeight = dp((22f * h).toInt().coerceIn(18, 40))
-        tv.background = GradientDrawable().apply {
+        val minH = dp((22f * h).toInt().coerceIn(18, 40))
+        val radius = dp((14f * h).toInt().coerceIn(10, 22)).toFloat()
+        fun pillBg(): GradientDrawable = GradientDrawable().apply {
             shape = GradientDrawable.RECTANGLE
-            cornerRadius = dp((14f * h).toInt().coerceIn(10, 22)).toFloat()
+            cornerRadius = radius
             setColor(Color.parseColor("#F2000000"))
             setStroke(dp(1), Color.parseColor("#22FFFFFF"))
         }
+        val split = exclusionMode() == CameraExclusionMode.CAMERA_CENTER &&
+            !session.pillSecondary.isNullOrBlank()
+
+        if (split) {
+            pillRow?.visibility = View.VISIBLE
+            pillSingle?.visibility = View.GONE
+            styleSegment(pillLeft, session.pillPrimary, padH, padV, textSp, minH, pillBg())
+            styleSegment(pillRight, session.pillSecondary ?: "", padH, padV, textSp, minH, pillBg())
+            val gapLp = pillGap?.layoutParams as? LinearLayout.LayoutParams
+            gapLp?.width = CameraAnchorResolver.resolve(app).let {
+                (it.width + dp(12)).coerceAtLeast(dp(20))
+            }
+            gapLp?.height = 1
+            pillGap?.layoutParams = gapLp
+        } else {
+            pillRow?.visibility = View.GONE
+            pillSingle?.visibility = View.VISIBLE
+            styleSegment(pillSingle, session.pillText(), padH, padV, textSp, minH, pillBg())
+            pillSingle?.minWidth = dp((120f * w).toInt().coerceIn(72, 300))
+        }
+
         val hint = pageHint ?: return
         if (snap.sessions.size > 1) {
             hint.visibility = View.VISIBLE
@@ -233,14 +291,43 @@ class OneCapsuleOverlay private constructor(context: Context) {
         }
     }
 
+    private fun styleSegment(
+        tv: TextView?,
+        text: String,
+        padH: Int,
+        padV: Int,
+        textSp: Float,
+        minH: Int,
+        bg: GradientDrawable,
+    ) {
+        tv ?: return
+        tv.text = text
+        tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, textSp)
+        tv.setPadding(padH, padV, padH, padV)
+        tv.minHeight = minH
+        tv.background = bg
+    }
+
     private fun applyExpanded(session: CapsuleSession, show: Boolean) {
         val box = expandedView ?: return
         if (!show) {
-            box.visibility = View.GONE
-            box.removeAllViews()
+            if (box.visibility == View.VISIBLE) {
+                box.animate()
+                    .alpha(0f)
+                    .translationY((-dp(8)).toFloat())
+                    .setDuration(CapsuleMotion.COLLAPSE_MS.toLong())
+                    .withEndAction {
+                        box.visibility = View.GONE
+                        box.removeAllViews()
+                        box.translationY = 0f
+                    }
+                    .start()
+            } else {
+                box.visibility = View.GONE
+                box.removeAllViews()
+            }
             return
         }
-        box.visibility = View.VISIBLE
         box.removeAllViews()
         box.background = GradientDrawable().apply {
             shape = GradientDrawable.RECTANGLE
@@ -248,16 +335,12 @@ class OneCapsuleOverlay private constructor(context: Context) {
             setColor(Color.parseColor("#F214161C"))
             setStroke(dp(1), Color.parseColor("#33FFFFFF"))
         }
-
         box.addView(label(session.title, 15f, true, Color.WHITE))
         if (session.subtitle.isNotBlank()) {
-            box.addView(
-                label(session.subtitle, 12f, false, Color.parseColor("#B3FFFFFF")).also {
-                    (it.layoutParams as LinearLayout.LayoutParams).topMargin = dp(4)
-                },
-            )
+            val sub = label(session.subtitle, 12f, false, Color.parseColor("#B3FFFFFF"))
+            (sub.layoutParams as LinearLayout.LayoutParams).topMargin = dp(4)
+            box.addView(sub)
         }
-
         when (session.expandTemplate) {
             CapsuleExpandTemplate.PROGRESS_CARD -> {
                 val row = LinearLayout(app).apply {
@@ -275,14 +358,15 @@ class OneCapsuleOverlay private constructor(context: Context) {
                         layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
                     }
                     val filled = index <= session.activeStageIndex || stage.done
-                    val dot = View(app).apply {
-                        background = GradientDrawable().apply {
-                            shape = GradientDrawable.OVAL
-                            setColor(if (filled) session.accentColor else Color.parseColor("#44FFFFFF"))
-                        }
-                        layoutParams = LinearLayout.LayoutParams(dp(10), dp(10))
-                    }
-                    col.addView(dot)
+                    col.addView(
+                        View(app).apply {
+                            background = GradientDrawable().apply {
+                                shape = GradientDrawable.OVAL
+                                setColor(if (filled) session.accentColor else Color.parseColor("#44FFFFFF"))
+                            }
+                            layoutParams = LinearLayout.LayoutParams(dp(10), dp(10))
+                        },
+                    )
                     val stageLabel = label(stage.label, 10f, false, Color.parseColor("#CCFFFFFF"))
                     (stageLabel.layoutParams as LinearLayout.LayoutParams).topMargin = dp(6)
                     col.addView(stageLabel)
@@ -305,63 +389,76 @@ class OneCapsuleOverlay private constructor(context: Context) {
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                 ).apply { topMargin = dp(14) }
                 listOfNotNull(session.actionSecondary, session.actionPrimary).forEach { text ->
-                    actions.addView(
-                        label(text, 12f, true, session.accentColor).also { t ->
-                            t.setPadding(dp(12), dp(8), dp(12), dp(8)
-                            )
-                            t.background = GradientDrawable().apply {
-                                cornerRadius = dp(16).toFloat()
-                                setColor(Color.parseColor("#22FFFFFF"))
-                            }
-                            val mlp = LinearLayout.LayoutParams(
-                                LinearLayout.LayoutParams.WRAP_CONTENT,
-                                LinearLayout.LayoutParams.WRAP_CONTENT,
-                            ).apply { marginStart = dp(8) }
-                            t.layoutParams = mlp
-                        },
-                    )
+                    val chip = label(text, 12f, true, session.accentColor)
+                    chip.setPadding(dp(12), dp(8), dp(12), dp(8))
+                    chip.background = GradientDrawable().apply {
+                        cornerRadius = dp(16).toFloat()
+                        setColor(Color.parseColor("#22FFFFFF"))
+                    }
+                    val mlp = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                    ).apply { marginStart = dp(8) }
+                    chip.layoutParams = mlp
+                    actions.addView(chip)
                 }
                 box.addView(actions, alp)
             }
         }
+        val tip = label("上滑收起 · 点按切换", 10f, false, Color.parseColor("#66FFFFFF"))
+        (tip.layoutParams as LinearLayout.LayoutParams).topMargin = dp(12)
+        box.addView(tip)
 
-        box.addView(
-            label("上滑收起 · 点按切换", 10f, false, Color.parseColor("#66FFFFFF")).also {
-                (it.layoutParams as LinearLayout.LayoutParams).topMargin = dp(12)
-            },
-        )
+        val animatingIn = lastMode != CapsuleDisplayMode.EXPANDED
+        box.visibility = View.VISIBLE
+        if (animatingIn) {
+            box.alpha = 0f
+            box.translationY = dp(10).toFloat()
+            box.animate()
+                .alpha(1f)
+                .translationY(0f)
+                .setDuration(CapsuleMotion.EXPAND_MS.toLong())
+                .start()
+        } else {
+            box.alpha = 1f
+            box.translationY = 0f
+        }
     }
 
-    private fun label(
-        text: String,
-        sp: Float,
-        bold: Boolean,
-        color: Int,
-    ): TextView = TextView(app).apply {
-        this.text = text
-        setTextColor(color)
-        setTextSize(TypedValue.COMPLEX_UNIT_SP, sp)
-        typeface = Typeface.create(
-            "sans-serif-medium",
-            if (bold) Typeface.BOLD else Typeface.NORMAL,
-        )
-        layoutParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.WRAP_CONTENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT,
-        )
-    }
+    private fun label(text: String, sp: Float, bold: Boolean, color: Int): TextView =
+        TextView(app).apply {
+            this.text = text
+            setTextColor(color)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, sp)
+            typeface = Typeface.create(
+                "sans-serif-medium",
+                if (bold) Typeface.BOLD else Typeface.NORMAL,
+            )
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+            )
+        }
 
-    private fun applyPosition() {
+    private fun applyPosition(mode: CapsuleDisplayMode) {
         val lp = params ?: return
         val r = root ?: return
-        lp.x = dp(prefs.capsuleOffsetXDp)
-        lp.y = statusBarHeight() + dp(prefs.capsuleOffsetYDp)
+        val pillH = ((22f * prefs.capsuleHeightScale).toInt().coerceIn(18, 40)).let { dp(it) }
+        val exclusion = exclusionMode()
+        val anchor = CameraAnchorResolver.resolve(app)
+        val bounds = CameraAwareCapsuleLayout.compute(
+            anchor = anchor,
+            mode = mode,
+            pillHeightPx = pillH,
+            offsetYPx = dp(prefs.capsuleOffsetYDp),
+            exclusion = exclusion,
+        )
+        val screenW = app.resources.displayMetrics.widthPixels
+        lp.gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
+        // 相对屏幕中心再叠用户左右偏移，使双叶间隙对准挖孔。
+        lp.x = (bounds.centerXPx - screenW / 2) + dp(prefs.capsuleOffsetXDp)
+        lp.y = bounds.topPx
         runCatching { wm?.updateViewLayout(r, lp) }
-    }
-
-    private fun statusBarHeight(): Int {
-        val resId = app.resources.getIdentifier("status_bar_height", "dimen", "android")
-        return if (resId > 0) app.resources.getDimensionPixelSize(resId) else dp(28)
     }
 
     private fun dp(v: Int): Int =

@@ -13,8 +13,8 @@ android {
         applicationId = "com.onetools.app"
         minSdk = 31
         targetSdk = 36
-        versionCode = 25
-        versionName = "0.5.0"
+        versionCode = 26
+        versionName = "0.5.1"
         buildConfigField(
             "String",
             "ONE_CDN_INDEX_URL",

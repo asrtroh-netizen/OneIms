@@ -79,7 +79,10 @@
     <string name="live_status_adjust_width">长度 %1$.0f%%</string>
     <string name="live_status_adjust_height">高低 %1$.0f%%</string>
     <string name="live_status_adjust_x">左右 %1$d dp</string>
-    <string name="live_status_adjust_y">上下 %1$d dp（默认在状态栏下，避摄）</string>
+    <string name="live_status_adjust_y">上下 %1$d dp（相对避摄锚点）</string>
+    <string name="live_status_exclusion">避摄策略</string>
+    <string name="live_status_exclusion_below">摄像头下方（更安全）</string>
+    <string name="live_status_exclusion_center">对齐摄像头（更像灵动岛）</string>
     <string name="live_status_access_need">需要打开「通知使用权」才能读取美团/滴滴/菜鸟进度通知</string>
     <string name="live_status_access_ready">通知使用权已开启</string>
     <string name="live_status_access_action">打开通知使用权设置</string>

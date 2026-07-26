@@ -45,6 +45,9 @@ fun LiveLabScreen() {
     var heightScale by remember { mutableFloatStateOf(prefs.capsuleHeightScale) }
     var offsetX by remember { mutableIntStateOf(prefs.capsuleOffsetXDp) }
     var offsetY by remember { mutableIntStateOf(prefs.capsuleOffsetYDp) }
+    var exclusionCenter by remember {
+        mutableStateOf(prefs.cameraExclusionMode == "CAMERA_CENTER")
+    }
     val lifecycleOwner = LocalLifecycleOwner.current
 
     fun applyCapsuleLayout() {
@@ -75,6 +78,7 @@ fun LiveLabScreen() {
                 heightScale = prefs.capsuleHeightScale
                 offsetX = prefs.capsuleOffsetXDp
                 offsetY = prefs.capsuleOffsetYDp
+                exclusionCenter = prefs.cameraExclusionMode == "CAMERA_CENTER"
                 LiveStatusHub.refreshCapsuleVisibility(context)
             }
         }
@@ -172,6 +176,21 @@ fun LiveLabScreen() {
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
+                    OneToolsSettingsSwitchRow(
+                        title = stringResource(R.string.live_status_exclusion),
+                        subtitle = if (exclusionCenter) {
+                            stringResource(R.string.live_status_exclusion_center)
+                        } else {
+                            stringResource(R.string.live_status_exclusion_below)
+                        },
+                        checked = exclusionCenter,
+                        enabled = master && capsule,
+                        onCheckedChange = {
+                            exclusionCenter = it
+                            prefs.cameraExclusionMode = if (it) "CAMERA_CENTER" else "BELOW"
+                            applyCapsuleLayout()
+                        },
+                    )
                     Text(
                         text = stringResource(
                             R.string.live_status_adjust_width,
