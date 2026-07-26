@@ -26,7 +26,7 @@
 
 | # | 能力 | 说明 |
 |---|---|---|
-| 6 | DOT / MINI / COMPACT 多档高度 | MT 三级折叠；我们现只有 PILL/EXPANDED |
+| 6 | ~~DOT / MINI / COMPACT 多档高度~~ | **0.8.0 已做** `CapsuleModeLadder` · 旧 PILL→COMPACT |
 | 7 | ~~主题 token / 动态色~~ | **0.7.1 已做** `CapsuleThemeColors` + Live Lab 开关 |
 | 8 | ~~震动反馈节奏~~ | **0.7.1 已做** `CapsuleHaptics` |
 | 9 | ~~手势可配置表~~ | **0.7.1 已做** `CapsuleGestureMap` + Live Lab 映射 |

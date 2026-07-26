@@ -104,6 +104,12 @@ class OneCapsuleOverlay private constructor(context: Context) {
 
     fun start() {
         runOnMain {
+            OneCapsuleStore.configure(
+                CapsuleModeLadder.clampQuiet(
+                    CapsuleDisplayMode.entries.find { it.name == prefs.quietCapsuleMode }
+                        ?: CapsuleDisplayMode.COMPACT,
+                ),
+            )
             OneCapsuleStore.observe(storeListener)
             render(OneCapsuleStore.snapshot())
         }
@@ -117,7 +123,15 @@ class OneCapsuleOverlay private constructor(context: Context) {
     }
 
     fun applyLayoutFromPrefs() {
-        runOnMain { render(OneCapsuleStore.snapshot()) }
+        runOnMain {
+            OneCapsuleStore.configure(
+                CapsuleModeLadder.clampQuiet(
+                    CapsuleDisplayMode.entries.find { it.name == prefs.quietCapsuleMode }
+                        ?: CapsuleDisplayMode.COMPACT,
+                ),
+            )
+            render(OneCapsuleStore.snapshot())
+        }
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -258,6 +272,15 @@ class OneCapsuleOverlay private constructor(context: Context) {
         lastMode = snap.mode
     }
 
+    private fun shellScale(mode: CapsuleDisplayMode): Pair<Float, Float> = when (mode) {
+        CapsuleDisplayMode.DOT -> 0.55f to 0.7f
+        CapsuleDisplayMode.MINI -> 0.78f to 0.85f
+        CapsuleDisplayMode.COMPACT,
+        CapsuleDisplayMode.EXPANDED,
+        CapsuleDisplayMode.HIDDEN,
+        -> 1f to 1f
+    }
+
     private fun exclusionMode(): CameraExclusionMode =
         if (prefs.cameraExclusionMode == "CAMERA_CENTER") {
             CameraExclusionMode.CAMERA_CENTER
@@ -266,66 +289,98 @@ class OneCapsuleOverlay private constructor(context: Context) {
         }
 
     private fun applyPill(session: CapsuleSession, snap: CapsuleUiSnapshot) {
-        val w = prefs.capsuleWidthScale
-        val h = prefs.capsuleHeightScale
-        val padH = dp((14f * w).toInt().coerceIn(8, 36))
+        val (ws, hs) = shellScale(snap.mode)
+        val w = prefs.capsuleWidthScale * ws
+        val h = prefs.capsuleHeightScale * hs
+        val padH = dp((14f * w).toInt().coerceIn(6, 36))
         val padV = dp((4f * h).toInt().coerceIn(2, 12))
-        val textSp = (11f * ((w + h) * 0.5f)).coerceIn(9f, 15f)
-        val minH = dp((22f * h).toInt().coerceIn(18, 40)).coerceAtLeast(dp(32))
+        val textSp = (11f * ((w + h) * 0.5f)).coerceIn(8f, 15f)
+        val minH = dp((22f * h).toInt().coerceIn(16, 40)).coerceAtLeast(
+            if (snap.mode == CapsuleDisplayMode.DOT) dp(28) else dp(32),
+        )
         val radius = dp((14f * h).toInt().coerceIn(10, 22)).toFloat()
         val fill = CapsuleThemeColors.pillFill(app, prefs.dynamicColorEnabled)
         val stroke = CapsuleThemeColors.stroke(prefs.dynamicColorEnabled, session.accentColor)
-        fun pillBg(): GradientDrawable = GradientDrawable().apply {
-            shape = GradientDrawable.RECTANGLE
-            cornerRadius = radius
+        fun pillBg(oval: Boolean = false): GradientDrawable = GradientDrawable().apply {
+            shape = if (oval) GradientDrawable.OVAL else GradientDrawable.RECTANGLE
+            if (!oval) cornerRadius = radius
             setColor(fill)
             setStroke(dp(1), stroke)
         }
         val slots = session.toSlots()
-        val split = exclusionMode() == CameraExclusionMode.CAMERA_CENTER &&
+        val split = snap.mode == CapsuleDisplayMode.COMPACT &&
+            exclusionMode() == CameraExclusionMode.CAMERA_CENTER &&
             !slots.secondary.isNullOrBlank()
 
-        if (split) {
-            pillRow?.visibility = View.VISIBLE
-            pillSingle?.visibility = View.GONE
-            styleSegment(
-                pillLeft,
-                "${slots.iconGlyph} ${slots.primary}",
-                padH,
-                padV,
-                textSp,
-                minH,
-                pillBg(),
-            )
-            styleSegment(pillRight, slots.secondary ?: "", padH, padV, textSp, minH, pillBg())
-            val gapLp = pillGap?.layoutParams as? LinearLayout.LayoutParams
-            gapLp?.width = CameraAnchorResolver.resolve(app).let {
-                (it.width + dp(12)).coerceAtLeast(dp(20))
+        when (snap.mode) {
+            CapsuleDisplayMode.DOT -> {
+                pillRow?.visibility = View.GONE
+                pillSingle?.visibility = View.VISIBLE
+                val size = dp(28)
+                styleSegment(pillSingle, slots.iconGlyph, 0, 0, 12f, size, pillBg(oval = true))
+                pillSingle?.layoutParams = LinearLayout.LayoutParams(size, size)
+                pillSingle?.minWidth = size
+                pillSingle?.minHeight = size
             }
-            gapLp?.height = 1
-            pillGap?.layoutParams = gapLp
-        } else {
-            pillRow?.visibility = View.GONE
-            pillSingle?.visibility = View.VISIBLE
-            styleSegment(
-                pillSingle,
-                "${slots.iconGlyph} ${slots.pillText()}",
-                padH,
-                padV,
-                textSp,
-                minH,
-                pillBg(),
-            )
-            pillSingle?.minWidth = dp((120f * w).toInt().coerceIn(72, 300))
+            CapsuleDisplayMode.MINI -> {
+                pillRow?.visibility = View.GONE
+                pillSingle?.visibility = View.VISIBLE
+                val short = slots.primary.take(8)
+                styleSegment(
+                    pillSingle,
+                    "${slots.iconGlyph} $short",
+                    padH,
+                    padV,
+                    textSp,
+                    minH,
+                    pillBg(),
+                )
+                pillSingle?.minWidth = dp((88f * w).toInt().coerceIn(64, 180))
+            }
+            else -> {
+                if (split) {
+                    pillRow?.visibility = View.VISIBLE
+                    pillSingle?.visibility = View.GONE
+                    styleSegment(
+                        pillLeft,
+                        "${slots.iconGlyph} ${slots.primary}",
+                        padH,
+                        padV,
+                        textSp,
+                        minH,
+                        pillBg(),
+                    )
+                    styleSegment(pillRight, slots.secondary ?: "", padH, padV, textSp, minH, pillBg())
+                    val gapLp = pillGap?.layoutParams as? LinearLayout.LayoutParams
+                    gapLp?.width = CameraAnchorResolver.resolve(app).let {
+                        (it.width + dp(12)).coerceAtLeast(dp(20))
+                    }
+                    gapLp?.height = 1
+                    pillGap?.layoutParams = gapLp
+                } else {
+                    pillRow?.visibility = View.GONE
+                    pillSingle?.visibility = View.VISIBLE
+                    styleSegment(
+                        pillSingle,
+                        "${slots.iconGlyph} ${slots.pillText()}",
+                        padH,
+                        padV,
+                        textSp,
+                        minH,
+                        pillBg(),
+                    )
+                    pillSingle?.minWidth = dp((120f * w).toInt().coerceIn(72, 300))
+                }
+            }
         }
         // 触控热区：扁胶囊外扩，避免「看得见点不中」。
         pillRow?.minimumHeight = dp(48)
         pillSingle?.minimumHeight = dp(48)
 
         val hint = pageHint ?: return
-        if (snap.sessions.size > 1) {
+        if (snap.sessions.size > 1 && snap.mode != CapsuleDisplayMode.DOT) {
             hint.visibility = View.VISIBLE
-            hint.text = "${snap.activeIndex + 1}/${snap.sessions.size} · 左右切换"
+            hint.text = "${snap.activeIndex + 1}/${snap.sessions.size} · ${CapsuleModeLadder.labelZh(snap.mode)}"
         } else {
             hint.visibility = View.GONE
         }

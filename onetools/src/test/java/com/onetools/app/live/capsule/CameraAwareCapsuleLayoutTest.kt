@@ -11,7 +11,7 @@ class CameraAwareCapsuleLayoutTest {
     fun belowSitsUnderCameraBand() {
         val bounds = CameraAwareCapsuleLayout.compute(
             anchor = anchor,
-            mode = CapsuleDisplayMode.PILL,
+            mode = CapsuleDisplayMode.COMPACT,
             pillHeightPx = 102,
             offsetYPx = 0,
             exclusion = CameraExclusionMode.BELOW,
@@ -26,7 +26,7 @@ class CameraAwareCapsuleLayoutTest {
         val pillH = 102
         val bounds = CameraAwareCapsuleLayout.compute(
             anchor = anchor,
-            mode = CapsuleDisplayMode.PILL,
+            mode = CapsuleDisplayMode.COMPACT,
             pillHeightPx = pillH,
             offsetYPx = 0,
             exclusion = CameraExclusionMode.CAMERA_CENTER,
@@ -42,7 +42,7 @@ class CameraAwareCapsuleLayoutTest {
         val pillH = 102
         val pill = CameraAwareCapsuleLayout.compute(
             anchor = anchor,
-            mode = CapsuleDisplayMode.PILL,
+            mode = CapsuleDisplayMode.COMPACT,
             pillHeightPx = pillH,
             offsetYPx = 0,
             exclusion = CameraExclusionMode.CAMERA_CENTER,

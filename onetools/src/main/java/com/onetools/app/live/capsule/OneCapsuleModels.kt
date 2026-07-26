@@ -3,10 +3,16 @@ package com.onetools.app.live.capsule
 import androidx.annotation.ColorInt
 import com.onetools.app.live.LiveStatusSource
 
-/** 展示层模式：隐藏 / 扁胶囊 / 展开卡 */
+/**
+ * 展示层模式（对齐 OneCapsule/MT）：
+ * HIDDEN → DOT → MINI → COMPACT → EXPANDED
+ * 旧版 PILL 已更名为 COMPACT。
+ */
 enum class CapsuleDisplayMode {
     HIDDEN,
-    PILL,
+    DOT,
+    MINI,
+    COMPACT,
     EXPANDED,
 }
 
