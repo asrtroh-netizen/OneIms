@@ -57,6 +57,14 @@ class LiveStatusPrefs(context: Context) {
         set(value) = prefs.edit().putInt(KEY_CUTOUT_Y, value.coerceIn(-16, 16)).apply()
 
     /**
+     * 挖孔文字缝额外边距（dp）：缝宽 ≈ 系统挖孔宽 + 此值。
+     * 负值收紧、正值加宽，默认 16。
+     */
+    var cutoutGapPadDp: Int
+        get() = prefs.getInt(KEY_CUTOUT_GAP, 16).coerceIn(-12, 48)
+        set(value) = prefs.edit().putInt(KEY_CUTOUT_GAP, value.coerceIn(-12, 48)).apply()
+
+    /**
      * 避摄策略：默认 BELOW（不挡摄）；CAMERA_CENTER 对齐挖孔（更像 MT 岛）。
      */
     var cameraExclusionMode: String
@@ -170,6 +178,7 @@ class LiveStatusPrefs(context: Context) {
         private const val KEY_OFFSET_Y = "capsule_offset_y"
         private const val KEY_CUTOUT_X = "cutout_calib_x"
         private const val KEY_CUTOUT_Y = "cutout_calib_y"
+        private const val KEY_CUTOUT_GAP = "cutout_gap_pad_dp"
         private const val KEY_CUTOUT_AUTO = "cutout_auto_detected"
         private const val KEY_CUTOUT_CX = "cutout_last_cx"
         private const val KEY_CUTOUT_CY = "cutout_last_cy"

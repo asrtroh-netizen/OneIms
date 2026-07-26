@@ -322,7 +322,7 @@ class OneCapsuleOverlay private constructor(context: Context) {
         // 对齐挖孔时：中间缝 ≈ 挖孔宽，左右文字用 weight 顶到两端。
         val avoidCamera = exclusionMode() == CameraExclusionMode.CAMERA_CENTER
         val gapW = if (avoidCamera) {
-            (anchor.width + dp(16)).coerceIn(dp(28), dp(96))
+            (anchor.width + dp(prefs.cutoutGapPadDp)).coerceIn(dp(20), dp(120))
         } else {
             dp(8)
         }

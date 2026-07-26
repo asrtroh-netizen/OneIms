@@ -57,6 +57,7 @@ fun LiveLabScreen() {
     var haptic by remember { mutableStateOf(prefs.hapticEnabled) }
     var cutoutX by remember { mutableIntStateOf(prefs.cutoutCalibXDp) }
     var cutoutY by remember { mutableIntStateOf(prefs.cutoutCalibYDp) }
+    var cutoutGap by remember { mutableIntStateOf(prefs.cutoutGapPadDp) }
     var gestureEpoch by remember { mutableIntStateOf(0) }
     val cutoutRaw = remember(cutoutX, cutoutY, gestureEpoch) {
         CameraAnchorResolver.resolveRaw(context)
@@ -96,6 +97,7 @@ fun LiveLabScreen() {
                 haptic = prefs.hapticEnabled
                 cutoutX = prefs.cutoutCalibXDp
                 cutoutY = prefs.cutoutCalibYDp
+                cutoutGap = prefs.cutoutGapPadDp
                 sourceEnabled = LiveStatusSource.entries.associateWith { prefs.isSourceEnabled(it) }
                 LiveStatusHub.refreshCapsuleVisibility(context)
             }
@@ -404,6 +406,26 @@ fun LiveLabScreen() {
                             applyCapsuleLayout()
                         },
                         valueRange = -16f..16f,
+                        enabled = master && capsule,
+                    )
+                    Text(
+                        text = stringResource(
+                            R.string.live_status_cutout_gap,
+                            cutoutGap,
+                            cutoutRaw.width + cutoutGap,
+                        ),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Slider(
+                        value = cutoutGap.toFloat(),
+                        onValueChange = {
+                            val v = it.roundToInt()
+                            cutoutGap = v
+                            prefs.cutoutGapPadDp = v
+                            applyCapsuleLayout()
+                        },
+                        valueRange = -12f..48f,
                         enabled = master && capsule,
                     )
                     OneToolsPrimaryButton(

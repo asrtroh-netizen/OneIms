@@ -81,6 +81,7 @@
     <string name="live_status_cutout_info">识别挖孔：中心 (%1$d, %2$d) · 尺寸 %3$d×%4$d</string>
     <string name="live_status_cutout_x">挖孔水平校准 %1$d dp</string>
     <string name="live_status_cutout_y">挖孔垂直校准 %1$d dp</string>
+    <string name="live_status_cutout_gap">文字缝额外边距 %1$d dp（约缝宽 %2$d px）</string>
     <string name="live_status_cutout_auto">自动识别挖孔位置</string>
     <string name="live_status_cutout_auto_done">已识别挖孔：中心 (%1$d, %2$d) · %3$d×%4$d</string>
     <string name="live_status_cutout_reset">清零手工偏移</string>
