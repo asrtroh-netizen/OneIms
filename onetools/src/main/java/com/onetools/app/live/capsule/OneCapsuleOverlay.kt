@@ -138,7 +138,7 @@ class OneCapsuleOverlay private constructor(context: Context) {
         val shell = LinearLayout(app).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            minimumHeight = dp(48)
+            // 触控热区在 root；视觉壳保持扁胶囊高度，勿硬抬到 48dp 变「圆角矩形」。
         }
         val icon = ImageView(app).apply {
             scaleType = ImageView.ScaleType.CENTER_CROP
@@ -285,23 +285,30 @@ class OneCapsuleOverlay private constructor(context: Context) {
         val shell = pillShell ?: return
         val w = prefs.capsuleWidthScale
         val h = prefs.capsuleHeightScale
-        val padH = dp((14f * w).toInt().coerceIn(10, 36))
-        val padV = dp((5f * h).toInt().coerceIn(3, 14))
-        val textSp = (11f * ((w + h) * 0.5f)).coerceIn(9f, 15f)
-        // 真胶囊：圆角始终 = 高度一半，高低调节也不会变直角。
-        val minH = dp((24f * h).toInt().coerceIn(22, 44)).coerceAtLeast(dp(32))
-        val radius = minH / 2f
+        val padH = dp((16f * w).toInt().coerceIn(12, 40))
+        val padV = dp((4f * h).toInt().coerceIn(2, 10))
+        val textSp = (11f * ((w + h) * 0.5f)).coerceIn(9f, 14f)
+        // 扁胶囊高度（视觉）；超大 cornerRadius 会被系统钳成「短边一半」= 正胶囊/跑道形。
+        val visualH = dp((22f * h).toInt().coerceIn(20, 36))
         val fill = CapsuleThemeColors.pillFill(app, prefs.dynamicColorEnabled)
         val stroke = CapsuleThemeColors.stroke(prefs.dynamicColorEnabled, session.accentColor)
         shell.background = GradientDrawable().apply {
             shape = GradientDrawable.RECTANGLE
-            cornerRadius = radius
+            cornerRadius = 9999f
             setColor(fill)
             setStroke(dp(1), stroke)
         }
         shell.setPadding(padH, padV, padH, padV)
-        shell.minimumHeight = minH.coerceAtLeast(dp(48))
-        shell.minimumWidth = dp((128f * w).toInt().coerceIn(96, 320))
+        shell.minimumHeight = visualH
+        shell.minimumWidth = dp((140f * w).toInt().coerceIn(110, 340))
+        // 固定视觉高度，避免内容撑高后圆角相对变钝。
+        shell.layoutParams = (shell.layoutParams as? LinearLayout.LayoutParams)?.apply {
+            height = visualH + padV * 2
+            width = LinearLayout.LayoutParams.WRAP_CONTENT
+        } ?: LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            visualH + padV * 2,
+        )
 
         val slots = session.toSlots()
         bindAppIcon(pillIcon, session.source, dp(18))
