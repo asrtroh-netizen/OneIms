@@ -314,14 +314,20 @@ class OneCapsuleOverlay private constructor(context: Context) {
             if (box.visibility == View.VISIBLE) {
                 box.animate()
                     .alpha(0f)
-                    .translationY((-dp(8)).toFloat())
+                    .translationY((-dp(10)).toFloat())
+                    .scaleX(0.96f)
+                    .scaleY(0.96f)
                     .setDuration(CapsuleMotion.COLLAPSE_MS.toLong())
+                    .setInterpolator(CapsuleMotion.collapseInterpolator())
                     .withEndAction {
                         box.visibility = View.GONE
                         box.removeAllViews()
                         box.translationY = 0f
+                        box.scaleX = 1f
+                        box.scaleY = 1f
                     }
                     .start()
+                pulsePill(expanding = false)
             } else {
                 box.visibility = View.GONE
                 box.removeAllViews()
@@ -413,15 +419,46 @@ class OneCapsuleOverlay private constructor(context: Context) {
         box.visibility = View.VISIBLE
         if (animatingIn) {
             box.alpha = 0f
-            box.translationY = dp(10).toFloat()
+            box.translationY = dp(14).toFloat()
+            box.scaleX = 0.94f
+            box.scaleY = 0.94f
             box.animate()
                 .alpha(1f)
                 .translationY(0f)
+                .scaleX(1f)
+                .scaleY(1f)
                 .setDuration(CapsuleMotion.EXPAND_MS.toLong())
+                .setInterpolator(CapsuleMotion.expandInterpolator())
                 .start()
+            pulsePill(expanding = true)
         } else {
             box.alpha = 1f
             box.translationY = 0f
+            box.scaleX = 1f
+            box.scaleY = 1f
+        }
+    }
+
+    /** 展开/收起时扁胶囊轻弹一下（过冲 1.08 → 回 1.0）。 */
+    private fun pulsePill(expanding: Boolean) {
+        val targets = listOfNotNull(pillSingle, pillLeft, pillRight).filter { it.visibility == View.VISIBLE }
+        val peak = if (expanding) CapsuleMotion.PILL_OVERSHOOT else 0.96f
+        targets.forEach { v ->
+            v.animate().cancel()
+            v.animate()
+                .scaleX(peak)
+                .scaleY(peak)
+                .setDuration(CapsuleMotion.PILL_PULSE_MS.toLong())
+                .setInterpolator(CapsuleMotion.bounceInterpolator())
+                .withEndAction {
+                    v.animate()
+                        .scaleX(1f)
+                        .scaleY(1f)
+                        .setDuration(CapsuleMotion.CROSSFADE_MS.toLong())
+                        .setInterpolator(CapsuleMotion.softOpenInterpolator())
+                        .start()
+                }
+                .start()
         }
     }
 

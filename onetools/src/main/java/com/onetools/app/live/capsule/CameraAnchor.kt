@@ -101,10 +101,3 @@ object CameraAwareCapsuleLayout {
         return Bounds(topPx = top, centerXPx = anchor.centerX, gapWidthPx = gap)
     }
 }
-
-/** MT 动效时长心智（自有常量，不引用第三方类）。 */
-object CapsuleMotion {
-    const val EXPAND_MS = 300
-    const val COLLAPSE_MS = 260
-    const val CROSSFADE_MS = 180
-}
