@@ -145,7 +145,14 @@ class OneCapsuleOverlay private constructor(context: Context) {
             val pad = dp(extraTouchDp)
             setPadding(pad, pad, pad, pad)
             minimumHeight = dp(48)
-            setOnTouchListener { _, ev -> gestureDetector.onTouchEvent(ev) }
+            isClickable = true
+            isFocusable = true
+            // 必须消费触控：GestureDetector 在手势识别中常返回 false，
+            // 若不吞掉，顶栏下滑会被系统当成拉开通知栏。
+            setOnTouchListener { _, ev ->
+                gestureDetector.onTouchEvent(ev)
+                true
+            }
         }
 
         val shell = LinearLayout(app).apply {
@@ -349,23 +356,26 @@ class OneCapsuleOverlay private constructor(context: Context) {
             ?: if (avoidCamera && leftText.isNotBlank()) "" else null
         val showLong = face.allowsLong && snap.pillSize == CapsulePillSize.LONG
 
+        // 长胶囊恢复上一版「扁岛」量级（约 140～360dp），禁止铺满屏。
+        val sideMin = dp((72f * w).toInt().coerceIn(56, 120))
+        val classicPillW = (gapW + sideMin * 2 + padH * 2)
+            .coerceAtLeast(dp((168f * w).toInt().coerceIn(140, 360)))
         val shellW = if (showLong) {
-            val displayWidth = app.resources.displayMetrics.widthPixels
-            (displayWidth - dp(24)).coerceAtLeast(dp(240))
+            classicPillW
         } else {
             // 短胶囊按内容收紧：logo(+状态/取件码)+时间
             val probe = pillTextView()
             val measuredLeft = if (leftText.isBlank()) 0f else probe.paint.measureText(leftText)
             val measuredRight = if (rightText.isNullOrBlank()) 0f else probe.paint.measureText(rightText)
             val contentW = measuredLeft + measuredRight + dp(18 + 6 + 12)
-            (contentW + gapW + padH * 2).toInt().coerceIn(dp(120), dp(280))
+            (contentW + gapW + padH * 2).toInt().coerceIn(dp(100), classicPillW)
         }
         val sideBudget = ((shellW - gapW - padH * 2 - dp(18)) / 2).coerceAtLeast(dp(40))
 
         bindAppIcon(pillIcon, session.source, dp(18))
         // AutoSize 必须有固定宽度容器；WRAP_CONTENT 会导致字号不缩、文字被裁切。
         val leftBudget = sideBudget.coerceAtLeast(dp(36))
-        val rightBudget = (if (showLong) dp(160) else sideBudget).coerceAtLeast(dp(36))
+        val rightBudget = sideBudget.coerceAtLeast(dp(36))
         pillPrimary?.apply {
             setTextColor(Color.WHITE)
             text = leftText

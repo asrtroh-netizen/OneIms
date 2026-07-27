@@ -1,7 +1,8 @@
 package com.onetools.app.live.capsule
 
 /**
- * 干净室手势表：对照 OneCapsule/MT「手势 → 动作」心智，默认值保持现网行为。
+ * 干净室手势表：对照超级岛/流体云心智。
+ * 默认：单击无动作（双击展开大框）、左滑短/长、上下滑展开/收起。
  */
 enum class CapsuleGestureSlot(val prefKey: String, val labelZh: String) {
     TAP("gesture_tap", "单击"),
