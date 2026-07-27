@@ -9,10 +9,11 @@ object OneCapsuleStore {
     private val sessions = CopyOnWriteArrayList<CapsuleSession>()
     private var activeIndex: Int = 0
     private var mode: CapsuleDisplayMode = CapsuleDisplayMode.HIDDEN
+    private var pillSize: CapsulePillSize = CapsulePillSize.SHORT
     private val listeners = CopyOnWriteArrayList<(CapsuleUiSnapshot) -> Unit>()
 
     fun snapshot(): CapsuleUiSnapshot =
-        CapsuleUiSnapshot(mode, sessions.toList(), activeIndex)
+        CapsuleUiSnapshot(mode, sessions.toList(), activeIndex, pillSize)
 
     fun observe(listener: (CapsuleUiSnapshot) -> Unit) {
         listeners.add(listener)
@@ -29,6 +30,7 @@ object OneCapsuleStore {
         if (idx >= 0) sessions[idx] = refreshed else sessions.add(refreshed)
         activeIndex = sessions.indexOfFirst { it.id == refreshed.id }.coerceAtLeast(0)
         mode = if (expand) CapsuleDisplayMode.EXPANDED else CapsuleDisplayMode.PILL
+        pillSize = CapsulePillSize.SHORT
         if (sessions.isEmpty()) mode = CapsuleDisplayMode.HIDDEN
         CapsuleLifecycle.onSessionTouched()
         emit()
@@ -51,6 +53,7 @@ object OneCapsuleStore {
         sessions.clear()
         activeIndex = 0
         mode = CapsuleDisplayMode.HIDDEN
+        pillSize = CapsulePillSize.SHORT
         emit()
     }
 
@@ -63,12 +66,39 @@ object OneCapsuleStore {
         emit()
     }
 
+    fun setPillSize(newSize: CapsulePillSize) {
+        if (sessions.isEmpty()) return
+        pillSize = newSize
+        emit()
+    }
+
+    fun togglePillSize() {
+        val active = sessions.getOrNull(activeIndex) ?: return
+        if (!active.allowsLongPill()) {
+            // 取件码/无时间会话没有长胶囊形态，保持短胶囊。
+            if (pillSize != CapsulePillSize.SHORT) {
+                pillSize = CapsulePillSize.SHORT
+                emit()
+            }
+            return
+        }
+        setPillSize(
+            if (pillSize == CapsulePillSize.SHORT) CapsulePillSize.LONG
+            else CapsulePillSize.SHORT,
+        )
+    }
+
     fun expand() {
         if (sessions.isNotEmpty()) setMode(CapsuleDisplayMode.EXPANDED)
     }
 
     fun collapse() {
         if (sessions.isNotEmpty()) setMode(CapsuleDisplayMode.PILL)
+    }
+
+    fun toggleExpanded() {
+        if (sessions.isEmpty()) return
+        if (mode == CapsuleDisplayMode.EXPANDED) collapse() else expand()
     }
 
     fun next() {

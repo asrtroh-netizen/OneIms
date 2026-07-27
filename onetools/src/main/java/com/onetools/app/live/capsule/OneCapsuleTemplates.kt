@@ -60,14 +60,15 @@ object OneCapsuleTemplates {
         )
     }
 
-    fun cainiaoParcel(status: String = "派送中"): CapsuleSession {
+    fun cainiaoParcel(status: String = "派送中", pickupCode: String = "A3K9"): CapsuleSession {
         return CapsuleSession(
             id = "demo-cainiao",
             source = LiveStatusSource.CAINIAO,
-            pillPrimary = status,
-            pillSecondary = "包裹",
+            // 无 ETA：短胶囊只展示取件码；双击进大框看完整状态。
+            pillPrimary = pickupCode,
+            pillSecondary = null,
             title = "菜鸟 · $status",
-            subtitle = "快递正在派送，请留意电话",
+            subtitle = "取件码 $pickupCode · 请留意柜机/电话",
             stages = listOf(
                 CapsuleStage("已揽收", true),
                 CapsuleStage("运输中", true),
@@ -75,6 +76,7 @@ object OneCapsuleTemplates {
                 CapsuleStage("已签收", status.contains("签")),
             ),
             activeStageIndex = 2,
+            detailRows = listOf("取件码" to pickupCode, "状态" to status),
             expandTemplate = CapsuleExpandTemplate.PROGRESS_CARD,
             accentColor = ACCENT_CAINIAO,
         )

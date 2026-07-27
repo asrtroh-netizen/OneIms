@@ -10,6 +10,12 @@ enum class CapsuleDisplayMode {
     EXPANDED,
 }
 
+/** 扁胶囊的内容密度；与展开卡状态解耦。 */
+enum class CapsulePillSize {
+    SHORT,
+    LONG,
+}
+
 /** 展开模板：进度条卡（外卖）或关键详情（网约车） */
 enum class CapsuleExpandTemplate {
     PROGRESS_CARD,
@@ -49,6 +55,7 @@ data class CapsuleUiSnapshot(
     val mode: CapsuleDisplayMode,
     val sessions: List<CapsuleSession>,
     val activeIndex: Int,
+    val pillSize: CapsulePillSize = CapsulePillSize.SHORT,
 ) {
     val active: CapsuleSession? =
         sessions.getOrNull(activeIndex.coerceIn(0, (sessions.size - 1).coerceAtLeast(0)))

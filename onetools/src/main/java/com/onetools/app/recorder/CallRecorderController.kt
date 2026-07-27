@@ -50,14 +50,19 @@ class CallRecorderController(private val context: Context) {
         context.startActivity(intent)
     }
 
-    fun startMonitoring() {
+    fun startMonitoring(): Boolean {
         if (!hasPhonePermission()) {
             lastStatus = "缺少 READ_PHONE_STATE"
-            return
+            return false
+        }
+        if (!canDrawOverlay()) {
+            lastStatus = "需要悬浮窗权限才能弹出录音按钮"
+            return false
         }
         ensurePromptOverlay()
         monitor.start(executor)
         lastStatus = "通话接通后将弹出录音按钮"
+        return true
     }
 
     fun stopMonitoring() {

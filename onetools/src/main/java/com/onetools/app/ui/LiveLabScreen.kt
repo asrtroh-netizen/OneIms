@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
@@ -59,10 +60,15 @@ fun LiveLabScreen() {
     var cutoutY by remember { mutableIntStateOf(prefs.cutoutCalibYDp) }
     var cutoutGap by remember { mutableIntStateOf(prefs.cutoutGapPadDp) }
     var gestureEpoch by remember { mutableIntStateOf(0) }
+    var showLayout by remember { mutableStateOf(false) }
+    var showGestures by remember { mutableStateOf(false) }
+    var showCutout by remember { mutableStateOf(false) }
+    var showMoreDemos by remember { mutableStateOf(false) }
     val cutoutRaw = remember(cutoutX, cutoutY, gestureEpoch) {
         CameraAnchorResolver.resolveRaw(context)
     }
     val lifecycleOwner = LocalLifecycleOwner.current
+    val controlsEnabled = master && capsule
 
     fun applyCapsuleLayout() {
         LiveStatusCapsuleOverlay.get(context).applyLayoutFromPrefs()
@@ -112,12 +118,6 @@ fun LiveLabScreen() {
     ) {
         item {
             OneToolsInlineNotice(
-                text = stringResource(R.string.lab_scope_notice),
-                danger = false,
-            )
-        }
-        item {
-            OneToolsInlineNotice(
                 text = if (access) {
                     stringResource(R.string.live_status_access_ready)
                 } else {
@@ -127,7 +127,10 @@ fun LiveLabScreen() {
             )
         }
         item {
-            OneToolsSection(title = stringResource(R.string.live_status_section_power)) {
+            OneToolsSection(
+                title = stringResource(R.string.live_status_section_power),
+                description = stringResource(R.string.live_status_section_power_desc),
+            ) {
                 OneToolsSettingsSwitchRow(
                     title = stringResource(R.string.live_status_master),
                     subtitle = stringResource(R.string.live_status_master_sub),
@@ -135,17 +138,13 @@ fun LiveLabScreen() {
                     onCheckedChange = {
                         master = it
                         prefs.masterEnabled = it
-                        if (!it) {
-                            LiveStatusHub.clear(context)
-                        } else {
+                        if (it) {
                             LiveStatusHub.refreshCapsuleVisibility(context)
+                        } else {
+                            LiveStatusHub.clear(context)
                         }
                         if (it && !access) {
-                            Toast.makeText(
-                                context,
-                                R.string.live_status_access_need,
-                                Toast.LENGTH_LONG,
-                            ).show()
+                            Toast.makeText(context, R.string.live_status_access_need, Toast.LENGTH_LONG).show()
                         }
                     },
                 )
@@ -160,11 +159,7 @@ fun LiveLabScreen() {
                         prefs.capsuleEnabled = it
                         LiveStatusHub.refreshCapsuleVisibility(context)
                         if (it && !canOverlay) {
-                            Toast.makeText(
-                                context,
-                                R.string.live_status_overlay_need,
-                                Toast.LENGTH_LONG,
-                            ).show()
+                            Toast.makeText(context, R.string.live_status_overlay_need, Toast.LENGTH_LONG).show()
                         }
                     },
                 )
@@ -172,7 +167,7 @@ fun LiveLabScreen() {
                     OneToolsGroupDivider()
                     Column(
                         modifier = Modifier.padding(20.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         if (!access) {
                             OneToolsPrimaryButton(
@@ -191,106 +186,116 @@ fun LiveLabScreen() {
             }
         }
         item {
-            OneToolsSection(title = stringResource(R.string.live_status_section_display)) {
-                Column(
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
+            OneToolsSection(
+                title = stringResource(R.string.live_status_section_sources),
+                description = stringResource(R.string.live_status_section_sources_desc),
+            ) {
+                LiveStatusSource.entries.forEachIndexed { index, source ->
+                    if (index > 0) OneToolsGroupDivider()
                     OneToolsSettingsSwitchRow(
-                        title = stringResource(R.string.live_status_exclusion),
-                        subtitle = if (exclusionCenter) {
-                            stringResource(R.string.live_status_exclusion_center)
-                        } else {
-                            stringResource(R.string.live_status_exclusion_below)
+                        title = source.labelZh,
+                        subtitle = source.packages.firstOrNull().orEmpty(),
+                        checked = sourceEnabled[source] == true,
+                        enabled = master,
+                        onCheckedChange = { enabled ->
+                            sourceEnabled = sourceEnabled.toMutableMap().apply {
+                                put(source, enabled)
+                            }
+                            prefs.setSourceEnabled(source, enabled)
                         },
-                        checked = exclusionCenter,
-                        enabled = master && capsule,
-                        onCheckedChange = {
-                            exclusionCenter = it
-                            prefs.cameraExclusionMode = if (it) "CAMERA_CENTER" else "BELOW"
-                            applyCapsuleLayout()
-                        },
-                    )
-                    Text(
-                        text = stringResource(
-                            R.string.live_status_adjust_width,
-                            (widthScale * 100f),
-                        ),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                    Slider(
-                        value = widthScale,
-                        onValueChange = {
-                            widthScale = it
-                            prefs.capsuleWidthScale = it
-                            applyCapsuleLayout()
-                        },
-                        valueRange = 0.7f..1.8f,
-                        steps = 10,
-                        enabled = master && capsule,
-                    )
-                    Text(
-                        text = stringResource(
-                            R.string.live_status_adjust_height,
-                            (heightScale * 100f),
-                        ),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                    Slider(
-                        value = heightScale,
-                        onValueChange = {
-                            heightScale = it
-                            prefs.capsuleHeightScale = it
-                            applyCapsuleLayout()
-                        },
-                        valueRange = 0.5f..2.2f,
-                        steps = 16,
-                        enabled = master && capsule,
-                    )
-                    Text(
-                        text = stringResource(R.string.live_status_adjust_x, offsetX),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                    Slider(
-                        value = offsetX.toFloat(),
-                        onValueChange = {
-                            val v = it.roundToInt()
-                            offsetX = v
-                            prefs.capsuleOffsetXDp = v
-                            applyCapsuleLayout()
-                        },
-                        valueRange = -120f..120f,
-                        enabled = master && capsule,
-                    )
-                    Text(
-                        text = stringResource(R.string.live_status_adjust_y, offsetY),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                    Slider(
-                        value = offsetY.toFloat(),
-                        onValueChange = {
-                            val v = it.roundToInt()
-                            offsetY = v
-                            prefs.capsuleOffsetYDp = v
-                            applyCapsuleLayout()
-                        },
-                        valueRange = -40f..120f,
-                        enabled = master && capsule,
                     )
                 }
             }
         }
         item {
-            OneToolsSection(title = stringResource(R.string.live_status_section_feel)) {
+            OneToolsSection(
+                title = stringResource(R.string.live_status_section_preview),
+                description = stringResource(R.string.live_status_section_preview_desc),
+            ) {
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Text(
+                        text = preview?.let {
+                            stringResource(R.string.live_status_preview, it)
+                        } ?: stringResource(R.string.live_status_preview_idle),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Text(
+                        text = stringResource(R.string.live_status_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    OneToolsPrimaryButton(
+                        text = stringResource(R.string.live_status_demo),
+                        enabled = controlsEnabled,
+                        onClick = {
+                            if (!ensureOverlayReady()) return@OneToolsPrimaryButton
+                            LiveStatusHub.publishDemoMeituan(context, expand = false)
+                            preview = "配送中 · 18分钟"
+                        },
+                    )
+                }
+                OneToolsGroupDivider()
+                OneToolsSettingsActionRow(
+                    icon = Icons.Filled.Star,
+                    title = stringResource(R.string.live_status_more_demos),
+                    subtitle = if (showMoreDemos) {
+                        stringResource(R.string.live_status_collapse)
+                    } else {
+                        stringResource(R.string.live_status_more_demos_sub)
+                    },
+                    enabled = controlsEnabled || showMoreDemos,
+                    onClick = { showMoreDemos = !showMoreDemos },
+                )
+                if (showMoreDemos) {
+                    Column(
+                        modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 20.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        OneToolsPrimaryButton(
+                            text = stringResource(R.string.live_status_demo_meituan_card),
+                            enabled = controlsEnabled,
+                            onClick = {
+                                if (!ensureOverlayReady()) return@OneToolsPrimaryButton
+                                LiveStatusHub.publishDemoMeituan(context, expand = true)
+                                preview = "美团展开进度卡"
+                            },
+                        )
+                        OneToolsPrimaryButton(
+                            text = stringResource(R.string.live_status_demo_didi_detail),
+                            enabled = controlsEnabled,
+                            onClick = {
+                                if (!ensureOverlayReady()) return@OneToolsPrimaryButton
+                                LiveStatusHub.publishDemoDidi(context, expand = true)
+                                preview = "滴滴关键详情"
+                            },
+                        )
+                        OneToolsPrimaryButton(
+                            text = stringResource(R.string.live_status_demo_multi),
+                            enabled = controlsEnabled,
+                            onClick = {
+                                if (!ensureOverlayReady()) return@OneToolsPrimaryButton
+                                LiveStatusHub.publishDemoMulti(context)
+                                preview = "多任务 · 左右切换"
+                            },
+                        )
+                    }
+                }
+            }
+        }
+        item {
+            OneToolsSection(
+                title = stringResource(R.string.live_status_section_advanced),
+                description = stringResource(R.string.live_status_section_advanced_desc),
+            ) {
                 OneToolsSettingsSwitchRow(
                     title = stringResource(R.string.live_status_dynamic_color),
                     subtitle = stringResource(R.string.live_status_dynamic_color_sub),
                     checked = dynamicColor,
-                    enabled = master && capsule,
+                    enabled = controlsEnabled,
                     onCheckedChange = {
                         dynamicColor = it
                         prefs.dynamicColorEnabled = it
@@ -302,136 +307,145 @@ fun LiveLabScreen() {
                     title = stringResource(R.string.live_status_haptic),
                     subtitle = stringResource(R.string.live_status_haptic_sub),
                     checked = haptic,
-                    enabled = master && capsule,
+                    enabled = controlsEnabled,
                     onCheckedChange = {
                         haptic = it
                         prefs.hapticEnabled = it
                     },
                 )
-            }
-        }
-        item {
-            OneToolsSection(title = stringResource(R.string.live_status_section_gestures)) {
-                Column(
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    Text(
-                        text = stringResource(R.string.live_status_gesture_hint),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                @Suppress("UNUSED_EXPRESSION")
-                gestureEpoch
-                CapsuleGestureSlot.entries.forEachIndexed { index, slot ->
-                    if (index > 0) OneToolsGroupDivider()
-                    val action = prefs.gestureAction(slot)
-                    OneToolsSettingsActionRow(
-                        icon = Icons.Filled.Star,
-                        title = slot.labelZh,
-                        subtitle = action.labelZh,
-                        enabled = master && capsule,
-                        onClick = {
-                            val next = CapsuleGestureDefaults.cycle(action)
-                            prefs.setGestureAction(slot, next)
-                            gestureEpoch += 1
+                OneToolsGroupDivider()
+                AdvancedSectionToggle(
+                    title = stringResource(R.string.live_status_section_display),
+                    subtitle = if (showLayout) {
+                        stringResource(R.string.live_status_collapse)
+                    } else {
+                        stringResource(R.string.live_status_display_summary)
+                    },
+                    expanded = showLayout,
+                    enabled = controlsEnabled || showLayout,
+                    onToggle = { showLayout = !showLayout },
+                )
+                if (showLayout) {
+                    CapsuleLayoutControls(
+                        exclusionCenter = exclusionCenter,
+                        widthScale = widthScale,
+                        heightScale = heightScale,
+                        offsetX = offsetX,
+                        offsetY = offsetY,
+                        enabled = controlsEnabled,
+                        onExclusionChange = {
+                            exclusionCenter = it
+                            prefs.cameraExclusionMode = if (it) "CAMERA_CENTER" else "BELOW"
+                            applyCapsuleLayout()
+                        },
+                        onWidthChange = {
+                            widthScale = it
+                            prefs.capsuleWidthScale = it
+                            applyCapsuleLayout()
+                        },
+                        onHeightChange = {
+                            heightScale = it
+                            prefs.capsuleHeightScale = it
+                            applyCapsuleLayout()
+                        },
+                        onOffsetXChange = {
+                            offsetX = it
+                            prefs.capsuleOffsetXDp = it
+                            applyCapsuleLayout()
+                        },
+                        onOffsetYChange = {
+                            offsetY = it
+                            prefs.capsuleOffsetYDp = it
                             applyCapsuleLayout()
                         },
                     )
                 }
                 OneToolsGroupDivider()
-                Column(modifier = Modifier.padding(20.dp)) {
-                    OneToolsPrimaryButton(
-                        text = stringResource(R.string.live_status_gesture_reset),
-                        enabled = master && capsule,
-                        onClick = {
-                            prefs.resetGesturesToDefaults()
-                            gestureEpoch += 1
-                            applyCapsuleLayout()
-                        },
-                    )
-                }
-            }
-        }
-        item {
-            OneToolsSection(title = stringResource(R.string.live_status_section_cutout)) {
-                Column(
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
+                AdvancedSectionToggle(
+                    title = stringResource(R.string.live_status_section_gestures),
+                    subtitle = if (showGestures) {
+                        stringResource(R.string.live_status_collapse)
+                    } else {
+                        stringResource(R.string.live_status_gesture_summary)
+                    },
+                    expanded = showGestures,
+                    enabled = controlsEnabled || showGestures,
+                    onToggle = { showGestures = !showGestures },
+                )
+                if (showGestures) {
+                    @Suppress("UNUSED_EXPRESSION")
+                    gestureEpoch
                     Text(
-                        text = stringResource(
-                            R.string.live_status_cutout_info,
-                            cutoutRaw.centerX,
-                            cutoutRaw.centerY,
-                            cutoutRaw.width,
-                            cutoutRaw.height,
-                        ),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                    Text(
-                        text = stringResource(R.string.live_status_cutout_note),
+                        text = stringResource(R.string.live_status_gesture_hint),
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    Text(
-                        text = stringResource(R.string.live_status_cutout_x, cutoutX),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                    Slider(
-                        value = cutoutX.toFloat(),
-                        onValueChange = {
-                            val v = it.roundToInt()
-                            cutoutX = v
-                            prefs.cutoutCalibXDp = v
+                    CapsuleGestureSlot.entries.forEachIndexed { index, slot ->
+                        if (index > 0) OneToolsGroupDivider()
+                        val action = prefs.gestureAction(slot)
+                        OneToolsSettingsActionRow(
+                            icon = Icons.Filled.Star,
+                            title = slot.labelZh,
+                            subtitle = action.labelZh,
+                            enabled = controlsEnabled,
+                            onClick = {
+                                prefs.setGestureAction(slot, CapsuleGestureDefaults.cycle(action))
+                                gestureEpoch += 1
+                                applyCapsuleLayout()
+                            },
+                        )
+                    }
+                    Column(modifier = Modifier.padding(20.dp)) {
+                        OneToolsPrimaryButton(
+                            text = stringResource(R.string.live_status_gesture_reset),
+                            enabled = controlsEnabled,
+                            onClick = {
+                                prefs.resetGesturesToDefaults()
+                                gestureEpoch += 1
+                                applyCapsuleLayout()
+                            },
+                        )
+                    }
+                }
+                OneToolsGroupDivider()
+                AdvancedSectionToggle(
+                    title = stringResource(R.string.live_status_section_cutout),
+                    subtitle = if (showCutout) {
+                        stringResource(R.string.live_status_collapse)
+                    } else {
+                        stringResource(R.string.live_status_cutout_summary)
+                    },
+                    expanded = showCutout,
+                    enabled = controlsEnabled || showCutout,
+                    onToggle = { showCutout = !showCutout },
+                )
+                if (showCutout) {
+                    CutoutCalibrationControls(
+                        centerX = cutoutRaw.centerX,
+                        centerY = cutoutRaw.centerY,
+                        width = cutoutRaw.width,
+                        height = cutoutRaw.height,
+                        cutoutX = cutoutX,
+                        cutoutY = cutoutY,
+                        cutoutGap = cutoutGap,
+                        enabled = controlsEnabled,
+                        onCutoutXChange = {
+                            cutoutX = it
+                            prefs.cutoutCalibXDp = it
                             applyCapsuleLayout()
                         },
-                        valueRange = -24f..24f,
-                        enabled = master && capsule,
-                    )
-                    Text(
-                        text = stringResource(R.string.live_status_cutout_y, cutoutY),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                    Slider(
-                        value = cutoutY.toFloat(),
-                        onValueChange = {
-                            val v = it.roundToInt()
-                            cutoutY = v
-                            prefs.cutoutCalibYDp = v
+                        onCutoutYChange = {
+                            cutoutY = it
+                            prefs.cutoutCalibYDp = it
                             applyCapsuleLayout()
                         },
-                        valueRange = -16f..16f,
-                        enabled = master && capsule,
-                    )
-                    Text(
-                        text = stringResource(
-                            R.string.live_status_cutout_gap,
-                            cutoutGap,
-                            cutoutRaw.width + cutoutGap,
-                        ),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                    Slider(
-                        value = cutoutGap.toFloat(),
-                        onValueChange = {
-                            val v = it.roundToInt()
-                            cutoutGap = v
-                            prefs.cutoutGapPadDp = v
+                        onCutoutGapChange = {
+                            cutoutGap = it
+                            prefs.cutoutGapPadDp = it
                             applyCapsuleLayout()
                         },
-                        valueRange = -12f..48f,
-                        enabled = master && capsule,
-                    )
-                    OneToolsPrimaryButton(
-                        text = stringResource(R.string.live_status_cutout_auto),
-                        enabled = master && capsule,
-                        onClick = {
+                        onAutoDetect = {
                             val detected = CameraAnchorResolver.detectAndPersist(context)
                             cutoutX = 0
                             cutoutY = 0
@@ -448,11 +462,7 @@ fun LiveLabScreen() {
                                 Toast.LENGTH_LONG,
                             ).show()
                         },
-                    )
-                    OneToolsPrimaryButton(
-                        text = stringResource(R.string.live_status_cutout_reset),
-                        enabled = master && capsule,
-                        onClick = {
+                        onReset = {
                             prefs.resetCutoutCalibration()
                             cutoutX = 0
                             cutoutY = 0
@@ -462,79 +472,177 @@ fun LiveLabScreen() {
                 }
             }
         }
-        item {
-            OneToolsSection(title = stringResource(R.string.live_status_section_sources)) {
-                LiveStatusSource.entries.forEachIndexed { index, source ->
-                    if (index > 0) OneToolsGroupDivider()
-                    OneToolsSettingsSwitchRow(
-                        title = source.labelZh,
-                        subtitle = source.packages.firstOrNull().orEmpty(),
-                        checked = sourceEnabled[source] == true,
-                        enabled = master,
-                        onCheckedChange = { on ->
-                            sourceEnabled = sourceEnabled.toMutableMap().apply { put(source, on) }
-                            prefs.setSourceEnabled(source, on)
-                        },
-                    )
-                }
-            }
-        }
-        item {
-            OneToolsSection(title = stringResource(R.string.live_status_section_preview)) {
-                Column(
-                    modifier = Modifier.padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    Text(
-                        text = preview?.let {
-                            stringResource(R.string.live_status_preview, it)
-                        } ?: stringResource(R.string.live_status_preview_idle),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                    Text(
-                        text = stringResource(R.string.live_status_hint),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    OneToolsPrimaryButton(
-                        text = stringResource(R.string.live_status_demo),
-                        enabled = master && capsule,
-                        onClick = {
-                            if (!ensureOverlayReady()) return@OneToolsPrimaryButton
-                            LiveStatusHub.publishDemoMeituan(context, expand = false)
-                            preview = "配送中 · 18分钟"
-                        },
-                    )
-                    OneToolsPrimaryButton(
-                        text = stringResource(R.string.live_status_demo_meituan_card),
-                        enabled = master && capsule,
-                        onClick = {
-                            if (!ensureOverlayReady()) return@OneToolsPrimaryButton
-                            LiveStatusHub.publishDemoMeituan(context, expand = true)
-                            preview = "美团展开进度卡"
-                        },
-                    )
-                    OneToolsPrimaryButton(
-                        text = stringResource(R.string.live_status_demo_didi_detail),
-                        enabled = master && capsule,
-                        onClick = {
-                            if (!ensureOverlayReady()) return@OneToolsPrimaryButton
-                            LiveStatusHub.publishDemoDidi(context, expand = true)
-                            preview = "滴滴关键详情"
-                        },
-                    )
-                    OneToolsPrimaryButton(
-                        text = stringResource(R.string.live_status_demo_multi),
-                        enabled = master && capsule,
-                        onClick = {
-                            if (!ensureOverlayReady()) return@OneToolsPrimaryButton
-                            LiveStatusHub.publishDemoMulti(context)
-                            preview = "多任务 · 左右切换"
-                        },
-                    )
-                }
-            }
-        }
+    }
+}
+
+@Composable
+private fun AdvancedSectionToggle(
+    title: String,
+    subtitle: String,
+    expanded: Boolean,
+    enabled: Boolean,
+    onToggle: () -> Unit,
+) {
+    OneToolsSettingsActionRow(
+        icon = if (expanded) Icons.Filled.Star else Icons.Filled.Settings,
+        title = title,
+        subtitle = subtitle,
+        enabled = enabled,
+        onClick = onToggle,
+    )
+}
+
+@Composable
+private fun CapsuleLayoutControls(
+    exclusionCenter: Boolean,
+    widthScale: Float,
+    heightScale: Float,
+    offsetX: Int,
+    offsetY: Int,
+    enabled: Boolean,
+    onExclusionChange: (Boolean) -> Unit,
+    onWidthChange: (Float) -> Unit,
+    onHeightChange: (Float) -> Unit,
+    onOffsetXChange: (Int) -> Unit,
+    onOffsetYChange: (Int) -> Unit,
+) {
+    Column(
+        modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        OneToolsSettingsSwitchRow(
+            title = stringResource(R.string.live_status_exclusion),
+            subtitle = if (exclusionCenter) {
+                stringResource(R.string.live_status_exclusion_center)
+            } else {
+                stringResource(R.string.live_status_exclusion_below)
+            },
+            checked = exclusionCenter,
+            enabled = enabled,
+            onCheckedChange = onExclusionChange,
+        )
+        LabSlider(
+            label = stringResource(R.string.live_status_adjust_width, widthScale * 100f),
+            value = widthScale,
+            valueRange = 0.7f..1.8f,
+            steps = 10,
+            enabled = enabled,
+            onValueChange = onWidthChange,
+        )
+        LabSlider(
+            label = stringResource(R.string.live_status_adjust_height, heightScale * 100f),
+            value = heightScale,
+            valueRange = 0.5f..2.2f,
+            steps = 16,
+            enabled = enabled,
+            onValueChange = onHeightChange,
+        )
+        LabSlider(
+            label = stringResource(R.string.live_status_adjust_x, offsetX),
+            value = offsetX.toFloat(),
+            valueRange = -120f..120f,
+            enabled = enabled,
+            onValueChange = { onOffsetXChange(it.roundToInt()) },
+        )
+        LabSlider(
+            label = stringResource(R.string.live_status_adjust_y, offsetY),
+            value = offsetY.toFloat(),
+            valueRange = -40f..120f,
+            enabled = enabled,
+            onValueChange = { onOffsetYChange(it.roundToInt()) },
+        )
+    }
+}
+
+@Composable
+private fun CutoutCalibrationControls(
+    centerX: Int,
+    centerY: Int,
+    width: Int,
+    height: Int,
+    cutoutX: Int,
+    cutoutY: Int,
+    cutoutGap: Int,
+    enabled: Boolean,
+    onCutoutXChange: (Int) -> Unit,
+    onCutoutYChange: (Int) -> Unit,
+    onCutoutGapChange: (Int) -> Unit,
+    onAutoDetect: () -> Unit,
+    onReset: () -> Unit,
+) {
+    Column(
+        modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(
+            text = stringResource(R.string.live_status_cutout_info, centerX, centerY, width, height),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        Text(
+            text = stringResource(R.string.live_status_cutout_note),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        LabSlider(
+            label = stringResource(R.string.live_status_cutout_x, cutoutX),
+            value = cutoutX.toFloat(),
+            valueRange = -24f..24f,
+            enabled = enabled,
+            onValueChange = { onCutoutXChange(it.roundToInt()) },
+        )
+        LabSlider(
+            label = stringResource(R.string.live_status_cutout_y, cutoutY),
+            value = cutoutY.toFloat(),
+            valueRange = -16f..16f,
+            enabled = enabled,
+            onValueChange = { onCutoutYChange(it.roundToInt()) },
+        )
+        LabSlider(
+            label = stringResource(
+                R.string.live_status_cutout_gap,
+                cutoutGap,
+                width + cutoutGap,
+            ),
+            value = cutoutGap.toFloat(),
+            valueRange = -12f..48f,
+            enabled = enabled,
+            onValueChange = { onCutoutGapChange(it.roundToInt()) },
+        )
+        OneToolsPrimaryButton(
+            text = stringResource(R.string.live_status_cutout_auto),
+            enabled = enabled,
+            onClick = onAutoDetect,
+        )
+        OneToolsPrimaryButton(
+            text = stringResource(R.string.live_status_cutout_reset),
+            enabled = enabled,
+            onClick = onReset,
+        )
+    }
+}
+
+@Composable
+private fun LabSlider(
+    label: String,
+    value: Float,
+    valueRange: ClosedFloatingPointRange<Float>,
+    enabled: Boolean,
+    onValueChange: (Float) -> Unit,
+    steps: Int = 0,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        Slider(
+            value = value,
+            onValueChange = onValueChange,
+            valueRange = valueRange,
+            steps = steps,
+            enabled = enabled,
+        )
     }
 }

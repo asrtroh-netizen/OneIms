@@ -16,6 +16,7 @@ enum class CapsuleGestureAction(val labelZh: String) {
     EXPAND("展开"),
     COLLAPSE("收起"),
     TOGGLE("展开/收起"),
+    TOGGLE_LONG("短/长胶囊"),
     NEXT("下一会话"),
     PREV("上一会话"),
     ;
@@ -28,10 +29,11 @@ enum class CapsuleGestureAction(val labelZh: String) {
 
 object CapsuleGestureDefaults {
     fun actionFor(slot: CapsuleGestureSlot): CapsuleGestureAction = when (slot) {
-        CapsuleGestureSlot.TAP -> CapsuleGestureAction.TOGGLE
+        // 单击留给系统/预留；展开大框走双击（Overlay.onDoubleTap）。
+        CapsuleGestureSlot.TAP -> CapsuleGestureAction.NONE
         CapsuleGestureSlot.SWIPE_UP -> CapsuleGestureAction.COLLAPSE
         CapsuleGestureSlot.SWIPE_DOWN -> CapsuleGestureAction.EXPAND
-        CapsuleGestureSlot.SWIPE_LEFT -> CapsuleGestureAction.NEXT
+        CapsuleGestureSlot.SWIPE_LEFT -> CapsuleGestureAction.TOGGLE_LONG
         CapsuleGestureSlot.SWIPE_RIGHT -> CapsuleGestureAction.PREV
     }
 
@@ -53,6 +55,7 @@ object CapsuleGestureDispatcher {
                 if (mode == CapsuleDisplayMode.PILL) OneCapsuleStore.expand()
                 else if (mode == CapsuleDisplayMode.EXPANDED) OneCapsuleStore.collapse()
             }
+            CapsuleGestureAction.TOGGLE_LONG -> OneCapsuleStore.togglePillSize()
             CapsuleGestureAction.NEXT -> OneCapsuleStore.next()
             CapsuleGestureAction.PREV -> OneCapsuleStore.prev()
         }

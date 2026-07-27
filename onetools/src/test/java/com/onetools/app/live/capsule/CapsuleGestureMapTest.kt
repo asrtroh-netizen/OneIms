@@ -6,10 +6,10 @@ import org.junit.Test
 class CapsuleGestureMapTest {
     @Test
     fun defaultsMatchLegacyOverlayBehavior() {
-        assertEquals(CapsuleGestureAction.TOGGLE, CapsuleGestureDefaults.actionFor(CapsuleGestureSlot.TAP))
+        assertEquals(CapsuleGestureAction.NONE, CapsuleGestureDefaults.actionFor(CapsuleGestureSlot.TAP))
         assertEquals(CapsuleGestureAction.EXPAND, CapsuleGestureDefaults.actionFor(CapsuleGestureSlot.SWIPE_DOWN))
         assertEquals(CapsuleGestureAction.COLLAPSE, CapsuleGestureDefaults.actionFor(CapsuleGestureSlot.SWIPE_UP))
-        assertEquals(CapsuleGestureAction.NEXT, CapsuleGestureDefaults.actionFor(CapsuleGestureSlot.SWIPE_LEFT))
+        assertEquals(CapsuleGestureAction.TOGGLE_LONG, CapsuleGestureDefaults.actionFor(CapsuleGestureSlot.SWIPE_LEFT))
         assertEquals(CapsuleGestureAction.PREV, CapsuleGestureDefaults.actionFor(CapsuleGestureSlot.SWIPE_RIGHT))
     }
 

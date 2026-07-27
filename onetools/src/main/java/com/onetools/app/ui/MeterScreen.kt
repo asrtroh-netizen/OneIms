@@ -40,6 +40,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import com.onetools.app.R
@@ -69,13 +70,18 @@ fun MeterScreen(
     val prefs by settings.snapshotFlow.collectAsState(
         initial = com.onetools.app.meter.MeterPrefsSnapshot(),
     )
+    val lifecycleOwner = LocalLifecycleOwner.current
     var running by remember { mutableStateOf(SpeedMonitorService.isRunning) }
     var prefixDraft by remember(prefs.prefix) { mutableStateOf(prefs.prefix) }
 
-
-
-    DisposableEffect(Unit) {
-        onDispose { }
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_START) {
+                running = SpeedMonitorService.isRunning
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
     fun applyAndRestartPrefs() {
@@ -107,33 +113,30 @@ fun MeterScreen(
             }
         }
         item {
-            Text(
-                stringResource(R.string.meter_desc),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        item {
-            if (running) {
-                Button(
-                    onClick = {
-                        SpeedMonitorService.stop(context)
-                        running = false
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                ) { Text(stringResource(R.string.meter_stop)) }
-            } else {
-                Button(
-                    onClick = {
-                        SpeedMonitorService.start(context)
-                        running = true
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                ) { Text(stringResource(R.string.meter_start)) }
+            OneToolsSection(
+                title = stringResource(R.string.meter_mode_title),
+                description = stringResource(R.string.meter_desc),
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    if (running) {
+                        Button(
+                            onClick = {
+                                SpeedMonitorService.stop(context)
+                                running = false
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) { Text(stringResource(R.string.meter_stop)) }
+                    } else {
+                        Button(
+                            onClick = {
+                                SpeedMonitorService.start(context)
+                                running = true
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) { Text(stringResource(R.string.meter_start)) }
+                    }
+                }
             }
-        }
-        item {
-            Text(stringResource(R.string.meter_mode_title), style = MaterialTheme.typography.titleMedium)
         }
         item {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {

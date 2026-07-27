@@ -49,6 +49,10 @@ internal fun extractEtaMinutes(joined: String): Int? =
     Regex("(\\d{1,3})\\s*分钟").find(joined)?.groupValues?.getOrNull(1)?.toIntOrNull()
         ?: Regex("预计\\s*(\\d{1,3})").find(joined)?.groupValues?.getOrNull(1)?.toIntOrNull()
 
+internal fun extractPickupCode(joined: String): String? =
+    Regex("取件码[:：\\s]*([A-Za-z0-9]{4,10})").find(joined)?.groupValues?.getOrNull(1)
+        ?: Regex("(?:取件|货柜)\\s*码[:：\\s]*([A-Za-z0-9]{4,10})").find(joined)?.groupValues?.getOrNull(1)
+
 internal fun extractPlate(joined: String): String? =
     Regex("([京津沪渝冀豫云辽黑湘皖鲁新苏浙赣鄂桂甘晋蒙陕吉闽贵粤青藏川宁琼][A-Z][·.\\s]?[A-Z0-9]{4,6})")
         .find(joined)?.groupValues?.getOrNull(1)

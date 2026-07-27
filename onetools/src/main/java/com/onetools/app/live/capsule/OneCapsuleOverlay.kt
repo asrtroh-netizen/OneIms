@@ -21,6 +21,7 @@ import android.widget.LinearLayout
 import android.widget.Space
 import android.widget.TextView
 import androidx.core.graphics.ColorUtils
+import androidx.core.widget.TextViewCompat
 import com.onetools.app.live.LiveStatusPrefs
 import com.onetools.app.live.LiveStatusSource
 import kotlin.math.abs
@@ -83,6 +84,12 @@ class OneCapsuleOverlay private constructor(context: Context) {
 
                 override fun onSingleTapConfirmed(e: MotionEvent): Boolean =
                     runGesture(CapsuleGestureSlot.TAP)
+
+                override fun onDoubleTap(e: MotionEvent): Boolean {
+                    OneCapsuleStore.toggleExpanded()
+                    CapsuleHaptics.confirm(root, prefs.hapticEnabled)
+                    return true
+                }
             },
         )
     }
@@ -95,6 +102,7 @@ class OneCapsuleOverlay private constructor(context: Context) {
                 CapsuleGestureAction.EXPAND,
                 CapsuleGestureAction.COLLAPSE,
                 CapsuleGestureAction.TOGGLE,
+                CapsuleGestureAction.TOGGLE_LONG,
                 -> CapsuleHaptics.confirm(root, prefs.hapticEnabled)
                 CapsuleGestureAction.NEXT,
                 CapsuleGestureAction.PREV,
@@ -258,6 +266,15 @@ class OneCapsuleOverlay private constructor(context: Context) {
         gravity = Gravity.CENTER_VERTICAL
         maxLines = 1
         isSingleLine = true
+        ellipsize = null
+        // 在侧栏最大宽度内自适应字号，避免「卡断」截断。
+        TextViewCompat.setAutoSizeTextTypeUniformWithConfiguration(
+            this,
+            /* autoSizeMinTextSize= */ 8,
+            /* autoSizeMaxTextSize= */ 14,
+            /* autoSizeStepGranularity= */ 1,
+            TypedValue.COMPLEX_UNIT_SP,
+        )
     }
 
     private fun detach() {
@@ -305,7 +322,6 @@ class OneCapsuleOverlay private constructor(context: Context) {
         val h = prefs.capsuleHeightScale
         val padH = dp((16f * w).toInt().coerceIn(12, 40))
         val padV = dp((4f * h).toInt().coerceIn(2, 10))
-        val textSp = (11f * ((w + h) * 0.5f)).coerceIn(9f, 14f)
         // 扁胶囊高度（视觉）；超大 cornerRadius 会被系统钳成「短边一半」= 正胶囊/跑道形。
         val visualH = dp((26f * h).toInt().coerceIn(18, 64))
         val fill = CapsuleThemeColors.pillFill(app, prefs.dynamicColorEnabled)
@@ -326,33 +342,59 @@ class OneCapsuleOverlay private constructor(context: Context) {
         } else {
             dp(8)
         }
-        val sideMin = dp((72f * w).toInt().coerceIn(56, 120))
-        val shellW = (gapW + sideMin * 2 + padH * 2).coerceAtLeast(dp((168f * w).toInt().coerceIn(140, 360)))
+
+        val face = session.pillFace(snap.pillSize)
+        val leftText = face.primary
+        val rightText = face.secondary?.takeIf { it.isNotBlank() }
+            ?: if (avoidCamera && leftText.isNotBlank()) "" else null
+        val showLong = face.allowsLong && snap.pillSize == CapsulePillSize.LONG
+
+        val shellW = if (showLong) {
+            val displayWidth = app.resources.displayMetrics.widthPixels
+            (displayWidth - dp(24)).coerceAtLeast(dp(240))
+        } else {
+            // 短胶囊按内容收紧：logo(+状态/取件码)+时间
+            val probe = pillTextView()
+            val measuredLeft = if (leftText.isBlank()) 0f else probe.paint.measureText(leftText)
+            val measuredRight = if (rightText.isNullOrBlank()) 0f else probe.paint.measureText(rightText)
+            val contentW = measuredLeft + measuredRight + dp(18 + 6 + 12)
+            (contentW + gapW + padH * 2).toInt().coerceIn(dp(120), dp(280))
+        }
+        val sideBudget = ((shellW - gapW - padH * 2 - dp(18)) / 2).coerceAtLeast(dp(40))
+
+        bindAppIcon(pillIcon, session.source, dp(18))
+        // AutoSize 必须有固定宽度容器；WRAP_CONTENT 会导致字号不缩、文字被裁切。
+        val leftBudget = sideBudget.coerceAtLeast(dp(36))
+        val rightBudget = (if (showLong) dp(160) else sideBudget).coerceAtLeast(dp(36))
+        pillPrimary?.apply {
+            setTextColor(Color.WHITE)
+            text = leftText
+            visibility = if (leftText.isBlank()) View.GONE else View.VISIBLE
+            maxWidth = leftBudget
+            layoutParams = (layoutParams as? LinearLayout.LayoutParams)?.apply {
+                width = if (leftText.isBlank()) 0 else leftBudget
+                height = LinearLayout.LayoutParams.WRAP_CONTENT
+                weight = 0f
+            }
+        }
+        pillSecondary?.apply {
+            setTextColor(Color.WHITE)
+            text = rightText.orEmpty()
+            visibility = if (rightText.isNullOrBlank()) View.GONE else View.VISIBLE
+            maxWidth = rightBudget
+            gravity = Gravity.END or Gravity.CENTER_VERTICAL
+            layoutParams = (layoutParams as? LinearLayout.LayoutParams)?.apply {
+                width = if (rightText.isNullOrBlank()) 0 else rightBudget
+                height = LinearLayout.LayoutParams.WRAP_CONTENT
+                weight = 0f
+            }
+        }
         shell.minimumHeight = visualH
         shell.layoutParams = (shell.layoutParams as? LinearLayout.LayoutParams)?.apply {
             height = LinearLayout.LayoutParams.WRAP_CONTENT
             width = shellW
         } ?: LinearLayout.LayoutParams(shellW, LinearLayout.LayoutParams.WRAP_CONTENT)
 
-        val slots = session.toSlots()
-        val leftText = slots.primary
-        val rightText = slots.secondary?.takeIf { it.isNotBlank() }
-            ?: if (avoidCamera) "" else null
-
-        bindAppIcon(pillIcon, session.source, dp(18))
-        pillPrimary?.apply {
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, textSp)
-            setTextColor(Color.WHITE)
-            text = leftText
-            maxWidth = sideMin + dp(24)
-        }
-        pillSecondary?.apply {
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, textSp)
-            setTextColor(Color.WHITE)
-            text = rightText.orEmpty()
-            visibility = if (rightText.isNullOrBlank()) View.INVISIBLE else View.VISIBLE
-            maxWidth = sideMin + dp(24)
-        }
         pillTextGap?.visibility = View.VISIBLE
         (pillTextGap?.layoutParams as? LinearLayout.LayoutParams)?.apply {
             width = gapW

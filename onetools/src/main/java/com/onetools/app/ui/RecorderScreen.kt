@@ -32,6 +32,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.core.content.ContextCompat
 import com.onetools.app.R
 import com.onetools.app.channel.ShizukuChannel
@@ -54,15 +57,47 @@ fun RecorderScreen(onBack: () -> Unit) {
     var files by remember { mutableStateOf(RecordingStore.list(context)) }
     var checkLegal by remember { mutableStateOf(consented) }
     var probe by remember { mutableStateOf<String?>(null) }
+    var pendingAuto by remember { mutableStateOf(false) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions(),
     ) {
-        status = "权限结果已返回，可再试启动"
+        if (!pendingAuto) {
+            status = "权限结果已返回，可再试启动"
+            return@rememberLauncherForActivityResult
+        }
+        pendingAuto = false
+        val granted = controller.hasPhonePermission() && controller.hasMicPermission()
+        if (granted && controller.canDrawOverlay()) {
+            auto = true
+            controller.promptOnCallEnabled = true
+            controller.startMonitoring()
+        } else {
+            status = "仍缺少录音或通话权限，自动提示未开启"
+        }
+        files = RecordingStore.list(context)
     }
 
-    DisposableEffect(Unit) {
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_START && pendingAuto) {
+                pendingAuto = false
+                if (controller.hasPhonePermission() &&
+                    controller.hasMicPermission() &&
+                    controller.canDrawOverlay()
+                ) {
+                    auto = true
+                    controller.promptOnCallEnabled = true
+                    controller.startMonitoring()
+                }
+                files = RecordingStore.list(context)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
         onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
             RecordingPlayer.stop()
             controller.dispose()
         }
@@ -134,22 +169,31 @@ fun RecorderScreen(onBack: () -> Unit) {
                     Checkbox(
                         checked = auto,
                         onCheckedChange = {
-                            if (it && !controller.canDrawOverlay()) {
+                            if (!it) {
+                                pendingAuto = false
+                                auto = false
+                                controller.promptOnCallEnabled = false
+                                controller.stopMonitoring()
+                                refresh()
+                                return@Checkbox
+                            }
+                            if (!controller.canDrawOverlay()) {
                                 Toast.makeText(
                                     context,
                                     R.string.recorder_need_overlay,
                                     Toast.LENGTH_LONG,
                                 ).show()
                                 controller.openOverlaySettings()
+                                pendingAuto = true
+                                return@Checkbox
                             }
-                            auto = it
-                            controller.promptOnCallEnabled = it
-                            if (it) {
-                                if (!ensurePerms()) return@Checkbox
-                                controller.startMonitoring()
-                            } else {
-                                controller.stopMonitoring()
+                            if (!ensurePerms()) {
+                                pendingAuto = true
+                                return@Checkbox
                             }
+                            auto = true
+                            controller.promptOnCallEnabled = true
+                            controller.startMonitoring()
                             refresh()
                         },
                         enabled = consented,

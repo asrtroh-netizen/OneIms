@@ -18,18 +18,25 @@ object CainiaoVendorAdapter : VendorAdapter {
             joined.contains("揽收") || joined.contains("已收") -> 0
             else -> if (snippet.isOngoing) 2 else return AdapterOutcome.Ignored
         }
-        val primary = when (stage) {
+        val status = when (stage) {
             3 -> "已签收"
             2 -> "派送中"
             1 -> "运输中"
             else -> "已揽收"
         }
+        // 取件码优先；无时间字段 → 只走短胶囊（不允许长胶囊）。
+        val code = extractPickupCode(joined)
+        val primary = code ?: status
         val slots = CapsuleContentSlots(
             iconGlyph = "菜",
             primary = primary,
-            secondary = "包裹",
+            secondary = null,
             stages = stageList(listOf("已揽收", "运输中", "派送中", "已签收"), stage),
             activeStageIndex = stage,
+            detailRows = buildList {
+                if (code != null) add("取件码" to code)
+                add("状态" to status)
+            },
             actions = listOf("查看物流"),
         )
         val session = sessionFromSlots(

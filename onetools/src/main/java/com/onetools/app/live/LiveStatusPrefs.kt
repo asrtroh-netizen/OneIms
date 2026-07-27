@@ -58,10 +58,10 @@ class LiveStatusPrefs(context: Context) {
 
     /**
      * 挖孔文字缝额外边距（dp）：缝宽 ≈ 系统挖孔宽 + 此值。
-     * 负值收紧、正值加宽，默认 16。
+     * 负值收紧、正值加宽，默认 8。
      */
     var cutoutGapPadDp: Int
-        get() = prefs.getInt(KEY_CUTOUT_GAP, 16).coerceIn(-12, 48)
+        get() = prefs.getInt(KEY_CUTOUT_GAP, 8).coerceIn(-12, 48)
         set(value) = prefs.edit().putInt(KEY_CUTOUT_GAP, value.coerceIn(-12, 48)).apply()
 
     /**

@@ -1,17 +1,12 @@
 package com.onetools.app.live
 
-import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.provider.Settings
-import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
-import com.onetools.app.MainActivity
 import com.onetools.app.R
 import com.onetools.app.live.adapter.AdapterOutcome
 import com.onetools.app.live.adapter.NotificationSnippet
@@ -24,15 +19,12 @@ import com.onetools.app.live.capsule.OneCapsuleStore
 import com.onetools.app.live.capsule.OneCapsuleTemplates
 
 /**
- * 发布国内软件实时状态：
- * 1) Ongoing 通知（API 36+ Live Update 芯片）
- * 2) One Capsule 悬浮岛（轻提醒 / 展开卡）
+ * 发布国内软件实时状态到 One Capsule 悬浮岛。
+ * 刻意不在状态栏旁再挂 Live Update 小胶囊（除 Meter 网速外），避免与时间挤在一起。
  */
 object LiveStatusHub {
     const val CHANNEL_ID = "onetools_live_status_v1"
     const val NOTIFICATION_ID = 71
-
-    private const val EXTRA_REQUEST_PROMOTED_ONGOING = "android.requestPromotedOngoing"
 
     @Volatile
     private var lastChip: String? = null
@@ -70,11 +62,8 @@ object LiveStatusHub {
         val app = context.applicationContext
         ensureChannel(app)
         lastChip = session.pillText()
-        val nm = app.getSystemService(NotificationManager::class.java) ?: return
-        nm.notify(
-            NOTIFICATION_ID,
-            buildNotification(app, session.source, session.pillText().take(7), session.subtitle),
-        )
+        // Real app status is rendered by One Capsule; do not create a second status chip.
+        app.getSystemService(NotificationManager::class.java)?.cancel(NOTIFICATION_ID)
         val prefs = LiveStatusPrefs(app)
         CapsuleLifecycle.attach(app)
         OneCapsuleStore.upsert(session, expand = expand)
@@ -105,15 +94,6 @@ object LiveStatusHub {
         OneCapsuleStore.upsert(OneCapsuleTemplates.cainiaoParcel(), expand = false)
         lastChip = OneCapsuleStore.snapshot().active?.pillText()
         ensureChannel(app)
-        app.getSystemService(NotificationManager::class.java)?.notify(
-            NOTIFICATION_ID,
-            buildNotification(
-                app,
-                LiveStatusSource.MEITUAN,
-                lastChip?.take(7) ?: "实时",
-                "多任务演示：左右滑动切换",
-            ),
-        )
         OneCapsuleOverlay.get(app).start()
     }
 
@@ -163,53 +143,6 @@ object LiveStatusHub {
             setSound(null, null)
         }
         nm.createNotificationChannel(channel)
-    }
-
-    private fun buildNotification(
-        context: Context,
-        source: LiveStatusSource,
-        chipText: String,
-        detail: String,
-    ): Notification {
-        val open = PendingIntent.getActivity(
-            context,
-            0,
-            Intent(context, MainActivity::class.java)
-                .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP),
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-        )
-        val title = source.labelZh
-        val content = detail.ifBlank { chipText }
-        if (Build.VERSION.SDK_INT >= 36) {
-            val builder = Notification.Builder(context, CHANNEL_ID)
-                .setOngoing(true)
-                .setOnlyAlertOnce(true)
-                .setContentIntent(open)
-                .setVisibility(Notification.VISIBILITY_PUBLIC)
-                .setShowWhen(false)
-                .setContentTitle(title)
-                .setContentText(content)
-                .setSmallIcon(R.drawable.ic_live_status)
-                .setShortCriticalText(chipText.take(7))
-            builder.extras.putBoolean(EXTRA_REQUEST_PROMOTED_ONGOING, true)
-            runCatching {
-                Notification.Builder::class.java
-                    .getMethod("setRequestPromotedOngoing", Boolean::class.javaPrimitiveType)
-                    .invoke(builder, true)
-            }
-            return builder.build()
-        }
-        return NotificationCompat.Builder(context, CHANNEL_ID)
-            .setOngoing(true)
-            .setOnlyAlertOnce(true)
-            .setContentIntent(open)
-            .setSilent(true)
-            .setShowWhen(false)
-            .setContentTitle(title)
-            .setContentText(content)
-            .setSmallIcon(R.drawable.ic_live_status)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            .build()
     }
 
     fun isNotificationAccessEnabled(context: Context): Boolean {

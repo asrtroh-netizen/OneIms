@@ -4,6 +4,10 @@ import com.onetools.app.live.LiveStatusSource
 import com.onetools.app.live.capsule.CapsuleContentSlots
 import com.onetools.app.live.capsule.CapsuleExpandTemplate
 
+/**
+ * 美团外卖完整状态链（对齐超级岛/流体云：有 ETA 才出长胶囊）。
+ * 阶段：已下单 → 已出餐 → 配送中 → 已送达
+ */
 object MeituanVendorAdapter : VendorAdapter {
     override val source: LiveStatusSource = LiveStatusSource.MEITUAN
 
@@ -11,14 +15,15 @@ object MeituanVendorAdapter : VendorAdapter {
         val joined = listOfNotNull(snippet.title, snippet.text).joinToString(" ")
         if (joined.isBlank()) return AdapterOutcome.Ignored
         if (marketingNoise(joined)) return AdapterOutcome.Ignored
-        val eta = extractEtaMinutes(joined) ?: 18
+        val eta = extractEtaMinutes(joined)
+        // 终态优先：避免「骑手已送达」被「骑手」误判成配送中。
         val stage = when {
-            // 「预计xx送达」仍属配送中，必须先匹配配送/骑手再匹配终态。
-            joined.contains("配送") || joined.contains("骑手") || joined.contains("送餐") -> 2
             joined.contains("已送达") || joined.contains("已完成") ||
                 (joined.contains("送达") && !joined.contains("预计")) -> 3
+            joined.contains("配送") || joined.contains("骑手") || joined.contains("送餐") ||
+                joined.contains("取餐") -> 2
             joined.contains("出餐") || joined.contains("制作") || joined.contains("备餐") -> 1
-            joined.contains("下单") || joined.contains("已接单") -> 0
+            joined.contains("下单") || joined.contains("已接单") || joined.contains("商家") -> 0
             else -> if (snippet.isOngoing) 2 else return AdapterOutcome.Ignored
         }
         val primary = when (stage) {
@@ -27,12 +32,18 @@ object MeituanVendorAdapter : VendorAdapter {
             1 -> "已出餐"
             else -> "已下单"
         }
+        // 无时间字段 → 只短胶囊（logo+状态）；有 ETA → 短=时间 / 长=状态+时间。
+        val secondary = if (stage >= 3) null else eta?.let { "${it}分钟" }
         val slots = CapsuleContentSlots(
             iconGlyph = "美",
             primary = primary,
-            secondary = "${eta}分钟",
+            secondary = secondary,
             stages = stageList(listOf("已下单", "已出餐", "配送中", "已送达"), stage),
             activeStageIndex = stage,
+            detailRows = buildList {
+                add("状态" to primary)
+                if (eta != null) add("预计" to "${eta}分钟")
+            },
             actions = listOf("查看订单"),
         )
         val session = sessionFromSlots(
@@ -44,7 +55,7 @@ object MeituanVendorAdapter : VendorAdapter {
             template = CapsuleExpandTemplate.PROGRESS_CARD,
             accent = 0xFFFFC107.toInt(),
         )
-        val confidence = if (snippet.isOngoing) 0.8f else 0.55f
+        val confidence = if (snippet.isOngoing) 0.85f else 0.6f
         return AdapterOutcome.Accepted(session, confidence)
     }
 }

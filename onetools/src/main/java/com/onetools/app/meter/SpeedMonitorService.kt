@@ -48,9 +48,13 @@ class SpeedMonitorService : Service() {
                 return START_NOT_STICKY
             }
             ACTION_APPLY_PREFS -> {
-                scope.launch {
-                    refreshPrefs()
-                    applyOverlayState(lastFormatted)
+                if (!isRunning) {
+                    startMonitoring()
+                } else {
+                    scope.launch {
+                        refreshPrefs()
+                        applyOverlayState(lastFormatted)
+                    }
                 }
                 return START_STICKY
             }
@@ -270,10 +274,7 @@ class SpeedMonitorService : Service() {
         }
 
         fun stop(context: Context) {
-            ContextCompat.startForegroundService(
-                context,
-                Intent(context, SpeedMonitorService::class.java).setAction(ACTION_STOP),
-            )
+            context.stopService(Intent(context, SpeedMonitorService::class.java))
         }
     }
 }

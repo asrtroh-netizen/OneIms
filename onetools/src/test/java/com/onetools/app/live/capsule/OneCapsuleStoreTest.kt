@@ -32,4 +32,31 @@ class OneCapsuleStoreTest {
         OneCapsuleStore.collapse()
         assertEquals(CapsuleDisplayMode.PILL, OneCapsuleStore.snapshot().mode)
     }
+
+    @Test
+    fun togglePillSizeForEtaSession() {
+        OneCapsuleStore.upsert(OneCapsuleTemplates.meituanDelivering())
+        assertEquals(CapsulePillSize.SHORT, OneCapsuleStore.snapshot().pillSize)
+        OneCapsuleStore.togglePillSize()
+        assertEquals(CapsulePillSize.LONG, OneCapsuleStore.snapshot().pillSize)
+        OneCapsuleStore.togglePillSize()
+        assertEquals(CapsulePillSize.SHORT, OneCapsuleStore.snapshot().pillSize)
+    }
+
+    @Test
+    fun cainiaoCannotEnterLongPill() {
+        OneCapsuleStore.upsert(OneCapsuleTemplates.cainiaoParcel())
+        OneCapsuleStore.togglePillSize()
+        assertEquals(CapsulePillSize.SHORT, OneCapsuleStore.snapshot().pillSize)
+    }
+
+    @Test
+    fun doubleTapToggleExpanded() {
+        OneCapsuleStore.upsert(OneCapsuleTemplates.didiOnTrip())
+        OneCapsuleStore.toggleExpanded()
+        assertEquals(CapsuleDisplayMode.EXPANDED, OneCapsuleStore.snapshot().mode)
+        OneCapsuleStore.toggleExpanded()
+        assertEquals(CapsuleDisplayMode.PILL, OneCapsuleStore.snapshot().mode)
+    }
 }
+
