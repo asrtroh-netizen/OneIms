@@ -27,10 +27,12 @@ object OneCapsuleStore {
     fun upsert(session: CapsuleSession, expand: Boolean = false) {
         val refreshed = session.copy(updatedAtMs = System.currentTimeMillis())
         val idx = sessions.indexOfFirst { it.id == refreshed.id }
+        val isNew = idx < 0
         if (idx >= 0) sessions[idx] = refreshed else sessions.add(refreshed)
         activeIndex = sessions.indexOfFirst { it.id == refreshed.id }.coerceAtLeast(0)
         mode = if (expand) CapsuleDisplayMode.EXPANDED else CapsuleDisplayMode.PILL
-        pillSize = CapsulePillSize.SHORT
+        // 同会话通知刷新保留短/长形态，避免左滑长胶囊被下一秒推送打回短态。
+        if (isNew) pillSize = CapsulePillSize.SHORT
         if (sessions.isEmpty()) mode = CapsuleDisplayMode.HIDDEN
         CapsuleLifecycle.onSessionTouched()
         emit()

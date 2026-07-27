@@ -58,5 +58,15 @@ class OneCapsuleStoreTest {
         OneCapsuleStore.toggleExpanded()
         assertEquals(CapsuleDisplayMode.PILL, OneCapsuleStore.snapshot().mode)
     }
+
+    @Test
+    fun upsertSameSessionKeepsLongPill() {
+        val first = OneCapsuleTemplates.meituanDelivering(etaMinutes = 12)
+        OneCapsuleStore.upsert(first)
+        OneCapsuleStore.togglePillSize()
+        assertEquals(CapsulePillSize.LONG, OneCapsuleStore.snapshot().pillSize)
+        OneCapsuleStore.upsert(first.copy(pillSecondary = "10分钟"))
+        assertEquals(CapsulePillSize.LONG, OneCapsuleStore.snapshot().pillSize)
+    }
 }
 

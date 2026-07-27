@@ -11,6 +11,14 @@ class LiveStatusPrefs(context: Context) {
     private val prefs: SharedPreferences =
         context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
+    init {
+        // 0.8.8：默认手势改为「单击无动作 / 左滑短长 / 双击展开」。升级用户若残留旧映射则一次性覆盖。
+        if (prefs.getInt(KEY_GESTURE_SCHEMA, 0) < GESTURE_SCHEMA) {
+            resetGesturesToDefaults()
+            prefs.edit().putInt(KEY_GESTURE_SCHEMA, GESTURE_SCHEMA).apply()
+        }
+    }
+
     var masterEnabled: Boolean
         get() = prefs.getBoolean(KEY_MASTER, false)
         set(value) = prefs.edit().putBoolean(KEY_MASTER, value).apply()
@@ -187,6 +195,8 @@ class LiveStatusPrefs(context: Context) {
         private const val KEY_EXCLUSION = "camera_exclusion_mode"
         private const val KEY_DYNAMIC_COLOR = "dynamic_color"
         private const val KEY_HAPTIC = "haptic_enabled"
+        private const val KEY_GESTURE_SCHEMA = "gesture_schema"
+        private const val GESTURE_SCHEMA = 2
     }
 }
 
