@@ -17,14 +17,23 @@ object MeituanVendorAdapter : VendorAdapter {
         if (marketingNoise(joined)) return AdapterOutcome.Ignored
         val eta = extractEtaMinutes(joined)
         // 终态优先：避免「骑手已送达」被「骑手」误判成配送中。
+        // 刚下单常见文案（支付成功/订单已提交）往往不是 FLAG_ONGOING，不能直接 Ignored。
         val stage = when {
             joined.contains("已送达") || joined.contains("已完成") ||
                 (joined.contains("送达") && !joined.contains("预计")) -> 3
             joined.contains("配送") || joined.contains("骑手") || joined.contains("送餐") ||
-                joined.contains("取餐") -> 2
+                joined.contains("取餐") || joined.contains("派送") -> 2
             joined.contains("出餐") || joined.contains("制作") || joined.contains("备餐") -> 1
-            joined.contains("下单") || joined.contains("已接单") || joined.contains("商家") -> 0
-            else -> if (snippet.isOngoing) 2 else return AdapterOutcome.Ignored
+            joined.contains("下单") || joined.contains("已接单") || joined.contains("商家") ||
+                joined.contains("支付") || joined.contains("已提交") || joined.contains("确认中") ||
+                joined.contains("等待商家") -> 0
+            eta != null -> 2
+            snippet.isOngoing -> 2
+            // 非 ongoing：仍认「订单已/成功/等待…」类瞬时通知
+            joined.contains("订单") && (
+                joined.contains("成功") || joined.contains("已") || joined.contains("等待")
+            ) -> 0
+            else -> return AdapterOutcome.Ignored
         }
         val primary = when (stage) {
             3 -> "已送达"

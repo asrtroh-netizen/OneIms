@@ -28,12 +28,18 @@ class LiveStatusNotificationListener : NotificationListenerService() {
         val n = sbn.notification ?: return
         if (n.flags and Notification.FLAG_GROUP_SUMMARY != 0) return
         val extras = n.extras ?: return
+        // 美团等常用自定义 RemoteViews：EXTRA_TEXT 可能空，尽量拼 ticker/摘要/信息行。
         val title = extras.getCharSequence(Notification.EXTRA_TITLE)?.toString()
-        val text = (
-            extras.getCharSequence(Notification.EXTRA_TEXT)
-                ?: extras.getCharSequence(Notification.EXTRA_BIG_TEXT)
-                ?: extras.getCharSequence(Notification.EXTRA_SUB_TEXT)
-            )?.toString()
+            ?: n.tickerText?.toString()?.takeIf { it.isNotBlank() }
+        val text = listOfNotNull(
+            extras.getCharSequence(Notification.EXTRA_TEXT)?.toString(),
+            extras.getCharSequence(Notification.EXTRA_BIG_TEXT)?.toString(),
+            extras.getCharSequence(Notification.EXTRA_SUB_TEXT)?.toString(),
+            extras.getCharSequence(Notification.EXTRA_SUMMARY_TEXT)?.toString(),
+            extras.getCharSequence(Notification.EXTRA_INFO_TEXT)?.toString(),
+            n.tickerText?.toString(),
+        ).map { it.trim() }.filter { it.isNotEmpty() }.distinct().joinToString(" ")
+            .ifBlank { null }
         val outcome = VendorAdapterRegistry.parse(
             NotificationSnippet(
                 packageName = sbn.packageName.orEmpty(),

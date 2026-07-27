@@ -96,7 +96,10 @@ enum class LiveStatusSource(
     companion object {
         fun fromPackage(packageName: String?): LiveStatusSource? {
             if (packageName.isNullOrBlank()) return null
-            return entries.firstOrNull { packageName in it.packages }
+            entries.firstOrNull { packageName in it.packages }?.let { return it }
+            // 美团系子包（外卖/主站推送变体）文档约定 com.sankuai.meituan*。
+            if (packageName.startsWith("com.sankuai.meituan")) return MEITUAN
+            return null
         }
 
         fun fromId(id: String?): LiveStatusSource? =

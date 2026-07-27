@@ -91,6 +91,37 @@ class MeituanDidiVendorAdapterTest {
         assertEquals(AdapterOutcome.Ignored, outcome)
     }
 
+    @Test
+    fun meituanPaymentSuccessNonOngoingAccepted() {
+        val session = accept(
+            MeituanVendorAdapter,
+            pkg = meituanPkg,
+            title = "美团外卖",
+            text = "订单支付成功，等待商家接单",
+            ongoing = false,
+        )
+        assertEquals("已下单", session.pillPrimary)
+        assertEquals(0, session.activeStageIndex)
+    }
+
+    @Test
+    fun meituanSankuaiSubpackageMatchedViaRegistry() {
+        val outcome = VendorAdapterRegistry.parse(
+            NotificationSnippet(
+                packageName = "com.sankuai.meituan.meituanwaimai",
+                key = "subpkg",
+                title = "美团外卖",
+                text = "订单已提交成功",
+                isOngoing = false,
+            ),
+        )
+        assertTrue(outcome is AdapterOutcome.Accepted)
+        assertEquals(
+            "已下单",
+            (outcome as AdapterOutcome.Accepted).session.pillPrimary,
+        )
+    }
+
     // ── 滴滴 ──────────────────────────────────────────────
 
     @Test

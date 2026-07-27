@@ -38,9 +38,17 @@ XJ021「真实通知适配」断线前用户四点要求：
 
 根因：对齐摄像头时整宽透明窗压在状态栏手势带上，仅 `onTouch` 吞事件不够——事件可能根本进不来或与 shade 竞争；挪到摄像头下方（`BELOW`）不易复现。
 
+## 0.8.11 跟进
+
+| 项 | 说明 |
+|---|---|
+| 刚下单不出岛 | 放宽美团阶段关键词（支付/已提交/等待商家等）；非 ongoing 的「订单已/成功/等待」也受理；有 ETA 即认配送 |
+| 子包包名 | `LiveStatusSource.fromPackage` 支持 `com.sankuai.meituan*` 前缀 |
+| 通知文本 | Listener 合并 ticker / summary / info，缓解自定义 RemoteViews 空 EXTRA_TEXT |
+
 ## 版本
 
-`0.8.10` / `versionCode 41`
+`0.8.11` / `versionCode 42`
 
 ## 验证
 
