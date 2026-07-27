@@ -220,6 +220,37 @@ class MeituanDidiVendorAdapterTest {
         assertEquals(AdapterOutcome.Ignored, outcome)
     }
 
+    @Test
+    fun didiHailingNonOngoingAccepted() {
+        val session = accept(
+            DidiVendorAdapter,
+            pkg = didiPkg,
+            title = "滴滴出行",
+            text = "正在为您呼叫快车，请稍候",
+            ongoing = false,
+        )
+        assertEquals("等待接驾", session.pillPrimary)
+        assertEquals(0, session.activeStageIndex)
+    }
+
+    @Test
+    fun didiSubpackageMatchedViaRegistry() {
+        val outcome = VendorAdapterRegistry.parse(
+            NotificationSnippet(
+                packageName = "com.sdu.didi.psnger.v3",
+                key = "dd-sub",
+                title = "滴滴",
+                text = "司机正在赶来 预计5分钟",
+                isOngoing = true,
+            ),
+        )
+        assertTrue(outcome is AdapterOutcome.Accepted)
+        assertEquals(
+            "司机赶来",
+            (outcome as AdapterOutcome.Accepted).session.pillPrimary,
+        )
+    }
+
     private fun accept(
         adapter: VendorAdapter,
         pkg: String,

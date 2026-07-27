@@ -46,9 +46,18 @@ XJ021「真实通知适配」断线前用户四点要求：
 | 子包包名 | `LiveStatusSource.fromPackage` 支持 `com.sankuai.meituan*` 前缀 |
 | 通知文本 | Listener 合并 ticker / summary / info，缓解自定义 RemoteViews 空 EXTRA_TEXT |
 
+## 0.8.12 跟进
+
+| 项 | 说明 |
+|---|---|
+| 总开关默认 | `masterEnabled` 默认改为 true；实验室打开胶囊时联锁打开总开关 |
+| 滴滴刚叫车 | 放宽叫车/派单/快车等文案；非 ongoing 也可出岛 |
+| 滴滴包名 | `com.sdu.didi*` 前缀匹配 |
+| 通知栏进度 | 仍为设计：不在状态栏旁挂 Live Update 芯片，进度只在 One Capsule |
+
 ## 版本
 
-`0.8.11` / `versionCode 42`
+`0.8.12` / `versionCode 43`
 
 ## 验证
 

@@ -99,6 +99,8 @@ enum class LiveStatusSource(
             entries.firstOrNull { packageName in it.packages }?.let { return it }
             // 美团系子包（外卖/主站推送变体）文档约定 com.sankuai.meituan*。
             if (packageName.startsWith("com.sankuai.meituan")) return MEITUAN
+            // 滴滴乘客端变体常见 com.sdu.didi.*
+            if (packageName.startsWith("com.sdu.didi")) return DIDI
             return null
         }
 

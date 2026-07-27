@@ -157,6 +157,11 @@ fun LiveLabScreen() {
                     onCheckedChange = {
                         capsule = it
                         prefs.capsuleEnabled = it
+                        // 开岛时联锁打开总开关，避免「胶囊开着、Listener 仍被 master=false 短路」。
+                        if (it && !master) {
+                            master = true
+                            prefs.masterEnabled = true
+                        }
                         LiveStatusHub.refreshCapsuleVisibility(context)
                         if (it && !canOverlay) {
                             Toast.makeText(context, R.string.live_status_overlay_need, Toast.LENGTH_LONG).show()

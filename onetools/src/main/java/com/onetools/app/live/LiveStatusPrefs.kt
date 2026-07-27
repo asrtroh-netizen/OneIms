@@ -19,8 +19,12 @@ class LiveStatusPrefs(context: Context) {
         }
     }
 
+    /**
+     * 实时状况总开关。默认 true：避免只开胶囊/已授权通知却因默认关而被 Listener 整链短路
+     *（美团/滴滴「下了单却不出岛」的常见原因）。
+     */
     var masterEnabled: Boolean
-        get() = prefs.getBoolean(KEY_MASTER, false)
+        get() = prefs.getBoolean(KEY_MASTER, true)
         set(value) = prefs.edit().putBoolean(KEY_MASTER, value).apply()
 
     /** 顶栏灵动岛胶囊（默认开；需悬浮窗权限）。 */

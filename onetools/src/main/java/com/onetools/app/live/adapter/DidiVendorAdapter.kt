@@ -15,12 +15,15 @@ object DidiVendorAdapter : VendorAdapter {
         val joined = listOfNotNull(snippet.title, snippet.text).joinToString(" ")
         if (joined.isBlank()) return AdapterOutcome.Ignored
         if (marketingNoise(joined)) return AdapterOutcome.Ignored
+        val eta = extractEtaMinutes(joined)
         val tripSignal = joined.contains("行程") || joined.contains("接驾") ||
             joined.contains("司机") || joined.contains("上车") || joined.contains("到达") ||
-            joined.contains("呼叫") || joined.contains("匹配") || extractPlate(joined) != null
+            joined.contains("呼叫") || joined.contains("匹配") || joined.contains("叫车") ||
+            joined.contains("派单") || joined.contains("应答") || joined.contains("快车") ||
+            joined.contains("专车") || joined.contains("拼车") || joined.contains("滴滴") ||
+            eta != null || extractPlate(joined) != null
         if (!snippet.isOngoing && !tripSignal) return AdapterOutcome.Ignored
 
-        val eta = extractEtaMinutes(joined)
         val stage = when {
             joined.contains("已完成") || joined.contains("行程结束") ||
                 (joined.contains("已到达") && !joined.contains("司机已到达")) ||
@@ -30,10 +33,14 @@ object DidiVendorAdapter : VendorAdapter {
             joined.contains("司机已到达") || joined.contains("已到达上车点") ||
                 joined.contains("车辆已到") -> 1
             joined.contains("等待") || joined.contains("呼叫") || joined.contains("匹配") ||
-                joined.contains("正在为您") -> 0
+                joined.contains("正在为您") || joined.contains("叫车") || joined.contains("派单") ||
+                joined.contains("应答") -> 0
             joined.contains("接驾") || joined.contains("赶来") || joined.contains("已接单") ||
                 joined.contains("司机") -> 1
-            else -> if (snippet.isOngoing) 2 else return AdapterOutcome.Ignored
+            eta != null -> 2
+            snippet.isOngoing -> 2
+            tripSignal -> 0
+            else -> return AdapterOutcome.Ignored
         }
         val primary = when (stage) {
             3 -> "已到达"
