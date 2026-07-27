@@ -51,6 +51,8 @@ class OneCapsuleOverlay private constructor(context: Context) {
     private var pageHint: TextView? = null
     private var attached = false
     private var lastMode: CapsuleDisplayMode = CapsuleDisplayMode.HIDDEN
+    /** 最近一次短/长胶囊外壳宽度（px），用于 PILL 态收窄悬浮窗，避免顶栏整宽抢通知栏手势。 */
+    private var lastPillShellWPx: Int = 0
 
     private val storeListener: (CapsuleUiSnapshot) -> Unit = { snap ->
         runOnMain { render(snap) }
@@ -238,8 +240,10 @@ class OneCapsuleOverlay private constructor(context: Context) {
             @Suppress("DEPRECATION")
             WindowManager.LayoutParams.TYPE_PHONE
         }
+        // PILL 默认 WRAP_CONTENT：整宽 MATCH_PARENT 会盖住状态栏手势带，
+        // 挖孔对齐时任意下滑易被 SystemUI 当成拉开通知栏（BELOW 位不易复现）。
         val lp = WindowManager.LayoutParams(
-            WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.WRAP_CONTENT,
             type,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
@@ -300,6 +304,7 @@ class OneCapsuleOverlay private constructor(context: Context) {
         expandedView = null
         attached = false
         lastMode = CapsuleDisplayMode.HIDDEN
+        lastPillShellWPx = 0
     }
 
     private fun render(snap: CapsuleUiSnapshot) {
@@ -404,6 +409,7 @@ class OneCapsuleOverlay private constructor(context: Context) {
             height = LinearLayout.LayoutParams.WRAP_CONTENT
             width = shellW
         } ?: LinearLayout.LayoutParams(shellW, LinearLayout.LayoutParams.WRAP_CONTENT)
+        lastPillShellWPx = shellW
 
         pillTextGap?.visibility = View.VISIBLE
         (pillTextGap?.layoutParams as? LinearLayout.LayoutParams)?.apply {
@@ -782,7 +788,27 @@ class OneCapsuleOverlay private constructor(context: Context) {
         lp.gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
         lp.x = dp(prefs.capsuleOffsetXDp)
         lp.y = bounds.topPx
+        // 收窄触控命中面：仅展开卡需要全宽；胶囊态贴合外壳，把状态栏其余区域还给 SystemUI。
+        val pad = dp(extraTouchDp) * 2
+        lp.width = when (mode) {
+            CapsuleDisplayMode.EXPANDED -> WindowManager.LayoutParams.MATCH_PARENT
+            CapsuleDisplayMode.PILL, CapsuleDisplayMode.HIDDEN -> {
+                val shellW = lastPillShellWPx
+                if (shellW > 0) {
+                    (shellW + pad).coerceAtLeast(dp(100))
+                } else {
+                    WindowManager.LayoutParams.WRAP_CONTENT
+                }
+            }
+        }
         runCatching { wm?.updateViewLayout(r, lp) }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            r.post {
+                val w = r.width.coerceAtLeast(1)
+                val h = r.height.coerceAtLeast(1)
+                r.systemGestureExclusionRects = listOf(android.graphics.Rect(0, 0, w, h))
+            }
+        }
     }
 
     private fun gestureHintText(): String {

@@ -29,15 +29,24 @@ XJ021「真实通知适配」断线前用户四点要求：
 | 长胶囊宽度 | 恢复经典扁岛量级（`168×scale`，夹在 140～360dp），不再近全屏 |
 | 扁岛手势 | Overlay 触控一律消费，避免下滑被系统当成拉开通知栏 |
 
+## 0.8.10 跟进
+
+| 项 | 说明 |
+|---|---|
+| 挖孔位手势 | PILL 悬浮窗宽改为贴合胶囊（非顶栏 `MATCH_PARENT`），把状态栏其余区域还给 SystemUI；展开卡仍全宽 |
+| 手势排除 | API 29+ 对岛根视图设置 `systemGestureExclusionRects` |
+
+根因：对齐摄像头时整宽透明窗压在状态栏手势带上，仅 `onTouch` 吞事件不够——事件可能根本进不来或与 shade 竞争；挪到摄像头下方（`BELOW`）不易复现。
+
 ## 版本
 
-`0.8.9` / `versionCode 40`
+`0.8.10` / `versionCode 41`
 
 ## 验证
 
 ```text
 .\gradlew.bat :onetools:testDebugUnitTest --tests "com.onetools.app.live.capsule.*" --tests "com.onetools.app.live.adapter.*"
-.\gradlew.bat :onetools:compileDebugKotlin
+.\gradlew.bat :onetools:assembleDebug
 ```
 
-真机真实美团/滴滴通知回放：需通知使用权 + 悬浮窗。
+真机：避摄=对齐挖孔时，在岛上左滑/双击不应拉开通知栏。真实美团/滴滴通知回放仍需通知使用权 + 悬浮窗。
