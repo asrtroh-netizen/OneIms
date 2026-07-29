@@ -15,6 +15,7 @@
 - `ProvisioningWritePolicy`：26/27 对应 detail key 为软失败
 - `ImsController.applyAll`：仅软键失败 → `treatAsSuccess=true` + OEM 随缘文案
 - `setWfcMode`：OEM reject 不再当硬失败吓人
+- **防闪退**：`SystemApiBroker.setProvisioningInt` 对 key=26/27 **永不抛**（只返回非 0）；`getVoWiFiModeSetting` 异常返回 -1；MainActivity 一键应用不再 `throw IllegalStateException`
 
 ## 验证
 

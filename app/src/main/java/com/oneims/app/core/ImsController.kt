@@ -114,20 +114,20 @@ object ImsController {
                     SystemApiBroker.setProvisioningInt(
                         subId, ProvisioningKeys.KEY_VOICE_OVER_WIFI_ENABLED,
                         ProvisioningKeys.PROVISIONING_VALUE_ENABLED,
-                    )
-                }.isSuccess
+                    ) == 0
+                }.getOrDefault(false)
+                // 26/27：broker 软拒不抛；以返回码 0 判成功，避免一加把拒写打成崩溃。
                 detail["provision_vowifi_roaming"] = runCatching {
                     SystemApiBroker.setProvisioningInt(
                         subId, ProvisioningKeys.KEY_VOICE_OVER_WIFI_ROAMING,
                         ProvisioningKeys.PROVISIONING_VALUE_ENABLED,
-                    )
-                }.isSuccess
-                // VoWiFi 模式默认蜂窝优先，保证没 WiFi 时电话短信仍走蜂窝
+                    ) == 0
+                }.getOrDefault(false)
                 detail["provision_wfc_mode"] = runCatching {
                     SystemApiBroker.setProvisioningInt(
                         subId, ProvisioningKeys.KEY_VOICE_OVER_WIFI_MODE, wfcMode.value,
-                    )
-                }.isSuccess
+                    ) == 0
+                }.getOrDefault(false)
             }
 
             // 写后健康检查：若基本通信被搞挂，立即回滚保命
@@ -219,15 +219,21 @@ object ImsController {
 
     /** 单独设置 WFC（VoWiFi）呼叫模式，写入后回读校验。 */
     fun setWfcMode(context: Context, subId: Int, mode: WfcMode): ConfigResult {
-        // 开门尝试：非 Tensor 不硬拒；一加/高通常拒 key=27，按 OEM 软失败提示。
+        // key=27 在 broker 层已软拒不抛；此处只根据返回码/回读给文案。
         return try {
-            SystemApiBroker.setProvisioningInt(
+            val written = SystemApiBroker.setProvisioningInt(
                 subId, ProvisioningKeys.KEY_VOICE_OVER_WIFI_MODE, mode.value,
             )
+            if (written != 0) {
+                return ConfigResult(
+                    true,
+                    context.getString(R.string.msg_wfc_oem_rejected, context.getString(mode.labelRes)),
+                )
+            }
             val readback = SystemApiBroker.getVoWiFiModeSetting(subId)
             val ok = readback == mode.value
             ConfigResult(
-                ok,
+                true, // 回读不一致也不当崩溃；最多提示可能需重启
                 if (ok) context.getString(R.string.msg_wfc_set, context.getString(mode.labelRes))
                 else context.getString(R.string.msg_wfc_readback, readback),
             )
@@ -235,7 +241,6 @@ object ImsController {
             val desc = OperationErrors.describe(e)
             if (ProvisioningWritePolicy.isOemProvisioningReject(desc)) {
                 ConfigResult(
-                    // 软失败：不阻断后续流程，也不包装成「整单崩溃」。
                     true,
                     context.getString(R.string.msg_wfc_oem_rejected, context.getString(mode.labelRes)),
                 )

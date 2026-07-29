@@ -14,6 +14,14 @@ object ProvisioningWritePolicy {
         "provision_wfc_mode",
     )
 
+    /** AOSP provisioning int key：一加/高通常拒写，禁止向上抛崩进程。 */
+    val SOFT_PROVISIONING_INT_KEYS: Set<Int> = setOf(
+        ProvisioningKeys.KEY_VOICE_OVER_WIFI_ROAMING, // 26
+        ProvisioningKeys.KEY_VOICE_OVER_WIFI_MODE, // 27
+    )
+
+    fun isSoftProvisioningIntKey(key: Int): Boolean = key in SOFT_PROVISIONING_INT_KEYS
+
     enum class OutcomeKind {
         FULL_OK,
         OEM_SOFT_PARTIAL,

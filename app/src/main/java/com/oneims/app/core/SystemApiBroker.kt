@@ -393,30 +393,58 @@ object SystemApiBroker {
         return m.invoke(tel, subId, key, value) as Int
     }
 
-    /** 返回码 0 才是真成功；旧实现只判断“没抛异常”，会把返回码 1 误报成成功。 */
+    /**
+     * 写入 IMS provisioning。
+     * - 返回 0 = 成功
+     * - key=26/27（漫游 / WFC 模式）：OEM 拒写只打日志并返回非 0，**绝不抛**（一加闪退根因之一）
+     * - 其它 key：非 0 仍抛 IllegalStateException，由上层 runCatching 消化
+     */
     fun setProvisioningInt(subId: Int, key: Int, value: Int): Int {
-        val result = shizukuProvision(subId, key, value)
+        val soft = ProvisioningWritePolicy.isSoftProvisioningIntKey(key)
+        val result = runCatching { shizukuProvision(subId, key, value) }.getOrElse { error ->
+            if (soft) {
+                android.util.Log.w(
+                    "OneIMS-Broker",
+                    "soft provisioning invoke failed key=$key: ${error.message}",
+                )
+                return -1
+            }
+            throw error
+        }
+        if (result == 0) {
+            lastStrategy = "shizuku-direct"
+            return 0
+        }
+        if (soft) {
+            android.util.Log.w(
+                "OneIMS-Broker",
+                "OEM soft-reject provisioning key=$key result=$result (no throw)",
+            )
+            lastStrategy = "shizuku-oem-soft"
+            return result
+        }
         check(result == 0) { "IMS provisioning rejected key=$key, result=$result" }
-        lastStrategy = "shizuku-direct"
         return result
     }
 
-    /** 优先读用户 WFC 模式；接口缺失时退到 provisioning key 27，仍保留真实失败。 */
+    /** 优先读用户 WFC 模式；接口缺失/OEM 异常时返回 -1，不向上抛。 */
     fun getVoWiFiModeSetting(subId: Int): Int {
-        val telephony = telephonyInterface()
-        val telephonyClass = Class.forName("com.android.internal.telephony.ITelephony")
         return runCatching {
-            telephonyClass.getMethod(
-                "getVoWiFiModeSetting",
-                Int::class.javaPrimitiveType,
-            ).invoke(telephony, subId) as Int
-        }.getOrElse {
-            telephonyClass.getMethod(
-                "getImsProvisioningInt",
-                Int::class.javaPrimitiveType,
-                Int::class.javaPrimitiveType,
-            ).invoke(telephony, subId, ProvisioningKeys.KEY_VOICE_OVER_WIFI_MODE) as Int
-        }
+            val telephony = telephonyInterface()
+            val telephonyClass = Class.forName("com.android.internal.telephony.ITelephony")
+            runCatching {
+                telephonyClass.getMethod(
+                    "getVoWiFiModeSetting",
+                    Int::class.javaPrimitiveType,
+                ).invoke(telephony, subId) as Int
+            }.getOrElse {
+                telephonyClass.getMethod(
+                    "getImsProvisioningInt",
+                    Int::class.javaPrimitiveType,
+                    Int::class.javaPrimitiveType,
+                ).invoke(telephony, subId, ProvisioningKeys.KEY_VOICE_OVER_WIFI_MODE) as Int
+            }
+        }.getOrDefault(-1)
     }
 
     /**

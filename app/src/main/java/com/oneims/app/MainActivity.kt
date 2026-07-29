@@ -1768,8 +1768,9 @@ private fun AppRoot(
                                     targetVonr,
                                     targetWfcMode,
                                 )
+                                // 不再 throw：一加等机会把「操作失败」链路放大成体感闪退/中断。
                                 if (!coreResult.success) {
-                                    throw IllegalStateException(coreResult.message)
+                                    return@runOperation coreResult.message
                                 }
                                 // 同区「5G NR + 信号阈值」并入一键；格子样式由独家页独立应用。
                                 val nrResult = ImsController.apply5g(
@@ -1778,7 +1779,10 @@ private fun AppRoot(
                                     targetNr5g,
                                 )
                                 if (!nrResult.success) {
-                                    throw IllegalStateException(nrResult.message)
+                                    return@runOperation listOf(
+                                        coreResult.message,
+                                        nrResult.message,
+                                    ).joinToString("\n")
                                 }
                                 val signalMessage = when {
                                     targetSignal && !targetNr5g -> {

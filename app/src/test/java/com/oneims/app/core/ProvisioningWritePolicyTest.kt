@@ -64,4 +64,12 @@ class ProvisioningWritePolicyTest {
         )
         assertFalse(ProvisioningWritePolicy.isOemProvisioningReject("permission denied"))
     }
+
+    @Test
+    fun softIntKeys_include26And27() {
+        assertTrue(ProvisioningWritePolicy.isSoftProvisioningIntKey(26))
+        assertTrue(ProvisioningWritePolicy.isSoftProvisioningIntKey(27))
+        assertFalse(ProvisioningWritePolicy.isSoftProvisioningIntKey(28))
+        assertFalse(ProvisioningWritePolicy.isSoftProvisioningIntKey(10))
+    }
 }
