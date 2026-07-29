@@ -90,7 +90,10 @@ private val DockIslandShape = RoundedCornerShape(28.dp)
 @Composable
 internal fun rememberHomeCompactLayout(): Boolean {
     val config = LocalConfiguration.current
-    return config.screenHeightDp < 740 || config.fontScale >= 1.1f
+    // 矮屏 / 窄屏 / 大字号都会把 Hero 标题与「未激活」胶囊挤到一起吃字。
+    return config.screenHeightDp < 780 ||
+        config.screenWidthDp < 400 ||
+        config.fontScale >= 1.05f
 }
 
 @Composable
@@ -848,33 +851,57 @@ fun StatusHero(
                 )
                 Column(
                     modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(if (compact) 2.dp else 4.dp),
+                    verticalArrangement = Arrangement.spacedBy(if (compact) 4.dp else 6.dp),
                 ) {
                     if (!compact) {
-                        Text(
-                            text = stringResource(R.string.onekuku_card_eyebrow),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = contentColor.copy(alpha = 0.72f),
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            Text(
+                                text = stringResource(R.string.onekuku_card_eyebrow),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = contentColor.copy(alpha = 0.72f),
+                                modifier = Modifier.weight(1f),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                            if (onOpenDeviceDetails != null) {
+                                Surface(
+                                    onClick = onOpenDeviceDetails,
+                                    shape = RoundedCornerShape(percent = 50),
+                                    color = contentColor.copy(alpha = 0.10f),
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.home_device_details),
+                                        modifier = Modifier.padding(
+                                            horizontal = 10.dp,
+                                            vertical = 4.dp,
+                                        ),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = contentColor.copy(alpha = 0.88f),
+                                        maxLines = 1,
+                                    )
+                                }
+                            }
+                        }
                     }
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        Text(
-                            title,
-                            style = if (compact) {
-                                MaterialTheme.typography.titleMedium
-                            } else {
-                                MaterialTheme.typography.titleLarge
-                            },
-                            color = contentColor,
-                            modifier = Modifier.weight(1f, fill = false),
-                            maxLines = if (compact) 1 else 2,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                        StatusPillChip()
-                    }
+                    // 标题独占整行：禁止与「未激活」胶囊并排抢宽（截图像「还差 —— ...」）。
+                    Text(
+                        title,
+                        style = if (compact) {
+                            MaterialTheme.typography.titleMedium
+                        } else {
+                            MaterialTheme.typography.titleLarge
+                        },
+                        color = contentColor,
+                        modifier = Modifier.fillMaxWidth(),
+                        maxLines = 2,
+                        softWrap = true,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    StatusPillChip()
                     if (!settled) {
                         Text(
                             subtitle,
@@ -884,7 +911,8 @@ fun StatusHero(
                                 MaterialTheme.typography.bodyLarge
                             },
                             color = contentColor,
-                            maxLines = if (compact) 1 else 2,
+                            maxLines = if (compact) 2 else 3,
+                            softWrap = true,
                             overflow = TextOverflow.Ellipsis,
                         )
                         Text(
@@ -892,22 +920,8 @@ fun StatusHero(
                             style = MaterialTheme.typography.bodySmall,
                             color = contentColor.copy(alpha = 0.78f),
                             maxLines = if (compact) 2 else 4,
+                            softWrap = true,
                             overflow = TextOverflow.Ellipsis,
-                        )
-                    }
-                }
-                if (onOpenDeviceDetails != null && !compact) {
-                    Surface(
-                        onClick = onOpenDeviceDetails,
-                        shape = RoundedCornerShape(percent = 50),
-                        color = contentColor.copy(alpha = 0.10f),
-                    ) {
-                        Text(
-                            text = stringResource(R.string.home_device_details),
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = contentColor.copy(alpha = 0.88f),
-                            maxLines = 1,
                         )
                     }
                 }
