@@ -14,16 +14,16 @@
 
 <br/>
 
-### ⬇️ 下载 APK（最新 · v3.0.5 · 请自选产品线）
+### ⬇️ 下载 APK（最新 · v3.0.6 · 请自选产品线）
 
 > **两个包功能相同（IMS/诊断/恢复），差别只在「特权通道怎么激活」——看下方选购指南，**只装其中一个**即可；进阶用户也可同机并存对比。
 
 | 推荐给… | 包 | 下载 |
 |---|---|---|
-| 🟢 **想少装 App、App 内一键配对** | **OneKuku（独立激活）** | [OneIms-OneKuku-standalone-3.0.5.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.0.5/OneIms-OneKuku-standalone-3.0.5.apk) |
-| 🔵 **已有 / 想用 Shizuku 轻壳** | **OneIms Lite（Shizuku）** | [OneIms-Lite-Shizuku-3.0.5.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.0.5/OneIms-Lite-Shizuku-3.0.5.apk) |
+| 🟢 **想少装 App、App 内一键配对** | **OneKuku（独立激活）** | [OneIms-OneKuku-standalone-3.0.6.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.0.6/OneIms-OneKuku-standalone-3.0.6.apk) |
+| 🔵 **已有 / 想用 Shizuku 轻壳** | **OneIms Lite（Shizuku）** | [OneIms-Lite-Shizuku-3.0.6.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.0.6/OneIms-Lite-Shizuku-3.0.6.apk) |
 
-[📦 全部 Release 资产](https://github.com/asrtroh-netizen/OneIms/releases/tag/v3.0.5)
+[📦 全部 Release 资产](https://github.com/asrtroh-netizen/OneIms/releases/tag/v3.0.6)
 
 > 💙 **友情推荐特权通道**：[asrtroh 修缮版 Shizuku V15.0](https://github.com/asrtroh-netizen/shizuku)（配对一次 · 旧 Wi‑Fi 自连 · 开机 FGS 内激活）  
 > 下载正式包：[Releases](https://github.com/asrtroh-netizen/shizuku/releases) · 截图：
@@ -64,10 +64,39 @@
 
 | 对外名称 | 包名 | 特权通道 | Release 文件名 |
 |---|---|---|---|
-| **OneIms · OneKuku** `3.0.5-onekuku` | `com.oneims.app` | 内嵌 OneBridge + 无线调试配对 | `OneIms-OneKuku-standalone-3.0.5.apk`（备注：独立激活） |
-| **OneIms · OneIms Lite** `3.0.5-onelink` | `com.oneims.onelink` | 官方 Shizuku | `OneIms-Lite-Shizuku-3.0.5.apk`（备注：Shizuku） |
+| **OneIms · OneKuku** `3.0.6-onekuku` | `com.oneims.app` | 内嵌 OneBridge + 无线调试配对 | `OneIms-OneKuku-standalone-3.0.6.apk`（备注：独立激活） |
+| **OneIms · OneIms Lite** `3.0.6-onelink` | `com.oneims.onelink` | 官方 Shizuku | `OneIms-Lite-Shizuku-3.0.6.apk`（备注：Shizuku） |
 
 > **双包同版号一起更新**；请只从本页 Release 链接下载，勿混装未知来源包。
+
+---
+
+## ✨ What's New · 3.0.6
+
+**本版主线：短屏适配 + OneKuku 对齐 asrtroh Shizuku V15 开机韧性；一加等 OEM 对 IMS provisioning 软失败不闪退。**
+
+### 🏠 体验
+
+* 矮屏 / 大字体首页更紧凑，双版本共用布局策略
+* 通道状态卡统一为三态：未激活 / 激活中 / 就绪（不再强调「休眠」）
+
+### 🟢 OneKuku（独立激活）
+
+* 配对六位码通知改由前台服务承载（对齐 V15，国产机更稳）
+* binder 就绪才算成功；冷启最多重试 3 次
+* `/proc/net/tcp*` 挖无线调试端口 + 上次端口缓存；Wi‑Fi / 解锁后续跑
+* 可选通道守护（Watchdog）：特权进程掉线后限次静默重连
+
+### 📶 IMS / 兼容
+
+* 非 Tensor（含高通）兼容层降级为可尝试，不再一刀切「不支持」
+* 一加等对 key=26/27（漫游 / WFC 模式）拒写按软成功提示，避免崩溃体感
+
+### 🔄 升级
+
+* 🟢 OneKuku：覆盖安装 `OneIms-OneKuku-standalone-3.0.6.apk`
+* 🔵 OneIms Lite：覆盖安装 `OneIms-Lite-Shizuku-3.0.6.apk`
+* versionCode `76`（相对 3.0.5 的 `75` 会提示升级）
 
 ---
 

@@ -23,21 +23,31 @@ if (Test-Path $Jdk) {
     $env:PATH = "$Jdk\bin;$env:PATH"
 }
 
-$KukuApk = "OneIms-OneKuku-$Version.apk"
-$LinkApk = "OneIms-OneLink-$Version.apk"
+$KukuApk = "OneIms-OneKuku-standalone-$Version.apk"
+$LinkApk = "OneIms-Lite-Shizuku-$Version.apk"
 
 Write-Host "==> OneIms dual publish $Version ($ReleaseTag)"
 
 if (-not $SkipBuild) {
     Write-Host "==> Build dual APKs"
     .\gradlew.bat :app:packageDualDebugApks --no-daemon
-    Copy-Item -Force "OneIms-OneKuku-$Version-debug.apk" $KukuApk
-    Copy-Item -Force "OneIms-OneLink-$Version-debug.apk" $LinkApk
+    # packageDualDebugApks 已写出无 -debug 与带 -debug 两份；优先无后缀正式名
+    if (-not (Test-Path $KukuApk)) {
+        Copy-Item -Force "OneIms-OneKuku-standalone-$Version-debug.apk" $KukuApk
+    }
+    if (-not (Test-Path $LinkApk)) {
+        Copy-Item -Force "OneIms-Lite-Shizuku-$Version-debug.apk" $LinkApk
+    }
 }
 
 if (-not $SkipApkUpload) {
-    Write-Host "==> Upload APKs to GitHub Release $ReleaseTag"
-    gh release upload $ReleaseTag $KukuApk $LinkApk --clobber
+    Write-Host "==> Ensure GitHub Release $ReleaseTag then upload APKs"
+    $exists = gh release view $ReleaseTag 2>$null
+    if (-not $exists) {
+        gh release create $ReleaseTag $KukuApk $LinkApk --title "OneIms $Version" --generate-notes
+    } else {
+        gh release upload $ReleaseTag $KukuApk $LinkApk --clobber
+    }
 }
 
 if (-not $SkipReadmePush) {
