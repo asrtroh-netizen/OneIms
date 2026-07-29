@@ -269,10 +269,12 @@
     <string name="compat_tensor">① Tensor 芯片: %1$s</string>
     <string name="compat_soc">② SoC: %1$s（%2$s）</string>
     <string name="compat_soc_tensor">Google Tensor</string>
-    <string name="compat_soc_mediatek">联发科 / 天玑 — VoWiFi 强开不可用</string>
+    <string name="compat_soc_mediatek">联发科 / 天玑 — VoWiFi 可能无效（仍可尝试开门）</string>
     <string name="compat_soc_other">非 Tensor</string>
     <string name="compat_yes">是 ✅</string>
-    <string name="compat_tensor_no">否 ❌（本工具面向 Tensor Pixel）</string>
+    <string name="compat_tensor_no">否（非 Tensor；软件可开门，OEM 随缘）</string>
+    <string name="compat_soc_qualcomm">高通 / 骁龙 — VoWiFi 尽力写入</string>
+    <string name="compat_advice_nontensor">非 Tensor（含高通）可正常开 VoLTE/VoWiFi 软件开关；能否上岛由 OEM/运营商决定，属降级可用。</string>
     <string name="compat_os">③ 系统版本: Android %1$s (API %2$d) %3$s</string>
     <string name="compat_os_bad">❌（需 Android 12+）</string>
     <string name="compat_shizuku">④ OneKuku: %1$s</string>
@@ -286,7 +288,7 @@
     <string name="compat_sim_no">❌（未检测到 SIM）</string>
     <string name="compat_conclusion">—— 结论：本机%1$s ——</string>
     <string name="compat_advice_full">可放心使用全部功能。</string>
-    <string name="compat_advice_degraded">可用性降级：请更新 Hidden/API 兼容层后重试；Root 通道可走直调，非 Root 仍依赖委托。</string>
+    <string name="compat_advice_degraded">可用性降级：委托探测失败时可走 Root 直调；非 Root 仍依赖 Instrumentation。非 Tensor 亦可试开 VoWiFi。</string>
     <string name="compat_advice_need_shizuku">请先激活 OneKuku 核心服务再来。</string>
     <string name="compat_advice_unsupported">本机不满足前置条件，不建议使用，以免影响通信。</string>
     <string name="compat_advice_mediatek_vowifi">联发科 VoWiFi 可能无效；主推 Tensor。</string>
@@ -300,7 +302,7 @@
     <string name="dev_patch">安全补丁: %1$s</string>
     <string name="dev_tensor">Tensor 芯片: %1$s</string>
     <string name="dev_tensor_yes">是（受支持）</string>
-    <string name="dev_tensor_no">否（非 Tensor，可能不支持）</string>
+    <string name="dev_tensor_no">否（非 Tensor，软件开门 OEM 随缘）</string>
     <string name="dev_soc">SoC: %1$s</string>
     <string name="dev_mediatek_vowifi_note">联发科：VoWiFi 可能无效</string>
     <string name="dev_sim_count">激活 SIM 数: %1$d</string>
@@ -572,7 +574,7 @@
     <string name="onekuku_snapshot_meta_value">卡%1$d · %2$s · hash=%3$s</string>
     <string name="onekuku_restore_no_matching_sim">未找到与快照匹配的 SIM，请确认当前插入的是之前配置过的 SIM</string>
 
-    <string name="onekuku_detail_no_snapshot">暂无通话配置快照，请先点「保存通话配置」</string>
+    <string name="onekuku_detail_no_snapshot">暂无快照，请先「保存通话配置」</string>
     <string name="onekuku_detail_waiting_wifi">正在等待连上已保存的 Wi‑Fi，随后自动激活并恢复配置</string>
     <string name="onekuku_boot_channel">通话配置恢复</string>
     <string name="onekuku_boot_channel_desc">重启后自动检查通话配置的低优先级通知</string>

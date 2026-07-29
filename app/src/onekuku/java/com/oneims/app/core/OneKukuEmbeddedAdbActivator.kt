@@ -55,6 +55,12 @@ object OneKukuEmbeddedAdbActivator {
     private const val KEY_HAS_PAIRED = "has_paired_once"
     private const val BINDER_WAIT_MS = 12_000L
     private const val BINDER_POLL_MS = 300L
+    /**
+     * 对齐 V15.0.0 `AdbWirelessHelper.startShizukuViaAdb`：shell 回执后 binder 未就绪时最多再试。
+     * 冷启常见「命令已结束但 onebridge_server 尚未粘住」。
+     */
+    private const val BINDER_START_MAX_ATTEMPTS = 3
+    private const val BINDER_RETRY_GAP_MS = 1_000L
     /** pair() 在部分机型上会无限阻塞；独立线程 + 超时，避免通知栏「配对中」卡死。 */
     private const val PAIR_TIMEOUT_MS = 12_000L
     private const val POST_PAIR_DISCOVER_MS = 3_000L
@@ -176,14 +182,11 @@ object OneKukuEmbeddedAdbActivator {
                     Log.i(TAG, "tcpip5555 persisted=$persisted")
                     val startPkg = OneKukuCoreComponent.resolveCorePackage(app)
                         ?: OneKukuCoreComponent.HOST_PACKAGE
-                    val startCmd =
-                        OneKukuCoreComponent.bridgeBootShellCommand(startPkg, forceRestart) + "\n"
-                    val boot = runCatching {
-                        writeShellAndAwaitBinder(manager, startCmd)
-                    }.getOrElse {
-                        Log.w(TAG, "shell/binder failed", it)
-                        "start_failed"
-                    }
+                    val boot = startBridgeAwaitingBinder(
+                        manager = manager,
+                        packageName = startPkg,
+                        forceRestart = forceRestart,
+                    )
                     if (boot == "ok") {
                         markPairedOnce(app)
                         val granted = grantWriteSecureSettings(manager, app.packageName)
@@ -267,14 +270,11 @@ object OneKukuEmbeddedAdbActivator {
 
             val startPkg = OneKukuCoreComponent.resolveCorePackage(app)
                 ?: OneKukuCoreComponent.HOST_PACKAGE
-            val startCmd =
-                OneKukuCoreComponent.bridgeBootShellCommand(startPkg, forceRestart) + "\n"
-            val boot = runCatching {
-                writeShellAndAwaitBinder(manager, startCmd)
-            }.getOrElse {
-                Log.w(TAG, "shell/binder failed", it)
-                "start_failed"
-            }
+            val boot = startBridgeAwaitingBinder(
+                manager = manager,
+                packageName = startPkg,
+                forceRestart = forceRestart,
+            )
             when (boot) {
                 "ok" -> {
                     markPairedOnce(app)
@@ -391,6 +391,39 @@ object OneKukuEmbeddedAdbActivator {
             Thread.sleep(BINDER_POLL_MS)
         }
         return OneKukuManager.isRunning()
+    }
+
+    /**
+     * 写启动命令并等待 binder；binder 未就绪时按 V15 策略最多重试 [BINDER_START_MAX_ATTEMPTS] 次。
+     * @return `"ok"` / `"start_failed"` / `"binder_not_received"`
+     */
+    private fun startBridgeAwaitingBinder(
+        manager: AbsAdbConnectionManager,
+        packageName: String,
+        forceRestart: Boolean,
+    ): String {
+        var last = "start_failed"
+        for (attempt in 0 until BINDER_START_MAX_ATTEMPTS) {
+            val restart = forceRestart || attempt > 0
+            val startCmd = OneKukuCoreComponent.bridgeBootShellCommand(packageName, restart) + "\n"
+            last = runCatching {
+                writeShellAndAwaitBinder(manager, startCmd)
+            }.getOrElse {
+                Log.w(TAG, "shell/binder failed attempt=$attempt", it)
+                "start_failed"
+            }
+            if (last == "ok") return "ok"
+            if (last == "binder_not_received" && attempt < BINDER_START_MAX_ATTEMPTS - 1) {
+                Log.w(
+                    TAG,
+                    "binder not ready after shell (attempt=$attempt) — retry like V15",
+                )
+                Thread.sleep(BINDER_RETRY_GAP_MS * (attempt + 1L))
+                continue
+            }
+            if (last != "binder_not_received") return last
+        }
+        return last
     }
 
     /**

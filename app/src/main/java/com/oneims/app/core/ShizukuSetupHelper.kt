@@ -71,10 +71,15 @@ object ShizukuSetupHelper {
             }.getOrDefault(false)
             if (ok) return 0
         }
+        // OneLink 推荐 asrtroh 修缮版 V15.0.0（与库内逻辑同系）；商店可能装到官版。
         return runCatching {
             context.startActivity(
                 Intent(Intent.ACTION_VIEW)
-                    .setData(android.net.Uri.parse("market://details?id=${SHIZUKU_MANAGER_PACKAGES[0]}"))
+                    .setData(
+                        android.net.Uri.parse(
+                            "https://github.com/asrtroh-netizen/shizuku/releases/tag/V15.0.0",
+                        ),
+                    )
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
             )
             1

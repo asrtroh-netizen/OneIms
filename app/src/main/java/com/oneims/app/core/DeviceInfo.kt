@@ -74,7 +74,7 @@ object DeviceInfo {
 
     /**
      * 是否联发科 / 天玑系 SoC。
-     * 社区反馈：此类机型上 VoWiFi 强开常「改不了 / 不起作用」，必须诚实门禁，禁止假成功。
+     * 社区反馈：此类机型上 VoWiFi 强开常「改不了 / 不起作用」，软件仍可开门，但需诚实提示。
      */
     fun isMediaTek(fp: SocFingerprint = socFingerprint()): Boolean {
         val soc = fp.joined()
@@ -85,6 +85,20 @@ object DeviceInfo {
             soc.contains("dimensity") ||
             soc.contains("天玑") ||
             soc.contains("helio")
+    }
+
+    /**
+     * 是否高通 / 骁龙系 SoC（国内大量 VoWiFi 用户机型）。
+     * 仅用于兼容提示与首页适配；不硬拦写入。
+     */
+    fun isQualcomm(fp: SocFingerprint = socFingerprint()): Boolean {
+        val soc = fp.joined()
+        return soc.contains("qualcomm") ||
+            soc.contains("qcom") ||
+            soc.contains("snapdragon") ||
+            Regex("""\bsm\d{4}\b""").containsMatchIn(soc) ||
+            Regex("""\bsdm\d{3,4}\b""").containsMatchIn(soc) ||
+            Regex("""\bmsm\d+\b""").containsMatchIn(soc)
     }
 
     /** 人类可读 SoC 摘要（排障用）。 */

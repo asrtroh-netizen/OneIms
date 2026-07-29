@@ -267,10 +267,12 @@
     <string name="compat_tensor">① Tensor chip: %1$s</string>
     <string name="compat_soc">② SoC: %1$s (%2$s)</string>
     <string name="compat_soc_tensor">Google Tensor</string>
-    <string name="compat_soc_mediatek">MediaTek / Dimensity — VoWiFi force-enable unavailable</string>
+    <string name="compat_soc_mediatek">MediaTek / Dimensity — VoWiFi may have no effect (still try unlock)</string>
     <string name="compat_soc_other">Non-Tensor</string>
     <string name="compat_yes">Yes ✅</string>
-    <string name="compat_tensor_no">No ❌ (this tool targets Tensor Pixel)</string>
+    <string name="compat_tensor_no">No (non-Tensor; software unlock, OEM decides)</string>
+    <string name="compat_soc_qualcomm">Qualcomm / Snapdragon — VoWiFi best-effort write</string>
+    <string name="compat_advice_nontensor">Non-Tensor (incl. Qualcomm): VoLTE/VoWiFi software switches are available; OEM/carrier decide if it sticks. Degraded but usable.</string>
     <string name="compat_os">③ OS: Android %1$s (API %2$d) %3$s</string>
     <string name="compat_os_bad">❌ (needs Android 12+)</string>
     <string name="compat_shizuku">④ OneKuku: %1$s</string>
@@ -284,7 +286,7 @@
     <string name="compat_sim_no">❌ (no SIM detected)</string>
     <string name="compat_conclusion">—— Verdict: %1$s ——</string>
     <string name="compat_advice_full">All features safe to use.</string>
-    <string name="compat_advice_degraded">Degraded: update the hidden-API compat layer and retry; Root channel can go direct, non-root still needs Instrumentation.</string>
+    <string name="compat_advice_degraded">Degraded: if delegate probe fails, Root can go direct; non-root still needs Instrumentation. Non-Tensor may still try VoWiFi.</string>
     <string name="compat_advice_need_shizuku">Activate OneKuku first.</string>
     <string name="compat_advice_unsupported">Device does not meet prerequisites; not recommended to avoid impacting calls.</string>
     <string name="compat_advice_mediatek_vowifi">MediaTek VoWiFi may have no effect; Tensor preferred.</string>
@@ -298,7 +300,7 @@
     <string name="dev_patch">Security patch: %1$s</string>
     <string name="dev_tensor">Tensor chip: %1$s</string>
     <string name="dev_tensor_yes">Yes (supported)</string>
-    <string name="dev_tensor_no">No (non-Tensor, may be unsupported)</string>
+    <string name="dev_tensor_no">No (non-Tensor; software unlock, OEM decides)</string>
     <string name="dev_soc">SoC: %1$s</string>
     <string name="dev_mediatek_vowifi_note">MediaTek: VoWiFi may have no effect</string>
     <string name="dev_sim_count">Active SIMs: %1$d</string>
@@ -566,7 +568,7 @@
     <string name="onekuku_snapshot_meta_value">SIM %1$d · %2$s · hash=%3$s</string>
     <string name="onekuku_restore_no_matching_sim">No SIM matched the snapshot. Confirm the previously configured SIM is inserted.</string>
 
-    <string name="onekuku_detail_no_snapshot">No call-settings snapshot yet. Tap Save call settings first.</string>
+    <string name="onekuku_detail_no_snapshot">No snapshot yet — tap Save call settings first</string>
     <string name="onekuku_detail_waiting_wifi">Waiting for a saved Wi‑Fi, then auto-activate and restore</string>
     <string name="onekuku_boot_channel">Call config restore</string>
     <string name="onekuku_boot_channel_desc">Low-priority alerts for post-reboot call config checks</string>
