@@ -14,16 +14,16 @@
 
 <br/>
 
-### ⬇️ 下载 APK（最新 · v3.0.6 · 请自选产品线）
+### ⬇️ 下载 APK（最新 · v3.0.7 · 请自选产品线）
 
 > **两个包功能相同（IMS/诊断/恢复），差别只在「特权通道怎么激活」——看下方选购指南，**只装其中一个**即可；进阶用户也可同机并存对比。
 
 | 推荐给… | 包 | 下载 |
 |---|---|---|
-| 🟢 **想少装 App、App 内一键配对** | **OneKuku（独立激活）** | [OneIms-OneKuku-standalone-3.0.6.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.0.6/OneIms-OneKuku-standalone-3.0.6.apk) |
-| 🔵 **已有 / 想用 Shizuku 轻壳** | **OneIms Lite（Shizuku）** | [OneIms-Lite-Shizuku-3.0.6.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.0.6/OneIms-Lite-Shizuku-3.0.6.apk) |
+| 🟢 **想少装 App、App 内一键配对** | **OneKuku（独立激活）** | [OneIms-OneKuku-standalone-3.0.7.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.0.7/OneIms-OneKuku-standalone-3.0.7.apk) |
+| 🔵 **已有 / 想用 Shizuku 轻壳** | **OneIms Lite（Shizuku）** | [OneIms-Lite-Shizuku-3.0.7.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.0.7/OneIms-Lite-Shizuku-3.0.7.apk) |
 
-[📦 全部 Release 资产](https://github.com/asrtroh-netizen/OneIms/releases/tag/v3.0.6)
+[📦 全部 Release 资产](https://github.com/asrtroh-netizen/OneIms/releases/tag/v3.0.7)
 
 > 💙 **友情推荐特权通道**：[asrtroh 修缮版 Shizuku V15.0](https://github.com/asrtroh-netizen/shizuku)（配对一次 · 旧 Wi‑Fi 自连 · 开机 FGS 内激活）  
 > 下载正式包：[Releases](https://github.com/asrtroh-netizen/shizuku/releases) · 截图：
@@ -64,10 +64,33 @@
 
 | 对外名称 | 包名 | 特权通道 | Release 文件名 |
 |---|---|---|---|
-| **OneIms · OneKuku** `3.0.6-onekuku` | `com.oneims.app` | 内嵌 OneBridge + 无线调试配对 | `OneIms-OneKuku-standalone-3.0.6.apk`（备注：独立激活） |
-| **OneIms · OneIms Lite** `3.0.6-onelink` | `com.oneims.onelink` | 官方 Shizuku | `OneIms-Lite-Shizuku-3.0.6.apk`（备注：Shizuku） |
+| **OneIms · OneKuku** `3.0.7-onekuku` | `com.oneims.app` | 内嵌 OneBridge + 无线调试配对 | `OneIms-OneKuku-standalone-3.0.7.apk`（备注：独立激活） |
+| **OneIms · OneIms Lite** `3.0.7-onelink` | `com.oneims.onelink` | 官方 Shizuku | `OneIms-Lite-Shizuku-3.0.7.apk`（备注：Shizuku） |
 
 > **双包同版号一起更新**；请只从本页 Release 链接下载，勿混装未知来源包。
+
+---
+
+## ✨ What's New · 3.0.7
+
+**本版主线：修一加「假就绪 / 点应用闪退」与首页标题吃字；3.0.6 稳定性补丁。**
+
+### 🟢 OneKuku
+
+* 激活成功后同步 granted，避免 Hero 假「就绪」
+* 「通道已拉起」文案按真实授权分流，不再与就绪态打架
+* 首页 Hero 标题独占整行，不再被「未激活」胶囊吃成「还差 —— ...」
+
+### 📶 双版本共用
+
+* 一键应用前实时校验特权通道；信号条失败改提示、不抛崩
+* Lite / OneKuku 均受益（OEM key=26/27 仍软提示，属机型限制）
+
+### 🔄 升级
+
+* 🟢 OneKuku：覆盖安装 `OneIms-OneKuku-standalone-3.0.7.apk`
+* 🔵 OneIms Lite：覆盖安装 `OneIms-Lite-Shizuku-3.0.7.apk`
+* versionCode `77`（相对 3.0.6 的 `76` 会提示升级）
 
 ---
 
