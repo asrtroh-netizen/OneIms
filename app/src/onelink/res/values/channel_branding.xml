@@ -107,7 +107,7 @@
     <string name="onekuku_settings_status">OneLink 状态：%1$s</string>
     <string name="onekuku_settings_auto_restore_sub">检测到配置失效时，自动尝试通过 OneLink 恢复</string>
     <string name="onekuku_settings_check_status">检查 OneLink 状态</string>
-    <string name="onekuku_settings_auto_sleep_sub">恢复完成后按需休眠，不靠本应用前台常驻</string>
+    <string name="onekuku_settings_auto_sleep_sub">恢复完成后不拉起本应用前台常驻；特权在官方 Shizuku</string>
     <string name="onekuku_settings_resident_note">特权在官方 Shizuku 进程；本应用不再以前台服务常驻轮询。</string>
     <string name="onekuku_settings_reactivate">重新激活 OneLink</string>
     <string name="onekuku_settings_reactivate_sub">打开 Shizuku 并重新授权 OneLink</string>

@@ -67,7 +67,7 @@ object OneKukuHomeTools {
                 label = context.getString(R.string.onekuku_subtitle_active),
                 value = when {
                     serviceRunning && serviceGranted ->
-                        context.getString(R.string.onekuku_settings_state_sleeping)
+                        context.getString(R.string.onekuku_settings_state_running)
                     serviceRunning ->
                         context.getString(R.string.onekuku_settings_state_inactive)
                     else ->
@@ -286,7 +286,9 @@ object OneKukuHomeTools {
                 context.getString(R.string.onekuku_history_result_failed)
         }
         val oneKukuLabel = when (record.oneKukuStatusAfter) {
-            "sleeping" -> context.getString(R.string.onekuku_history_kuku_sleeping)
+            // 历史记录里的 sleeping 对外归并到「就绪」（三态）。
+            "sleeping", "active", "ready" ->
+                context.getString(R.string.onekuku_history_kuku_ready)
             "failed" -> context.getString(R.string.onekuku_history_kuku_failed)
             "inactive" -> context.getString(R.string.onekuku_history_kuku_inactive)
             else -> context.getString(R.string.onekuku_history_kuku_failed)
@@ -407,8 +409,6 @@ object OneKukuHomeTools {
     ): String = when (state) {
         OneKukuCardState.READY ->
             context.getString(R.string.onekuku_settings_state_running)
-        OneKukuCardState.SLEEPING ->
-            context.getString(R.string.onekuku_settings_state_sleeping)
         OneKukuCardState.ACTIVATING ->
             context.getString(R.string.onekuku_settings_state_inactive)
         OneKukuCardState.INACTIVE ->

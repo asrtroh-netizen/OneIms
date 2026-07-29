@@ -482,7 +482,7 @@
     <string name="onekuku_title_inactive">One more step</string>
     <string name="onekuku_subtitle_inactive">OneKuku channel is inactive</string>
     <string name="onekuku_detail_inactive">Call settings may not auto-restore after reboot</string>
-    <string name="onekuku_hint_power">Activate on demand, sleep when idle — no always-on drain</string>
+    <string name="onekuku_hint_power">Activate on demand; privilege stays in the channel process — app is not FG-resident</string>
     <string name="onekuku_hint_resident">Privilege stays in onebridge_server (Shizuku-like); app is not FG-resident</string>
     <string name="onekuku_pill_inactive">Inactive</string>
     <string name="onekuku_action_activate">Activate OneKuku</string>
@@ -493,7 +493,7 @@
     <string name="onekuku_nameplate_ready">Ready</string>
     <string name="onekuku_badge_active">Ready</string>
     <string name="onekuku_subtitle_ready">Channel is ready to use</string>
-    <string name="onekuku_detail_ready">Foreground shows Ready; closing or backgrounding sleeps the channel. Reopen to wake — no re-pair needed</string>
+    <string name="onekuku_detail_ready">Channel ready; privilege stays in the bridge process — no re-pair after backgrounding</string>
     <string name="onekuku_subtitle_sleeping">Channel is sleeping</string>
     <string name="onekuku_detail_sleeping">Privilege stays in the channel process; reopen the app to return to Ready without reactivating</string>
     <string name="onekuku_action_save_config">Save call settings</string>
@@ -516,7 +516,7 @@
     <string name="onekuku_action_running">Restoring…</string>
 
     <string name="onekuku_subtitle_complete">Call settings restored</string>
-    <string name="onekuku_detail_complete">OneKuku finished; channel is sleeping on standby</string>
+    <string name="onekuku_detail_complete">OneKuku finished; channel stays ready</string>
     <string name="onekuku_action_check">Check OneKuku status</string>
     <string name="onekuku_action_check_sub">Status only — restore from Quick start below</string>
 
@@ -542,7 +542,7 @@
     <string name="onekuku_msg_activation_denied">OneKuku activation was not granted</string>
     <string name="onekuku_msg_need_active">Activate OneKuku core service first</string>
     <string name="onekuku_msg_need_sim">Select an available SIM first</string>
-    <string name="onekuku_msg_status_ok">OneKuku looks healthy and is sleeping</string>
+    <string name="onekuku_msg_status_ok">OneKuku looks healthy; channel ready</string>
     <string name="onekuku_busy_restore">Restoring call settings…</string>
     <string name="onekuku_busy_status_check">Checking status</string>
     <string name="action_close">Close</string>
@@ -596,7 +596,8 @@
     <string name="onekuku_history_result_success">All succeeded</string>
     <string name="onekuku_history_result_partial">Partial success</string>
     <string name="onekuku_history_result_failed">Failed</string>
-    <string name="onekuku_history_kuku_sleeping">Sleeping</string>
+    <string name="onekuku_history_kuku_sleeping">Ready</string>
+    <string name="onekuku_history_kuku_ready">Ready</string>
     <string name="onekuku_history_kuku_failed">Execution failed</string>
     <string name="onekuku_history_kuku_inactive">Inactive</string>
     <string name="onekuku_history_target_value">SIM %1$d · %2$s</string>
@@ -632,8 +633,8 @@
     <string name="onekuku_settings_state_invalid">Invalid</string>
     <string name="onekuku_settings_restore_on">Auto restore enabled</string>
     <string name="onekuku_settings_restore_off">Auto restore disabled</string>
-    <string name="onekuku_settings_auto_sleep">Auto-sleep when idle</string>
-    <string name="onekuku_settings_auto_sleep_sub">After restore, OneKuku sleeps to save power; wake is near-instant</string>
+    <string name="onekuku_settings_auto_sleep">Skip App FG residency after use</string>
+    <string name="onekuku_settings_auto_sleep_sub">After restore, do not start App FG residency; privilege stays in the channel process</string>
     <string name="onekuku_settings_resident_note">Aligned with Shizuku: privilege lives in the shell process; the app no longer runs a resident foreground poller.</string>
     <string name="onekuku_resident_channel">OneKuku (resident retired)</string>
     <string name="onekuku_resident_channel_desc">Legacy channel; foreground resident poller is no longer started</string>
@@ -645,8 +646,8 @@
     <string name="onekuku_settings_view_status_sub">Read-only check of SIM and calling features</string>
     <string name="onekuku_settings_boot_on">Boot auto-check enabled</string>
     <string name="onekuku_settings_boot_off">Boot auto-check disabled</string>
-    <string name="onekuku_settings_sleep_on">Auto-sleep enabled</string>
-    <string name="onekuku_settings_sleep_off">Auto-sleep disabled</string>
+    <string name="onekuku_settings_sleep_on">Enabled: skip App FG residency after use</string>
+    <string name="onekuku_settings_sleep_off">Disabled: allow legacy App residency path</string>
 
     <string name="onekuku_status_onekuku">OneKuku: %1$s</string>
     <string name="onekuku_status_sim">SIM: slot %1$d · %2$s</string>
