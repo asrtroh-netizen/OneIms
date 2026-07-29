@@ -32,6 +32,10 @@ class BootReceiver : BroadcastReceiver() {
                     ) {
                         GuardService.start(context)
                     }
+                    // 对齐 V15：锁屏阶段只武装 USER_PRESENT，真正启动等解锁。
+                    if (!ChannelLine.usesShizuku && ConfigStore.isOneKukuBootAutoCheck(context)) {
+                        OneKukuUserPresentRestartReceiver.setEnabled(context, true)
+                    }
                     Log.i(TAG, "boot action=$action skip restore enqueue until unlocked")
                 } finally {
                     pending.finish()
@@ -44,6 +48,10 @@ class BootReceiver : BroadcastReceiver() {
                         ConfigStore.lastApplied(context) != null
                     ) {
                         GuardService.start(context)
+                    }
+                    if (!ChannelLine.usesShizuku && ConfigStore.isOneKukuBootAutoCheck(context)) {
+                        OneKukuUserPresentRestartReceiver.setEnabled(context, true)
+                        OneKukuWifiReadyMonitor.ensureRegistered(context)
                     }
                     // 无 BOOT_COMPLETED 白名单；现代系统解锁后会投递 BOOT_COMPLETED。
                     Log.i(TAG, "boot action=$action skip restore enqueue (wait BOOT_COMPLETED allowlist)")
@@ -63,6 +71,10 @@ class BootReceiver : BroadcastReceiver() {
                         GuardService.start(context)
                     }
                     if (ConfigStore.isOneKukuBootAutoCheck(context)) {
+                        if (!ChannelLine.usesShizuku) {
+                            OneKukuUserPresentRestartReceiver.setEnabled(context, true)
+                            OneKukuWifiReadyMonitor.ensureRegistered(context)
+                        }
                         Log.i(TAG, "boot action=$action enqueue restore debounce=1000")
                         OneKukuBootRestoreService.enqueue(context, debounceMs = 1_000L)
                     }

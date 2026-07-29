@@ -2,7 +2,7 @@
 
 **日期**：2026-07-29  
 **范围**：内部通道（`onekuku` + `bridge`）对照 `_forks/HSSkyBoy-Shizuku-clean`  
-**结论摘要**：关键冷启/配对/binder 成功门禁已大体对齐；剩余空间主要在**开机基础设施**（端口发现、Wi‑Fi/解锁重试、Worker、Watchdog），不是再抄一套完整 Shizuku API。
+**结论摘要**：关键冷启/配对/binder 成功门禁已对齐；**开机基础设施**（端口发现、Wi‑Fi/解锁重试、Watchdog、自动配对码）已于同日落地，见 `docs/changes/2026-07-29-onekuku-v15-boot-alignment.md`。不做多 App / 完整 API 面。
 
 ---
 

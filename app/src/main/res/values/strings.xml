@@ -655,6 +655,10 @@
     <string name="onekuku_settings_view_status_sub">只读检查当前 SIM 与通话能力</string>
     <string name="onekuku_settings_boot_on">已开启开机自动检查</string>
     <string name="onekuku_settings_boot_off">已关闭开机自动检查</string>
+    <string name="onekuku_watchdog_channel">OneKuku 通道守护</string>
+    <string name="onekuku_watchdog_channel_desc">特权通道断开时在后台限次静默重连</string>
+    <string name="onekuku_watchdog_title">OneKuku 通道守护中</string>
+    <string name="onekuku_watchdog_text">特权进程掉线时会自动尝试重连</string>
     <string name="onekuku_settings_sleep_on">已开启：用完不拉 App 常驻</string>
     <string name="onekuku_settings_sleep_off">已关闭：允许 App 侧旧常驻路径</string>
 

@@ -648,6 +648,10 @@
     <string name="onekuku_settings_view_status_sub">Read-only check of SIM and calling features</string>
     <string name="onekuku_settings_boot_on">Boot auto-check enabled</string>
     <string name="onekuku_settings_boot_off">Boot auto-check disabled</string>
+    <string name="onekuku_watchdog_channel">OneKuku channel watchdog</string>
+    <string name="onekuku_watchdog_channel_desc">Silently reconnects the privilege channel a limited number of times if it drops</string>
+    <string name="onekuku_watchdog_title">OneKuku channel watchdog</string>
+    <string name="onekuku_watchdog_text">Will auto-retry if the privilege process dies</string>
     <string name="onekuku_settings_sleep_on">Enabled: skip App FG residency after use</string>
     <string name="onekuku_settings_sleep_off">Disabled: allow legacy App residency path</string>
 
