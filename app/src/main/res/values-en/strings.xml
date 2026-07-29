@@ -349,7 +349,9 @@
     <string name="msg_apply_ok">Config applied (persistent=false, re-apply after reboot). Basic comms OK.</string>
     <string name="msg_vowifi_mediatek_unsupported">MediaTek VoWiFi may have no effect (still allowed)</string>
     <string name="msg_vowifi_non_tensor_unsupported">Non-Tensor VoWiFi may have no effect (still allowed)</string>
-    <string name="msg_apply_partial">CarrierConfig applied, but these provisioning writes were incomplete: %1$s</string>
+    <string name="msg_apply_partial">CarrierConfig applied, but these critical provisioning writes were incomplete: %1$s</string>
+    <string name="msg_apply_oem_soft">Applied. OEM rejected non-critical provisioning (%1$s; common on OnePlus/Qualcomm keys 26/27). Switches opened; OEM decides if it sticks.</string>
+    <string name="msg_wfc_oem_rejected">WFC mode \"%1$s\" rejected by OEM (key=27). Other VoWiFi switches were still attempted.</string>
     <string name="msg_write_not_started">No configuration was written: %1$s</string>
     <string name="msg_write_rollback">Write failed; rollback was confirmed successful: %1$s</string>
     <string name="msg_write_rollback_failed">Write failed: %1$s; automatic rollback also failed: %2$s. Restart now and verify basic communications.</string>

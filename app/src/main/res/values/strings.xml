@@ -349,7 +349,9 @@
     <!-- IMS 配置结果消息 -->
     <string name="msg_health_rollback">检测到基本通信异常（电话/数据/短信），已自动还原配置保命。IMS 未启用。</string>
     <string name="msg_apply_ok">配置已下发（persistent=false，重启后需重应用）。基本通信正常。</string>
-    <string name="msg_apply_partial">CarrierConfig 已生效，但以下 provisioning 未完整写入：%1$s</string>
+    <string name="msg_apply_partial">CarrierConfig 已生效，但以下关键 provisioning 未完整写入：%1$s</string>
+    <string name="msg_apply_oem_soft">配置已下发。OEM 拒绝了部分非关键 provisioning（%1$s，常见于一加/高通 key=26/27）；开关侧已开门，能否上岛随缘。</string>
+    <string name="msg_wfc_oem_rejected">WFC 模式「%1$s」写入被 OEM 拒绝（key=27），属机型限制；其它 VoWiFi 开关已尽量打开。</string>
     <string name="msg_vowifi_mediatek_unsupported">联发科 VoWiFi 可能无效（仍可尝试）</string>
     <string name="msg_vowifi_non_tensor_unsupported">非 Tensor VoWiFi 可能无效（仍可尝试）</string>
     <string name="msg_write_not_started">配置未写入：%1$s</string>

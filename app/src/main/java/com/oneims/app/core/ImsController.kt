@@ -145,18 +145,24 @@ object ImsController {
                 context,
                 ConfigStore.Applied(subId, enableVolte, enableVowifi, enableVonr, wfcMode),
             )
-            val failedProvisioning = detail.filterValues { applied -> !applied }.keys
+            val outcome = ProvisioningWritePolicy.classifyApplyOutcome(detail)
             ConfigResult(
-                failedProvisioning.isEmpty(),
-                if (failedProvisioning.isEmpty()) {
-                    context.getString(R.string.msg_apply_ok)
-                } else {
-                    context.getString(
-                        R.string.msg_apply_partial,
-                        failedProvisioning.joinToString(),
-                    )
+                success = outcome.treatAsSuccess,
+                message = when (outcome.kind) {
+                    ProvisioningWritePolicy.OutcomeKind.FULL_OK ->
+                        context.getString(R.string.msg_apply_ok)
+                    ProvisioningWritePolicy.OutcomeKind.OEM_SOFT_PARTIAL ->
+                        context.getString(
+                            R.string.msg_apply_oem_soft,
+                            outcome.softFailedKeys.joinToString(),
+                        )
+                    ProvisioningWritePolicy.OutcomeKind.HARD_PARTIAL ->
+                        context.getString(
+                            R.string.msg_apply_partial,
+                            outcome.hardFailedKeys.joinToString(),
+                        )
                 },
-                detail,
+                detail = detail,
             )
         } catch (e: Throwable) {
             val error = OperationErrors.describe(e)
@@ -213,7 +219,7 @@ object ImsController {
 
     /** 单独设置 WFC（VoWiFi）呼叫模式，写入后回读校验。 */
     fun setWfcMode(context: Context, subId: Int, mode: WfcMode): ConfigResult {
-        // 开门尝试：非 Tensor 不硬拒；不追加长文案。
+        // 开门尝试：非 Tensor 不硬拒；一加/高通常拒 key=27，按 OEM 软失败提示。
         return try {
             SystemApiBroker.setProvisioningInt(
                 subId, ProvisioningKeys.KEY_VOICE_OVER_WIFI_MODE, mode.value,
@@ -226,7 +232,16 @@ object ImsController {
                 else context.getString(R.string.msg_wfc_readback, readback),
             )
         } catch (e: Throwable) {
-            ConfigResult(false, context.getString(R.string.msg_set_failed, OperationErrors.describe(e)))
+            val desc = OperationErrors.describe(e)
+            if (ProvisioningWritePolicy.isOemProvisioningReject(desc)) {
+                ConfigResult(
+                    // 软失败：不阻断后续流程，也不包装成「整单崩溃」。
+                    true,
+                    context.getString(R.string.msg_wfc_oem_rejected, context.getString(mode.labelRes)),
+                )
+            } else {
+                ConfigResult(false, context.getString(R.string.msg_set_failed, desc))
+            }
         }
     }
 
