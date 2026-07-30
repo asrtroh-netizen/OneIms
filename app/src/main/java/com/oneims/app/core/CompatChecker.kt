@@ -33,9 +33,23 @@ object CompatChecker {
         val lines = mutableListOf<String>()
 
         val tensor = DeviceInfo.isTensor()
+        val mediaTek = DeviceInfo.isMediaTek()
+        val qualcomm = DeviceInfo.isQualcomm()
         lines += context.getString(
             R.string.compat_tensor,
             context.getString(if (tensor) R.string.compat_yes else R.string.compat_tensor_no),
+        )
+        lines += context.getString(
+            R.string.compat_soc,
+            DeviceInfo.socLabel(),
+            context.getString(
+                when {
+                    tensor -> R.string.compat_soc_tensor
+                    mediaTek -> R.string.compat_soc_mediatek
+                    qualcomm -> R.string.compat_soc_qualcomm
+                    else -> R.string.compat_soc_other
+                },
+            ),
         )
 
         val sdkOk = Build.VERSION.SDK_INT >= 31
@@ -69,22 +83,39 @@ object CompatChecker {
             if (simCount > 0) context.getString(R.string.compat_yes) else context.getString(R.string.compat_sim_no),
         )
 
-        val level = when {
-            !tensor -> SupportLevel.UNSUPPORTED
-            !sdkOk -> SupportLevel.UNSUPPORTED
-            !shizukuGranted -> SupportLevel.NEED_SHIZUKU
-            delegate -> SupportLevel.FULL
-            else -> SupportLevel.DEGRADED
-        }
+        // 软件开门：非 Tensor（含国内高通）不再标「不支持」，改为降级可用；仅 API 过低才硬拒。
+        val level = resolveSupportLevel(
+            sdkOk = sdkOk,
+            shizukuGranted = shizukuGranted,
+            tensor = tensor,
+            delegate = delegate,
+        )
         lines += context.getString(R.string.compat_conclusion, context.getString(level.labelRes))
         lines += context.getString(
-            when (level) {
-                SupportLevel.FULL -> R.string.compat_advice_full
-                SupportLevel.DEGRADED -> R.string.compat_advice_degraded
-                SupportLevel.NEED_SHIZUKU -> R.string.compat_advice_need_shizuku
-                SupportLevel.UNSUPPORTED -> R.string.compat_advice_unsupported
+            when {
+                level == SupportLevel.FULL -> R.string.compat_advice_full
+                level == SupportLevel.NEED_SHIZUKU -> R.string.compat_advice_need_shizuku
+                level == SupportLevel.UNSUPPORTED -> R.string.compat_advice_unsupported
+                !tensor && mediaTek -> R.string.compat_advice_mediatek_vowifi
+                !tensor -> R.string.compat_advice_nontensor
+                else -> R.string.compat_advice_degraded
             },
         )
         return CompatReport(level, lines)
+    }
+
+    /**
+     * 纯判定：便于单测。非 Tensor 走降级（可试 VoWiFi），不再一刀切 UNSUPPORTED。
+     */
+    internal fun resolveSupportLevel(
+        sdkOk: Boolean,
+        shizukuGranted: Boolean,
+        tensor: Boolean,
+        delegate: Boolean,
+    ): SupportLevel = when {
+        !sdkOk -> SupportLevel.UNSUPPORTED
+        !shizukuGranted -> SupportLevel.NEED_SHIZUKU
+        tensor && delegate -> SupportLevel.FULL
+        else -> SupportLevel.DEGRADED
     }
 }

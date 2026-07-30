@@ -65,6 +65,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -82,6 +83,15 @@ private val PageMaxWidth = 960.dp
 private val RailBreakpoint = 720.dp
 private val OneImsBrandRed = Color(0xFFD6242F)
 private val DockIslandShape = RoundedCornerShape(28.dp)
+
+/**
+ * 小屏 / 大字号（国内高通机常见）压缩首页垂直占用，避免 StatusHero 把整屏顶爆。
+ */
+@Composable
+internal fun rememberHomeCompactLayout(): Boolean {
+    val config = LocalConfiguration.current
+    return config.screenHeightDp < 740 || config.fontScale >= 1.1f
+}
 
 @Composable
 fun OneImsScaffold(
@@ -249,6 +259,7 @@ fun OneImsPage(
     simSelectionEnabled: Boolean = true,
     content: LazyListScope.() -> Unit,
 ) {
+    val compact = rememberHomeCompactLayout()
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.TopCenter,
@@ -259,11 +270,11 @@ fun OneImsPage(
                 .fillMaxSize(),
             contentPadding = PaddingValues(
                 start = 20.dp,
-                top = 28.dp,
+                top = if (compact) 16.dp else 28.dp,
                 end = 20.dp,
-                bottom = 36.dp,
+                bottom = if (compact) 24.dp else 36.dp,
             ),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
+            verticalArrangement = Arrangement.spacedBy(if (compact) 12.dp else 20.dp),
         ) {
             item {
                 Row(
@@ -275,17 +286,29 @@ fun OneImsPage(
                         modifier = Modifier
                             .weight(1f)
                             .padding(end = 12.dp),
-                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(if (compact) 2.dp else 6.dp),
                     ) {
                         Text(
                             text = title,
-                            style = MaterialTheme.typography.headlineLarge,
+                            style = if (compact) {
+                                MaterialTheme.typography.headlineSmall
+                            } else {
+                                MaterialTheme.typography.headlineLarge
+                            },
                             color = MaterialTheme.colorScheme.onBackground,
+                            maxLines = if (compact) 1 else 2,
+                            overflow = TextOverflow.Ellipsis,
                         )
                         Text(
                             text = subtitle,
-                            style = MaterialTheme.typography.bodyLarge,
+                            style = if (compact) {
+                                MaterialTheme.typography.bodyMedium
+                            } else {
+                                MaterialTheme.typography.bodyLarge
+                            },
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = if (compact) 1 else 2,
+                            overflow = TextOverflow.Ellipsis,
                         )
                     }
                     if (sims.isNotEmpty() && onSelectSim != null) {
@@ -712,6 +735,7 @@ fun StatusHero(
     onOpenDeviceDetails: (() -> Unit)? = null,
     detailOverride: String? = null,
 ) {
+    val compact = rememberHomeCompactLayout()
     val alert = OneKukuCardPolicy.isAlert(oneKukuState)
     val busy = OneKukuCardPolicy.isBusy(oneKukuState)
     val settled = OneKukuCardPolicy.isSettled(oneKukuState)
@@ -761,12 +785,17 @@ fun StatusHero(
             OneKukuCardState.ACTIVATING -> R.string.onekuku_action_activating
         },
     )
-    val actionSub = when (oneKukuState) {
-        OneKukuCardState.INACTIVE -> stringResource(R.string.onekuku_action_activate_sub)
+    // 紧凑屏省略副提示，避免「立即激活」下方再顶出一整行通知栏说明。
+    val actionSub = when {
+        compact -> null
+        oneKukuState == OneKukuCardState.INACTIVE ->
+            stringResource(R.string.onekuku_action_activate_sub)
         else -> null
     }
     val actionEnabled = !busy
     val actionLoading = busy
+    val cardPad = if (compact) 14.dp else 24.dp
+    val blockGap = if (compact) 10.dp else 18.dp
 
     @Composable
     fun StatusPillChip() {
@@ -776,8 +805,15 @@ fun StatusHero(
         ) {
             Text(
                 text = statusPill,
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                style = MaterialTheme.typography.labelLarge,
+                modifier = Modifier.padding(
+                    horizontal = if (compact) 8.dp else 12.dp,
+                    vertical = if (compact) 4.dp else 6.dp,
+                ),
+                style = if (compact) {
+                    MaterialTheme.typography.labelMedium
+                } else {
+                    MaterialTheme.typography.labelLarge
+                },
                 fontWeight = FontWeight.SemiBold,
                 color = contentColor,
                 maxLines = 1,
@@ -793,12 +829,12 @@ fun StatusHero(
         shadowElevation = if (readyLook && !busy) 1.dp else 0.dp,
     ) {
         Column(
-            modifier = Modifier.padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(18.dp),
+            modifier = Modifier.padding(cardPad),
+            verticalArrangement = Arrangement.spacedBy(blockGap),
         ) {
             Row(
                 verticalAlignment = Alignment.Top,
-                horizontalArrangement = Arrangement.spacedBy(18.dp),
+                horizontalArrangement = Arrangement.spacedBy(if (compact) 10.dp else 18.dp),
             ) {
                 Icon(
                     imageVector = when {
@@ -807,44 +843,60 @@ fun StatusHero(
                         else -> Icons.Filled.CheckCircle
                     },
                     contentDescription = null,
-                    modifier = Modifier.size(38.dp),
+                    modifier = Modifier.size(if (compact) 28.dp else 38.dp),
                     tint = contentColor,
                 )
                 Column(
                     modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalArrangement = Arrangement.spacedBy(if (compact) 2.dp else 4.dp),
                 ) {
-                    Text(
-                        text = stringResource(R.string.onekuku_card_eyebrow),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = contentColor.copy(alpha = 0.72f),
-                    )
+                    if (!compact) {
+                        Text(
+                            text = stringResource(R.string.onekuku_card_eyebrow),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = contentColor.copy(alpha = 0.72f),
+                        )
+                    }
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         Text(
                             title,
-                            style = MaterialTheme.typography.titleLarge,
+                            style = if (compact) {
+                                MaterialTheme.typography.titleMedium
+                            } else {
+                                MaterialTheme.typography.titleLarge
+                            },
                             color = contentColor,
                             modifier = Modifier.weight(1f, fill = false),
+                            maxLines = if (compact) 1 else 2,
+                            overflow = TextOverflow.Ellipsis,
                         )
                         StatusPillChip()
                     }
                     if (!settled) {
                         Text(
                             subtitle,
-                            style = MaterialTheme.typography.bodyLarge,
+                            style = if (compact) {
+                                MaterialTheme.typography.bodyMedium
+                            } else {
+                                MaterialTheme.typography.bodyLarge
+                            },
                             color = contentColor,
+                            maxLines = if (compact) 1 else 2,
+                            overflow = TextOverflow.Ellipsis,
                         )
                         Text(
                             detail,
                             style = MaterialTheme.typography.bodySmall,
                             color = contentColor.copy(alpha = 0.78f),
+                            maxLines = if (compact) 2 else 4,
+                            overflow = TextOverflow.Ellipsis,
                         )
                     }
                 }
-                if (onOpenDeviceDetails != null) {
+                if (onOpenDeviceDetails != null && !compact) {
                     Surface(
                         onClick = onOpenDeviceDetails,
                         shape = RoundedCornerShape(percent = 50),
@@ -864,16 +916,18 @@ fun StatusHero(
             OneKukuStageProgress(
                 litCount = OneKukuCardPolicy.litStageCount(oneKukuState),
                 contentColor = contentColor,
+                compact = compact,
             )
 
             if (!settled) {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(if (compact) 4.dp else 8.dp)) {
                     OneImsPrimaryButton(
                         text = actionLabel,
                         onClick = onPrimaryAction,
                         enabled = actionEnabled,
                         loading = actionLoading,
                         loadingText = actionLabel,
+                        compact = compact,
                     )
                     if (actionSub != null) {
                         Text(
@@ -881,6 +935,8 @@ fun StatusHero(
                             style = MaterialTheme.typography.bodySmall,
                             color = contentColor.copy(alpha = 0.72f),
                             modifier = Modifier.padding(horizontal = 4.dp),
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
                         )
                     }
                 }
@@ -893,6 +949,7 @@ fun StatusHero(
 private fun OneKukuStageProgress(
     litCount: Int,
     contentColor: Color,
+    compact: Boolean = false,
 ) {
     val stages = OneKukuCardPolicy.stageLabelRes()
     Row(
@@ -919,19 +976,21 @@ private fun OneKukuStageProgress(
             }
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(6.dp),
+                verticalArrangement = Arrangement.spacedBy(if (compact) 0.dp else 6.dp),
             ) {
                 Box(
                     modifier = Modifier
-                        .size(10.dp)
+                        .size(if (compact) 8.dp else 10.dp)
                         .background(color = stageColor, shape = CircleShape),
                 )
-                Text(
-                    text = stringResource(labelRes),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = stageColor,
-                    maxLines = 1,
-                )
+                if (!compact) {
+                    Text(
+                        text = stringResource(labelRes),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = stageColor,
+                        maxLines = 1,
+                    )
+                }
             }
         }
     }
