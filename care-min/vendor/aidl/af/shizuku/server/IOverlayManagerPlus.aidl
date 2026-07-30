@@ -1,0 +1,28 @@
+package af.shizuku.server;
+
+interface IOverlayManagerPlus {
+    /**
+     * Enable or disable a specific system overlay.
+     */
+    boolean setOverlayEnabled(String packageName, boolean enabled);
+
+    /**
+     * Change the priority of an overlay.
+     */
+    boolean setHighestPriority(String packageName);
+
+    /**
+     * List all installed overlays and their states.
+     */
+    List<String> getAllOverlays();
+
+    /**
+     * Inject a dynamic resource overlay (Android 12+).
+     */
+    boolean injectResourceOverlay(String targetPackage, String resourceName, int type, String value);
+
+    /**
+     * [Ghost Bridge] Prepares an OverlayFS shadow mount for rootless system modification simulation.
+     */
+    boolean prepareShadowMount(String callingPackage, String partition);
+}
