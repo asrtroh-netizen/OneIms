@@ -435,7 +435,7 @@ object SystemApiBroker {
                 return -1
             }
             if (soft) {
-                // soft key 但异常类型未知：仍不抛，保持一加/小米软键不崩进程
+                // soft key 但异常类型未知：仍不抛，保持国产/OEM 软键不崩进程
                 android.util.Log.w(
                     "OneIMS-Broker",
                     "soft provisioning invoke (any) key=$key: ${error.message}",
@@ -539,8 +539,8 @@ object SystemApiBroker {
             Thread.sleep(RESULT_POLL_INTERVAL_MS)
         }
         val keys = expected.keySet().joinToString(",")
-        // 小米/HyperOS 常见：写已接受但回读延迟/被过滤；硬抛只会放大闪退面。
-        // Writer 仍会对逐 key 做 verify；此处软放行避免进程级失败风暴。
+        // 国产 VoWIFI OEM 常见：写已接受但回读延迟/被过滤；硬抛只会放大闪退面。
+        // Writer 仍会对逐 key 做 verify；Pixel 不进此门控。
         if (OemDeviceCompat.softenCarrierConfigReadback()) {
             android.util.Log.w(
                 "OneIMS-Broker",
