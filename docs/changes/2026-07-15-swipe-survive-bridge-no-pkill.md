@@ -12,7 +12,7 @@
 ## 修复
 
 1. 默认启动：`pidof onebridge_server` 已在则只 echo OK，不杀；`forceRestart=true`（设置「重新激活」）才 pkill。
-2. `BridgeService` 每 3s 重投 binder，新 App 进程可无 ADB 接回。
+2. `BridgeService` 经 Uid/Process Observer 在客户端起来时重投 binder（**已不再做 3s 死循环**；2026-07-30 起 ProcessObserver 按 **PID** 去重，见 `2026-07-30-onebridge-pid-binder-resend.md`）。
 3. `prepareOneKukuCore`：静默 wake 失败后先等最多 9s binder，再才进 CONNECTING / ADB。
 
 ## 验证建议

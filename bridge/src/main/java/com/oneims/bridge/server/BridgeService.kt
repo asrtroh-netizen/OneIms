@@ -57,6 +57,10 @@ object BridgeService {
 /**
  * 对齐 Shizuku [BinderSender]：客户端 UID/进程起来时再投递 binder，
  * 代替「死循环 sleep 重投」。
+ *
+ * 关键：ProcessObserver 必须按 **PID** 去重（与 V15 一致）。
+ * 仅按 UID 去重时，划掉 App 后若 OEM 未及时 `onUidGone`，新进程会被
+ * 「Uid already starts」挡掉而不重投——表现为「V15 划掉还能活、OneKuku 假死」。
  */
 @SuppressLint("PrivateApi")
 object ClientBinderSender {
@@ -67,6 +71,7 @@ object ClientBinderSender {
     private const val UID_OBSERVER_CACHED = 1 shl 3
 
     private val startedUids = CopyOnWriteArrayList<Int>()
+    private val startedPids = CopyOnWriteArrayList<Int>()
 
     fun register(onClientReady: () -> Unit) {
         val am = activityManager() ?: run {
@@ -173,14 +178,24 @@ object ClientBinderSender {
                 arrayOf(Class.forName("android.app.IProcessObserver")),
             ) { _, method, args ->
                 when (method.name) {
+                    // (pid, uid, foregroundActivities) — 对齐 V15 ProcessObserver
                     "onForegroundActivitiesChanged" -> {
-                        val uid = args?.getOrNull(1) as? Int ?: return@newProxyInstance null
+                        val pid = args?.getOrNull(0) as? Int ?: return@newProxyInstance null
+                        val uid = args.getOrNull(1) as? Int ?: return@newProxyInstance null
                         val fg = args.getOrNull(2) as? Boolean ?: false
-                        if (fg) onUidStarts(uid, onClientReady)
+                        if (fg) onProcessStarts(pid, uid, onClientReady)
                     }
+                    // (pid, uid, procState)
                     "onProcessStateChanged" -> {
-                        val uid = args?.getOrNull(1) as? Int ?: return@newProxyInstance null
-                        onUidStarts(uid, onClientReady)
+                        val pid = args?.getOrNull(0) as? Int ?: return@newProxyInstance null
+                        val uid = args.getOrNull(1) as? Int ?: return@newProxyInstance null
+                        onProcessStarts(pid, uid, onClientReady)
+                    }
+                    // (pid, uid) — 划掉/强停后必须清 PID，否则永远不再投
+                    "onProcessDied" -> {
+                        val pid = args?.getOrNull(0) as? Int ?: return@newProxyInstance null
+                        startedPids.remove(pid)
+                        Log.v(TAG, "pid $pid died")
                     }
                     "asBinder" -> Binder()
                     else -> null
@@ -188,8 +203,20 @@ object ClientBinderSender {
             }
             val m = am.javaClass.methods.first { it.name == "registerProcessObserver" }
             m.invoke(am, proxy)
-            Log.i(TAG, "registerProcessObserver ok")
+            Log.i(TAG, "registerProcessObserver ok (pid-tracked)")
         }.onFailure { Log.w(TAG, "registerProcessObserver failed", it) }
+    }
+
+    /** 新 PID 才投递；同一进程内的重复前台回调忽略（对齐 V15 PID_LIST）。 */
+    private fun onProcessStarts(pid: Int, uid: Int, onClientReady: () -> Unit) {
+        if (!isOneImsClient(uid)) return
+        if (startedPids.contains(pid)) {
+            Log.v(TAG, "pid $pid already starts")
+            return
+        }
+        startedPids.add(pid)
+        Log.i(TAG, "OneIMS pid=$pid uid=$uid starts; send binder")
+        onClientReady()
     }
 }
 
