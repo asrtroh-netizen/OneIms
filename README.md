@@ -14,16 +14,16 @@
 
 <br/>
 
-### ⬇️ 下载 APK（最新 · v3.0.8 · 请自选产品线）
+### ⬇️ 下载 APK（最新 · v3.1.0 · 请自选产品线）
 
 > **两个包功能相同（IMS/诊断/恢复），差别只在「特权通道怎么激活」——看下方选购指南，**只装其中一个**即可；进阶用户也可同机并存对比。
 
 | 推荐给… | 包 | 下载 |
 |---|---|---|
-| 🟢 **想少装 App、App 内一键配对** | **OneKuku（独立激活）** | [OneIms-OneKuku-standalone-3.0.8.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.0.8/OneIms-OneKuku-standalone-3.0.8.apk) |
-| 🔵 **已有 / 想用 Shizuku 轻壳** | **OneIms Lite（Shizuku）** | [OneIms-Lite-Shizuku-3.0.8.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.0.8/OneIms-Lite-Shizuku-3.0.8.apk) |
+| 🟢 **想少装 App、App 内一键配对** | **OneKuku（独立激活）** | [OneIms-OneKuku-standalone-3.1.0.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.1.0/OneIms-OneKuku-standalone-3.1.0.apk) |
+| 🔵 **已有 / 想用 Shizuku 轻壳** | **OneIms Lite（Shizuku）** | [OneIms-Lite-Shizuku-3.1.0.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.1.0/OneIms-Lite-Shizuku-3.1.0.apk) |
 
-[📦 全部 Release 资产](https://github.com/asrtroh-netizen/OneIms/releases/tag/v3.0.8)
+[📦 全部 Release 资产](https://github.com/asrtroh-netizen/OneIms/releases/tag/v3.1.0)
 
 > 💙 **友情推荐特权通道**：[asrtroh 修缮版 Shizuku](https://github.com/asrtroh-netizen/shizuku)（配对一次 · 旧 Wi‑Fi 自连 · 开机 FGS 内激活）  
 > 下载正式包：[Releases](https://github.com/asrtroh-netizen/shizuku/releases) · 截图：
@@ -71,18 +71,36 @@
 
 | 对外名称 | 包名 | 特权通道 | 最新版下载 |
 |---|---|---|---|
-| **OneIms · OneKuku** `3.0.8-onekuku` | `com.oneims.app` | 内嵌 OneBridge + 无线调试配对 | [OneIms-OneKuku-standalone-3.0.8.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.0.8/OneIms-OneKuku-standalone-3.0.8.apk) |
-| **OneIms · OneIms Lite** `3.0.8-onelink` | `com.oneims.onelink` | 官方 Shizuku | [OneIms-Lite-Shizuku-3.0.8.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.0.8/OneIms-Lite-Shizuku-3.0.8.apk) |
+| **OneIms · OneKuku** `3.1.0-onekuku` | `com.oneims.app` | 内嵌 OneBridge + 无线调试配对 | [OneIms-OneKuku-standalone-3.1.0.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.1.0/OneIms-OneKuku-standalone-3.1.0.apk) |
+| **OneIms · OneIms Lite** `3.1.0-onelink` | `com.oneims.onelink` | 官方 Shizuku | [OneIms-Lite-Shizuku-3.1.0.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.1.0/OneIms-Lite-Shizuku-3.1.0.apk) |
 
 > **双包同版号一起更新**；请只从本页 Release 链接下载，勿混装未知来源包。
 
 ---
 
-## 📦 本地底包身份（非公开 Release）
+## 📦 门禁血统（底包 3.0.4）
 
-> **本地构建身份 = 底包 `3.0.4` / versionCode `74`**（已废止本地号 `3.0.9` / `79`）。  
-> 公开下载区仍指向下方已发版 **3.0.8**。门禁血统与叠加纪律见 `docs/architecture/2026-07-30-oneims-3.0.4-base-package.md`。  
-> 若机上已装过更高 versionCode（如 78/79），需**先卸载再装**本地 3.0.4 底包产物。
+> 门禁血统仍锚定 **3.0.4**（`CompatChecker` 非 Tensor → UNSUPPORTED）。  
+> 当前公开发版身份 = **`3.1.0` / versionCode `80`**。纪律见 `docs/architecture/2026-07-30-oneims-3.0.4-base-package.md`。
+
+---
+
+## ✨ What's New · 3.1.0
+
+**本版主线：底包 3.0.4 血统上收敛产品面——砍掉三项独家运行时入口，保留能力页「5G信号强度调整」；OneKuku 内循环固定 OneBridge。**
+
+### 📶 双版本共用
+
+* 去掉独家三项入口：信号格显示样式 / 5G 显示增强 / 控制中心快捷切卡（能力迁 OneTools）
+* **保留**能力页第五项「5G信号强度调整」与开机阈值重放
+* 门禁血统对齐 3.0.4：非 Tensor 标不支持，不鼓励强开
+* OneKuku：内循环只保留 OneBridge（已废止 CARE_MIN 迷你线）
+
+### 🔄 升级
+
+* 🟢 OneKuku：覆盖安装 `OneIms-OneKuku-standalone-3.1.0.apk`
+* 🔵 OneIms Lite：覆盖安装 `OneIms-Lite-Shizuku-3.1.0.apk`
+* versionCode `80`（相对 3.0.8 的 `78` 会提示升级）
 
 ---
 
