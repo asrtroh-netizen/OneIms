@@ -49,5 +49,37 @@
                 <action android:name="com.oneims.app.action.SUBMIT_WIRELESS_PAIRING_CODE" />
             </intent-filter>
         </receiver>
+
+        <!-- 对齐 V15：解锁后 0/5/15s 续跑开机激活（默认禁用，BootReceiver 武装） -->
+        <receiver
+            android:name=".core.OneKukuUserPresentRestartReceiver"
+            android:enabled="false"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.USER_PRESENT" />
+            </intent-filter>
+        </receiver>
+
+        <!-- 对齐 V15 Watchdog：binder 死后限次静默重拉 -->
+        <service
+            android:name=".core.OneKukuWatchdogService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Watch OneBridge binder and silently restart via wireless ADB" />
+        </service>
+
+        <!-- 对齐 V15：从系统设置通知自动抓六位码（需用户开启通知使用权） -->
+        <service
+            android:name=".core.OneKukuPairingCodeListener"
+            android:enabled="true"
+            android:exported="true"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
     </application>
 </manifest>

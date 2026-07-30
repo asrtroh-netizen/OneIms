@@ -47,7 +47,6 @@ object OneKukuEmbeddedAdbActivator {
 
     private const val TAG = "OneIMS-EmbeddedAdb"
     private const val HOST = "127.0.0.1"
-    private const val PERSIST_PORT = 5555
     private const val PREFS = "onekuku_adb_identity"
     private const val KEY_PRIVATE = "private_key_b64"
     private const val KEY_CERT = "cert_b64"
@@ -165,21 +164,25 @@ object OneKukuEmbeddedAdbActivator {
                 }
             }
 
-            // 已配对快路径：上次 tcpip:5555 若仍在，跳过首轮 mDNS（杀进程重开常见）。
+            val persistPort = OneKukuAdbEnvironment.persistTcpipPort(app)
+            // 已配对快路径：配置 tcpip 口 /proc / last-port 任一可连则跳过首轮 mDNS。
             if (pairedBefore && code.length < 6 &&
                 OneKukuAdbMdns.isWifiClientConnected(app)
             ) {
-                val fast5555 = runCatching {
-                    manager.connect(HOST, PERSIST_PORT)
-                    true
-                }.getOrElse {
-                    Log.i(TAG, "fast :$PERSIST_PORT miss: ${it.message}")
-                    false
-                }
-                if (fast5555) {
-                    Log.i(TAG, "fast path :$PERSIST_PORT connected, skip first mDNS")
-                    val persisted = persistTcpip5555(manager)
-                    Log.i(TAG, "tcpip5555 persisted=$persisted")
+                val startable = OneKukuAdbEnvironment.resolveStartableConnectPort(app)
+                val fastPorts = listOfNotNull(persistPort, startable).distinct()
+                for (fastPort in fastPorts) {
+                    val fastOk = runCatching {
+                        manager.connect(HOST, fastPort)
+                        true
+                    }.getOrElse {
+                        Log.i(TAG, "fast :$fastPort miss: ${it.message}")
+                        false
+                    }
+                    if (!fastOk) continue
+                    Log.i(TAG, "fast path :$fastPort connected, skip first mDNS")
+                    val persisted = persistTcpipPort(manager, persistPort)
+                    Log.i(TAG, "tcpip persisted=$persisted port=$persistPort")
                     val startPkg = OneKukuCoreComponent.resolveCorePackage(app)
                         ?: OneKukuCoreComponent.HOST_PACKAGE
                     val boot = startBridgeAwaitingBinder(
@@ -189,25 +192,38 @@ object OneKukuEmbeddedAdbActivator {
                     )
                     if (boot == "ok") {
                         markPairedOnce(app)
+                        OneKukuAdbEnvironment.setLastAdbWirelessPort(app, fastPort)
                         val granted = grantWriteSecureSettings(manager, app.packageName)
                         val wifiOn = ShizukuSetupHelper.tryEnableAdbWifi(app)
                         Log.i(TAG, "post-boot grantSecure=$granted adbWifi=$wifiOn")
+                        OneKukuWatchdogService.start(app)
                         return@withContext Outcome.Success(
                             if (persisted) "core_running_tcpip" else "core_running",
                         )
                     }
-                    Log.w(TAG, "fast :$PERSIST_PORT shell failed ($boot), fall through mDNS")
+                    Log.w(TAG, "fast :$fastPort shell failed ($boot), try next / mDNS")
+                    OneKukuAdbEnvironment.clearLastAdbWirelessPort(app)
                 }
             }
 
-            var ports = OneKukuAdbMdns.discover(
-                app,
-                timeoutMs = if (pairedBefore && code.length < 6) {
-                    PAIRED_DISCOVER_MS
-                } else {
-                    6_000L
-                },
-            )
+            // mDNS 与 /proc 端口轮询并行窗口（对齐 V15 SelfStarter 400ms poll）。
+            val discoverTimeout = if (pairedBefore && code.length < 6) {
+                PAIRED_DISCOVER_MS
+            } else {
+                6_000L
+            }
+            var ports = OneKukuAdbMdns.discover(app, timeoutMs = discoverTimeout)
+            if (ports.connectPort == null) {
+                val polled = OneKukuAdbEnvironment.pollStartableConnectPort(
+                    app,
+                    timeoutMs = minOf(discoverTimeout, 4_000L),
+                    pollMs = 400L,
+                )
+                if (polled != null) {
+                    Log.i(TAG, "proc/last-port connect=$polled (mdns miss)")
+                    ports = ports.copy(connectPort = polled)
+                }
+            }
             Log.i(
                 TAG,
                 "mdns pair=${ports.pairPort} connect=${ports.connectPort} " +
@@ -264,9 +280,9 @@ object OneKukuEmbeddedAdbActivator {
                 }
             }
 
-            // 持久化：无线调试跳板 → tcpip 5555 → 回环自连（出门关 WiFi 也可保活）
-            val persisted = persistTcpip5555(manager)
-            Log.i(TAG, "tcpip5555 persisted=$persisted")
+            // 持久化：无线调试跳板 → tcpip 保活口 → 回环自连（出门关 WiFi 也可保活）
+            val persisted = persistTcpipPort(manager, persistPort)
+            Log.i(TAG, "tcpip persisted=$persisted port=$persistPort")
 
             val startPkg = OneKukuCoreComponent.resolveCorePackage(app)
                 ?: OneKukuCoreComponent.HOST_PACKAGE
@@ -278,13 +294,20 @@ object OneKukuEmbeddedAdbActivator {
             when (boot) {
                 "ok" -> {
                     markPairedOnce(app)
+                    ports.connectPort?.let {
+                        OneKukuAdbEnvironment.setLastAdbWirelessPort(app, it)
+                    }
                     // 留下 WRITE_SECURE_SETTINGS，供下次开机静默写回 adb_wifi_enabled（Shizuku 同款思路）。
                     val granted = grantWriteSecureSettings(manager, app.packageName)
                     val wifiOn = ShizukuSetupHelper.tryEnableAdbWifi(app)
                     Log.i(TAG, "post-boot grantSecure=$granted adbWifi=$wifiOn")
+                    OneKukuWatchdogService.start(app)
                     Outcome.Success(if (persisted) "core_running_tcpip" else "core_running")
                 }
-                else -> Outcome.Failed(boot)
+                else -> {
+                    OneKukuAdbEnvironment.clearLastAdbWirelessPort(app)
+                    Outcome.Failed(boot)
+                }
             }
         }
 
@@ -317,27 +340,24 @@ object OneKukuEmbeddedAdbActivator {
             false
         }
 
-    /** connect 口 → 5555 → connectTls，任一成功即可。 */
+    /** connect 口 → 持久 tcpip 口 → /proc 口 → connectTls，任一成功即可。 */
     private fun tryConnectOnce(
         manager: AbsAdbConnectionManager,
         app: Context,
         connectPort: Int?,
     ): Boolean {
-        // 已配对场景优先固定口，减少「先等 mDNS 口失败再试 5555」的体感。
-        val on5555First = runCatching {
-            manager.connect(HOST, PERSIST_PORT)
-            true
-        }.getOrElse {
-            Log.w(TAG, "connect :$PERSIST_PORT failed", it)
-            false
+        val persistPort = OneKukuAdbEnvironment.persistTcpipPort(app)
+        val candidates = linkedSetOf<Int>().apply {
+            add(persistPort)
+            connectPort?.let { add(it) }
+            OneKukuAdbEnvironment.resolveStartableConnectPort(app)?.let { add(it) }
         }
-        if (on5555First) return true
-        if (connectPort != null) {
+        for (port in candidates) {
             val ok = runCatching {
-                manager.connect(HOST, connectPort)
+                manager.connect(HOST, port)
                 true
             }.getOrElse {
-                Log.w(TAG, "connect :$connectPort failed", it)
+                Log.w(TAG, "connect :$port failed", it)
                 false
             }
             if (ok) return true
@@ -427,34 +447,33 @@ object OneKukuEmbeddedAdbActivator {
     }
 
     /**
-     * 通过 ADB 服务 `tcpip:5555` 把 adbd 切到固定端口，再连回 127.0.0.1:5555。
-     * 失败不阻断后续 start.sh（仍可用当前无线调试连接）。
-     *
-     * 仅 OneKuku 内嵌激活路径调用；OneLink/Shizuku 线不走本对象。
-     * 注意：会重启 adbd，可能踢掉同机其它无线调试客户端——这是出门保活换取的取舍。
+     * 通过 ADB 服务 `tcpip:<port>` 把 adbd 切到保活口，再连回 127.0.0.1。
+     * 失败不阻断后续 start（仍可用当前无线调试连接）。
+     * 默认 5555，可用 [OneKukuAdbEnvironment.setPersistTcpipPort] 覆盖。
      */
-    private fun persistTcpip5555(manager: AbsAdbConnectionManager): Boolean {
+    private fun persistTcpipPort(manager: AbsAdbConnectionManager, port: Int): Boolean {
         if (!ChannelLine.usesEmbeddedBridge) {
             Log.i(TAG, "skip tcpip: not embedded bridge channel")
             return false
         }
+        val target = port.takeIf { it in 1..65535 } ?: 5555
         val switched = runCatching {
-            manager.openStream("tcpip:5555").use { stream ->
+            manager.openStream("tcpip:$target").use { stream ->
                 val buf = ByteArray(64)
                 runCatching { stream.openInputStream().read(buf) }
             }
             true
         }.getOrElse {
-            Log.w(TAG, "tcpip:5555 failed", it)
+            Log.w(TAG, "tcpip:$target failed", it)
             false
         }
         if (!switched) return false
         Thread.sleep(600)
         return runCatching {
-            manager.connect(HOST, PERSIST_PORT)
+            manager.connect(HOST, target)
             true
         }.getOrElse {
-            Log.w(TAG, "reconnect :$PERSIST_PORT failed", it)
+            Log.w(TAG, "reconnect :$target failed", it)
             false
         }
     }

@@ -72,8 +72,35 @@ class OneKukuPairingHostService : Service() {
         const val ACTION_HOLD = "com.oneims.app.action.HOLD_PAIRING_NOTIFICATION"
         const val ACTION_STOP = "com.oneims.app.action.STOP_PAIRING_HOST"
 
+        @Volatile
+        private var autoPairCode: String? = null
+
+        /** V15 同款：通知监听器抓到六位码后注入，立刻走配对广播。 */
+        fun setAutoPairCode(code: String) {
+            val digits = code.filter { it.isDigit() }.takeLast(6)
+            if (digits.length != 6) return
+            autoPairCode = digits
+            Log.i(TAG, "autoPairCode armed")
+        }
+
+        fun consumeAutoPairCode(): String? {
+            val code = autoPairCode
+            autoPairCode = null
+            return code
+        }
+
         fun startHolding(context: Context) {
             val app = context.applicationContext
+            val pendingAuto = consumeAutoPairCode()
+            if (pendingAuto != null) {
+                Log.i(TAG, "auto-submitting pairing code from listener")
+                app.sendBroadcast(
+                    Intent(OneKukuPairingNotification.ACTION_SUBMIT_CODE)
+                        .setPackage(app.packageName)
+                        .putExtra(OneKukuPairingNotification.EXTRA_PAIRING_CODE, pendingAuto),
+                )
+                return
+            }
             val intent = Intent(app, OneKukuPairingHostService::class.java).setAction(ACTION_HOLD)
             runCatching {
                 ContextCompat.startForegroundService(app, intent)

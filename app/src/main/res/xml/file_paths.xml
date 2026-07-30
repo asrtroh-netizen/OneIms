@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths>
     <cache-path name="apk_cache" path="apk/" />
+    <cache-path name="diag_cache" path="diag_logs/" />
+    <files-path name="diag_files" path="diag_logs/" />
     <external-files-path name="ext_downloads" path="Download/" />
 </paths>
