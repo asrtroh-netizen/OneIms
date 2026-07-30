@@ -348,24 +348,39 @@ private fun AppRoot(
     // activationEpoch：生命周期休眠/唤醒后强制重组，才能读到 HiddenRunner 最新态。
     @Suppress("UNUSED_VARIABLE")
     val runnerEpoch = activationEpoch
-    val oneKukuState = OneKukuCardPolicy.fromActivationPhase(activationPhase)
-        ?: OneKukuCardPolicy.resolve(
-            serviceReady = shizukuRunning && shizukuGranted && !bootForceInactive,
-            isExecuting = oneKukuRestoring ||
-                bootUiHint == OneKukuBootUiHint.RESTORING ||
-                bootUiHint == OneKukuBootUiHint.WAITING_WIFI ||
-                OneKukuHiddenRunner.currentState() == OneKukuRunnerState.EXECUTING ||
-                OneKukuHiddenRunner.currentState() == OneKukuRunnerState.STARTING,
+    val bridgeReady = shizukuRunning && shizukuGranted && !bootForceInactive
+    // 桥已就绪时禁止 CONNECTING/STARTING 相位盖住 Hero（否则日志 ACTIVE、UI「激活中」横跳）。
+    val oneKukuState = if (bridgeReady) {
+        OneKukuCardPolicy.resolve(
+            serviceReady = true,
+            isExecuting = false,
             channelSleeping = OneKukuCardPolicy.isChannelSleeping(
                 OneKukuHiddenRunner.currentState(),
             ),
             taskComplete = oneKukuTaskComplete || bootUiHint == OneKukuBootUiHint.RESTORE_COMPLETE,
         )
+    } else {
+        OneKukuCardPolicy.fromActivationPhase(activationPhase)
+            ?: OneKukuCardPolicy.resolve(
+                serviceReady = false,
+                isExecuting = oneKukuRestoring ||
+                    bootUiHint == OneKukuBootUiHint.RESTORING ||
+                    bootUiHint == OneKukuBootUiHint.WAITING_WIFI ||
+                    OneKukuHiddenRunner.currentState() == OneKukuRunnerState.EXECUTING ||
+                    OneKukuHiddenRunner.currentState() == OneKukuRunnerState.STARTING,
+                channelSleeping = OneKukuCardPolicy.isChannelSleeping(
+                    OneKukuHiddenRunner.currentState(),
+                ),
+                taskComplete = oneKukuTaskComplete || bootUiHint == OneKukuBootUiHint.RESTORE_COMPLETE,
+            )
+    }
     // 三态后卡片不再有 SLEEPING；内部 runner 待命仍可探测，供调试/兼容字段。
     val oneKukuChannelSleeping = OneKukuCardPolicy.isChannelSleeping(
         OneKukuHiddenRunner.currentState(),
     )
     val oneKukuDetailOverride = when {
+        // 桥已就绪：忽略残留 CONNECTING 文案（划掉再开复连常见）。
+        bridgeReady -> null
         // OneLink：不展示内嵌 ADB 配对相位文案（即便相位短暂残留）。
         ChannelLine.usesShizuku &&
             (
@@ -435,6 +450,8 @@ private fun AppRoot(
             OneKukuBootRestoreStore.writeHint(context, hint)
             bootUiHint = hint
         }
+        // 清掉 CONNECTING/STARTING，否则 fromActivationPhase 会盖住 READY（ACTIVE+激活中横跳）。
+        OneKukuActivationUi.setPhase(OneKukuActivationPhase.IDLE)
         syncPrivilegeFlagsFromBridge()
         activationEpoch++
     }
@@ -585,6 +602,15 @@ private fun AppRoot(
         if (!shizukuRunning || !shizukuGranted) {
             oneKukuTaskComplete = false
             oneKukuRestoring = false
+        }
+    }
+    // 标志已就绪但相位仍卡 CONNECTING：强制清掉，消「ACTIVE+激活中」横跳。
+    LaunchedEffect(bridgeReady, activationPhase) {
+        if (!bridgeReady) return@LaunchedEffect
+        if (activationPhase == OneKukuActivationPhase.CONNECTING ||
+            activationPhase == OneKukuActivationPhase.STARTING
+        ) {
+            OneKukuActivationUi.setPhase(OneKukuActivationPhase.IDLE)
         }
     }
     val phonePermissionLauncher = rememberLauncherForActivityResult(
@@ -957,7 +983,8 @@ private fun AppRoot(
                     "reconnect $label force=$forceRestart " +
                         "running=${OneKukuManager.isRunning()} granted=${OneKukuManager.isGranted()}",
                 )
-                OneKukuActivationUi.setPhase(OneKukuActivationPhase.CONNECTING)
+                // 不在此强行 CONNECTING：prepare 静默 wake 成功则不应闪「激活中」；
+                // 只有真正走 ADB 直连时 prepare 内部才会置 CONNECTING。
                 activationEpoch++
                 prepareOneKukuCore(forceRestart = forceRestart)
             }
@@ -1034,9 +1061,7 @@ private fun AppRoot(
                 return@launch
             }
             if (OneKukuEmbeddedAdbActivator.hasPairedOnce(context)) {
-                // 复连窗口显示「激活中」，避免划掉再开先闪红「未激活」再变绿。
-                // 单次 prepare 不够：学 V15 错峰多拍（无线口/重投 binder 常晚几秒才到）。
-                OneKukuActivationUi.setPhase(OneKukuActivationPhase.CONNECTING)
+                // 单次 prepare 不够：学 V15 错峰多拍。勿预置 CONNECTING，避免 binder 已到仍钉「激活中」。
                 activationEpoch++
                 schedulePrivilegeReconnectShots("foreground")
             } else {
