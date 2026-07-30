@@ -18,16 +18,15 @@ object CareMinBootShell {
     ): String {
         val nice = CareMinHostConstants.PROCESS_NICE_NAME
         val entry = CareMinHostConstants.SERVER_ENTRY_CLASS
-        // dirname(APK)/lib/$ABI 与 libshizuku starter 一致；legacy packaging 才会解压到该目录。
+        // legacy packaging 解压到 dirname(APK)/lib/<abi>；设备上常见 lib/arm64 而非 arm64-v8a。
         val start =
             "APK=\$(pm path $packageName 2>/dev/null | head -n 1 | cut -d: -f2 | tr -d '\\r'); " +
                 "if [ -z \"\$APK\" ]; then printf '%s\\n' $SHELL_BOOT_MISS; exit 1; fi; " +
-                "ABI=\$(getprop ro.product.cpu.abi); " +
-                "LIB=\"\$(dirname \"\$APK\")/lib/\$ABI\"; " +
-                "if [ ! -f \"\$LIB/librish.so\" ]; then " +
-                "for a in arm64-v8a armeabi-v7a x86_64 arm64; do " +
+                "LIB=\"\"; " +
+                "for a in arm64 arm64-v8a armeabi-v7a armeabi x86_64 x86; do " +
                 "if [ -f \"\$(dirname \"\$APK\")/lib/\$a/librish.so\" ]; then LIB=\"\$(dirname \"\$APK\")/lib/\$a\"; break; fi; " +
-                "done; fi; " +
+                "done; " +
+                "if [ -z \"\$LIB\" ]; then ABI=\$(getprop ro.product.cpu.abi); LIB=\"\$(dirname \"\$APK\")/lib/\$ABI\"; fi; " +
                 "export CLASSPATH=\"\$APK\"; " +
                 "(setsid /system/bin/app_process -Dshizuku.library.path=\"\$LIB\" /system/bin --nice-name=$nice " +
                 "$entry >/dev/null 2>&1 </dev/null &) || " +

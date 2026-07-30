@@ -180,6 +180,10 @@ public abstract class Service<
             newData.appendFrom(data, data.dataPosition(), data.dataAvail());
         } catch (Throwable tr) {
             LOGGER.w(tr, "appendFrom");
+            // Never leave the client with an empty reply (reads as false / silent reject).
+            if (reply != null) {
+                reply.writeException(new IllegalStateException("transactRemote appendFrom failed", tr));
+            }
             return;
         }
         
@@ -399,6 +403,19 @@ public abstract class Service<
     @CallSuper
     @Override
     public boolean onTransact(int code, Parcel data, Parcel reply, int flags) throws RemoteException {
+        // ShizukuBinderWrapper always uses transaction code 1 for transactRemote.
+        // That code is NOT in IShizukuService.aidl (numbered methods start at 2), so it must be
+        // handled here. Prefer public enforceInterface over hidden Parcel.readInterfaceToken —
+        // if the hidden read fails, descriptor becomes "" and code 1 falls through unhandled;
+        // the client then reads an empty reply as boolean false and surfaces
+        // "ActivityManager rejected BrokerInstrumentation" even though AMS was never reached.
+        if (code == ShizukuApiConstants.BINDER_TRANSACTION_transact) {
+            data.setDataPosition(0);
+            data.enforceInterface(ShizukuApiConstants.BINDER_DESCRIPTOR);
+            transactRemote(data, reply, flags);
+            return true;
+        }
+
         // Support legacy interface tokens from existing Shizuku apps
         data.setDataPosition(0);
         String descriptor = readInterfaceTokenCompat(data);
@@ -406,11 +423,6 @@ public abstract class Service<
         boolean isNew = ShizukuApiConstants.BINDER_DESCRIPTOR.equals(descriptor);
 
         if (isLegacy || isNew) {
-            if (code == ShizukuApiConstants.BINDER_TRANSACTION_transact) {
-                transactRemote(data, reply, flags);
-                return true;
-            }
-
             if (isLegacy) {
                 // Manually handle all methods for legacy callers to avoid descriptor mismatch in super.onTransact
                 switch (code) {

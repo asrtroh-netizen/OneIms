@@ -75,12 +75,14 @@ import com.oneims.app.core.OneClickDiagnosticsManager
 import com.oneims.app.core.ShizukuSetupHelper
 import com.oneims.app.core.OneKukuCoreComponent
 import com.oneims.app.core.OneKukuEmbeddedAdbActivator
+import com.oneims.app.core.OneKukuHostServerBootstrap
 import com.oneims.app.core.OneKukuMiniAdbClient
 import com.oneims.app.core.OneKukuPairingNotification
 import com.oneims.app.core.OneKukuActivationUi
 import com.oneims.app.core.OneKukuActivationPhase
 import com.oneims.app.core.ChannelLine
 import com.oneims.app.core.OneKukuManager
+import com.oneims.app.core.privilege.ChannelEngine
 import com.oneims.app.core.WirelessPairingCodeReceiver
 import com.oneims.app.core.SimCountryIsoManager
 import com.oneims.app.core.UpdateChecker
@@ -809,10 +811,19 @@ private fun AppRoot(
         }
         scope.launch {
             OneKukuHiddenRunner.installBridge(OneKukuPrivilegeBridgeImpl)
-            // 非强制重建：等已存活的 onebridge_server 周期重投 binder（划掉 App 后再开无需 ADB）。
+            // CARE_MIN：外置 V15 binder 让 isReady()=true 仍不够，必须有宿主 onekuku_server。
+            val careMin = !ChannelLine.usesShizuku &&
+                ChannelEngine.current() == ChannelEngine.CARE_MIN
+            if (careMin) {
+                withContext(Dispatchers.IO) {
+                    OneKukuHostServerBootstrap.ensureRunning(context)
+                }
+            }
+            // 非强制重建：等已存活的通道 server 重投 binder（划掉 App 后再开无需 ADB）。
             if (!forceRestart) {
                 val wake = OneKukuHiddenRunner.wake()
-                if (wake.success && OneKukuManager.isReady()) {
+                val hostOk = !careMin || OneKukuHostServerBootstrap.isHostServerAlive()
+                if (wake.success && OneKukuManager.isReady() && hostOk) {
                     pairingUiPrimed = false
                     OneKukuActivationUi.setPhase(OneKukuActivationPhase.IDLE)
                     activationEpoch++
@@ -840,7 +851,9 @@ private fun AppRoot(
                 if (OneKukuManager.isRunning() && !OneKukuManager.isGranted()) {
                     OneKukuManager.requestActivation()
                 }
-                if (OneKukuManager.isReady()) {
+                if (OneKukuManager.isReady() &&
+                    (!careMin || OneKukuHostServerBootstrap.isHostServerAlive())
+                ) {
                     pairingUiPrimed = false
                     OneKukuActivationUi.setPhase(OneKukuActivationPhase.IDLE)
                     activationEpoch++

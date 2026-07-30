@@ -65,9 +65,20 @@ class BootReceiver : BroadcastReceiver() {
             Intent.ACTION_BOOT_COMPLETED -> {
                 val pending = goAsync()
                 try {
-                    // Root 旁路：先尝试 su 拉起 OneBridge，失败不影响后续重放。
+                    // Root 旁路：先尝试 su 拉起通道 server，失败不影响后续重放。
                     runCatching { RootBootStarter.maybeStartOnBoot(context) }
                         .onFailure { Log.w(TAG, "root boot start failed: ${it.message}") }
+                    // CARE_MIN 冷启拉起放到 BootRestoreService（可等 Wi‑Fi）；此处不阻塞广播。
+                    if (!ChannelLine.usesShizuku) {
+                        val appCtx = context.applicationContext
+                        Thread({
+                            runCatching {
+                                OneKukuHostServerBootstrap.ensureRunning(appCtx)
+                            }.onFailure {
+                                Log.w(TAG, "host server bootstrap failed: ${it.message}")
+                            }
+                        }, "onekuku-host-boot").start()
+                    }
                     if (ConfigStore.isGuardEnabled(context) ||
                         ConfigStore.lastApplied(context) != null
                     ) {
