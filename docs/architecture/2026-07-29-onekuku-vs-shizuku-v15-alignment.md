@@ -34,21 +34,25 @@
 
 ---
 
-## 2. 未对齐 / 部分对齐（仍有颗粒度）
+## 2. 缺口状态（2026-07-30 刷新）
 
-| 优先级 | 缺口 | 工作量 | 风险 | V15 证据 | OneIMS 现状 |
+> **同日开机韧性已落地**：详见 `docs/changes/2026-07-29-onekuku-v15-boot-alignment.md`。  
+> **专攻入口**：`docs/architecture/2026-07-30-onekuku-focus-war-map.md`。  
+> 下表「现状」以当前源码为准；勿再按旧版「无」开新工。
+
+| 优先级 | 能力 | 工作量 | 风险 | V15 证据 | OneIMS 现状（2026-07-30） |
 |---|---|---|---|---|---|
-| P0 | `/proc/net/tcp*` 发现 adbd TLS 监听端口 | L | 中 | `EnvironmentUtils.findAdbdListeningPorts` | **无** |
-| P0 | 上次成功无线端口缓存 + 失效清理 | M | 中 | `ShizukuSettings` + `AdbWirelessHelper` | **无** |
-| P1 | mDNS 等待期端口轮询（~400ms） | M | 低 | `SelfStarterService` pollJob | 仅 discover 超时 |
-| P1 | `WifiReadyMonitor` NetworkCallback | M | 低 | `WifiReadyMonitor.kt` | BootReceiver 条件监听偏弱 |
-| P1 | `USER_PRESENT` 0/5/15s 强制重试 | M | 低 | `UserPresentRestartReceiver` | **无**专用接收器 |
-| P2 | `WirelessBootStartWorker` WorkManager 退避 | L | 中 | `WirelessBootStartWorker.kt` | IMS 开机协调器合并路径 |
-| P2 | 可选 `WatchdogService`（binder 死→限次重启） | L | 中 | `WatchdogService.kt` | **无** |
-| P2 | 通知监听器自动填六位码 | M | 中 | `AdbPairingNotificationListener` | **无**（需用户授权） |
-| P3 | 纯通道 Headless Starter 与 IMS 恢复解耦 | M | 中 | `SelfStarterService` | 绑在 `OneKukuBootRestoreCoordinator` |
-| P3 | tcpip 端口可配置（非写死 5555） | S | 低 | `TCPIP_PORT` 设置 | `PERSIST_PORT = 5555` |
-| P3 | `bridge/assets/start.sh` 与 Phase4 同步 | S | 低 | `Starter.kt` | 可能仍 unconditional pkill |
+| — | `/proc/net/tcp*` 发现 adbd 端口 | L | 中 | `EnvironmentUtils.findAdbdListeningPorts` | ✅ `OneKukuAdbEnvironment.findAdbdListeningPorts` |
+| — | 上次成功无线端口缓存 | M | 中 | `ShizukuSettings` + `AdbWirelessHelper` | ✅ last-port（同 boot-alignment） |
+| — | mDNS 空窗 /proc 轮询 | M | 低 | `SelfStarterService` pollJob | ✅ `OneKukuEmbeddedAdbActivator` |
+| — | `WifiReadyMonitor` | M | 低 | `WifiReadyMonitor.kt` | ✅ `OneKukuWifiReadyMonitor` |
+| — | `USER_PRESENT` 0/5/15s | M | 低 | `UserPresentRestartReceiver` | ✅ `OneKukuUserPresentRestartReceiver` |
+| — | 可选 Watchdog | L | 中 | `WatchdogService.kt` | ✅ `OneKukuWatchdogService`（可配） |
+| — | 通知监听自动填六位码 | M | 中 | `AdbPairingNotificationListener` | ✅ `OneKukuPairingCodeListener`（默认关） |
+| — | tcpip 端口可配置 | S | 低 | `TCPIP_PORT` 设置 | ✅ `persistTcpipPort` |
+| P2 | `WirelessBootStartWorker` WorkManager 退避 | L | 中 | `WirelessBootStartWorker.kt` | 仍并在 IMS 开机协调器；按需再拆 |
+| P3 | 纯通道 Headless Starter 与 IMS 恢复解耦 | M | 中 | `SelfStarterService` | 仍绑 `OneKukuBootRestoreCoordinator` |
+| P0（验收） | 划掉/复连真机矩阵 | — | — | V15.1.0 秒醒 | 代码已合（reconnect shots / READY 优先 / wait-binder）；真机多为 **NOT RUN** |
 
 ---
 
@@ -63,13 +67,12 @@ OneKuku: OneIMS App ──ADB──► onebridge_server(app_process) ──Binde
 
 ---
 
-## 4. 建议落地顺序（若继续对齐）
+## 4. 建议落地顺序（若继续专攻）
 
-1. **端口发现 + last-port 缓存**（最大开机收益，对齐 V15 冷启经验）  
-2. **Wi‑Fi 就绪监听 + USER_PRESENT 重试**（少点手动「重试」）  
-3. **可选 Watchdog**（后台静默复活，默认关/可开关）  
-4. **自动读配对码**（便利项，权限摩擦大，可后置）  
-5. **不要**扩协议面到完整 Shizuku
+1. **真机验收**今日复连三连 + 冷启韧性（最大证据缺口）  
+2. **复连差分**对照外置 V15.1.0（仍假死时再动刀）  
+3. **可选**：WorkManager 退避 / Headless Starter 与 IMS 解耦（P2/P3）  
+4. **不要**扩协议面到完整 Shizuku
 
 ---
 
