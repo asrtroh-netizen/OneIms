@@ -73,7 +73,6 @@ class OneKukuBootRestoreService : Service() {
 
     private fun ensureForeground() {
         if (foregroundStarted) return
-        foregroundStarted = true
         val nm = getSystemService(NotificationManager::class.java)
         if (Build.VERSION.SDK_INT >= 26) {
             val ch = NotificationChannel(
@@ -90,11 +89,25 @@ class OneKukuBootRestoreService : Service() {
             .setSmallIcon(android.R.drawable.stat_sys_data_bluetooth)
             .setOngoing(true)
             .build()
-        if (Build.VERSION.SDK_INT >= 34) {
-            startForeground(NOTIF_ID, notif, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
-        } else {
-            startForeground(NOTIF_ID, notif)
+        // 成功后再钉 flag：失败必须可重试，否则会踩 ForegroundServiceDidNotStartInTime。
+        val started = runCatching {
+            if (Build.VERSION.SDK_INT >= 34) {
+                startForeground(NOTIF_ID, notif, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
+            } else {
+                startForeground(NOTIF_ID, notif)
+            }
+            true
+        }.getOrElse { first ->
+            Log.w(TAG, "startForeground specialUse failed: ${first.message}")
+            runCatching {
+                startForeground(NOTIF_ID, notif)
+                true
+            }.getOrElse { second ->
+                Log.e(TAG, "startForeground fallback failed: ${second.message}")
+                false
+            }
         }
+        if (started) foregroundStarted = true
     }
 
     private fun scheduleRun(debounceMs: Long) {

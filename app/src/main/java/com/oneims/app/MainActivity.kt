@@ -402,10 +402,17 @@ private fun AppRoot(
         else -> null
     }
 
+    /** 从特权桥重读 running/granted，避免 binder 瞬断后 UI 假掉。 */
+    fun syncPrivilegeFlagsFromBridge() {
+        shizukuRunning = runCatching { OneKukuManager.isRunning() }.getOrDefault(false)
+        shizukuGranted = runCatching { OneKukuManager.isGranted() }.getOrDefault(false)
+    }
+
     /**
      * 通道就绪后的收尾（对齐 Shizuku）：
      * 特权活在桥接进程，不靠 App 前台常驻。
      * 前台收尾一律标「就绪」；关 App / 退后台由生命周期切入「休眠」。
+     * 须定义在 [syncPrivilegeFlagsFromBridge] 之后（本地函数不可前向引用）。
      */
     fun settleOneKukuChannelAfterReady() {
         // 硬门禁：仅 binder+授权双真才收尾，避免「假就绪」后误标 Active。
@@ -415,13 +422,21 @@ private fun AppRoot(
         }
         OneKukuHiddenRunner.installBridge(OneKukuPrivilegeBridgeImpl)
         OneKukuHiddenRunner.markActive()
+        // 划掉后台再开：桥已就绪时必须清掉 NEEDS_ACTIVATION，否则
+        // serviceReady=…&&!bootForceInactive 会把卡片钉死在「未激活」（一加/小米常见）。
+        if (bootUiHint == OneKukuBootUiHint.NEEDS_ACTIVATION ||
+            bootUiHint == OneKukuBootUiHint.WAITING_WIFI
+        ) {
+            val hint = if (OneKukuBootRestoreStore.shouldShowNoSnapshotNote(context)) {
+                OneKukuBootUiHint.NO_SNAPSHOT_SLEEPING
+            } else {
+                OneKukuBootUiHint.READY_SLEEPING
+            }
+            OneKukuBootRestoreStore.writeHint(context, hint)
+            bootUiHint = hint
+        }
+        syncPrivilegeFlagsFromBridge()
         activationEpoch++
-    }
-
-    /** 从特权桥重读 running/granted，避免 binder 瞬断后 UI 假掉。 */
-    fun syncPrivilegeFlagsFromBridge() {
-        shizukuRunning = runCatching { OneKukuManager.isRunning() }.getOrDefault(false)
-        shizukuGranted = runCatching { OneKukuManager.isGranted() }.getOrDefault(false)
     }
 
     /** App 退后台 / 关闭：已授权则进入休眠（不拆桥、不要求重配对）。 */
@@ -465,6 +480,9 @@ private fun AppRoot(
             }
             OneKukuActivationUi.setPhase(OneKukuActivationPhase.IDLE)
             settleOneKukuChannelAfterReady()
+        } else if (ChannelLine.usesShizuku) {
+            // OneLink：前台只靠 Shizuku binder 轮询复连，禁止 enqueue BootRestore FGS
+            // （小米/一加划掉后台再开会 ForegroundServiceDidNotStartInTime → 进程被杀 → 假未激活）。
         } else if (ConfigStore.isOneKukuBootAutoCheck(context) &&
             OneKukuEmbeddedAdbActivator.hasPairedOnce(context)
         ) {
@@ -485,20 +503,28 @@ private fun AppRoot(
         while (true) {
             kotlinx.coroutines.delay(1_000L)
             runCatching {
-                val latest = OneKukuBootRestoreStore.readHint(context)
-                if (latest != bootUiHint) {
-                    bootUiHint = latest
-                }
                 val running = OneKukuManager.isRunning()
                 val granted = OneKukuManager.isGranted()
-                if (running != shizukuRunning || granted != shizukuGranted) {
-                    shizukuRunning = running
-                    shizukuGranted = granted
-                    if (running && granted && bootUiHint == OneKukuBootUiHint.NEEDS_ACTIVATION) {
-                        // 实时 binder 状态优先于一次失败留下的持久化提示。
-                        OneKukuBootRestoreStore.writeHint(context, OneKukuBootUiHint.READY_SLEEPING)
-                        bootUiHint = OneKukuBootUiHint.READY_SLEEPING
+                shizukuRunning = running
+                shizukuGranted = granted
+                var latest = OneKukuBootRestoreStore.readHint(context)
+                // 桥已就绪时，禁止把持久化 NEEDS_ACTIVATION 刷回 UI（开机编排/划掉后台会写脏 hint）。
+                if (running && granted &&
+                    (
+                        latest == OneKukuBootUiHint.NEEDS_ACTIVATION ||
+                            latest == OneKukuBootUiHint.WAITING_WIFI
+                        )
+                ) {
+                    val hint = if (OneKukuBootRestoreStore.shouldShowNoSnapshotNote(context)) {
+                        OneKukuBootUiHint.NO_SNAPSHOT_SLEEPING
+                    } else {
+                        OneKukuBootUiHint.READY_SLEEPING
                     }
+                    OneKukuBootRestoreStore.writeHint(context, hint)
+                    latest = hint
+                }
+                if (latest != bootUiHint) {
+                    bootUiHint = latest
                 }
             }.onFailure { error ->
                 DiagFileLogger.w("UI", "boot/privilege poll failed: ${error.message}", error)
@@ -1000,8 +1026,11 @@ private fun AppRoot(
                 Lifecycle.Event.ON_STOP -> sleepChannelWhenBackgrounded()
                 Lifecycle.Event.ON_START -> wakeChannelWhenForegrounded()
                 Lifecycle.Event.ON_RESUME -> {
-                    // 每次回前台再对一次桥状态，防止小米上偶发 UI 与 binder 脱节。
+                    // 每次回前台再对一次桥状态，防止小米/一加上偶发 UI 与 binder 脱节。
                     syncPrivilegeFlagsFromBridge()
+                    if (OneKukuManager.isReady()) {
+                        settleOneKukuChannelAfterReady()
+                    }
                     if (!awaitingCoreInstall) return@LifecycleEventObserver
                     if (!OneKukuCoreComponent.isInstalled(context)) return@LifecycleEventObserver
                     // 装完从系统安装器 / 通道页返回：自动关掉「还没装」并进入配对
