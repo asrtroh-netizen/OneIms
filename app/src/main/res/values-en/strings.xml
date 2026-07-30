@@ -189,7 +189,7 @@
     <!-- Fix -->
     <string name="tool_health">Health</string>
     <string name="tool_restart_ims">Re-register IMS</string>
-    <string name="tool_apn">Offline APN library</string>
+    <string name="tool_apn">APN emergency</string>
     <string name="tool_epdg">ePDG</string>
     <string name="tool_diag">Diagnose</string>
     <string name="tool_config">View config</string>
@@ -241,7 +241,7 @@
     <string name="about_author_name">小喵崽</string>
     <string name="about_author_github_sub">Open the GitHub project page · product site coming soon</string>
     <string name="about_author_github_badge">GitHub</string>
-    <string name="about_recommend_shizuku_title">Recommended Shizuku (asrtroh fork)</string>
+    <string name="about_recommend_shizuku_title">XiaoMiaoZai patched Shizuku</string>
     <string name="about_recommend_shizuku_sub">Pair once · auto Wi‑Fi reconnect · stabler boot · open GitHub</string>
     <string name="about_recommend_shizuku_badge">Rec</string>
     <string name="about_donate_title">Support the project</string>
@@ -838,7 +838,7 @@
     <string name="action_cancel">Cancel</string>
 
     <!-- Offline APN catalog -->
-    <string name="apn_catalog_title">Offline APN library</string>
+    <string name="apn_catalog_title">APN emergency</string>
     <string name="apn_catalog_search">Search carrier, APN, region code, or MCC/MNC</string>
     <string name="apn_catalog_clear_search">Clear search</string>
     <string name="apn_catalog_summary">Profiles: %1$d · PLMNs: %2$d · Regions: %3$d · Showing: %4$d</string>
@@ -859,7 +859,7 @@
     <!-- Pixel IMS public-behavior compatible tools (independent implementation) -->
     <string name="tab_experimental">Labs</string>
     <string name="experimental_title">Experimental features</string>
-    <string name="experimental_subtitle">Early-access features: identity override, the offline APN catalog, and the expert editor live here; more will be added over time.</string>
+    <string name="experimental_subtitle">Early-access features: identity override and the expert editor live here; more will be added over time.</string>
     <string name="advanced_options_title">Carrier display and roaming options</string>
     <string name="advanced_apply">Apply advanced options</string>
     <string name="advanced_apply_summary">Applies only the switches below to the selected SIM</string>

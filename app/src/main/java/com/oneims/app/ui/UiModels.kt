@@ -107,8 +107,7 @@ data class HomeActions(
 
 /**
  * 「能力」页现已并入原「高级」的运营商显示/漫游开关（[advancedOptions]）与原「排障」修复工具中的
- * 重启 IMS/网络修复/TikTok 覆盖三项；身份覆盖、离线 APN 库仍在实验功能页。
- * 运营商推荐一键开启在本页最上侧；其下为通话能力与 5G。
+ * 重启 IMS/网络修复/TikTok 覆盖三项。页顶为 Apn救急入口；其下为通话能力与 5G。
  */
 data class CapabilitiesUiState(
     val sims: List<SimInfo>,
@@ -136,6 +135,7 @@ data class CapabilitiesUiState(
 data class CapabilitiesActions(
     val onSelectSim: (Int) -> Unit,
     val onApplyRecommended: () -> Unit,
+    val onOpenApnCatalog: () -> Unit,
     val onVolteChange: (Boolean) -> Unit,
     val onVowifiChange: (Boolean) -> Unit,
     val onVonrChange: (Boolean) -> Unit,

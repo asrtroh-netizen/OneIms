@@ -853,37 +853,28 @@ fun StatusHero(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(if (compact) 4.dp else 6.dp),
                 ) {
-                    if (!compact) {
+                    // 去掉「OneLink/OneKuku 通道」眉题小字；仅保留可选设备详情入口。
+                    if (!compact && onOpenDeviceDetails != null) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween,
+                            horizontalArrangement = Arrangement.End,
                         ) {
-                            Text(
-                                text = stringResource(R.string.onekuku_card_eyebrow),
-                                style = MaterialTheme.typography.labelMedium,
-                                color = contentColor.copy(alpha = 0.72f),
-                                modifier = Modifier.weight(1f),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                            if (onOpenDeviceDetails != null) {
-                                Surface(
-                                    onClick = onOpenDeviceDetails,
-                                    shape = RoundedCornerShape(percent = 50),
-                                    color = contentColor.copy(alpha = 0.10f),
-                                ) {
-                                    Text(
-                                        text = stringResource(R.string.home_device_details),
-                                        modifier = Modifier.padding(
-                                            horizontal = 10.dp,
-                                            vertical = 4.dp,
-                                        ),
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = contentColor.copy(alpha = 0.88f),
-                                        maxLines = 1,
-                                    )
-                                }
+                            Surface(
+                                onClick = onOpenDeviceDetails,
+                                shape = RoundedCornerShape(percent = 50),
+                                color = contentColor.copy(alpha = 0.10f),
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.home_device_details),
+                                    modifier = Modifier.padding(
+                                        horizontal = 10.dp,
+                                        vertical = 4.dp,
+                                    ),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = contentColor.copy(alpha = 0.88f),
+                                    maxLines = 1,
+                                )
                             }
                         }
                     }

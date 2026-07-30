@@ -191,7 +191,7 @@
     <!-- 排障页 -->
     <string name="tool_health">健康</string>
     <string name="tool_restart_ims">重新注册 IMS</string>
-    <string name="tool_apn">离线 APN 库</string>
+    <string name="tool_apn">Apn救急</string>
     <string name="tool_epdg">ePDG</string>
     <string name="tool_diag">诊断</string>
     <string name="tool_config">配置查看</string>
@@ -243,7 +243,7 @@
     <string name="about_author_name">小喵崽</string>
     <string name="about_author_github_sub">打开 GitHub 项目页 · 明天会有独立产品站</string>
     <string name="about_author_github_badge">GitHub</string>
-    <string name="about_recommend_shizuku_title">推荐 Shizuku（asrtroh 修缮版）</string>
+    <string name="about_recommend_shizuku_title">小喵崽修缮版</string>
     <string name="about_recommend_shizuku_sub">配对一次 · 旧 Wi‑Fi 自连 · 开机更稳 · 打开 GitHub</string>
     <string name="about_recommend_shizuku_badge">推荐</string>
     <string name="about_donate_title">捐赠支持</string>
@@ -846,7 +846,7 @@
     <string name="action_cancel">取消</string>
 
     <!-- 离线 APN 数据库 -->
-    <string name="apn_catalog_title">离线 APN 库</string>
+    <string name="apn_catalog_title">Apn救急</string>
     <string name="apn_catalog_search">搜索运营商、国家、APN 或 MCC/MNC</string>
     <string name="apn_catalog_clear_search">清除搜索</string>
     <string name="apn_catalog_summary">%1$d 条 · %2$d 个 PLMN · %3$d 个区域 · 当前显示 %4$d 条</string>
@@ -871,7 +871,7 @@
     <!-- Pixel IMS 公开行为兼容高级工具（独立实现） -->
     <string name="tab_experimental">独家</string>
     <string name="experimental_title">独家功能</string>
-    <string name="experimental_subtitle">身份覆盖、离线 APN 与专家工具</string>
+    <string name="experimental_subtitle">身份覆盖与专家工具</string>
     <string name="advanced_options_title">运营商显示与漫游选项</string>
     <string name="advanced_apply">应用高级选项</string>
     <string name="advanced_apply_summary">仅把下列开关写入当前选中的 SIM</string>

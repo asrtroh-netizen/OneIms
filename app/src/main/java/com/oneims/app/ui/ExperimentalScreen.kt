@@ -935,48 +935,6 @@ fun ExperimentalScreen(
 
         item {
 
-            SectionBlock(title = stringResource(R.string.tool_apn)) {
-
-
-
-                SettingsActionRow(
-
-
-
-                    icon = Icons.AutoMirrored.Filled.List,
-
-
-
-                    title = stringResource(R.string.tool_apn),
-
-
-
-                    subtitle = stringResource(R.string.tool_apn_sub_short),
-
-
-
-                    onClick = actions.onOpenApnCatalog,
-
-
-
-                    enabled = state.catalogEnabled,
-
-
-
-                )
-
-
-
-            }
-
-
-
-        }
-
-
-
-        item {
-
 
 
             SectionBlock(title = stringResource(R.string.advanced_expert_title)) {

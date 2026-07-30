@@ -1,7 +1,6 @@
 package com.oneims.app.ui
 
 import androidx.annotation.StringRes
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,8 +13,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Close
@@ -24,7 +23,6 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -46,9 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.oneims.app.R
-import com.oneims.app.core.CarrierProfiles
 import com.oneims.app.core.formatCarrierShortName
-import com.oneims.app.model.WfcMode
 
 private data class VoWifiFormatChoice(
     val index: Int?,
@@ -94,14 +90,15 @@ fun CapabilitiesScreen(
         simSelectionEnabled = state.actionsEnabled,
     ) {
         item {
-            CarrierRecommendCard(
-                sims = state.sims,
-                selectedSim = state.selectedSim,
-                actionsEnabled = state.recommendActionsEnabled,
-                applying = state.activeOperationLabel ==
-                    stringResource(R.string.apply_recommended),
-                onApplyRecommended = actions.onApplyRecommended,
-            )
+            SettingsGroup {
+                SettingsActionRow(
+                    icon = Icons.AutoMirrored.Filled.List,
+                    title = stringResource(R.string.tool_apn),
+                    subtitle = stringResource(R.string.tool_apn_sub_short),
+                    onClick = actions.onOpenApnCatalog,
+                    enabled = true,
+                )
+            }
         }
 
         if (!state.prerequisitesMet) {
@@ -170,43 +167,6 @@ fun CapabilitiesScreen(
                             stringResource(R.string.action_apply_core),
                         loadingText = stringResource(R.string.action_applying),
                         modifier = Modifier.fillMaxWidth(),
-                    )
-                }
-                GroupDivider()
-                Column(
-                    modifier = Modifier.padding(vertical = 18.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp),
-                ) {
-                    Text(
-                        stringResource(R.string.power_wfc_mode),
-                        style = MaterialTheme.typography.titleSmall,
-                        modifier = Modifier.padding(horizontal = 20.dp),
-                    )
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState())
-                            .padding(horizontal = 20.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        WfcMode.entries.forEach { mode ->
-                            FilterChip(
-                                selected = mode == state.wfcMode,
-                                onClick = { actions.onWfcModeChange(mode) },
-                                label = { Text(stringResource(mode.labelRes)) },
-                            )
-                        }
-                    }
-                    OneImsPrimaryButton(
-                        text = stringResource(R.string.action_set_wfc),
-                        onClick = actions.onApplyWfcMode,
-                        enabled = state.actionsEnabled,
-                        loading = state.activeOperationLabel ==
-                            stringResource(R.string.action_set_wfc),
-                        loadingText = stringResource(R.string.action_processing),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 20.dp),
                     )
                 }
                 GroupDivider()

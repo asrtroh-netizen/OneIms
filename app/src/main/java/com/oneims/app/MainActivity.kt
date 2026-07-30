@@ -1998,6 +1998,7 @@ private fun AppRoot(
                     actions = CapabilitiesActions(
                         onSelectSim = { selectSim(it) },
                         onApplyRecommended = { applyRecommendedProfile() },
+                        onOpenApnCatalog = { apnCatalogVisible = true },
                         onVolteChange = {
                             volte = it
                             persistCapabilityUi()
