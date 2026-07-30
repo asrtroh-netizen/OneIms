@@ -53,14 +53,14 @@ setprop service.adb.tcp.port 5555
 | Pixel 真机关 WiFi 冷启 | **NOT RUN**（本轮无 Pixel USB） |
 | 构建 APK | 见交付命令摘要 |
 
-## GitHub Release 覆盖（2026-07-30 22:57）
+## GitHub Release 覆盖（2026-07-30 22:57）→ 已删除（约 23:03）
 
 | 项 | 值 |
 |---|---|
 | 本地源包 | `E:\GQ\One\_forks\shizuku-vV15.1.0-persist-tcp-release.apk`（22:42 编译，6397198 bytes） |
 | SHA256 | `A63D7905DD0890795A79A7A27AB015141588E52F36CC0B07C950E9E3928BACBA` |
-| 发布仓/标签 | `asrtroh-netizen/shizuku` · `V15.1.0` |
-| 资产名 | `shizuku-V15.1.0-release.apk` |
-| 操作 | `gh release upload V15.1.0 … --clobber` → exit 0 |
-| 远端元数据 | size=`6397198`，`updated_at=2026-07-30T14:57:27Z` |
-| 下载 | https://github.com/asrtroh-netizen/shizuku/releases/download/V15.1.0/shizuku-V15.1.0-release.apk |
+| 曾发布仓/标签 | `asrtroh-netizen/shizuku` · `V15.1.0` |
+| 覆盖操作 | `gh release upload V15.1.0 … --clobber` → exit 0；远端 digest 曾对齐本地 SHA256 |
+| 删除操作 | `gh release delete-asset … -y` → exit 0；再 `gh release delete V15.1.0 -y --cleanup-tag` → exit 0 |
+| 删除后现状 | Release/tag `V15.1.0` **404**；列表 Latest 回落 `V15.0.0` |
+| 本地制品 | 仍保留在 `_forks\`，仅公开 Release 已撤 |
