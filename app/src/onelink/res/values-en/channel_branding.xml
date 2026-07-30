@@ -49,7 +49,7 @@
 
     <string name="log_shizuku_opened">Opened official Shizuku (start it, then return to grant access)</string>
     <string name="log_shizuku_not_installed">Shizuku not installed; tried opening the store</string>
-    <string name="shizuku_not_running_message">Shizuku is not running; start it in the official app first</string>
+    <string name="shizuku_not_running_message">Shizuku is not running. On aggressive OEMs, battery savers often kill it — set Shizuku to Unrestricted / allow autostart &amp; background, then Start in the Shizuku app</string>
     <string name="home_status_shizuku_off">Activate OneLink first</string>
     <string name="home_status_permission">Activate OneLink to write config</string>
     <string name="logic_title_need_channel">Waiting for OneLink</string>
