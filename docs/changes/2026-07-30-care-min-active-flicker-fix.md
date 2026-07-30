@@ -23,3 +23,14 @@
 
 - `assembleOnekukuDebug` + `adb install -r` → Success（`3.0.9-onekuku` vc79）。
 - 杀 `onekuku_server` 后冷开：UI 为「正在激活 OneKuku」（非「未激活」）→ 稍后稳定 `Active`，`onekuku_server` 存活。
+
+## 为何相对 3.0.4/3.0.5「增强反退步」
+
+| | 3.0.4/3.0.5 | 增强后（CARE_MIN） |
+|---|---|---|
+| 引擎 | OneBridge / `onebridge_server` | CARE_MIN / `onekuku_server` |
+| 冷启 | 立刻 `prepareOneKukuCore()` | 先 binder-only 等～15s 再 prepare |
+| Ready | binder+授权 ≈ Active | binder+授权+**宿主存活** |
+
+机制：为少弹 ADB 窗学了 V15「先等 binder」，宿主已死时却空等 → 开 App 像「还要点激活」。  
+追加收敛：宿主已死时跳过 binder-only，立刻 prepare（对齐 3.0.4）。
