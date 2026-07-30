@@ -265,24 +265,31 @@
     <string name="support_unsupported">Unsupported</string>
     <string name="support_need_shizuku">Activate OneKuku first</string>
     <string name="compat_tensor">① Tensor chip: %1$s</string>
+    <string name="compat_soc">② SoC: %1$s (%2$s)</string>
+    <string name="compat_soc_tensor">Google Tensor</string>
+    <string name="compat_soc_mediatek">MediaTek / Dimensity — VoWiFi may have no effect (still try unlock)</string>
+    <string name="compat_soc_other">Non-Tensor</string>
     <string name="compat_yes">Yes ✅</string>
-    <string name="compat_tensor_no">No ❌ (this tool targets Tensor Pixel)</string>
-    <string name="compat_os">② OS: Android %1$s (API %2$d) %3$s</string>
+    <string name="compat_tensor_no">No (non-Tensor; software unlock, OEM decides)</string>
+    <string name="compat_soc_qualcomm">Qualcomm / Snapdragon — VoWiFi best-effort write</string>
+    <string name="compat_advice_nontensor">Non-Tensor (incl. Qualcomm): VoLTE/VoWiFi software switches are available; OEM/carrier decide if it sticks. Degraded but usable.</string>
+    <string name="compat_os">③ OS: Android %1$s (API %2$d) %3$s</string>
     <string name="compat_os_bad">❌ (needs Android 12+)</string>
-    <string name="compat_shizuku">③ OneKuku: %1$s</string>
+    <string name="compat_shizuku">④ OneKuku: %1$s</string>
     <string name="compat_shizuku_granted">Granted ✅</string>
     <string name="compat_shizuku_running">Running, not granted ⚠️</string>
     <string name="compat_shizuku_off">Not running ❌</string>
-    <string name="compat_strategy">④ Bypass strategy: %1$s</string>
+    <string name="compat_strategy">⑤ Bypass strategy: %1$s</string>
     <string name="compat_strategy_delegate">Instrumentation permission proxy supported (patched devices) ✅</string>
     <string name="compat_strategy_direct">Delegate probe failed; non-root still tries Instrumentation, root uses OneKuku direct ⚠️</string>
-    <string name="compat_sim">⑤ Active SIM: %1$d %2$s</string>
+    <string name="compat_sim">⑥ Active SIM: %1$d %2$s</string>
     <string name="compat_sim_no">❌ (no SIM detected)</string>
     <string name="compat_conclusion">—— Verdict: %1$s ——</string>
     <string name="compat_advice_full">All features safe to use.</string>
-    <string name="compat_advice_degraded">Degraded: update the hidden-API compat layer and retry; Root channel can go direct, non-root still needs Instrumentation.</string>
+    <string name="compat_advice_degraded">Degraded: if delegate probe fails, Root can go direct; non-root still needs Instrumentation. Non-Tensor may still try VoWiFi.</string>
     <string name="compat_advice_need_shizuku">Activate OneKuku first.</string>
     <string name="compat_advice_unsupported">Device does not meet prerequisites; not recommended to avoid impacting calls.</string>
+    <string name="compat_advice_mediatek_vowifi">MediaTek VoWiFi may have no effect; Tensor preferred.</string>
 
     <!-- Device info -->
     <string name="dev_unknown">Unknown</string>
@@ -293,7 +300,9 @@
     <string name="dev_patch">Security patch: %1$s</string>
     <string name="dev_tensor">Tensor chip: %1$s</string>
     <string name="dev_tensor_yes">Yes (supported)</string>
-    <string name="dev_tensor_no">No (non-Tensor, may be unsupported)</string>
+    <string name="dev_tensor_no">No (non-Tensor; software unlock, OEM decides)</string>
+    <string name="dev_soc">SoC: %1$s</string>
+    <string name="dev_mediatek_vowifi_note">MediaTek: VoWiFi may have no effect</string>
     <string name="dev_sim_count">Active SIMs: %1$d</string>
     <string name="dev_delegate">Instrumentation permission proxy: %1$s</string>
     <string name="dev_delegate_yes">Supported (new-patch compatible)</string>
@@ -338,6 +347,8 @@
     <!-- IMS config result messages -->
     <string name="msg_health_rollback">Basic comms abnormal (call/data/SMS); config auto-restored to stay safe. IMS not enabled.</string>
     <string name="msg_apply_ok">Config applied (persistent=false, re-apply after reboot). Basic comms OK.</string>
+    <string name="msg_vowifi_mediatek_unsupported">MediaTek VoWiFi may have no effect (still allowed)</string>
+    <string name="msg_vowifi_non_tensor_unsupported">Non-Tensor VoWiFi may have no effect (still allowed)</string>
     <string name="msg_apply_partial">CarrierConfig applied, but these provisioning writes were incomplete: %1$s</string>
     <string name="msg_write_not_started">No configuration was written: %1$s</string>
     <string name="msg_write_rollback">Write failed; rollback was confirmed successful: %1$s</string>
@@ -557,7 +568,7 @@
     <string name="onekuku_snapshot_meta_value">SIM %1$d · %2$s · hash=%3$s</string>
     <string name="onekuku_restore_no_matching_sim">No SIM matched the snapshot. Confirm the previously configured SIM is inserted.</string>
 
-    <string name="onekuku_detail_no_snapshot">No call-settings snapshot yet. Tap Save call settings first.</string>
+    <string name="onekuku_detail_no_snapshot">No snapshot yet — tap Save call settings first</string>
     <string name="onekuku_detail_waiting_wifi">Waiting for a saved Wi‑Fi, then auto-activate and restore</string>
     <string name="onekuku_boot_channel">Call config restore</string>
     <string name="onekuku_boot_channel_desc">Low-priority alerts for post-reboot call config checks</string>
@@ -1086,7 +1097,7 @@
     <string name="membership_feat_android_follow">Priority notes for Android major releases</string>
     <string name="membership_feat_member_badge">Member badge</string>
     <string name="membership_feat_all_plus">Everything in Plus</string>
-    <string name="membership_feat_exclusive_six">Identity override · signal bars · country ISO · IMS guard · expert editor · config travel pack</string>
+    <string name="membership_feat_exclusive_six">Identity override · country ISO · IMS guard · expert editor · config travel pack · more</string>
     <string name="membership_feat_custom_three">3 exclusive customization tickets</string>
     <string name="membership_feat_nameplate">Exclusive nameplate (About / optional home badge)</string>
     <string name="membership_cta_plus">Get Plus · ¥29.9</string>
