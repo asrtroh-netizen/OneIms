@@ -88,9 +88,11 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     debugImplementation("androidx.compose.ui:ui-tooling")
 
-    // OneLink ????????????? Shizuku ???????onekuku ?????????
+    // Shizuku API/Provider：onelink=外置；onekuku=CARE_MIN 客户端面（默认引擎仍为 ONEBRIDGE）
     "onelinkImplementation"("dev.rikka.shizuku:api:13.1.5")
     "onelinkImplementation"("dev.rikka.shizuku:provider:13.1.5")
+    "onekukuImplementation"("dev.rikka.shizuku:api:13.1.5")
+    "onekukuImplementation"("dev.rikka.shizuku:provider:13.1.5")
 
     // ???? hidden API??????Android ?????? API ???????????.x ??????????Android 17??
     implementation("org.lsposed.hiddenapibypass:hiddenapibypass:6.1")

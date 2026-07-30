@@ -1,5 +1,6 @@
 package com.oneims.app.core
 
+import com.oneims.app.core.privilege.ChannelEngine
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -13,6 +14,17 @@ class OneKukuCoreComponentTest {
         assertTrue(cmd.contains("app_process"))
         assertTrue(cmd.contains("BridgeService"))
         assertTrue(cmd.startsWith("adb shell "))
+    }
+
+    @Test
+    fun bridgeBootShellCommand_defaultEngineStillOneBridgeServer() {
+        // BuildConfig.CHANNEL_ENGINE 默认 ONEBRIDGE：命令不得漂到 onekuku_server。
+        assertEquals(ChannelEngine.ONEBRIDGE, ChannelEngine.current())
+        val cmd = OneKukuCoreComponent.bridgeBootShellCommand()
+        assertTrue(cmd.contains("onebridge_server"))
+        assertTrue(cmd.contains(OneKukuCoreComponent.ENTRY_CLASS_ONEBRIDGE))
+        assertTrue(!cmd.contains("onekuku_server"))
+        assertTrue(!cmd.contains(OneKukuCoreComponent.ENTRY_CLASS_CARE_MIN))
     }
 
     @Test
@@ -36,6 +48,7 @@ class OneKukuCoreComponentTest {
         val cmd = OneKukuCoreComponent.bridgeBootShellCommand(forceRestart = true)
         assertTrue(cmd.contains("pkill"))
         assertTrue(cmd.contains("app_process"))
+        assertTrue(cmd.contains("onebridge_server"))
     }
 
     @Test

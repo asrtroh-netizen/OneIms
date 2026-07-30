@@ -12,12 +12,22 @@
     </queries>
 
     <application>
-        <!-- OneBridge：接收 shell 进程投递的 binder -->
+        <!-- OneBridge：接收 shell 进程投递的 binder（默认 CHANNEL_ENGINE=ONEBRIDGE） -->
         <provider
             android:name=".core.privilege.BridgeBinderProvider"
             android:authorities="${applicationId}.onebridge"
             android:exported="true"
             android:multiprocess="false"
+            tools:ignore="ExportedContentProvider" />
+
+        <!-- CARE_MIN：官方 ShizukuProvider，与 onebridge Provider 共存；默认引擎未切时闲置 -->
+        <provider
+            android:name="rikka.shizuku.ShizukuProvider"
+            android:authorities="${applicationId}.shizuku"
+            android:multiprocess="false"
+            android:enabled="true"
+            android:exported="true"
+            android:permission="android.permission.INTERACT_ACROSS_USERS_FULL"
             tools:ignore="ExportedContentProvider" />
 
         <!-- OneKuku 通道常驻保活（激活成功后顶在后台，Wi‑Fi 下静默重连） -->

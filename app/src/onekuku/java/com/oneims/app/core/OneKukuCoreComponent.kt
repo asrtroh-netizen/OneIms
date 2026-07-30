@@ -11,6 +11,7 @@ import android.os.Environment
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.oneims.app.R
+import com.oneims.app.core.privilege.ChannelEngine
 import org.json.JSONObject
 import java.io.File
 import java.net.HttpURLConnection
@@ -54,8 +55,7 @@ object OneKukuCoreComponent {
 
     /**
      * 内循环真源=宿主包；旧独立桥兼容；Care 仅实验室对照（用户路径不依赖第二 App）。
-     * 当前 [bridgeBootShellCommand] 仍硬编码 `onebridge_server`。
-     * P3b 接线后才会按 [com.oneims.app.core.privilege.ChannelEngine] 改打 `onekuku_server`。
+     * [bridgeBootShellCommand] 按 [ChannelEngine] 选择 nice-name / 入口类。
      */
     val CANDIDATE_PACKAGES: List<String> = listOf(HOST_PACKAGE, "com.oneims.bridge", CARE_PACKAGE)
 
@@ -150,10 +150,20 @@ object OneKukuCoreComponent {
     }
 
     /**
-     * 从指定包 APK 用 app_process 拉起 [com.oneims.bridge.server.BridgeService]。
-     * Phase4：默认宿主包（类已打进主 APK）；**不用 exec**，后台拉起后 echo 标记。
+     * 从指定包 APK 用 app_process 拉起通道 server。
      *
-     * **对齐 Shizuku**：默认不 `pkill` 已在跑的 `onebridge_server`——划掉 App 后 shell 进程应继续活着，
+     * - [ChannelEngine.ONEBRIDGE]（默认）：`--nice-name=onebridge_server` +
+     *   `com.oneims.bridge.server.BridgeService`（已在 `:bridge` / 主 APK）
+     * - [ChannelEngine.CARE_MIN]：`--nice-name=onekuku_server` +
+     *   `rikka.shizuku.server.ShizukuService`
+     *
+     * **P3a 依赖**：CARE_MIN 入口类需后续迁入 server 最小面后才真正可加载；
+     * 本方法在引擎切到 CARE_MIN 时仍会写出完整命令字符串，便于 starter / 单测接线，
+     * 类未进 APK 前运行时会 ClassNotFound（属预期，非本方法静默回落）。
+     *
+     * Phase4：默认宿主包；**不用 exec**，后台拉起后 echo 标记。
+     *
+     * **对齐 Shizuku**：默认不 `pkill` 已在跑的 server——划掉 App 后 shell 进程应继续活着，
      * 重进只等 binder 再投递。显式 [forceRestart]=true 才杀掉重建（设置里「重新激活」用）。
      *
      * 状态标记必须是「整行输出」专用串，且不能用会嵌在脚本正文里被 PTY 回显误判的旧名。
@@ -162,25 +172,40 @@ object OneKukuCoreComponent {
         packageName: String = HOST_PACKAGE,
         forceRestart: Boolean = false,
     ): String {
+        val nice = ChannelEngine.processNiceName()
+        val entryClass = when (ChannelEngine.current()) {
+            ChannelEngine.ONEBRIDGE -> ENTRY_CLASS_ONEBRIDGE
+            ChannelEngine.CARE_MIN -> ENTRY_CLASS_CARE_MIN
+        }
         // setsid+stdin 断开：libadb 的 shell: 流关闭时否则会 SIGHUP 带走刚拉起的 server，
         // 表现为 binder 收到后约 2s 就 dead（与 V15「划掉还能活」差一截）。
         val start =
             "APK=\$(pm path $packageName 2>/dev/null | head -n 1 | cut -d: -f2 | tr -d '\\r'); " +
                 "if [ -z \"\$APK\" ]; then printf '%s\\n' $SHELL_BOOT_MISS; exit 1; fi; " +
                 "export CLASSPATH=\"\$APK\"; " +
-                "(setsid /system/bin/app_process /system/bin --nice-name=onebridge_server " +
-                "com.oneims.bridge.server.BridgeService >/dev/null 2>&1 </dev/null &) || " +
-                "(nohup /system/bin/app_process /system/bin --nice-name=onebridge_server " +
-                "com.oneims.bridge.server.BridgeService >/dev/null 2>&1 </dev/null &); " +
+                "(setsid /system/bin/app_process /system/bin --nice-name=$nice " +
+                "$entryClass >/dev/null 2>&1 </dev/null &) || " +
+                "(nohup /system/bin/app_process /system/bin --nice-name=$nice " +
+                "$entryClass >/dev/null 2>&1 </dev/null &); " +
                 "printf '%s\\n' $SHELL_BOOT_OK"
         return if (forceRestart) {
-            "pkill -f onebridge_server 2>/dev/null || true; $start"
+            "pkill -f $nice 2>/dev/null || true; $start"
         } else {
-            // 已在跑：直接 OK，由 BridgeService 周期重投 binder 给新 App 进程。
-            "if pidof onebridge_server >/dev/null 2>&1; then printf '%s\\n' $SHELL_BOOT_OK; " +
+            // 已在跑：直接 OK，由 server 周期重投 binder 给新 App 进程。
+            "if pidof $nice >/dev/null 2>&1; then printf '%s\\n' $SHELL_BOOT_OK; " +
                 "else $start; fi"
         }
     }
+
+    /** ONEBRIDGE 现网入口（`:bridge` 已打进主 APK）。 */
+    const val ENTRY_CLASS_ONEBRIDGE: String = "com.oneims.bridge.server.BridgeService"
+
+    /**
+     * CARE_MIN 目标入口（邻仓 server 最小面）。
+     * P3a：命令字符串先写出；类进 APK 依赖 server 模块迁入（见
+     * `docs/architecture/2026-07-30-care-min-server-import-whitelist.md`）。
+     */
+    const val ENTRY_CLASS_CARE_MIN: String = "rikka.shizuku.server.ShizukuService"
 
     /** shell 成功标记（整行）；勿改成会出现在命令正文其它位置的子串。 */
     const val SHELL_BOOT_OK: String = "__OB_BOOT_OK__"
