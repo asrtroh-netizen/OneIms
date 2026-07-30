@@ -35,7 +35,13 @@
 
 - `LibrarySkinHome` / `HomeComposeScreen` / `ShizukuComposeTheme` 迁入
 - `MainActivity` → `V15SkinHomeActivity`（Plus Drop-In 底 + V15 首页）
-- 版本后缀 `+oem3`
+- 版本后缀曾为 `+oem3`
+
+## oem4 已落地（特性白名单）
+
+- 按用户点名：一类全留；二/三类仅保留指定项；其余默认关
+- 详见 `_forks/ShizukuDropIn-Local/README.LOCAL.md` oem4 节
+- 版本后缀 `+oem4`
 
 ## 验证
 
