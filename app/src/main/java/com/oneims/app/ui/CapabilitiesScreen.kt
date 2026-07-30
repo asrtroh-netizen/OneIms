@@ -149,15 +149,6 @@ fun CapabilitiesScreen(
                     onCheckedChange = actions.onNr5gChange,
                     icon = Icons.Filled.Phone,
                 )
-                GroupDivider()
-                SettingsSwitchRow(
-                    title = stringResource(R.string.signal_strength_adjust_title),
-                    subtitle = stringResource(R.string.signal_strength_adjust_subtitle),
-                    checked = state.signalStrengthAdjustmentEnabled,
-                    onCheckedChange = actions.onSignalStrengthAdjustmentChange,
-                    enabled = state.actionsEnabled,
-                    icon = Icons.Filled.Settings,
-                )
                 Column(
                     modifier = Modifier.padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),

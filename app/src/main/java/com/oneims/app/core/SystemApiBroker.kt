@@ -600,10 +600,8 @@ object SystemApiBroker {
     }
 
     /**
-     * 切换默认移动数据 subId（AOSP `ISub.setDefaultDataSubId(int)`）——应用内与控制中心磁贴
-     * 共用的唯一真实执行路径，走与 [resetIms]/[queryImsRegistration] 同一套 Shizuku 直调 binder 模式，
-     * 不经 Instrumentation 委托（该操作不受 2025 新补丁的 shell 委托限制）。
-     * 调用方（[DataSimSwitchManager]）负责切换前校验与切换后延迟回读，这里只做一次系统调用。
+     * 切换默认移动数据 subId（AOSP `ISub.setDefaultDataSubId(int)`）。
+     * 控制中心切卡已迁出 OneIMS；保留底层 binder 直调供诊断/将来调用。
      */
     fun setDefaultDataSubId(subId: Int) {
         require(subId >= 0) { "Invalid subscription id: $subId" }

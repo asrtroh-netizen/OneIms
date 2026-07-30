@@ -34,15 +34,6 @@ object OneKukuHomeTools {
         val simLine = sims.firstOrNull { it.subscriptionId == selectedSubId }?.let {
             context.getString(R.string.onekuku_status_sim, it.slotIndex + 1, it.carrierName)
         } ?: context.getString(R.string.onekuku_status_no_sim)
-        val fiveG = ConfigStore.fiveGDisplayConfig(context)
-        val fiveGLine = context.getString(
-            R.string.onekuku_status_5g,
-            if (fiveG.enabled) {
-                context.getString(R.string.onekuku_value_on)
-            } else {
-                context.getString(R.string.onekuku_value_off)
-            },
-        )
         val imsLine = if (selectedSubId >= 0 && serviceGranted) {
             sanitizeUserText(
                 com.oneims.app.core.ImsController.queryImsStatus(context, selectedSubId).rawText,
@@ -57,7 +48,7 @@ object OneKukuHomeTools {
             ),
             SnapshotLine(
                 label = context.getString(R.string.cap_group_radio_title),
-                value = "$simLine\n$fiveGLine",
+                value = simLine,
             ),
             SnapshotLine(
                 label = "IMS / VoWiFi",
@@ -117,8 +108,6 @@ object OneKukuHomeTools {
             }
             ?: return null
 
-        val fiveG = ConfigStore.fiveGDisplayConfig(context)
-        val signalAdj = ConfigStore.signalStrengthAdjustmentEnabled(context, subId)
         val vowifiSel = VoWifiNameFormatManager.readSelection(context, subId)
         val identity = ConfigStore.identityDraft(context, subId)
         val on = context.getString(R.string.onekuku_value_on)
@@ -162,11 +151,7 @@ object OneKukuHomeTools {
             ),
             SnapshotLine(
                 label = context.getString(R.string.onekuku_snapshot_nr5g),
-                value = if (caps.nr5g || fiveG.enabled) on else off,
-            ),
-            SnapshotLine(
-                label = context.getString(R.string.onekuku_snapshot_signal),
-                value = if (signalAdj) on else off,
+                value = if (caps.nr5g) on else off,
             ),
             SnapshotLine(
                 label = context.getString(R.string.onekuku_snapshot_vowifi_name),
@@ -236,12 +221,6 @@ object OneKukuHomeTools {
                 SnapshotLine(
                     label = context.getString(R.string.onekuku_snapshot_nr5g),
                     value = if (bool("nr5g", "enabled", false)) on else off,
-                ),
-            )
-            add(
-                SnapshotLine(
-                    label = context.getString(R.string.onekuku_snapshot_signal),
-                    value = if (bool("signal", "adjustment", false)) on else off,
                 ),
             )
             add(

@@ -6,14 +6,14 @@ import com.oneims.app.core.ConfigStore
 import com.oneims.app.core.ImsController
 import com.oneims.app.core.PixelImsCompat
 import com.oneims.app.core.PixelImsOptions
-import com.oneims.app.core.SystemDisplayOverrideManager
 import com.oneims.app.core.VoWifiNameFormatManager
 import com.oneims.app.model.ConfigResult
 import com.oneims.app.model.WfcMode
 
 /**
  * 按快照恢复通话配置：单项失败不阻断后续，末尾汇总。
- * 顺序：身份 → IMS → WFC → 5G NR → 信号强度 → VoWiFi 名称 → 高级选项 → 5G 显示 → extras。
+ * 顺序：身份 → IMS → WFC → 5G NR → VoWiFi 名称 → 高级选项 → extras。
+ * 信号格 / 5G 显示增强已迁出，不再恢复。
  */
 object OneKukuRestoreManager {
     private const val TAG = "OneIMS-Restore"
@@ -87,17 +87,11 @@ object OneKukuRestoreManager {
                 detail["nr5g"] = runNamed("nr5g") {
                     restoreFiveG(context, writeSubId, snapshot)
                 }
-                detail["signal"] = runNamed("signal") {
-                    restoreSignal(context, writeSubId, snapshot)
-                }
                 detail["vowifi_name"] = runNamed("vowifi_name") {
                     restoreVoWifiName(context, writeSubId, snapshot)
                 }
                 detail["advanced"] = runNamed("advanced") {
                     restoreAdvanced(context, writeSubId, snapshot)
-                }
-                detail["five_g_display"] = runNamed("five_g_display") {
-                    restoreFiveGDisplay(context, writeSubId, snapshot)
                 }
                 detail["extras"] = runNamed("extras") {
                     restoreExtras(context, writeSubId, snapshot)
@@ -260,23 +254,6 @@ object OneKukuRestoreManager {
         return ImsController.apply5g(context, subId, true)
     }
 
-    private fun restoreSignal(
-        context: Context,
-        subId: Int,
-        snapshot: OneKukuSnapshot,
-    ): ConfigResult {
-        val enabled = snapshot.bool("signal", "adjustment", false)
-        return runCatching {
-            val message = SystemDisplayOverrideManager.applySignalStrengthAdjustment(
-                context = context,
-                subId = subId,
-                enabled = enabled,
-                preferenceEnabled = enabled,
-            )
-            ConfigResult(true, message)
-        }.getOrElse { ConfigResult(false, it.message ?: "signal failed") }
-    }
-
     private fun restoreVoWifiName(
         context: Context,
         subId: Int,
@@ -309,37 +286,6 @@ object OneKukuRestoreManager {
         val options = ConfigStore.lastAdvancedOptions(context, subId)
             ?: return ConfigResult(true, "skip")
         return PixelImsCompat.applyOptions(context, subId, options)
-    }
-
-    private fun restoreFiveGDisplay(
-        context: Context,
-        subId: Int,
-        snapshot: OneKukuSnapshot,
-    ): ConfigResult {
-        val enabledInSnap = snapshot.bool("five_g_display", "enabled", false)
-        val prefs = ConfigStore.fiveGDisplayConfig(context)
-        val owned = ConfigStore.lastFiveGDisplaySubId(context)
-        if (!enabledInSnap) {
-            // 无本卡快照记录时，仅当归属卡匹配才用全局 prefs 回写。
-            if (!prefs.enabled || (owned >= 0 && owned != subId)) {
-                return ConfigResult(true, "skip")
-            }
-        } else if (owned >= 0 && owned != subId) {
-            return ConfigResult(true, "skip")
-        }
-        val config = if (enabledInSnap || prefs.enabled) {
-            prefs.copy(enabled = true)
-        } else {
-            return ConfigResult(true, "skip")
-        }
-        return runCatching {
-            val message = SystemDisplayOverrideManager.applyFiveGDisplay(
-                context = context,
-                subId = subId,
-                config = config,
-            )
-            ConfigResult(true, message)
-        }.getOrElse { ConfigResult(false, it.message ?: "five_g_display failed") }
     }
 
     private fun restoreExtras(
