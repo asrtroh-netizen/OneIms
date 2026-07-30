@@ -49,10 +49,10 @@ object OneKukuCoreComponent {
     const val CORE_PACKAGE: String = HOST_PACKAGE
 
     /**
-     * 拉起探测候选：Care 优先（融合中），其次宿主内嵌桥，最后旧独立桥包。
-     * 真源切换完成前 [bridgeBootShellCommand] 仍打 onebridge_server。
+     * 内循环真源=宿主包；旧独立桥兼容；Care 仅实验室对照（用户路径不依赖第二 App）。
+     * [bridgeBootShellCommand] 仍打 onebridge_server（见 care-home-fusion 纠偏文档）。
      */
-    val CANDIDATE_PACKAGES: List<String> = listOf(CARE_PACKAGE, HOST_PACKAGE, "com.oneims.bridge")
+    val CANDIDATE_PACKAGES: List<String> = listOf(HOST_PACKAGE, "com.oneims.bridge", CARE_PACKAGE)
 
     /** 内置 OneBridge APK。 */
     const val BUNDLED_BRIDGE_ASSET_NAME: String = "oneims-bridge.apk"

@@ -39,13 +39,13 @@ class OneKukuCoreComponentTest {
     }
 
     @Test
-    fun candidatePackages_careFirstDuringFusion() {
+    fun candidatePackages_hostFirstForInternalLoop() {
         assertEquals(
-            OneKukuCoreComponent.CARE_PACKAGE,
+            OneKukuCoreComponent.HOST_PACKAGE,
             OneKukuCoreComponent.CANDIDATE_PACKAGES.first(),
         )
-        assertTrue(OneKukuCoreComponent.CANDIDATE_PACKAGES.contains(OneKukuCoreComponent.HOST_PACKAGE))
         assertTrue(OneKukuCoreComponent.CANDIDATE_PACKAGES.contains("com.oneims.bridge"))
+        assertTrue(OneKukuCoreComponent.CANDIDATE_PACKAGES.contains(OneKukuCoreComponent.CARE_PACKAGE))
     }
 
     @Test

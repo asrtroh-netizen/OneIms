@@ -1,83 +1,75 @@
-# 2026-07-30 · 放弃内嵌特权通道 · Care 融合 OneIMS 首页
+# 2026-07-30 · OneIMS 内循环：MINI 能力融进首页（单 APK）
 
 **规模**：L  
-**状态**：方案冻结（本拍）· 实现分阶段  
-**依据**：context-scout 侦察 + 既有 privilege-min / mini-from-v1510 / strip-candidates
+**状态**：方案已按用户澄清纠偏（原「外置 Care 双 APK」作废）  
+**澄清原话**：总之就是相当于一个**内循环**
 
-## 0. 用户目标（原话对齐）
+## 0. 产品真源（冻结）
 
-1. **放弃** OneIMS 里面的特权通道（内嵌 OneBridge / `:bridge` / `onebridge_server`）  
-2. 把 **MINI 整包**（`com.onekuku.care`）**融合到 OneIMS 首页**
-
-## 1. 推荐形态（冻结）
-
-**方案 A（选定）**：外置 Care APK + OneIMS 首页薄壳（对齐 OneLink）
-
-| 角色 | 职责 |
+| 要 | 不要 |
 |---|---|
-| `com.onekuku.care` | Manager + server + 冷启/Watchdog/无线拉起（已裁 Doctor/Hub/自动化/终端…） |
-| `com.oneims.app`（onekuku） | 首页 Hero 三态 + 探测/引导/授权 + `SystemApiBroker` 写配置 |
-| `:bridge` / OneBridge | **退役**（联调 PASS 后再物理删） |
+| 用户只在 **OneIMS 首页**完成：启动 → 授权/就绪 → 写配置 → 划掉/冷启复连 | 再装/再开第二个 `com.onekuku.care` App |
+| 单 APK 闭环（`com.oneims.app`） | 外置双 APK 薄壳（上拍方案 A，已否） |
+| 把 MINI/Care **已验证能力**（冷启/热路径/首页心智）吃进内循环 | 把 DropIn 全家桶源码整仓塞进 `:app` |
+| 对外仍叫 OneKuku 通道 | 「再装一套 Shizuku/Care」叙事 |
 
-**不选 B（源码整仓内嵌）**：等于换一套更大内嵌桥，违背「放弃特权通道」，爆炸半径过高。
+邻仓 `com.onekuku.care` = **能力对照与编包试验田**，不是用户必经路径。
 
-「整包融合到首页」产品语义 = **首页就是通道入口**（状态/激活/授权），不是把 DropIn 源码塞进 `:app`。
+## 1. 「放弃特权通道」怎么读
 
-## 2. 关键阻塞：客户端如何绑 Care
+不是「OneIMS 不再有 shell binder」，而是：
 
-| 事实 | 证据 |
+- 放弃**旧叙事/旧双轨**（独立桥包、外置 Manager、第二套 UI）  
+- 内循环仍需要等价特权进程（今天是 `onebridge_server`；可逐步换成 Care 同源 starter，但**仍由主包拉起、首页驱动**）
+
+## 2. 推荐工程形态（纠偏后）
+
+**S2′（选定）**：保留 `PrivilegeBridge` 门面 + 宿主内嵌 server，把 Care/V15 **冷启精华与首页体验**迁入 OneIMS；不把整包 Care Manager 嵌进主包。
+
+| 对比 | 结论 |
 |---|---|
-| Care 包名 | `com.onekuku.care` |
-| Care 权限常量 | `af.shizuku.plus.permission.API_V23` |
-| DropIn API 里 Manager 常量仍写 | `af.shizuku.plus.api`（`ShizukuProvider.MANAGER_APPLICATION_ID`） |
-| OneLink 现用 | stock `dev.rikka.shizuku` → 默认找 `moe.shizuku.privileged.api` |
-| onekuku 现用 | **内嵌 OneBridge**，未走 rikka |
+| S1 整仓迁 Care server/UI 进主包 | 体量大、权限/Provider/进程名冲突多；与「最小特权桥」立项冲突 |
+| **S2′ 内循环增强（选）** | 复用现网 OneBridge 写入路径；补 SelfStarter/UserPresent/WifiReady 级韧性；首页继续 Hero 三态 |
+| 外置 Care（旧 A） | 与「内循环」冲突 → **否** |
 
-→ **不能**只 `onekukuImplementation("dev.rikka.shizuku:…")` 就完事。必须三选一：
+## 3. 数据流（目标态）
 
-| 绑定策略 | 做法 | 取舍 |
-|---|---|---|
-| **B1（推荐下一刀）** | OneIMS 依赖邻仓裁过的 `api`/`provider`，并把 Manager 常量改为 `com.onekuku.care`（flavor/替换） | 与 Care 真源一致；工程稍重 |
-| B2 | Care 改回官方包名 Drop-In（`moe.shizuku.privileged.api`） | 可吃 stock rikka；**违背已定 `com.onekuku.care`** |
-| B3 | 自建 `CarePrivilegeBridge`（ContentProvider/自定义 attach） | 灵活；重复造轮、难维护 |
+```
+OneIMS 首页 Hero
+  → 内嵌 ADB（可选）pair/connect
+  → app_process 拉起宿主 CLASSPATH 内 server（现 onebridge_server）
+  → Binder → PrivilegeBridge → SystemApiBroker
+       (activity / carrier_config / isub / phone)
+  → 冷启：Boot/UserPresent/WifiReady/Watchdog（对齐 MINI 已迁能力）
+```
 
-**本拍冻结假设**：走 **B1**；双 APK 可接受；OneLink 暂仍官方 Shizuku（不同步 Care，除非另令）。
+用户全程不离开 OneIMS。
 
-## 3. 落地阶段
+## 4. 阶段计划
 
 | 阶段 | 内容 | 完成标准 |
 |---|---|---|
-| **P0** 方案+探测 | 本文档；`ShizukuSetupHelper` 优先 `com.onekuku.care`；首页/深链可打开 Care | 文档+探测代码合入 |
-| **P1** 契约切换 | onekuku 引入 Care 兼容 api/provider；`ChannelBridgeBootstrap` → Shizuku 系桥；`CHANNEL_USES_EMBEDDED_BRIDGE=false` | `compileOnekukuDebugKotlin`；ping+grant 真机 |
-| **P2** 激活器 | `EmbeddedAdbActivator` 的 start 目标改为 Care starter（或完全交给 Care UI） | 无电脑仍能拉起 Care |
-| **P3** 拆除 | 删 `:bridge` 依赖与 OneBridge*；更新 war-map | 无 onebridge_server；写配置仍 PASS |
+| **P0** 纠偏 | 本文档；探测列表可保留 Care 作实验室回落，但产品路径不依赖 | 文档冻结 |
+| **P1** 首页内循环体验 | Hero/文案/引导统一「通道在 App 内」；去掉「去开 Shizuku/Care」主路径 | 文案+状态机自洽 |
+| **P2** 冷启对齐 MINI | 对照 Care oem1/oem6：解锁重试、WifiReady、SelfStarter 级热路径补进 onekuku | 冷启/划掉矩阵（真机） |
+| **P3** 实现收敛 | 若 OneBridge 协议够用则留门面换引擎；不够再评估迁 Care server **最小面** | 写配置 PASS；无第二 App |
 
-**禁止**：P1 真机写配置未 PASS 前物理删除 `:bridge`。
+## 5. 与上拍脚手架的关系
 
-## 4. 首页行为（目标态）
-
-```
-Hero INACTIVE → 未装 Care：引导安装 Care APK
-             → 已装未跑：打开 Care /（可选）ADB 代拉 Care
-             → 已跑未授权：requestPermission
-READY        → SystemApiBroker 可写 carrier_config 等
-```
-
-品牌文案可继续叫 OneKuku；工程通道真源 = Care。
-
-## 5. 验收账本
-
-1. 同机：Care + OneIMS(onekuku)  
-2. 首页 READY（ping + grant）  
-3. 一键写 `carrier_config` 成功  
-4. 划掉 OneIMS / 冷启后复连（Care Watchdog/冷启路径）  
-5. 再拆 `:bridge`
-
-## 6. 本拍已做 / 未做
-
-| 项 | 状态 |
+| 项 | 处理 |
 |---|---|
-| 方案冻结文档 | 本文件 |
-| Care 优先探测 | 见 `ShizukuSetupHelper` 改动 |
-| B1 依赖与 Bootstrap 切换 | **未做**（下一刀） |
-| 真机 | **NOT RUN** |
+| `ShizukuSetupHelper.CARE_PACKAGE` | 可留作实验室/对照；**内循环主路径不走 open Care** |
+| `CANDIDATE_PACKAGES` Care 首位 | 将改回**宿主优先**（内循环真源=主包） |
+| `CHANNEL_USES_EMBEDDED_BRIDGE` | **保持 true**（内循环=内嵌），直到有可证明的单包替换引擎 |
+
+## 6. 验收（内循环）
+
+1. 只装 OneIMS（onekuku），不装 Care  
+2. 首页完成激活 → READY → 写 `carrier_config`  
+3. 划掉 / 冷启后能回到 READY（或明确需点一次）  
+4. 全程无强制跳转第二 App  
+
+## 7. 本拍
+
+- 纠偏文档（本文件）  
+- 候选包序改回宿主优先（见代码）  
