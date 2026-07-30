@@ -25,12 +25,18 @@
 
 [📦 全部 Release 资产](https://github.com/asrtroh-netizen/OneIms/releases/tag/v3.0.8)
 
-> 💙 **友情推荐特权通道**：[asrtroh 修缮版 Shizuku V15.0](https://github.com/asrtroh-netizen/shizuku)（配对一次 · 旧 Wi‑Fi 自连 · 开机 FGS 内激活）  
+> 💙 **友情推荐特权通道**：[asrtroh 修缮版 Shizuku](https://github.com/asrtroh-netizen/shizuku)（配对一次 · 旧 Wi‑Fi 自连 · 开机 FGS 内激活）  
 > 下载正式包：[Releases](https://github.com/asrtroh-netizen/shizuku/releases) · 截图：
 >
 > <img src="docs/screenshots/shizuku-asrtroh-home-active.png" alt="asrtroh Shizuku Active" width="280" />
 >
-> 装 **OneIms Lite** 时优先用这只；装完请关掉电池优化，保持首页 **Active**。上游能力仍归 [RikkaApps/Shizuku](https://github.com/RikkaApps/Shizuku)。
+> **建议使用**
+> | 机型 | 建议 |
+> |---|---|
+> | **Pixel 系列** | **两版本都可用**（`V15.0.0` / `V15.1.0`） |
+> | **国产机** | 目前**优先使用组合版本**（`V15.1.0`） |
+>
+> 装 **OneIms Lite** 时按上表选包；装完请关掉电池优化，保持首页 **Active**。上游能力仍归 [RikkaApps/Shizuku](https://github.com/RikkaApps/Shizuku)。
 
 > 本仓库 **只提供 README + APK 发布**，**不开放源代码**。  
 > 需要交流 / 反馈请走 Telegram，别来仓库里翻源码啦～
@@ -55,7 +61,7 @@
 **怎么选（一句话）：**
 
 * 你是 **「我只想在一个 App 里搞定」** → 下 **OneKuku（独立激活）**
-* 你是 **「我手机本来就有 / 想用 Shizuku」** → 下 **OneIms Lite** + **[asrtroh Shizuku V15.0](https://github.com/asrtroh-netizen/shizuku/releases)**（友情推荐）
+* 你是 **「我手机本来就有 / 想用 Shizuku」** → 下 **OneIms Lite** + **[asrtroh Shizuku](https://github.com/asrtroh-netizen/shizuku/releases)**（Pixel 两版都可用；国产机优先组合版 `V15.1.0`）
 * 不确定 → 先试 **OneKuku**；若你本来就在用 Shizuku 生态，再换 **OneIms Lite** 也行
 
 ---
