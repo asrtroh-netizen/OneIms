@@ -51,6 +51,7 @@
 
 | | **OneKuku（独立激活）** | **OneIms Lite（Shizuku）** |
 |---|---|---|
+| **推荐机型** | **Pixel 绝配** | **国产机绝配** |
 | **适合谁** | 不想另外装 Shizuku；希望 **App 内无线调试 + 通知栏填码** 一条龙 | 已熟悉 Shizuku；想要 **更小安装包、更轻壳** |
 | **包名** | `com.oneims.app` | `com.oneims.onelink` |
 | **激活方式** | 内嵌 OneBridge · 无线调试配对 · 可通知栏六位码 | **推荐搭配** [asrtroh 修缮版 Shizuku](https://github.com/asrtroh-netizen/shizuku)（开机自启更稳）；也可使用官方 [RikkaApps/Shizuku](https://shizuku.rikka.app/) |
@@ -85,7 +86,6 @@
 
 ### 相对发版 3.0.8
 
-* 砍掉 OneIMS 内信号格 / 5G 显示增强 / 控制中心切卡的运行时路径（能力在 OneTools）
 * 小米 / HyperOS：VoWIFI 写入收窄、前台桥恢复、假未激活清理、重连 toast 降噪
 * 保留三态通道 / 矮屏紧凑 / 假就绪门禁 / Hero 吃字修复（3.0.6–3.0.7 已有）
 
