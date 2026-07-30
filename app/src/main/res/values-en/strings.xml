@@ -272,7 +272,7 @@
     <string name="compat_yes">Yes ✅</string>
     <string name="compat_tensor_no">No (non-Tensor; software unlock, OEM decides)</string>
     <string name="compat_soc_qualcomm">Qualcomm / Snapdragon — VoWiFi best-effort write</string>
-    <string name="compat_advice_nontensor">Non-Tensor (incl. Qualcomm): VoLTE/VoWiFi software switches are available; OEM/carrier decide if it sticks. Degraded but usable.</string>
+    <string name="compat_advice_nontensor">Non-Tensor (incl. Qualcomm): unsupported under the 3.0.4 bloodline policy; do not attempt force-enable. Use Pixel/Tensor as the primary path.</string>
     <string name="compat_os">③ OS: Android %1$s (API %2$d) %3$s</string>
     <string name="compat_os_bad">❌ (needs Android 12+)</string>
     <string name="compat_shizuku">④ OneKuku: %1$s</string>

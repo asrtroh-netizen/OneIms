@@ -272,9 +272,9 @@
     <string name="compat_soc_mediatek">联发科 / 天玑 — VoWiFi 可能无效（仍可尝试开门）</string>
     <string name="compat_soc_other">非 Tensor</string>
     <string name="compat_yes">是 ✅</string>
-    <string name="compat_tensor_no">否（非 Tensor；软件可开门，OEM 随缘）</string>
+    <string name="compat_tensor_no">否（非 Tensor；本机构建不支持强开）</string>
     <string name="compat_soc_qualcomm">高通 / 骁龙 — VoWiFi 尽力写入</string>
-    <string name="compat_advice_nontensor">非 Tensor（含高通）可正常开 VoLTE/VoWiFi 软件开关；能否上岛由 OEM/运营商决定，属降级可用。</string>
+    <string name="compat_advice_nontensor">非 Tensor（含高通）：按 3.0.4 血统纪律标为不支持，不鼓励尝试强开；请用 Pixel/Tensor 主路径。</string>
     <string name="compat_os">③ 系统版本: Android %1$s (API %2$d) %3$s</string>
     <string name="compat_os_bad">❌（需 Android 12+）</string>
     <string name="compat_shizuku">④ OneKuku: %1$s</string>
@@ -302,7 +302,7 @@
     <string name="dev_patch">安全补丁: %1$s</string>
     <string name="dev_tensor">Tensor 芯片: %1$s</string>
     <string name="dev_tensor_yes">是（受支持）</string>
-    <string name="dev_tensor_no">否（非 Tensor，软件开门 OEM 随缘）</string>
+    <string name="dev_tensor_no">否（非 Tensor；血统纪律下不支持强开）</string>
     <string name="dev_soc">SoC: %1$s</string>
     <string name="dev_mediatek_vowifi_note">联发科：VoWiFi 可能无效</string>
     <string name="dev_sim_count">激活 SIM 数: %1$d</string>
