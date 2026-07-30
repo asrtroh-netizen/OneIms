@@ -6,8 +6,9 @@ import com.oneims.app.R
 /**
  * 双线产品身份：由 productFlavor 注入 [BuildConfig]，UI/激活路径只读本对象。
  *
- * - onekuku：内置 OneBridge，首页显示 OneKuku
- * - onelink：官方 Shizuku，首页显示 OneLink
+ * - onelink：外置官方 Shizuku（Lite⊕Shizuku 协作模板）
+ * - onekuku：同一协作分工的内循环 —— 增强旧 OneKuku 充当「通道侧」
+ *   （docs/architecture/2026-07-30-onekuku-mirrors-lite-shizuku.md）
  */
 object ChannelLine {
     const val ONEKUKU: String = "onekuku"
