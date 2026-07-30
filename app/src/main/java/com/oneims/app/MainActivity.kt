@@ -961,50 +961,51 @@ private fun AppRoot(
     fun schedulePrivilegeReconnectShots(reason: String) {
         if (ChannelLine.usesShizuku) return
         if (!OneKukuEmbeddedAdbActivator.hasPairedOnce(context)) return
-        // 已有一轮在跑：勿因 binder_dead 抖动反复 cancel→重开，否则 ADB attempt>0 会 pkill 把自己打死。
-        val running = privilegeReconnectJobHolder[0]
-        if (running?.isActive == true) {
-            DiagFileLogger.i("Privilege", "reconnect shots already active; ignore reason=$reason")
-            return
-        }
-        privilegeReconnectJobHolder[0] = scope.launch {
+        // 已有一轮在跑：勿因 binder_dead / 冷启+ON_START 双触发叠两路。
+        synchronized(privilegeReconnectJobHolder) {
+            val running = privilegeReconnectJobHolder[0]
+            if (running?.isActive == true) {
+                DiagFileLogger.i("Privilege", "reconnect shots already active; ignore reason=$reason")
+                return
+            }
+            privilegeReconnectJobHolder[0] = scope.launch {
             DiagFileLogger.i("Privilege", "v15-style reconnect shots reason=$reason")
-            suspend fun fireShot(label: String, forceRestart: Boolean) {
+            /**
+             * 只等 onebridge_server 重投 binder / 本地 wake，**不**开 libadb shell。
+             * 否则每次复连都会拨 adbd，系统弹出「USB 调试已连接/断开」
+             * （文案如此，实际多半是无线调试回环，与数据线无关）。
+             */
+            suspend fun awaitBinderOnly(label: String, windowMs: Long): Boolean {
+                val deadline = System.currentTimeMillis() + windowMs
+                DiagFileLogger.i("Privilege", "reconnect $label wait-binder-only ${windowMs}ms")
+                while (System.currentTimeMillis() < deadline) {
+                    syncPrivilegeFlagsFromBridge()
+                    if (OneKukuManager.isReady()) {
+                        settleOneKukuChannelAfterReady()
+                        activationEpoch++
+                        return true
+                    }
+                    OneKukuHiddenRunner.installBridge(OneKukuPrivilegeBridgeImpl)
+                    OneKukuHiddenRunner.wake()
+                    delay(300L)
+                }
                 syncPrivilegeFlagsFromBridge()
                 if (OneKukuManager.isReady()) {
-                    // 成功后再 ping 一次语义：isReady 已含 pingBinder；settle 清脏 hint。
                     settleOneKukuChannelAfterReady()
                     activationEpoch++
-                    DiagFileLogger.i("Privilege", "reconnect $label already ready")
-                    return
+                    return true
                 }
-                DiagFileLogger.i(
-                    "Privilege",
-                    "reconnect $label force=$forceRestart " +
-                        "running=${OneKukuManager.isRunning()} granted=${OneKukuManager.isGranted()}",
-                )
-                // 不在此强行 CONNECTING：prepare 静默 wake 成功则不应闪「激活中」；
-                // 只有真正走 ADB 直连时 prepare 内部才会置 CONNECTING。
-                activationEpoch++
-                prepareOneKukuCore(forceRestart = forceRestart)
+                return false
             }
-            fireShot("t0", forceRestart = false)
-            delay(5_000L)
-            if (OneKukuManager.isReady()) {
-                settleOneKukuChannelAfterReady()
-                activationEpoch++
-                return@launch
-            }
-            fireShot("t5", forceRestart = false)
-            delay(10_000L) // 距 t0 共 15s
-            if (OneKukuManager.isReady()) {
-                settleOneKukuChannelAfterReady()
-                activationEpoch++
-                return@launch
-            }
-            // 末拍仍不 forceRestart：避免与仍存活的 onebridge_server 互杀；真要重建走设置「重新激活」。
-            fireShot("t15", forceRestart = false)
-            // 给最后一拍 ADB/binder 窗口收尾，避免相位永远钉在 CONNECTING。
+            // 0～15s：对齐 V15「server 仍活 → 只重投 binder」，避免刷 ADB 弹窗。
+            if (awaitBinderOnly("t0", 5_000L)) return@launch
+            if (awaitBinderOnly("t5", 10_000L)) return@launch
+            DiagFileLogger.w(
+                "Privilege",
+                "reconnect binder-only timeout → fallback ADB once reason=$reason",
+            )
+            activationEpoch++
+            prepareOneKukuCore(forceRestart = false)
             val settleDeadline = System.currentTimeMillis() + 12_000L
             while (System.currentTimeMillis() < settleDeadline) {
                 if (OneKukuManager.isReady()) {
@@ -1021,6 +1022,7 @@ private fun AppRoot(
                 DiagFileLogger.w("Privilege", "reconnect shots exhausted reason=$reason")
             }
             activationEpoch++
+            }
         }
     }
 
@@ -1103,7 +1105,8 @@ private fun AppRoot(
         ) {
             return@LaunchedEffect
         }
-        prepareOneKukuCore()
+        // 与前台复连同一条路：先等 binder 重投，避免冷启立刻 libadb 刷「USB 调试」弹窗。
+        schedulePrivilegeReconnectShots("cold_start")
     }
 
     // 激活中相位超时兜底：避免直连挂死时永远钉在「激活中」。
