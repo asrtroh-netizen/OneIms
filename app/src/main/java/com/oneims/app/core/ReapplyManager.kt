@@ -97,7 +97,8 @@ object ReapplyManager {
             reapplyPerSimPersisted(context, subId, ::note)
         }
 
-        // 信号格 / 5G 显示增强已迁出 OneIMS，不再开机重放。
+        // 5G 显示增强 / 信号格样式已迁出 OneIMS，不再开机重放。
+        // 能力页「5G信号强度调整」阈值仍按卡重放（见 reapplyPerSimPersisted）。
 
         val result = if (!attempted) {
             ConfigResult(false, context.getString(R.string.msg_no_history))
@@ -122,16 +123,19 @@ object ReapplyManager {
     }
 
     /**
-     * 是否存在任何可开机重放的持久源（核心 / 高级 / 按卡能力）。
+     * 是否存在任何可开机重放的持久源（核心 / 高级 / 按卡能力 / 信号阈值）。
      * 供开机编排在「无 lastApplied」时仍进入重放，而不是整段跳过。
-     * 信号格 / 5G 显示增强 / 切卡已迁出，不再计入重放源。
+     * 信号格样式 / 5G 显示增强 / 切卡已迁出，不再计入重放源。
      */
     fun hasPersistedReapplySource(context: Context): Boolean {
         if (ConfigStore.lastApplied(context) != null) return true
         if (ConfigStore.hasAnyAdvancedOptions(context)) return true
         return ImsController.listSims(context).any { sim ->
             val caps = ConfigStore.capabilityUiState(context, sim.subscriptionId)
-            caps != null && (caps.vilte || caps.ut || caps.crossSim || caps.nr5g)
+            caps != null && (
+                caps.vilte || caps.ut || caps.crossSim || caps.nr5g ||
+                    ConfigStore.signalStrengthAdjustmentEnabled(context, sim.subscriptionId)
+                )
         }
     }
 
@@ -155,6 +159,22 @@ object ReapplyManager {
         }
         if (caps?.nr5g == true) {
             note("nr5g@$subId", ImsController.apply5g(context, subId, true))
+        }
+
+        val signalOn = ConfigStore.signalStrengthAdjustmentEnabled(context, subId)
+        if (signalOn) {
+            val signalResult = runCatching {
+                val message = SystemDisplayOverrideManager.applySignalStrengthAdjustment(
+                    context = context,
+                    subId = subId,
+                    enabled = caps?.nr5g == true,
+                    preferenceEnabled = true,
+                )
+                ConfigResult(true, message)
+            }.getOrElse { error ->
+                ConfigResult(false, error.message ?: "signal failed")
+            }
+            note("signal@$subId", signalResult)
         }
     }
 

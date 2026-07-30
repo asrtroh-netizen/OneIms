@@ -108,6 +108,7 @@ object OneKukuHomeTools {
             }
             ?: return null
 
+        val signalAdj = ConfigStore.signalStrengthAdjustmentEnabled(context, subId)
         val vowifiSel = VoWifiNameFormatManager.readSelection(context, subId)
         val identity = ConfigStore.identityDraft(context, subId)
         val on = context.getString(R.string.onekuku_value_on)
@@ -152,6 +153,10 @@ object OneKukuHomeTools {
             SnapshotLine(
                 label = context.getString(R.string.onekuku_snapshot_nr5g),
                 value = if (caps.nr5g) on else off,
+            ),
+            SnapshotLine(
+                label = context.getString(R.string.onekuku_snapshot_signal),
+                value = if (signalAdj) on else off,
             ),
             SnapshotLine(
                 label = context.getString(R.string.onekuku_snapshot_vowifi_name),
@@ -221,6 +226,12 @@ object OneKukuHomeTools {
                 SnapshotLine(
                     label = context.getString(R.string.onekuku_snapshot_nr5g),
                     value = if (bool("nr5g", "enabled", false)) on else off,
+                ),
+            )
+            add(
+                SnapshotLine(
+                    label = context.getString(R.string.onekuku_snapshot_signal),
+                    value = if (bool("signal", "adjustment", false)) on else off,
                 ),
             )
             add(

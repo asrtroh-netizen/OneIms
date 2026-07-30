@@ -10,9 +10,11 @@
 
 ## 本轮做了什么
 
-- **功能页**：移除信号强度调整开关；一键应用核心不再写 `SystemDisplayOverrideManager`
-- **开机重放**（`ReapplyManager`）：不再重放 5G 显示 / 信号阈值 / 信号格样式
-- **一键恢复**（`OneKukuRestoreManager` / 快照工厂）：不再恢复 `signal` / `five_g_display`
+> **更正（同日后续）**：能力页「5G信号强度调整」属能力页第五项，**不属三项独家**；已按用户反馈加回，见 `2026-07-30-restore-capabilities-signal-strength.md`。下文「功能页移除信号强度」仅为当时误砍记录，现已撤销。
+
+- **功能页（当时误砍，已纠正）**：曾移除信号强度调整开关；现已恢复
+- **开机重放**（`ReapplyManager`）：不再重放 5G 显示 / 信号格样式（信号阈值已加回）
+- **一键恢复**（`OneKukuRestoreManager` / 快照工厂）：不再恢复 `five_g_display`（`signal` 已加回）
 - **展示**：状态摘要与网络类型标签不再挂 5G 显示增强文案
 - **切卡**：删除 `DataSimSwitchTileService` / `DataSimSwitchManager` / `QuickSettingsTileHelper` 与对应单测
 - **应急回滚**：`SafetyGuard.restoreDefaults` 仍清理旧显示 ownership / 本地 prefs（避免旧用户被静默重放）

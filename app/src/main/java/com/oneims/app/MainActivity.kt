@@ -84,6 +84,7 @@ import com.oneims.app.core.ChannelLine
 import com.oneims.app.core.OneKukuManager
 import com.oneims.app.core.privilege.ChannelEngine
 import com.oneims.app.core.WirelessPairingCodeReceiver
+import com.oneims.app.core.SystemDisplayOverrideManager
 import com.oneims.app.core.SimCountryIsoManager
 import com.oneims.app.core.UpdateChecker
 import com.oneims.app.core.VoWifiNameFormatManager
@@ -329,6 +330,9 @@ private fun AppRoot(
     }
     var sandboxPersistBypass by remember {
         mutableStateOf(ConfigStore.isSandboxPersistBypass(context))
+    }
+    var signalStrengthAdjustmentEnabled by remember {
+        mutableStateOf(ConfigStore.signalStrengthAdjustmentEnabled(context, selectedSubId))
     }
     var voWifiNameFormatIndex by remember { mutableStateOf<Int?>(null) }
     var voWifiCustomCarrierName by remember { mutableStateOf("") }
@@ -1331,6 +1335,8 @@ private fun AppRoot(
 
     LaunchedEffect(selectedSubId, shizukuGranted) {
         reapplyStatus = ConfigStore.lastReapplyStatus(context)
+        signalStrengthAdjustmentEnabled =
+            ConfigStore.signalStrengthAdjustmentEnabled(context, selectedSubId)
         if (selectedSubId >= 0 && shizukuGranted) {
             advancedOptions = withContext(Dispatchers.IO) {
                 runCatching {
@@ -1956,6 +1962,7 @@ private fun AppRoot(
                         ut = ut,
                         crossSim = crossSim,
                         nr5g = nr5g,
+                        signalStrengthAdjustmentEnabled = signalStrengthAdjustmentEnabled,
                         wfcMode = wfcMode,
                         voWifiNameFormatIndex = voWifiNameFormatIndex,
                         voWifiCustomCarrierName = voWifiCustomCarrierName,
@@ -2002,6 +2009,16 @@ private fun AppRoot(
                             nr5g = it
                             persistCapabilityUi()
                         },
+                        onSignalStrengthAdjustmentChange = { enabled ->
+                            signalStrengthAdjustmentEnabled = enabled
+                            if (selectedSubId >= 0) {
+                                ConfigStore.setSignalStrengthAdjustmentEnabled(
+                                    context,
+                                    selectedSubId,
+                                    enabled,
+                                )
+                            }
+                        },
                         onWfcModeChange = {
                             wfcMode = it
                             persistCapabilityUi()
@@ -2018,6 +2035,7 @@ private fun AppRoot(
                             val targetVonr = vonr
                             val targetWfcMode = wfcMode
                             val targetNr5g = nr5g
+                            val targetSignal = signalStrengthAdjustmentEnabled
                             persistCapabilityUi(targetSubId)
                             // 实时门禁：UI 上 stale granted 时禁止进入写链路（一加假就绪 + 闪退）。
                             if (!ensurePrivilegedAccess()) return@CapabilitiesActions
@@ -2034,7 +2052,7 @@ private fun AppRoot(
                                 if (!coreResult.success) {
                                     return@runOperation coreResult.message
                                 }
-                                // 仅保留 5G NR 能力写入；信号格 / 5G 显示增强已迁出 OneIMS。
+                                // 同区「5G NR + 信号阈值」并入一键；格子样式由独家页/OneTools 独立应用。
                                 val nrResult = ImsController.apply5g(
                                     context,
                                     targetSubId,
@@ -2046,7 +2064,34 @@ private fun AppRoot(
                                         nrResult.message,
                                     ).joinToString("\n")
                                 }
-                                val message = "${coreResult.message}\n${nrResult.message}"
+                                val signalMessage = when {
+                                    targetSignal && !targetNr5g -> {
+                                        runCatching {
+                                            SystemDisplayOverrideManager.applySignalStrengthAdjustment(
+                                                context = context,
+                                                subId = targetSubId,
+                                                enabled = false,
+                                                preferenceEnabled = true,
+                                            )
+                                        }
+                                        context.getString(R.string.signal_bar_needs_nr_enabled)
+                                    }
+                                    else -> runCatching {
+                                        SystemDisplayOverrideManager.applySignalStrengthAdjustment(
+                                            context = context,
+                                            subId = targetSubId,
+                                            enabled = targetSignal && targetNr5g,
+                                            preferenceEnabled = targetSignal,
+                                        )
+                                    }.getOrElse { error ->
+                                        context.getString(
+                                            R.string.signal_bar_system_apply_failed,
+                                            OperationErrors.describe(error),
+                                        )
+                                    }
+                                }
+                                val message =
+                                    "${coreResult.message}\n${nrResult.message}\n$signalMessage"
                                 sims.firstOrNull { it.subscriptionId == targetSubId }?.let { sim ->
                                     OneKukuSnapshotStore.save(
                                         context,

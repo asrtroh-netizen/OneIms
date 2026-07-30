@@ -6,14 +6,15 @@ import com.oneims.app.core.ConfigStore
 import com.oneims.app.core.ImsController
 import com.oneims.app.core.PixelImsCompat
 import com.oneims.app.core.PixelImsOptions
+import com.oneims.app.core.SystemDisplayOverrideManager
 import com.oneims.app.core.VoWifiNameFormatManager
 import com.oneims.app.model.ConfigResult
 import com.oneims.app.model.WfcMode
 
 /**
  * 按快照恢复通话配置：单项失败不阻断后续，末尾汇总。
- * 顺序：身份 → IMS → WFC → 5G NR → VoWiFi 名称 → 高级选项 → extras。
- * 信号格 / 5G 显示增强已迁出，不再恢复。
+ * 顺序：身份 → IMS → WFC → 5G NR → 信号强度 → VoWiFi 名称 → 高级选项 → extras。
+ * 信号格样式 / 5G 显示增强已迁出，不再恢复。
  */
 object OneKukuRestoreManager {
     private const val TAG = "OneIMS-Restore"
@@ -86,6 +87,9 @@ object OneKukuRestoreManager {
                 }
                 detail["nr5g"] = runNamed("nr5g") {
                     restoreFiveG(context, writeSubId, snapshot)
+                }
+                detail["signal"] = runNamed("signal") {
+                    restoreSignal(context, writeSubId, snapshot)
                 }
                 detail["vowifi_name"] = runNamed("vowifi_name") {
                     restoreVoWifiName(context, writeSubId, snapshot)
@@ -252,6 +256,23 @@ object OneKukuRestoreManager {
         val enabled = snapshot.bool("nr5g", "enabled", false)
         if (!enabled) return ConfigResult(true, "skip")
         return ImsController.apply5g(context, subId, true)
+    }
+
+    private fun restoreSignal(
+        context: Context,
+        subId: Int,
+        snapshot: OneKukuSnapshot,
+    ): ConfigResult {
+        val enabled = snapshot.bool("signal", "adjustment", false)
+        return runCatching {
+            val message = SystemDisplayOverrideManager.applySignalStrengthAdjustment(
+                context = context,
+                subId = subId,
+                enabled = enabled,
+                preferenceEnabled = enabled,
+            )
+            ConfigResult(true, message)
+        }.getOrElse { ConfigResult(false, it.message ?: "signal failed") }
     }
 
     private fun restoreVoWifiName(

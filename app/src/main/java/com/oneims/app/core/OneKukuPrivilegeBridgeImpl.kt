@@ -32,6 +32,7 @@ object OneKukuSnapshotFactory {
         val caps = ConfigStore.capabilityUiState(context, sim.subscriptionId)
         val applied = ConfigStore.lastApplied(context)
             ?.takeIf { it.subId == sim.subscriptionId }
+        val signal = ConfigStore.signalStrengthAdjustmentEnabled(context, sim.subscriptionId)
         val vowifi = VoWifiNameFormatManager.readSelection(context, sim.subscriptionId)
         val identity = ConfigStore.identityDraft(context, sim.subscriptionId)
         val now = System.currentTimeMillis()
@@ -58,6 +59,7 @@ object OneKukuSnapshotFactory {
                     true,
                 ),
             )
+            add(SnapshotEntry("signal", "adjustment", signal.toString(), method, true))
             vowifi.formatIndex?.let {
                 add(SnapshotEntry("vowifi_name", "formatIndex", it.toString(), method, true))
             }
