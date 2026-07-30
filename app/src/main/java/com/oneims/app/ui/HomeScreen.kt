@@ -90,9 +90,7 @@ private fun OneKukuStandaloneHome(
                 onPrimaryAction = {
                     when (state.oneKukuState) {
                         OneKukuCardState.INACTIVE -> actions.onActivateOneKuku()
-                        OneKukuCardState.READY,
-                        OneKukuCardState.SLEEPING,
-                        -> actions.onCheckOneKukuStatus()
+                        OneKukuCardState.READY -> actions.onCheckOneKukuStatus()
                         OneKukuCardState.ACTIVATING -> Unit
                     }
                 },
@@ -210,9 +208,7 @@ private fun OneLinkHome(
                 onPrimaryAction = {
                     when (state.oneKukuState) {
                         OneKukuCardState.INACTIVE -> actions.onActivateOneKuku()
-                        OneKukuCardState.READY,
-                        OneKukuCardState.SLEEPING,
-                        -> actions.onCheckOneKukuStatus()
+                        OneKukuCardState.READY -> actions.onCheckOneKukuStatus()
                         OneKukuCardState.ACTIVATING -> Unit
                     }
                 },
@@ -447,8 +443,7 @@ private fun OneKukuHomeDialogs(
         }
 
         HomeToolDialog.TerminalTip -> {
-            val channelReady = state.oneKukuState == OneKukuCardState.READY ||
-                state.oneKukuState == OneKukuCardState.SLEEPING
+            val channelReady = state.oneKukuState == OneKukuCardState.READY
             AlertDialog(
                 onDismissRequest = onDismiss,
                 title = { Text(stringResource(R.string.onekuku_home_tile_terminal)) },

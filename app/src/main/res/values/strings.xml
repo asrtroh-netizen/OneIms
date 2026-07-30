@@ -488,7 +488,7 @@
     <string name="onekuku_title_inactive">还差一步即可使用</string>
     <string name="onekuku_subtitle_inactive">OneKuku 通道未激活</string>
     <string name="onekuku_detail_inactive">重启后通话配置可能无法自动恢复</string>
-    <string name="onekuku_hint_power">按需激活，用完休眠，不常驻不耗电</string>
+    <string name="onekuku_hint_power">按需激活；特权在通道进程，App 不前台常驻</string>
     <string name="onekuku_hint_resident">特权由 onebridge_server 保活（学 Shizuku），App 不前台常驻</string>
     <string name="onekuku_pill_inactive">未激活</string>
     <string name="onekuku_action_activate">立即激活 OneKuku</string>
@@ -499,7 +499,7 @@
     <string name="onekuku_nameplate_ready">Ready</string>
     <string name="onekuku_badge_active">已就绪</string>
     <string name="onekuku_subtitle_ready">通道已就绪，可立即使用</string>
-    <string name="onekuku_detail_ready">应用在前台时胶囊为 Active；关掉或退到后台会进入休眠，再打开即可唤醒，无需重配对</string>
+    <string name="onekuku_detail_ready">通道已就绪；特权在桥接进程，退后台无需重配对</string>
     <string name="onekuku_subtitle_sleeping">通道已休眠</string>
     <string name="onekuku_detail_sleeping">特权仍在通道进程；重新打开应用会回到 Active，无需重新激活</string>
     <string name="onekuku_title_activating">正在激活 OneKuku</string>
@@ -522,7 +522,7 @@
     <string name="onekuku_action_running">正在恢复…</string>
 
     <string name="onekuku_subtitle_complete">通话配置已恢复</string>
-    <string name="onekuku_detail_complete">OneKuku 已完成任务，通道已休眠待命</string>
+    <string name="onekuku_detail_complete">OneKuku 已完成任务，通道仍就绪</string>
     <string name="onekuku_action_check">检查 OneKuku 状态</string>
     <string name="onekuku_action_check_sub">只检查通道；恢复见下方快速开始</string>
 
@@ -548,7 +548,7 @@
     <string name="onekuku_msg_activation_denied">OneKuku 激活未通过</string>
     <string name="onekuku_msg_need_active">请先激活 OneKuku 核心服务</string>
     <string name="onekuku_msg_need_sim">请先选择可用 SIM</string>
-    <string name="onekuku_msg_status_ok">OneKuku 状态正常，核心服务休眠中</string>
+    <string name="onekuku_msg_status_ok">OneKuku 状态正常，通道就绪</string>
     <string name="onekuku_busy_restore">正在恢复通话配置…</string>
     <string name="onekuku_busy_status_check">正在检查状态</string>
     <string name="action_close">关闭</string>
@@ -602,7 +602,8 @@
     <string name="onekuku_history_result_success">全部成功</string>
     <string name="onekuku_history_result_partial">部分成功</string>
     <string name="onekuku_history_result_failed">失败</string>
-    <string name="onekuku_history_kuku_sleeping">已休眠</string>
+    <string name="onekuku_history_kuku_sleeping">已就绪</string>
+    <string name="onekuku_history_kuku_ready">已就绪</string>
     <string name="onekuku_history_kuku_failed">执行失败</string>
     <string name="onekuku_history_kuku_inactive">未激活</string>
     <string name="onekuku_history_target_value">卡%1$d · %2$s</string>
@@ -639,8 +640,8 @@
     <string name="onekuku_settings_state_invalid">失效</string>
     <string name="onekuku_settings_restore_on">已开启自动恢复</string>
     <string name="onekuku_settings_restore_off">已关闭自动恢复</string>
-    <string name="onekuku_settings_auto_sleep">用完自动休眠</string>
-    <string name="onekuku_settings_auto_sleep_sub">恢复完成后 OneKuku 自动进入休眠，不常驻不耗电；唤醒秒级</string>
+    <string name="onekuku_settings_auto_sleep">用完不拉 App 常驻</string>
+    <string name="onekuku_settings_auto_sleep_sub">恢复完成后不拉起 App 前台常驻；特权仍在通道进程，秒级可用</string>
     <string name="onekuku_settings_resident_note">已对齐 Shizuku：特权在 shell 进程，App 不再以前台服务常驻轮询。</string>
     <string name="onekuku_resident_channel">OneKuku（已停用常驻）</string>
     <string name="onekuku_resident_channel_desc">历史通知渠道；现已不再拉起前台常驻</string>
@@ -652,8 +653,8 @@
     <string name="onekuku_settings_view_status_sub">只读检查当前 SIM 与通话能力</string>
     <string name="onekuku_settings_boot_on">已开启开机自动检查</string>
     <string name="onekuku_settings_boot_off">已关闭开机自动检查</string>
-    <string name="onekuku_settings_sleep_on">已开启用完自动休眠</string>
-    <string name="onekuku_settings_sleep_off">已关闭用完自动休眠</string>
+    <string name="onekuku_settings_sleep_on">已开启：用完不拉 App 常驻</string>
+    <string name="onekuku_settings_sleep_off">已关闭：允许 App 侧旧常驻路径</string>
 
     <string name="onekuku_status_onekuku">OneKuku：%1$s</string>
     <string name="onekuku_status_sim">SIM：卡槽 %1$d · %2$s</string>

@@ -368,7 +368,10 @@ private fun AppRoot(
             ),
             taskComplete = oneKukuTaskComplete || bootUiHint == OneKukuBootUiHint.RESTORE_COMPLETE,
         )
-    val oneKukuChannelSleeping = oneKukuState == OneKukuCardState.SLEEPING
+    // 三态后卡片不再有 SLEEPING；内部 runner 待命仍可探测，供调试/兼容字段。
+    val oneKukuChannelSleeping = OneKukuCardPolicy.isChannelSleeping(
+        OneKukuHiddenRunner.currentState(),
+    )
     val oneKukuDetailOverride = when {
         // OneLink：不展示内嵌 ADB 配对相位文案（即便相位短暂残留）。
         ChannelLine.usesShizuku &&

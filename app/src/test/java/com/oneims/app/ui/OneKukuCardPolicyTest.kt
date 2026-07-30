@@ -10,7 +10,7 @@ import org.junit.Test
 class OneKukuCardPolicyTest {
 
     @Test
-    fun resolve_mapsFourStates() {
+    fun resolve_mapsThreeStates_sleepingShowsReady() {
         assertEquals(
             OneKukuCardState.INACTIVE,
             OneKukuCardPolicy.resolve(
@@ -27,15 +27,15 @@ class OneKukuCardPolicyTest {
                 channelSleeping = false,
             ),
         )
+        // 后台待命不再单独占一态。
         assertEquals(
-            OneKukuCardState.SLEEPING,
+            OneKukuCardState.READY,
             OneKukuCardPolicy.resolve(
                 serviceReady = true,
                 isExecuting = false,
                 channelSleeping = true,
             ),
         )
-        // 执行中对外仍是就绪。
         assertEquals(
             OneKukuCardState.READY,
             OneKukuCardPolicy.resolve(
@@ -72,12 +72,11 @@ class OneKukuCardPolicyTest {
     }
 
     @Test
-    fun litStageCount_isFourStepRail() {
+    fun litStageCount_isThreeStepRail() {
         assertEquals(1, OneKukuCardPolicy.litStageCount(OneKukuCardState.INACTIVE))
         assertEquals(2, OneKukuCardPolicy.litStageCount(OneKukuCardState.ACTIVATING))
         assertEquals(3, OneKukuCardPolicy.litStageCount(OneKukuCardState.READY))
-        assertEquals(4, OneKukuCardPolicy.litStageCount(OneKukuCardState.SLEEPING))
-        assertEquals(4, OneKukuCardPolicy.stageLabelRes().size)
+        assertEquals(3, OneKukuCardPolicy.stageLabelRes().size)
     }
 
     @Test
@@ -88,11 +87,10 @@ class OneKukuCardPolicyTest {
     }
 
     @Test
-    fun enum_hasExactlyFourStates() {
-        assertEquals(4, OneKukuCardState.entries.size)
+    fun enum_hasExactlyThreeStates() {
+        assertEquals(3, OneKukuCardState.entries.size)
         assertTrue(OneKukuCardPolicy.isBusy(OneKukuCardState.ACTIVATING))
         assertTrue(OneKukuCardPolicy.isAlert(OneKukuCardState.INACTIVE))
         assertTrue(OneKukuCardPolicy.isSettled(OneKukuCardState.READY))
-        assertTrue(OneKukuCardPolicy.isSettled(OneKukuCardState.SLEEPING))
     }
 }

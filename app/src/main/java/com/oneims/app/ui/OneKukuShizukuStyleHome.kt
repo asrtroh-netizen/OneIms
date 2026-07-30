@@ -51,9 +51,7 @@ fun OneKukuShizukuStyleStatusHero(
     onOpenDeviceDetails: (() -> Unit)? = null,
 ) {
     val hero = when (oneKukuState) {
-        OneKukuCardState.READY,
-        OneKukuCardState.SLEEPING,
-        -> HeroVisual.READY
+        OneKukuCardState.READY -> HeroVisual.READY
         OneKukuCardState.ACTIVATING -> HeroVisual.ACTIVATING
         OneKukuCardState.INACTIVE -> HeroVisual.INACTIVE
     }
