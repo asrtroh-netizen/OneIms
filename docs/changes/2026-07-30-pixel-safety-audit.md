@@ -2,8 +2,11 @@
 
 ## 产品边界（用户确认）
 
-- **主战场**：Pixel / Tensor
-- **非 Pixel**：只额外兜 **VoWIFI 相关**，不扩 VoLTE 语义
+1. **Pixel 通信相关必须保证**（IMS/VoLTE 等）
+2. **Pixel 开机自启 / 恢复必须保证**
+3. **国产机**：只做非主功能兼容兜底，不得反噬 1/2
+
+详见 `docs/architecture/2026-07-30-product-priority-pixel-first.md`。
 
 ## 两笔 commit 影响面
 

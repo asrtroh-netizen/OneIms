@@ -5,8 +5,11 @@ import android.os.Build
 /**
  * OEM 兼容策略入口：只做识别与策略开关，不硬拦业务写入。
  *
+ * 产品优先级：Pixel 通信 + 开机自启是硬保证；本对象仅服务「国产机非主功能」
+ * 容错门控，禁止把 Pixel 默认路径改软（见 docs/architecture/2026-07-30-product-priority-pixel-first.md）。
+ *
  * 小米 / Redmi / POCO / HyperOS 对 Instrumentation 委托、CarrierConfig 回读、
- * IMS provisioning 更苛刻；PixelIMS 表面正常往往只因写集更小、异常多被吞。
+ * IMS provisioning 更苛刻；pixel-volte-patch 表面更稳往往只因写集更小、异常多被吞。
  */
 object OemDeviceCompat {
 

@@ -1,5 +1,8 @@
 package com.oneims.app.core
 
+// 产品硬保证：Pixel 开机自启 / 恢复入口。OEM 兼容改动不得削弱本文件控制流
+// （见 docs/architecture/2026-07-30-product-priority-pixel-first.md）。
+
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
