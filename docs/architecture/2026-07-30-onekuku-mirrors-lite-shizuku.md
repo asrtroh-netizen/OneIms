@@ -33,9 +33,10 @@
 ## 工程含义
 
 1. **`CHANNEL_USES_EMBEDDED_BRIDGE=true` 保持**（onekuku）  
-2. Care/MINI 邻仓 = **能力素材**（冷启/热路径），不是用户路径  
+2. Care/MINI 邻仓 = **能力素材 / 编包试验田**（冷启/热路径 + server 最小面源），不是用户路径  
 3. 增强点 = 旧 OneKuku + V15/MINI 冷启精华 + 内循环文案（已做「去第二 App」）  
-4. 下一刀实现优先：**冷启/复连对齐 Lite「回来就能用」体验**，而不是换外置包名
+4. **P3 引擎**：`ChannelEngine` — 默认 `ONEBRIDGE`；目标切 `CARE_MIN`（宿主内嵌 MINI server，进程 `onekuku_server`）替换旧桥  
+5. 下一刀：P3a 按白名单迁入 server 最小面（见 `2026-07-30-care-min-server-import-whitelist.md`），默认不切换运行时
 
 ## 相关
 

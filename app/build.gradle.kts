@@ -27,6 +27,8 @@ android {
             versionNameSuffix = "-onekuku"
             buildConfigField("String", "CHANNEL_LINE", "\"onekuku\"")
             buildConfigField("boolean", "CHANNEL_USES_EMBEDDED_BRIDGE", "true")
+            // 内循环引擎：默认 ONEBRIDGE；P3 验收后可切 CARE_MIN（宿主内嵌 MINI server）
+            buildConfigField("String", "CHANNEL_ENGINE", "\"ONEBRIDGE\"")
         }
         create("onelink") {
             dimension = "channel"
@@ -34,6 +36,8 @@ android {
             versionNameSuffix = "-onelink"
             buildConfigField("String", "CHANNEL_LINE", "\"onelink\"")
             buildConfigField("boolean", "CHANNEL_USES_EMBEDDED_BRIDGE", "false")
+            // onelink 走外置 Shizuku；此字段仅占位，业务不读 ChannelEngine
+            buildConfigField("String", "CHANNEL_ENGINE", "\"EXTERNAL_SHIZUKU\"")
         }
     }
 

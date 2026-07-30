@@ -25,13 +25,21 @@ cd /d E:\GQ\One\_forks\ShizukuDropIn-Local
 gradlew :manager:assembleOnekukuMiniRelease
 ```
 
-## 与 OneIMS 衔接（未做）
+## 与 OneIMS 衔接（纠偏后路径）
 
-1. `onekuku` 线探测 `com.onekuku.care` 并走 Shizuku 客户端契约  
-2. 撤 `:bridge` / 内嵌 OneBridge  
-3. 物理删 Plus 模块减体积（见 `2026-07-30-v1510-strip-candidates.md`）
+> 冻结内循环后：**不要**把「探测外置 `com.onekuku.care` + 当第二 App」当主路径。  
+> 正确衔接 = **把本 MINI 的 server 最小面融进宿主**（`ChannelEngine.CARE_MIN`），替换旧 OneBridge。
+
+| 步 | 状态 | 说明 |
+|---|---|---|
+| P0 `ChannelEngine` + 迁入白名单 | **已开**（OneIMS） | 默认仍 `ONEBRIDGE` |
+| P3a 白名单迁入 server | 未做 | `2026-07-30-care-min-server-import-whitelist.md` |
+| P3b 旗标切换 + 宿主 Provider | 未做 | 进程名 `onekuku_server` |
+| P3c 撤 `:bridge` | 未做 | 验收后 |
+| 物理删 Plus 模块减体积 | 邻仓继续 | `2026-07-30-v1510-strip-candidates.md` |
 
 ## 注意
 
-- **不是** stock `moe.shizuku.privileged.api`，可与官方/DropIn 同机并存  
-- 第三方默认 Shizuku API 仍指向官方包名；OneIMS 需显式绑 Care 包  
+- **不是** stock `moe.shizuku.privileged.api`；邻仓 Care 可与官方/DropIn 同机并存作对照  
+- 宿主融合后 Manager/API 指向 **`com.oneims.app`**，不要求用户安装 Care  
+

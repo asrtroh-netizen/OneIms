@@ -6,6 +6,9 @@
 **规模**：L  
 **决策**：不做换皮 Shizuku；不做完整 Shizuku 克隆；做**最小 shell binder 桥**，只服务 OneIMS。
 
+**口径修订（2026-07-30）**：禁止的是 **Manager UI / 多 App 生态 / 任意服务透传** 的「完整克隆」。  
+允许把邻仓 Care MINI 的 **server 最小面**（ping / 授权 / binder / MVP 四服务）内嵌进宿主以替换本立项的 OneBridge 引擎（`ChannelEngine.CARE_MIN`）；MVP 闸门与签名白名单硬约束不变。详见 `docs/architecture/2026-07-30-care-min-server-import-whitelist.md`。
+
 ---
 
 ## 0. OneKuku 产品意义（硬约束）

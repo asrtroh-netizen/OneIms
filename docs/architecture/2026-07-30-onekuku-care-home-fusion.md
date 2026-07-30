@@ -6,6 +6,10 @@
 **产品定调（更新）**：见 `2026-07-30-onekuku-mirrors-lite-shizuku.md` ——  
 OneIMS 内循环 = Lite⊕Shizuku 的分工镜像，通道侧是**增强旧 OneKuku**（非外置第二 App）。
 
+**P3 目标态（2026-07-30 升格）**：宿主内嵌 Care/Shizuku **server 最小面**（内置 Shizuku MINI / 新特权桥 / OneKuku 增强）**替换**旧 `onebridge_server` 引擎；  
+`PrivilegeBridge → SystemApiBroker` 门面保留。工程开关：`ChannelEngine`（默认 `ONEBRIDGE`，验收后切 `CARE_MIN`）。  
+迁入清单：`2026-07-30-care-min-server-import-whitelist.md`。邻仓 `com.onekuku.care` 仍是编包试验田，**不是**用户必经第二 App。
+
 ## 0. 产品真源（冻结）
 
 | 要 | 不要 |
@@ -24,14 +28,16 @@ OneIMS 内循环 = Lite⊕Shizuku 的分工镜像，通道侧是**增强旧 OneK
 - 放弃**旧叙事/旧双轨**（独立桥包、外置 Manager、第二套 UI）  
 - 内循环仍需要等价特权进程（今天是 `onebridge_server`；可逐步换成 Care 同源 starter，但**仍由主包拉起、首页驱动**）
 
-## 2. 推荐工程形态（纠偏后）
+## 2. 推荐工程形态（纠偏后 → P3 升格）
 
-**S2′（选定）**：保留 `PrivilegeBridge` 门面 + 宿主内嵌 server，把 Care/V15 **冷启精华与首页体验**迁入 OneIMS；不把整包 Care Manager 嵌进主包。
+**底盘 S2′（已基本完成）**：保留 `PrivilegeBridge` 门面 + 现网 OneBridge；补 Care/V15 冷启精华与首页内循环体验。  
+**目标态 B′（P3，选定）**：同一门面下，用宿主内嵌 Care **server 最小面**替换 OneBridge 引擎（进程名 `onekuku_server`，Provider `*.shizuku`）；不把整包 Care Manager 嵌进主包。
 
 | 对比 | 结论 |
 |---|---|
-| S1 整仓迁 Care server/UI 进主包 | 体量大、权限/Provider/进程名冲突多；与「最小特权桥」立项冲突 |
-| **S2′ 内循环增强（选）** | 复用现网 OneBridge 写入路径；补 SelfStarter/UserPresent/WifiReady 级韧性；首页继续 Hero 三态 |
+| S1 整仓迁 Care server/UI 进主包 | 体量大、权限/Provider/进程名冲突多 → **否** |
+| S2′ 只增强 OneBridge（终态） | 冷启可对齐，但永远两套协议，不满足「替换旧桥」→ **仅作迁移窗/底盘** |
+| **B′ 宿主内嵌 server 最小面（选）** | 满足「MINI 融合 + 替换旧桥 + 单 APK」；MVP 闸门防膨胀 |
 | 外置 Care（旧 A） | 与「内循环」冲突 → **否** |
 
 ## 3. 数据流（目标态）
@@ -54,7 +60,9 @@ OneIMS 首页 Hero
 | **P0** 纠偏 | 本文档；探测列表可保留 Care 作实验室回落，但产品路径不依赖 | 文档冻结 |
 | **P1** 首页内循环体验 | Hero/文案/引导统一「通道在 App 内」；去掉「去开 Shizuku/Care」主路径 | 文案+状态机自洽 |
 | **P2** 冷启对齐 MINI | 对照 Care oem1/oem6：解锁重试、WifiReady、SelfStarter 级热路径补进 onekuku | 冷启/划掉矩阵（真机） |
-| **P3** 实现收敛 | 若 OneBridge 协议够用则留门面换引擎；不够再评估迁 Care server **最小面** | 写配置 PASS；无第二 App |
+| **P3a** 迁入白名单 server | 按 `care-min-server-import-whitelist` 迁入；`ChannelEngine` 仍默认 ONEBRIDGE | `assembleOnekuku*` 绿；行为不变 |
+| **P3b** 旗标切换 | starter→`onekuku_server`；宿主 `*.shizuku` Provider；客户端接 Shizuku 同构桥 | 真机写 `carrier_config` PASS；划掉复连 |
+| **P3c** 退役 OneBridge | 去掉 `:bridge` / `onebridge_server` 主路径 | 默认 CARE_MIN；无第二 App |
 
 ## 5. 与上拍脚手架的关系
 

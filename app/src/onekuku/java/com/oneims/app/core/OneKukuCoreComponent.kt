@@ -21,13 +21,17 @@ import java.net.URL
  *
  * Phase4：OneBridge starter 以 library 打进主 App（[HOST_PACKAGE]），
  * **不再要求安装**独立 `com.oneims.bridge` APK。有 Wi‑Fi 时用无线调试配对拉起。
+ *
+ * P3 目标：用宿主内嵌 Care/Shizuku server 最小面（[ChannelEngine.CARE_MIN] /
+ * `onekuku_server`）替换本文件仍指向的 `onebridge_server`；邻仓
+ * `com.onekuku.care` 只作编包试验田，不是用户路径。
  */
 object OneKukuCoreComponent {
 
-    /** 宿主包：Phase4 内嵌 OneBridge（待 Care 融合后退役，见 care-home-fusion 文档）。 */
+    /** 宿主包：内循环真源（现 OneBridge；P3 后同宿主内嵌 MINI server）。 */
     const val HOST_PACKAGE: String = "com.oneims.app"
 
-    /** OneKuku Care / MINI 外置通道包（融合目标真源）。 */
+    /** 邻仓 Care / MINI 包名：仅实验室对照，主路径不依赖已安装。 */
     const val CARE_PACKAGE: String = ShizukuSetupHelper.CARE_PACKAGE
 
     /**
@@ -50,7 +54,8 @@ object OneKukuCoreComponent {
 
     /**
      * 内循环真源=宿主包；旧独立桥兼容；Care 仅实验室对照（用户路径不依赖第二 App）。
-     * [bridgeBootShellCommand] 仍打 onebridge_server（见 care-home-fusion 纠偏文档）。
+     * 当前 [bridgeBootShellCommand] 仍硬编码 `onebridge_server`。
+     * P3b 接线后才会按 [com.oneims.app.core.privilege.ChannelEngine] 改打 `onekuku_server`。
      */
     val CANDIDATE_PACKAGES: List<String> = listOf(HOST_PACKAGE, "com.oneims.bridge", CARE_PACKAGE)
 
