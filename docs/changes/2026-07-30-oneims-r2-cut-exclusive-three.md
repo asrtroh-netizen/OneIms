@@ -17,12 +17,26 @@
 - **切卡**：删除 `DataSimSwitchTileService` / `DataSimSwitchManager` / `QuickSettingsTileHelper` 与对应单测
 - **应急回滚**：`SafetyGuard.restoreDefaults` 仍清理旧显示 ownership / 本地 prefs（避免旧用户被静默重放）
 
+## 明确保留（用户点名「加上」· 已在当前树）
+
+下列 3.0.6/3.0.7 体验补丁均为 `HEAD` 祖先，R2 砍刀未触碰：
+
+| 能力 | 锚点 commit | 当前证据 |
+|---|---|---|
+| 三态通道卡（未激活/激活中/就绪，无休眠 UI） | `c0e3be4e0` | `OneKukuCardState` + `StatusHero` 三态注释 |
+| 矮屏紧凑布局 | `afdbda2cc` | `rememberHomeCompactLayout()`（矮屏/窄屏/大字号） |
+| 假就绪 + Apply 硬门禁 | `b1daf94bf` | `MainActivity.ensurePrivilegedAccess` / granted 同步 |
+| Hero 标题吃字修复 | `dd2a4ec60` | `StatusHero` 标题独占行，胶囊分行 |
+
+验证：`git merge-base --is-ancestor <commit> HEAD` 上述四条均为 true（2026-07-30）。
+
 ## 明确未做
 
 - **未编译**（用户要求「先不编译」）→ 编译门禁 **NOT RUN**
 - 未删除 `SystemDisplayOverrideManager` / `SignalBarSystemStyleManager` / `FiveGSignalReader` 等底层文件（仅断产品入口；可后续再做死代码清扫）
 - 未改 OneTools
 - 未升 versionCode
+- 「加上三态/矮屏/假就绪/吃字」**无需再合代码**（已在树内）
 
 ## 人工验证清单（编译后）
 
