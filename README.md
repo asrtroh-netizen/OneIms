@@ -98,6 +98,14 @@
 * 门禁血统对齐 3.0.4：非 Tensor 标不支持，不鼓励强开
 * OneKuku：内循环只保留 OneBridge（已废止 CARE_MIN 迷你线）
 
+### ✨ 本次覆盖更新（同号 3.1.0）
+
+* Lite 首页状态卡去掉「OneLink 通道」眉题小字（OneKuku 眉题保留）
+* 功能页去掉「按推荐一键开启」整块容器
+* 功能页去掉 WFC 模式框
+* 「离线 APN 库」改名为 **Apn救急**，挪到功能页顶部原一键开启位置
+* 设置页「推荐 Shizuku」改为 **小喵崽修缮版**
+
 ### 🔄 升级
 
 * 🟢 OneKuku：覆盖安装 `OneIms-OneKuku-standalone-3.1.0.apk`
