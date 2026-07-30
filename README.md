@@ -31,11 +31,7 @@
 >
 > <img src="docs/screenshots/shizuku-asrtroh-home-active.png" alt="asrtroh Shizuku Active" width="280" />
 >
-> **建议使用**
-> | 机型 | 建议 |
-> |---|---|
-> | **Pixel 系列** | **两版本都可用**（`V15.0.0` / `V15.1.0`） |
-> | **国产机** | 目前**优先使用组合版本**（`V15.1.0`） |
+> 
 >
 > 装 **OneIms Lite** 时按上表选包；装完请关掉电池优化，保持首页 **Active**。上游能力仍归 [RikkaApps/Shizuku](https://github.com/RikkaApps/Shizuku)。
 
@@ -46,7 +42,7 @@
 
 ---
 
-## 🧭 怎么选？OneKuku vs OneLink（2.2.1 起）
+## 🧭 怎么选？OneKuku vs OneLink
 
 两个 APK **业务功能一致**（VoLTE/VoWiFi/诊断/恢复/独家功能），区别只在 **特权通道** 怎么获得：
 
@@ -80,25 +76,7 @@
 
 ---
 
-## 📦 门禁血统（底包 3.0.4）
-
-> 门禁血统仍锚定 **3.0.4**（`CompatChecker` 非 Tensor → UNSUPPORTED）。  
-> 当前公开发版身份 = **`3.1.0` / versionCode `80`**。纪律见 `docs/architecture/2026-07-30-oneims-3.0.4-base-package.md`。
-
----
-
-## ✨ What's New · 3.1.0
-
-**本版主线：底包 3.0.4 血统上收敛产品面——砍掉三项独家运行时入口，保留能力页「5G信号强度调整」；OneKuku 内循环固定 OneBridge。**
-
-### 📶 双版本共用
-
-* 去掉独家三项入口：信号格显示样式 / 5G 显示增强 / 控制中心快捷切卡（能力迁 OneTools）
-* **保留**能力页第五项「5G信号强度调整」与开机阈值重放
-* 门禁血统对齐 3.0.4：非 Tensor 标不支持，不鼓励强开
-* OneKuku：内循环只保留 OneBridge（已废止 CARE_MIN 迷你线）
-
-### ✨ 本次覆盖更新（同号 3.1.0）
+## ✨ What's New ·3.1.
 
 * Lite 首页状态卡去掉「OneLink 通道」眉题小字（OneKuku 眉题保留）
 * 功能页去掉「按推荐一键开启」整块容器
