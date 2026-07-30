@@ -7,9 +7,9 @@ import org.junit.Test
 class ChannelEngineTest {
 
     @Test
-    fun current_defaultsToCareMin() {
-        // onekuku：默认已切 CARE_MIN（宿主内嵌 MINI server）。
-        assertEquals(ChannelEngine.CARE_MIN, ChannelEngine.current())
+    fun current_defaultsToOneBridge() {
+        // onekuku：默认回 OneBridge（放弃 CARE_MIN 默认）。
+        assertEquals(ChannelEngine.ONEBRIDGE, ChannelEngine.current())
     }
 
     @Test

@@ -28,8 +28,8 @@ android {
             versionNameSuffix = "-onekuku"
             buildConfigField("String", "CHANNEL_LINE", "\"onekuku\"")
             buildConfigField("boolean", "CHANNEL_USES_EMBEDDED_BRIDGE", "true")
-            // 内循环引擎：CARE_MIN = 宿主内嵌 Shizuku MINI（onekuku_server + librish.so）
-            buildConfigField("String", "CHANNEL_ENGINE", "\"CARE_MIN\"")
+            // 内循环引擎：默认 OneBridge（onebridge_server）。CARE_MIN 保留可切，暂不默认。
+            buildConfigField("String", "CHANNEL_ENGINE", "\"ONEBRIDGE\"")
         }
         create("onelink") {
             dimension = "channel"

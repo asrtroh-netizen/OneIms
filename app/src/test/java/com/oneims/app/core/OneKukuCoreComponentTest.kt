@@ -12,18 +12,18 @@ class OneKukuCoreComponentTest {
         val cmd = OneKukuCoreComponent.adbStartCommand(context = null)
         assertTrue(cmd.contains(OneKukuCoreComponent.HOST_PACKAGE))
         assertTrue(cmd.contains("app_process"))
-        assertTrue(cmd.contains(OneKukuCoreComponent.ENTRY_CLASS_CARE_MIN))
+        assertTrue(cmd.contains(OneKukuCoreComponent.ENTRY_CLASS_ONEBRIDGE))
         assertTrue(cmd.startsWith("adb shell "))
     }
 
     @Test
-    fun bridgeBootShellCommand_defaultEngineIsCareMinServer() {
-        assertEquals(ChannelEngine.CARE_MIN, ChannelEngine.current())
+    fun bridgeBootShellCommand_defaultEngineIsOneBridgeServer() {
+        assertEquals(ChannelEngine.ONEBRIDGE, ChannelEngine.current())
         val cmd = OneKukuCoreComponent.bridgeBootShellCommand()
-        assertTrue(cmd.contains("onekuku_server"))
-        assertTrue(cmd.contains(OneKukuCoreComponent.ENTRY_CLASS_CARE_MIN))
-        assertTrue(!cmd.contains("onebridge_server"))
-        assertTrue(!cmd.contains(OneKukuCoreComponent.ENTRY_CLASS_ONEBRIDGE))
+        assertTrue(cmd.contains("onebridge_server"))
+        assertTrue(cmd.contains(OneKukuCoreComponent.ENTRY_CLASS_ONEBRIDGE))
+        assertTrue(!cmd.contains("onekuku_server"))
+        assertTrue(!cmd.contains(OneKukuCoreComponent.ENTRY_CLASS_CARE_MIN))
     }
 
     @Test
@@ -34,9 +34,9 @@ class OneKukuCoreComponentTest {
         assertTrue(cmd.contains("app_process"))
         assertTrue(cmd.contains(OneKukuCoreComponent.SHELL_BOOT_OK))
         assertTrue(cmd.contains("printf"))
-        assertTrue(cmd.contains("pidof onekuku_server"))
-        assertTrue(cmd.contains("shizuku.library.path"))
-        assertTrue(cmd.contains("librish.so"))
+        assertTrue(cmd.contains("pidof onebridge_server"))
+        assertTrue(!cmd.contains("shizuku.library.path"))
+        assertTrue(!cmd.contains("librish.so"))
         assertTrue(!cmd.contains("pkill"))
         // Detach from adb shell: setsid (preferred) or nohup fallback — avoid SIGHUP kill.
         assertTrue(cmd.contains("setsid") || cmd.contains("nohup"))
@@ -49,8 +49,8 @@ class OneKukuCoreComponentTest {
         val cmd = OneKukuCoreComponent.bridgeBootShellCommand(forceRestart = true)
         assertTrue(cmd.contains("pkill"))
         assertTrue(cmd.contains("app_process"))
-        assertTrue(cmd.contains("onekuku_server"))
-        assertTrue(cmd.contains("shizuku.library.path"))
+        assertTrue(cmd.contains("onebridge_server"))
+        assertTrue(!cmd.contains("shizuku.library.path"))
     }
 
     @Test
