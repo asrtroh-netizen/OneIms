@@ -109,4 +109,18 @@ object ProvisioningWritePolicy {
         return t.contains("ims provisioning rejected") ||
             t.contains("provisioning rejected key=")
     }
+
+    /**
+     * 国产 VoWIFI：仅全机型软键（26/27/68 对应 detail）失败且 VoWIFI 门已开时，
+     * UI 报成功（与 OneLink 观感对齐）；仍属 soft，日志可保留 soft-reject。
+     */
+    fun preferQuietDomesticSoftUi(
+        softFailedKeys: List<String>,
+        detail: Map<String, Boolean>,
+        domesticVowifiOem: Boolean = OemDeviceCompat.isDomesticVowifiOem(),
+    ): Boolean {
+        if (!domesticVowifiOem || softFailedKeys.isEmpty()) return false
+        if (softFailedKeys.any { it !in SOFT_PROVISIONING_KEYS }) return false
+        return detail["provision_vowifi"] != false
+    }
 }

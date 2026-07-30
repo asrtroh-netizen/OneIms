@@ -172,11 +172,25 @@ object ImsController {
                 message = when (outcome.kind) {
                     ProvisioningWritePolicy.OutcomeKind.FULL_OK ->
                         context.getString(R.string.msg_apply_ok)
-                    ProvisioningWritePolicy.OutcomeKind.OEM_SOFT_PARTIAL ->
-                        context.getString(
-                            R.string.msg_apply_oem_soft,
-                            outcome.softFailedKeys.joinToString(),
-                        )
+                    ProvisioningWritePolicy.OutcomeKind.OEM_SOFT_PARTIAL -> {
+                        if (ProvisioningWritePolicy.preferQuietDomesticSoftUi(
+                                softFailedKeys = outcome.softFailedKeys,
+                                detail = detail,
+                                domesticVowifiOem = domesticVowifi,
+                            )
+                        ) {
+                            DiagFileLogger.i(
+                                "ImsController",
+                                "domestic soft-bypass UI→ok keys=${outcome.softFailedKeys}",
+                            )
+                            context.getString(R.string.msg_apply_ok)
+                        } else {
+                            context.getString(
+                                R.string.msg_apply_oem_soft,
+                                outcome.softFailedKeys.joinToString(),
+                            )
+                        }
+                    }
                     ProvisioningWritePolicy.OutcomeKind.HARD_PARTIAL ->
                         context.getString(
                             R.string.msg_apply_partial,

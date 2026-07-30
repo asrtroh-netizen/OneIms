@@ -182,4 +182,29 @@ class ProvisioningWritePolicyTest {
         assertTrue(ProvisioningWritePolicy.isSoftProvisioningIntKey(10, domesticVowifiOem = true))
         assertTrue(ProvisioningWritePolicy.isSoftProvisioningIntKey(68, domesticVowifiOem = true))
     }
+
+    @Test
+    fun quietDomesticUi_whenOnly26_27SoftAndVowifiOpen() {
+        assertTrue(
+            ProvisioningWritePolicy.preferQuietDomesticSoftUi(
+                softFailedKeys = listOf("provision_vowifi_roaming", "provision_wfc_mode"),
+                detail = mapOf("provision_vowifi" to true),
+                domesticVowifiOem = true,
+            ),
+        )
+        assertFalse(
+            ProvisioningWritePolicy.preferQuietDomesticSoftUi(
+                softFailedKeys = listOf("provision_vowifi_roaming", "provision_wfc_mode"),
+                detail = mapOf("provision_vowifi" to true),
+                domesticVowifiOem = false,
+            ),
+        )
+        assertFalse(
+            ProvisioningWritePolicy.preferQuietDomesticSoftUi(
+                softFailedKeys = listOf("provision_vowifi"),
+                detail = mapOf("provision_vowifi" to false),
+                domesticVowifiOem = true,
+            ),
+        )
+    }
 }
