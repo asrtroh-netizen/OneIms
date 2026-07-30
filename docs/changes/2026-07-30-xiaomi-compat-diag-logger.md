@@ -2,7 +2,8 @@
 
 ## 背景
 
-群友反馈：小米 / HyperOS 上 OneIMS 闪退，PixelIMS 正常。对照 `.tmp_vvb2060_ims`：PixelIMS 无完整 UI/OneKuku、几乎只做 CarrierConfig + key=68，异常多被吞；OneIMS 写集更大且此前无全局崩溃落盘。
+群友反馈：小米 / HyperOS 上 OneIMS 闪退，PixelIMS 正常。  
+**澄清（后续）**：用户所指 PixelIMS = [kyujin-cho/pixel-volte-patch](https://github.com/kyujin-cho/pixel-volte-patch)；本地 `.tmp_vvb2060_ims` 仅作南宫旁路参考。详见 `2026-07-30-align-pixel-volte-patch.md`。
 
 ## 改动
 

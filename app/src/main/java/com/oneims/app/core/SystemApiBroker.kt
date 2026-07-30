@@ -346,23 +346,40 @@ object SystemApiBroker {
      * bundle=null 表示清空覆盖；非 root 一律走活动 Instrumentation，并在返回前验证目标键。
      * OneKuku 业务写入应优先经 [CarrierConfigOverrideWriter]
      *（先 persistent=true，权限不足自动回退 temporary）。
+     *
+     * @return 实际是否使用了 persistent=true（Broker 内可能同会话降级为 temporary）。
      */
-    fun overrideConfig(context: Context, subId: Int, bundle: PersistableBundle?, persistent: Boolean) {
+    fun overrideConfig(
+        context: Context,
+        subId: Int,
+        bundle: PersistableBundle?,
+        persistent: Boolean,
+    ): Boolean {
         require(subId >= 0) { "Invalid subscription id: $subId" }
+        var usedPersistent = persistent
         if (PrivilegeBridges.current.getUid() == 0) {
             shizukuOverride(subId, bundle, persistent)
             lastStrategy = "shizuku-root"
         } else {
             lastStrategy = "instrumentation-shell-delegate"
-            executeBroker(context, BrokerProtocol.OP_OVERRIDE_CONFIG) {
+            val brokerMessage = executeBroker(context, BrokerProtocol.OP_OVERRIDE_CONFIG) {
                 putInt(BrokerProtocol.ARG_SUB_ID, subId)
                 putParcelable(BrokerProtocol.ARG_OVERRIDES, bundle)
                 putInt(BrokerProtocol.ARG_PERSISTENT, if (persistent) 1 else 0)
+            }
+            if (brokerMessage.contains("temporary", ignoreCase = true)) {
+                usedPersistent = false
+                lastStrategy = "instrumentation-temporary-fallback"
+                DiagFileLogger.i(
+                    "Broker",
+                    "overrideConfig used temporary fallback subId=$subId msg=$brokerMessage",
+                )
             }
         }
         if (bundle != null) {
             awaitOverrideReadback(context, subId, bundle)
         }
+        return usedPersistent
     }
 
     fun writeGlobalInt(context: Context, key: String, value: Int) {

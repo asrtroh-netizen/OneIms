@@ -25,6 +25,17 @@ class CarrierConfigOverrideWriterTest {
                 IllegalStateException("readback mismatch"),
             ),
         )
+        // HyperOS / OEM 文案变体：仍须带 SecurityException，避免误伤读回失败
+        assertTrue(
+            CarrierConfigOverrideWriter.isPersistentPrivilegeDenied(
+                SecurityException("persistent override requires system privilege"),
+            ),
+        )
+        assertFalse(
+            CarrierConfigOverrideWriter.isPersistentPrivilegeDenied(
+                IllegalStateException("persistent readback mismatch on system"),
+            ),
+        )
     }
 
     @Test

@@ -265,16 +265,20 @@ object CarrierConfigOverrideWriter {
             return true
         }
         return try {
+            // Broker 内已对齐 pixel-volte-patch：可能同会话降级 temporary，以返回值为准。
             SystemApiBroker.overrideConfig(
                 context = context,
                 subId = subId,
                 bundle = bundle,
                 persistent = true,
             )
-            true
         } catch (error: Throwable) {
             if (!isPersistentPrivilegeDenied(error)) throw error
             Log.w(TAG, "persistent=true denied, fallback to temporary: ${error.message}")
+            DiagFileLogger.w(
+                "CarrierConfig",
+                "Writer fallback temporary after persistent deny: ${error.message}",
+            )
             SystemApiBroker.overrideConfig(
                 context = context,
                 subId = subId,
@@ -289,10 +293,16 @@ object CarrierConfigOverrideWriter {
         val messages = generateSequence(error) { it.cause }
             .mapNotNull { it.message }
             .joinToString(" ")
+        val security = generateSequence(error) { it.cause }.any { it is SecurityException }
         return messages.contains("only can be invoked by system app", ignoreCase = true) ||
             (
                 messages.contains("persistent=true", ignoreCase = true) &&
                     messages.contains("system app", ignoreCase = true)
+                ) ||
+            (
+                security &&
+                    messages.contains("persistent", ignoreCase = true) &&
+                    messages.contains("system", ignoreCase = true)
                 )
     }
 
