@@ -180,6 +180,8 @@ data class DiagnosticsActions(
     val onDumpConfig: suspend () -> String,
     val onCopyLog: () -> Unit,
     val onClearLog: () -> Unit,
+    /** 导出详细文件日志包（含崩溃落盘），分享给排障用。 */
+    val onExportDetailLog: () -> Unit = {},
     val onReapply: () -> Unit,
     val onExportFullConfig: () -> Unit,
     val onRunUserFacingCheck: suspend (Int) -> List<UserFacingDiagnosticItem>,

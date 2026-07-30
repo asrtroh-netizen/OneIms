@@ -95,19 +95,20 @@ object ImsController {
             write.detail.forEach { (key, ok) -> detail["cc:$key"] = ok }
 
             if (enableVolte) {
+                // 必须以返回码 0 判成功：软键可返回 -1 且不抛，`.isSuccess` 会假成功。
                 detail["provision_volte"] = runCatching {
                     SystemApiBroker.setProvisioningInt(
                         subId, ProvisioningKeys.KEY_VOLTE_PROVISIONING_STATUS,
                         ProvisioningKeys.PROVISIONING_VALUE_ENABLED,
-                    )
-                }.isSuccess
+                    ) == 0
+                }.getOrDefault(false)
                 // 对齐南宫 3.1：VoIMS opt-in，强制设置页露出 VoLTE（不替代 carrier_config 覆盖）。
                 detail["provision_voims_opt_in"] = runCatching {
                     SystemApiBroker.setProvisioningInt(
                         subId, ProvisioningKeys.KEY_VOIMS_OPT_IN_STATUS,
                         ProvisioningKeys.PROVISIONING_VALUE_ENABLED,
-                    )
-                }.isSuccess
+                    ) == 0
+                }.getOrDefault(false)
             }
             if (enableVowifi) {
                 detail["provision_vowifi"] = runCatching {

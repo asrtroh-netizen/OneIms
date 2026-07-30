@@ -743,11 +743,15 @@
     <string name="tool_restart_ims_sub">安全重启 IMS 栈并复查注册状态</string>
     <string name="tool_apn_sub">全球配置内置本机，当前 SIM 优先匹配</string>
     <string name="action_net_fix_sub">调整系统门户检测行为</string>
-    <string name="log_subtitle">最近结果置顶，可长按选择或一键复制</string>
+    <string name="log_subtitle">最近结果置顶；详细文件日志含崩溃栈，可导出分享抓 Bug</string>
     <string name="action_copy_log">复制</string>
     <string name="action_clear_log">清空</string>
+    <string name="action_export_detail_log">导出详细日志</string>
     <string name="log_copied">日志已复制</string>
     <string name="log_cleared">日志已清空</string>
+    <string name="log_detail_exported">详细日志已导出，请选择分享应用</string>
+    <string name="log_detail_export_failed">详细日志导出失败，请重试或复制屏幕日志</string>
+    <string name="log_detail_share_title">OneIMS 详细诊断日志</string>
 
     <string name="settings_title">设置</string>
     <string name="settings_subtitle">外观、守护与应用维护</string>

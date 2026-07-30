@@ -46,6 +46,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import android.content.Intent
+import androidx.core.content.FileProvider
 import androidx.core.util.Consumer
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -54,6 +55,7 @@ import com.oneims.app.core.ApnCatalogEntry
 import com.oneims.app.core.ConfigStore
 import com.oneims.app.core.DodoPaySupportClient
 import com.oneims.app.core.DeviceInfo
+import com.oneims.app.core.DiagFileLogger
 import com.oneims.app.core.EpdgChecker
 import com.oneims.app.core.GuardService
 import com.oneims.app.core.ImsController
@@ -141,6 +143,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        DiagFileLogger.breadcrumb("MainActivity.onCreate")
         // 启动页使用正式品牌红色，首帧先用浅色系统栏图标保证对比度。
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
@@ -556,6 +559,7 @@ private fun AppRoot(
         val normalized = message.trim().take(MAX_DIAGNOSTIC_ENTRY_CHARS)
         if (normalized.isNotEmpty()) {
             log = "• $normalized\n$log".take(MAX_DIAGNOSTIC_LOG_CHARS)
+            DiagFileLogger.ui(normalized)
         }
     }
 
@@ -2231,10 +2235,52 @@ private fun AppRoot(
                         },
                         onClearLog = {
                             log = context.getString(R.string.log_ready)
+                            DiagFileLogger.clearSession()
                             scope.launch {
                                 snackbarHostState.showSnackbar(
                                     context.getString(R.string.log_cleared),
                                 )
+                            }
+                        },
+                        onExportDetailLog = {
+                            val file = DiagFileLogger.exportBundle(context)
+                            if (file == null) {
+                                publish(context.getString(R.string.log_detail_export_failed))
+                            } else {
+                                val uri = FileProvider.getUriForFile(
+                                    context,
+                                    "${context.packageName}.fileprovider",
+                                    file,
+                                )
+                                val share = Intent(Intent.ACTION_SEND).apply {
+                                    type = "text/plain"
+                                    putExtra(Intent.EXTRA_STREAM, uri)
+                                    putExtra(
+                                        Intent.EXTRA_SUBJECT,
+                                        context.getString(R.string.log_detail_share_title),
+                                    )
+                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                }
+                                runCatching {
+                                    context.startActivity(
+                                        Intent.createChooser(
+                                            share,
+                                            context.getString(R.string.log_detail_share_title),
+                                        ),
+                                    )
+                                    publish(context.getString(R.string.log_detail_exported))
+                                }.onFailure {
+                                    // 无分享目标时至少复制全文到剪贴板
+                                    val clipboard =
+                                        context.getSystemService(ClipboardManager::class.java)
+                                    clipboard?.setPrimaryClip(
+                                        ClipData.newPlainText(
+                                            context.getString(R.string.log_detail_share_title),
+                                            DiagFileLogger.buildExportText(context),
+                                        ),
+                                    )
+                                    publish(context.getString(R.string.log_copied))
+                                }
                             }
                         },
                         onReapply = {

@@ -397,22 +397,49 @@ object SystemApiBroker {
      * 写入 IMS provisioning。
      * - 返回 0 = 成功
      * - key=26/27（漫游 / WFC 模式）：OEM 拒写只打日志并返回非 0，**绝不抛**（一加闪退根因之一）
+     * - 小米系额外软化 key=28/68；反射/Security 异常也可软返回 -1
      * - 其它 key：非 0 仍抛 IllegalStateException，由上层 runCatching 消化
      */
     fun setProvisioningInt(subId: Int, key: Int, value: Int): Int {
         val soft = ProvisioningWritePolicy.isSoftProvisioningIntKey(key)
         val result = runCatching { shizukuProvision(subId, key, value) }.getOrElse { error ->
-            if (soft) {
+            // 仅声明为 soft 的 key 才吞 invoke 异常；硬键（含 VoLTE key=10）必须上抛，
+            // 避免上层 `.isSuccess` 把 -1 误判成成功。
+            if (soft && isSoftProvisioningThrowable(error)) {
                 android.util.Log.w(
                     "OneIMS-Broker",
                     "soft provisioning invoke failed key=$key: ${error.message}",
                 )
+                DiagFileLogger.w(
+                    "Broker",
+                    "soft provisioning invoke key=$key subId=$subId: ${error.javaClass.simpleName}: ${error.message}",
+                    error,
+                )
                 return -1
             }
+            if (soft) {
+                // soft key 但异常类型未知：仍不抛，保持一加/小米软键不崩进程
+                android.util.Log.w(
+                    "OneIMS-Broker",
+                    "soft provisioning invoke (any) key=$key: ${error.message}",
+                )
+                DiagFileLogger.w(
+                    "Broker",
+                    "soft provisioning invoke(any) key=$key subId=$subId: ${error.message}",
+                    error,
+                )
+                return -1
+            }
+            DiagFileLogger.e(
+                "Broker",
+                "provisioning invoke hard-fail key=$key subId=$subId",
+                error,
+            )
             throw error
         }
         if (result == 0) {
             lastStrategy = "shizuku-direct"
+            DiagFileLogger.i("Broker", "provisioning ok key=$key subId=$subId")
             return 0
         }
         if (soft) {
@@ -420,11 +447,32 @@ object SystemApiBroker {
                 "OneIMS-Broker",
                 "OEM soft-reject provisioning key=$key result=$result (no throw)",
             )
+            DiagFileLogger.w(
+                "Broker",
+                "OEM soft-reject provisioning key=$key result=$result subId=$subId",
+            )
             lastStrategy = "shizuku-oem-soft"
             return result
         }
         check(result == 0) { "IMS provisioning rejected key=$key, result=$result" }
         return result
+    }
+
+    private fun isSoftProvisioningThrowable(error: Throwable): Boolean {
+        var cur: Throwable? = error
+        while (cur != null) {
+            when (cur) {
+                is SecurityException,
+                is ReflectiveOperationException,
+                -> return true
+            }
+            val name = cur.javaClass.name
+            if (name.contains("RemoteException") || name.contains("DeadObjectException")) {
+                return true
+            }
+            cur = cur.cause
+        }
+        return false
     }
 
     /** 优先读用户 WFC 模式；接口缺失/OEM 异常时返回 -1，不向上抛。 */
@@ -472,6 +520,21 @@ object SystemApiBroker {
                 return
             }
             Thread.sleep(RESULT_POLL_INTERVAL_MS)
+        }
+        val keys = expected.keySet().joinToString(",")
+        // 小米/HyperOS 常见：写已接受但回读延迟/被过滤；硬抛只会放大闪退面。
+        // Writer 仍会对逐 key 做 verify；此处软放行避免进程级失败风暴。
+        if (OemDeviceCompat.softenCarrierConfigReadback()) {
+            android.util.Log.w(
+                "OneIMS-Broker",
+                "CarrierConfig readback soft-timeout subId=$subId keys=$keys oem=${OemDeviceCompat.summaryLine()}",
+            )
+            DiagFileLogger.w(
+                "Broker",
+                "CarrierConfig readback soft-timeout subId=$subId keys=$keys",
+            )
+            lastStrategy = "override-readback-soft"
+            return
         }
         error("CarrierConfig write accepted, but readback did not match within 5 seconds")
     }

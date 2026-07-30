@@ -53,6 +53,7 @@
         android:targetPackage="${applicationId}" />
 
     <application
+        android:name="com.oneims.app.OneImsApp"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:icon="@mipmap/ic_launcher"

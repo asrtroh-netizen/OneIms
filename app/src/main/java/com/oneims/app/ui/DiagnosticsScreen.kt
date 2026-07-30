@@ -226,6 +226,16 @@ fun DiagnosticsScreen(
                             )
                         }
                     }
+                    OutlinedButton(
+                        onClick = actions.onExportDetailLog,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Icon(Icons.AutoMirrored.Filled.List, contentDescription = null)
+                        Text(
+                            stringResource(R.string.action_export_detail_log),
+                            modifier = Modifier.padding(start = 8.dp),
+                        )
+                    }
                 }
             }
         }

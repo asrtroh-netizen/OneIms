@@ -735,11 +735,15 @@
     <string name="tool_restart_ims_sub">Safely reset the IMS stack and recheck registration</string>
     <string name="tool_apn_sub">Global carrier profiles stored locally, with current-SIM matching</string>
     <string name="action_net_fix_sub">Adjust Android captive-portal detection</string>
-    <string name="log_subtitle">Newest results first; select text or copy everything</string>
+    <string name="log_subtitle">Newest results first; detailed file logs include crash stacks for bug reports</string>
     <string name="action_copy_log">Copy</string>
     <string name="action_clear_log">Clear</string>
+    <string name="action_export_detail_log">Export detail log</string>
     <string name="log_copied">Log copied</string>
     <string name="log_cleared">Log cleared</string>
+    <string name="log_detail_exported">Detail log exported — pick an app to share</string>
+    <string name="log_detail_export_failed">Detail log export failed; retry or copy on-screen log</string>
+    <string name="log_detail_share_title">OneIMS detail diagnostic log</string>
 
     <string name="settings_title">Settings</string>
     <string name="settings_subtitle">Appearance, reliability, and maintenance</string>

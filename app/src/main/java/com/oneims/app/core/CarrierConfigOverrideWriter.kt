@@ -39,6 +39,10 @@ object CarrierConfigOverrideWriter {
         require(values.keySet().isNotEmpty()) { "override values must not be empty" }
         val target = formatTargetLabel(context, subId)
         Log.i(TAG, "write target=$target reason=$reason keys=${values.keySet()}")
+        DiagFileLogger.i(
+            "CarrierConfig",
+            "write target=$target reason=$reason keys=${values.keySet()} oem=${OemDeviceCompat.summaryLine()}",
+        )
 
         val detail = linkedMapOf<String, Boolean>()
         val failures = mutableListOf<String>()
