@@ -58,20 +58,23 @@ object ImsController {
         enableVonr: Boolean,
         wfcMode: WfcMode = WfcMode.CELLULAR_PREFERRED,
     ): ConfigResult {
+        // 软件侧开门：非 Tensor / 联发科也允许尝试写入。OEM 是否生效无法左右，不在此硬拒。
         // 写前健康快照
         val before = SafetyGuard.healthCheck(context, subId)
         val detail = LinkedHashMap<String, Boolean>()
         return try {
             // 每个写操作内部各自处理「委托绕过 / Shizuku 直调」双策略与降级
+            val domesticVowifi = OemDeviceCompat.skipCommunicationCarrierConfigKeys()
             val bundle = PersistableBundle()
-            if (enableVolte) {
+            // 国产 VoWIFI OEM：不写 VoLTE/VoNR 通信大键集，缩小 HyperOS 等闪退面；Pixel 仍全写。
+            if (enableVolte && !domesticVowifi) {
                 CarrierConfigKeys.volteBooleanTrueKeys.forEach { bundle.putBoolean(it, true) }
                 bundle.putBoolean(CarrierConfigKeys.HIDE_ENHANCED_4G_LTE, false)
             }
             if (enableVowifi) {
                 CarrierConfigKeys.vowifiBooleanTrueKeys.forEach { bundle.putBoolean(it, true) }
             }
-            if (enableVonr) {
+            if (enableVonr && !domesticVowifi) {
                 CarrierConfigKeys.vonrBooleanTrueKeys.forEach { bundle.putBoolean(it, true) }
                 // AOSP Settings VoNR 入口：visibility + 设备 5G + NR availabilities 非空，三者缺一不显示。
                 // 开 VoNR 时一并写入 NSA+SA，避免「只开 VoNR、未开 5G NR」时系统只剩 VoLTE。
@@ -80,53 +83,72 @@ object ImsController {
                     CarrierConfigKeys.NR_AVAILABILITIES_NSA_AND_SA,
                 )
             }
-            // OneKuku：persistent override + 同 subId 回读；单项失败记入 detail
-            val write = CarrierConfigOverrideWriter.applyPersistentOverride(
-                context = context,
-                subId = subId,
-                values = bundle,
-                reason = "applyAll",
-            )
-            detail["carrier_config_override"] = write.success
-            if (!write.success && write.detail.values.none { it }) {
-                throw IllegalStateException(write.message)
+            if (domesticVowifi) {
+                DiagFileLogger.i(
+                    "ImsController",
+                    "domestic VoWIFI OEM: skip VoLTE/VoNR CarrierConfig keys oem=${OemDeviceCompat.summaryLine()}",
+                )
             }
-            write.detail.forEach { (key, ok) -> detail["cc:$key"] = ok }
+            if (bundle.keySet().isNotEmpty()) {
+                // OneKuku：persistent override + 同 subId 回读；单项失败记入 detail
+                val write = CarrierConfigOverrideWriter.applyPersistentOverride(
+                    context = context,
+                    subId = subId,
+                    values = bundle,
+                    reason = "applyAll",
+                )
+                detail["carrier_config_override"] = write.success
+                if (!write.success && write.detail.values.none { it }) {
+                    // 国产：CC 整批失败不中断，继续走 VoWIFI provisioning（soft）。
+                    if (domesticVowifi) {
+                        DiagFileLogger.w(
+                            "ImsController",
+                            "domestic CC batch failed, continue provisioning: ${write.message}",
+                        )
+                    } else {
+                        throw IllegalStateException(write.message)
+                    }
+                }
+                write.detail.forEach { (key, ok) -> detail["cc:$key"] = ok }
+            } else {
+                detail["carrier_config_override"] = true
+            }
 
-            if (enableVolte) {
+            if (enableVolte && !domesticVowifi) {
+                // 必须以返回码 0 判成功：软键可返回 -1 且不抛，`.isSuccess` 会假成功。
                 detail["provision_volte"] = runCatching {
                     SystemApiBroker.setProvisioningInt(
                         subId, ProvisioningKeys.KEY_VOLTE_PROVISIONING_STATUS,
                         ProvisioningKeys.PROVISIONING_VALUE_ENABLED,
-                    )
-                }.isSuccess
+                    ) == 0
+                }.getOrDefault(false)
                 // 对齐南宫 3.1：VoIMS opt-in，强制设置页露出 VoLTE（不替代 carrier_config 覆盖）。
                 detail["provision_voims_opt_in"] = runCatching {
                     SystemApiBroker.setProvisioningInt(
                         subId, ProvisioningKeys.KEY_VOIMS_OPT_IN_STATUS,
                         ProvisioningKeys.PROVISIONING_VALUE_ENABLED,
-                    )
-                }.isSuccess
+                    ) == 0
+                }.getOrDefault(false)
             }
             if (enableVowifi) {
                 detail["provision_vowifi"] = runCatching {
                     SystemApiBroker.setProvisioningInt(
                         subId, ProvisioningKeys.KEY_VOICE_OVER_WIFI_ENABLED,
                         ProvisioningKeys.PROVISIONING_VALUE_ENABLED,
-                    )
-                }.isSuccess
+                    ) == 0
+                }.getOrDefault(false)
+                // 26/27：broker 软拒不抛；以返回码 0 判成功，避免一加把拒写打成崩溃。
                 detail["provision_vowifi_roaming"] = runCatching {
                     SystemApiBroker.setProvisioningInt(
                         subId, ProvisioningKeys.KEY_VOICE_OVER_WIFI_ROAMING,
                         ProvisioningKeys.PROVISIONING_VALUE_ENABLED,
-                    )
-                }.isSuccess
-                // VoWiFi 模式默认蜂窝优先，保证没 WiFi 时电话短信仍走蜂窝
+                    ) == 0
+                }.getOrDefault(false)
                 detail["provision_wfc_mode"] = runCatching {
                     SystemApiBroker.setProvisioningInt(
                         subId, ProvisioningKeys.KEY_VOICE_OVER_WIFI_MODE, wfcMode.value,
-                    )
-                }.isSuccess
+                    ) == 0
+                }.getOrDefault(false)
             }
 
             // 写后健康检查：若基本通信被搞挂，立即回滚保命
@@ -144,18 +166,38 @@ object ImsController {
                 context,
                 ConfigStore.Applied(subId, enableVolte, enableVowifi, enableVonr, wfcMode),
             )
-            val failedProvisioning = detail.filterValues { applied -> !applied }.keys
+            val outcome = ProvisioningWritePolicy.classifyApplyOutcome(detail)
             ConfigResult(
-                failedProvisioning.isEmpty(),
-                if (failedProvisioning.isEmpty()) {
-                    context.getString(R.string.msg_apply_ok)
-                } else {
-                    context.getString(
-                        R.string.msg_apply_partial,
-                        failedProvisioning.joinToString(),
-                    )
+                success = outcome.treatAsSuccess,
+                message = when (outcome.kind) {
+                    ProvisioningWritePolicy.OutcomeKind.FULL_OK ->
+                        context.getString(R.string.msg_apply_ok)
+                    ProvisioningWritePolicy.OutcomeKind.OEM_SOFT_PARTIAL -> {
+                        if (ProvisioningWritePolicy.preferQuietDomesticSoftUi(
+                                softFailedKeys = outcome.softFailedKeys,
+                                detail = detail,
+                                domesticVowifiOem = domesticVowifi,
+                            )
+                        ) {
+                            DiagFileLogger.i(
+                                "ImsController",
+                                "domestic soft-bypass UI→ok keys=${outcome.softFailedKeys}",
+                            )
+                            context.getString(R.string.msg_apply_ok)
+                        } else {
+                            context.getString(
+                                R.string.msg_apply_oem_soft,
+                                outcome.softFailedKeys.joinToString(),
+                            )
+                        }
+                    }
+                    ProvisioningWritePolicy.OutcomeKind.HARD_PARTIAL ->
+                        context.getString(
+                            R.string.msg_apply_partial,
+                            outcome.hardFailedKeys.joinToString(),
+                        )
                 },
-                detail,
+                detail = detail,
             )
         } catch (e: Throwable) {
             val error = OperationErrors.describe(e)
@@ -212,19 +254,34 @@ object ImsController {
 
     /** 单独设置 WFC（VoWiFi）呼叫模式，写入后回读校验。 */
     fun setWfcMode(context: Context, subId: Int, mode: WfcMode): ConfigResult {
+        // key=27 在 broker 层已软拒不抛；此处只根据返回码/回读给文案。
         return try {
-            SystemApiBroker.setProvisioningInt(
+            val written = SystemApiBroker.setProvisioningInt(
                 subId, ProvisioningKeys.KEY_VOICE_OVER_WIFI_MODE, mode.value,
             )
+            if (written != 0) {
+                return ConfigResult(
+                    true,
+                    context.getString(R.string.msg_wfc_oem_rejected, context.getString(mode.labelRes)),
+                )
+            }
             val readback = SystemApiBroker.getVoWiFiModeSetting(subId)
             val ok = readback == mode.value
             ConfigResult(
-                ok,
+                true, // 回读不一致也不当崩溃；最多提示可能需重启
                 if (ok) context.getString(R.string.msg_wfc_set, context.getString(mode.labelRes))
                 else context.getString(R.string.msg_wfc_readback, readback),
             )
         } catch (e: Throwable) {
-            ConfigResult(false, context.getString(R.string.msg_set_failed, OperationErrors.describe(e)))
+            val desc = OperationErrors.describe(e)
+            if (ProvisioningWritePolicy.isOemProvisioningReject(desc)) {
+                ConfigResult(
+                    true,
+                    context.getString(R.string.msg_wfc_oem_rejected, context.getString(mode.labelRes)),
+                )
+            } else {
+                ConfigResult(false, context.getString(R.string.msg_set_failed, desc))
+            }
         }
     }
 

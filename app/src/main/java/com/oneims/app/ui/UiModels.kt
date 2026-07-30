@@ -14,8 +14,6 @@ import com.oneims.app.core.ConfigStore
 import com.oneims.app.core.DiagnosticCheckItem
 import com.oneims.app.core.FixOutcome
 import com.oneims.app.core.PixelImsOptions
-import com.oneims.app.core.SimCardInfo
-import com.oneims.app.core.SimpleFiveGDisplayConfig
 import com.oneims.app.core.UserFacingDiagnosticItem
 import com.oneims.app.model.SimInfo
 import com.oneims.app.model.UpdateInfo
@@ -124,7 +122,6 @@ data class CapabilitiesUiState(
     val ut: Boolean,
     val crossSim: Boolean,
     val nr5g: Boolean,
-    val signalStrengthAdjustmentEnabled: Boolean,
     val wfcMode: WfcMode,
     val voWifiNameFormatIndex: Int?,
     val voWifiCustomCarrierName: String,
@@ -145,7 +142,6 @@ data class CapabilitiesActions(
     val onUtChange: (Boolean) -> Unit,
     val onCrossSimChange: (Boolean) -> Unit,
     val onNr5gChange: (Boolean) -> Unit,
-    val onSignalStrengthAdjustmentChange: (Boolean) -> Unit,
     val onWfcModeChange: (WfcMode) -> Unit,
     val onVoWifiNameFormatChange: (Int?) -> Unit,
     val onVoWifiCustomCarrierNameChange: (String) -> Unit,
@@ -182,6 +178,8 @@ data class DiagnosticsActions(
     val onDumpConfig: suspend () -> String,
     val onCopyLog: () -> Unit,
     val onClearLog: () -> Unit,
+    /** 导出详细文件日志包（含崩溃落盘），分享给排障用。 */
+    val onExportDetailLog: () -> Unit = {},
     val onReapply: () -> Unit,
     val onExportFullConfig: () -> Unit,
     val onRunUserFacingCheck: suspend (Int) -> List<UserFacingDiagnosticItem>,
@@ -190,14 +188,8 @@ data class DiagnosticsActions(
 )
 
 /**
- * 「实验功能」页：承接原「能力」的身份显示覆盖、原「设置」的掉线守护（[guardEnabled]）、
- * 原「排障」的离线 APN 库入口——三块内容逻辑均未改动，仅重新分配到这一个新页面；
- * 「修复工具」剩余的重启 IMS/网络修复/TikTok 覆盖已进一步并入「能力」页。
- * 「5G 显示增强」（[fiveGDisplayConfig]）保留原应用内展示，并在用户明确点击应用后
- * 尝试写 selectedSubId 的显示层 CarrierConfig；
- * 不影响 VoLTE/VoWiFi/VoNR。后续新增的实验性功能也会持续加入这里。
- * 页面顶部同样带 [sims]/[selectedSubId] 驱动的选卡开关，
- * 身份覆盖/专家编辑器都对齐同一张选中卡，不用跳到别的页面切卡。
+ * 「实验功能」页：身份显示覆盖、掉线守护、离线 APN 库、专家编辑。
+ * 选卡与身份/专家编辑对齐同一 [selectedSubId]。
  */
 data class ExperimentalUiState(
     val sims: List<SimInfo>,
@@ -219,10 +211,6 @@ data class ExperimentalUiState(
     val systemUpdateShield: Boolean = true,
     /** 只读状态摘要（通道 + 上次 persistent）。 */
     val rootPersistStatusDetail: String = "",
-    val fiveGDisplayConfig: SimpleFiveGDisplayConfig,
-    val signalBarDisplayMode: ConfigStore.SignalBarDisplayMode,
-    val nr5g: Boolean,
-    val activeDataSims: List<SimCardInfo>,
     val prerequisitesMet: Boolean,
     val actionsEnabled: Boolean,
     val activeOperationLabel: String? = null,
@@ -245,13 +233,6 @@ data class ExperimentalActions(
     val onSystemUpdateShieldChange: (Boolean) -> Unit = {},
     val onOpenApnCatalog: () -> Unit,
     val onApplyExpertValue: (String, String) -> Unit,
-    val onFiveGDisplayConfigChange: (SimpleFiveGDisplayConfig) -> Unit,
-    val onApplyFiveGDisplay: () -> Unit,
-    val onSignalBarDisplayModeChange: (ConfigStore.SignalBarDisplayMode) -> Unit,
-    val onApplySignalBarStyle: () -> Unit,
-    val onRefreshDataSims: () -> Unit,
-    val onSwitchDataSim: (Int) -> Unit,
-    val onOpenTileSettings: () -> Unit,
 )
 
 /** 「设置」页现已不含掉线守护——该开关已迁至实验功能页。 */

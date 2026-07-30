@@ -99,8 +99,8 @@ object SafetyGuard {
     }
 
     /**
-     * 只做「网络类型名 + 5G 显示增强」这一小步，不含 [healthCheck] 里 SIM 就绪/语音/数据状态那些
-     * 检测；轻量状态展示只需调用这个函数，不要为了拿网络类型顺带跑一整套体检。
+     * 只做网络类型名；不含体检里的 SIM/语音/数据探测。
+     * 5G 显示增强已迁出 OneIMS，不再改写展示文案。
      */
     @SuppressLint("MissingPermission")
     fun currentNetworkTypeLabel(context: Context, subId: Int, tm: TelephonyManager? = null): String {
@@ -109,37 +109,8 @@ object SafetyGuard {
             runCatching { base?.createForSubscriptionId(subId) }.getOrNull() ?: base
         }
         return runCatching {
-            val baseName = networkTypeName(context, telephony?.dataNetworkType ?: 0)
-            enhanceFiveGDisplay(context, subId, baseName)
+            networkTypeName(context, telephony?.dataNetworkType ?: 0)
         }.getOrDefault(context.getString(R.string.net_unknown))
-    }
-
-    /**
-     * 「5G 显示增强」（实验功能）接入点：仅当用户在实验功能页开启该开关时才生效，
-     * 关闭时原样返回 [baseName]，不改变体检展示的既有行为。只读取信号、只影响这一行文案，
-     * 不写 CarrierConfig、不碰 IMS/VoLTE/VoWiFi/VoNR 逻辑、不影响状态栏。
-     */
-    private fun enhanceFiveGDisplay(context: Context, subId: Int, baseName: String): String {
-        val config = ConfigStore.fiveGDisplayConfig(context)
-        if (!config.enabled) return baseName
-        val signal = FiveGSignalReader.read(context, subId)
-        val result = resolveSimpleFiveGDisplay(
-            config = config,
-            operatorName = null,
-            dataNetworkType = signal.dataNetworkType,
-            overrideNetworkType = signal.overrideNetworkType,
-            serviceStateText = signal.serviceStateText,
-            downlinkMbps = signal.downlinkMbps,
-            uplinkMbps = signal.uplinkMbps,
-            labels = SimpleFiveGDisplayLabels(
-                unknownOperator = context.getString(R.string.five_g_unknown_operator),
-                uplinkEnhanced = context.getString(R.string.five_g_uplink_enhanced),
-                superUplink = context.getString(R.string.five_g_super_uplink),
-                coolFiveGPlus = context.getString(R.string.five_g_cool_plus),
-                coolFiveGa = context.getString(R.string.five_g_cool_a),
-            ),
-        )
-        return if (result.enabled && result.title.isNotBlank()) result.title else baseName
     }
 
     private fun networkTypeName(context: Context, type: Int): String = when (type) {

@@ -349,7 +349,9 @@
     <string name="msg_apply_ok">Config applied (persistent=false, re-apply after reboot). Basic comms OK.</string>
     <string name="msg_vowifi_mediatek_unsupported">MediaTek VoWiFi may have no effect (still allowed)</string>
     <string name="msg_vowifi_non_tensor_unsupported">Non-Tensor VoWiFi may have no effect (still allowed)</string>
-    <string name="msg_apply_partial">CarrierConfig applied, but these provisioning writes were incomplete: %1$s</string>
+    <string name="msg_apply_partial">CarrierConfig applied, but these critical provisioning writes were incomplete: %1$s</string>
+    <string name="msg_apply_oem_soft">Applied. OEM rejected non-critical provisioning (%1$s; common on OnePlus/Qualcomm keys 26/27). Switches opened; OEM decides if it sticks.</string>
+    <string name="msg_wfc_oem_rejected">WFC mode \"%1$s\" rejected by OEM (key=27). Other VoWiFi switches were still attempted.</string>
     <string name="msg_write_not_started">No configuration was written: %1$s</string>
     <string name="msg_write_rollback">Write failed; rollback was confirmed successful: %1$s</string>
     <string name="msg_write_rollback_failed">Write failed: %1$s; automatic rollback also failed: %2$s. Restart now and verify basic communications.</string>
@@ -646,6 +648,10 @@
     <string name="onekuku_settings_view_status_sub">Read-only check of SIM and calling features</string>
     <string name="onekuku_settings_boot_on">Boot auto-check enabled</string>
     <string name="onekuku_settings_boot_off">Boot auto-check disabled</string>
+    <string name="onekuku_watchdog_channel">OneKuku channel watchdog</string>
+    <string name="onekuku_watchdog_channel_desc">Silently reconnects the privilege channel a limited number of times if it drops</string>
+    <string name="onekuku_watchdog_title">OneKuku channel watchdog</string>
+    <string name="onekuku_watchdog_text">Will auto-retry if the privilege process dies</string>
     <string name="onekuku_settings_sleep_on">Enabled: skip App FG residency after use</string>
     <string name="onekuku_settings_sleep_off">Disabled: allow legacy App residency path</string>
 
@@ -729,11 +735,15 @@
     <string name="tool_restart_ims_sub">Safely reset the IMS stack and recheck registration</string>
     <string name="tool_apn_sub">Global carrier profiles stored locally, with current-SIM matching</string>
     <string name="action_net_fix_sub">Adjust Android captive-portal detection</string>
-    <string name="log_subtitle">Newest results first; select text or copy everything</string>
+    <string name="log_subtitle">Newest results first; detailed file logs include crash stacks for bug reports</string>
     <string name="action_copy_log">Copy</string>
     <string name="action_clear_log">Clear</string>
+    <string name="action_export_detail_log">Export detail log</string>
     <string name="log_copied">Log copied</string>
     <string name="log_cleared">Log cleared</string>
+    <string name="log_detail_exported">Detail log exported — pick an app to share</string>
+    <string name="log_detail_export_failed">Detail log export failed; retry or copy on-screen log</string>
+    <string name="log_detail_share_title">OneIMS detail diagnostic log</string>
 
     <string name="settings_title">Settings</string>
     <string name="settings_subtitle">Appearance, reliability, and maintenance</string>

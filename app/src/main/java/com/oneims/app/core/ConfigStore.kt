@@ -77,6 +77,10 @@ object ConfigStore {
     private const val KEY_ONEKUKU_AUTO_RESTORE = "onekuku_auto_restore"
     /** 与守护解耦后的「开机自动检查」；无键时默认开，旧数据回退 guard。 */
     private const val KEY_ONEKUKU_BOOT_AUTO_CHECK = "onekuku_boot_auto_check"
+    /** 对齐 V15 Watchdog：binder 死后限次静默重拉；默认开。 */
+    private const val KEY_ONEKUKU_WATCHDOG = "onekuku_watchdog_enabled"
+    /** 对齐 V15：从系统设置通知自动抓六位码；默认关（需通知使用权）。 */
+    private const val KEY_ONEKUKU_AUTO_PAIRING = "onekuku_auto_pairing_enabled"
     /** Root 持久化增强开关；默认关，免 Root 路径零感知。 */
     private const val KEY_ROOT_PERSIST_ENHANCE = "root_persist_enhance"
     /** Root 开机拉起 OneKuku/OneBridge；默认关。 */
@@ -648,6 +652,20 @@ object ConfigStore {
             .putBoolean(KEY_ONEKUKU_BOOT_AUTO_CHECK, enabled)
             .putBoolean(KEY_GUARD, enabled)
             .apply()
+    }
+
+    fun isOneKukuWatchdogEnabled(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_ONEKUKU_WATCHDOG, true)
+
+    fun setOneKukuWatchdogEnabled(context: Context, enabled: Boolean) {
+        prefs(context).edit().putBoolean(KEY_ONEKUKU_WATCHDOG, enabled).apply()
+    }
+
+    fun isOneKukuAutoPairingEnabled(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_ONEKUKU_AUTO_PAIRING, false)
+
+    fun setOneKukuAutoPairingEnabled(context: Context, enabled: Boolean) {
+        prefs(context).edit().putBoolean(KEY_ONEKUKU_AUTO_PAIRING, enabled).apply()
     }
 
     /** OneKuku「用完自动休眠」偏好；默认开启（降发热；唤醒走秒级 binder）。 */

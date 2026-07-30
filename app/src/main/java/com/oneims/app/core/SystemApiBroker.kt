@@ -346,23 +346,40 @@ object SystemApiBroker {
      * bundle=null 表示清空覆盖；非 root 一律走活动 Instrumentation，并在返回前验证目标键。
      * OneKuku 业务写入应优先经 [CarrierConfigOverrideWriter]
      *（先 persistent=true，权限不足自动回退 temporary）。
+     *
+     * @return 实际是否使用了 persistent=true（Broker 内可能同会话降级为 temporary）。
      */
-    fun overrideConfig(context: Context, subId: Int, bundle: PersistableBundle?, persistent: Boolean) {
+    fun overrideConfig(
+        context: Context,
+        subId: Int,
+        bundle: PersistableBundle?,
+        persistent: Boolean,
+    ): Boolean {
         require(subId >= 0) { "Invalid subscription id: $subId" }
+        var usedPersistent = persistent
         if (PrivilegeBridges.current.getUid() == 0) {
             shizukuOverride(subId, bundle, persistent)
             lastStrategy = "shizuku-root"
         } else {
             lastStrategy = "instrumentation-shell-delegate"
-            executeBroker(context, BrokerProtocol.OP_OVERRIDE_CONFIG) {
+            val brokerMessage = executeBroker(context, BrokerProtocol.OP_OVERRIDE_CONFIG) {
                 putInt(BrokerProtocol.ARG_SUB_ID, subId)
                 putParcelable(BrokerProtocol.ARG_OVERRIDES, bundle)
                 putInt(BrokerProtocol.ARG_PERSISTENT, if (persistent) 1 else 0)
+            }
+            if (brokerMessage.contains("temporary", ignoreCase = true)) {
+                usedPersistent = false
+                lastStrategy = "instrumentation-temporary-fallback"
+                DiagFileLogger.i(
+                    "Broker",
+                    "overrideConfig used temporary fallback subId=$subId msg=$brokerMessage",
+                )
             }
         }
         if (bundle != null) {
             awaitOverrideReadback(context, subId, bundle)
         }
+        return usedPersistent
     }
 
     fun writeGlobalInt(context: Context, key: String, value: Int) {
@@ -393,30 +410,106 @@ object SystemApiBroker {
         return m.invoke(tel, subId, key, value) as Int
     }
 
-    /** 返回码 0 才是真成功；旧实现只判断“没抛异常”，会把返回码 1 误报成成功。 */
+    /**
+     * 写入 IMS provisioning。
+     * - 返回 0 = 成功
+     * - key=26/27（漫游 / WFC 模式）：OEM 拒写只打日志并返回非 0，**绝不抛**（一加闪退根因之一）
+     * - 国产 VoWIFI OEM 额外软化 key=28/10（白名单）；soft 键 invoke 异常返回 -1
+     * - Pixel 上 VoLTE key=10 非 0 仍抛，由上层 runCatching 消化
+     */
     fun setProvisioningInt(subId: Int, key: Int, value: Int): Int {
-        val result = shizukuProvision(subId, key, value)
+        val soft = ProvisioningWritePolicy.isSoftProvisioningIntKey(key)
+        val result = runCatching { shizukuProvision(subId, key, value) }.getOrElse { error ->
+            // 仅声明为 soft 的 key 才吞 invoke 异常；硬键（含 VoLTE key=10）必须上抛，
+            // 避免上层 `.isSuccess` 把 -1 误判成成功。
+            if (soft && isSoftProvisioningThrowable(error)) {
+                android.util.Log.w(
+                    "OneIMS-Broker",
+                    "soft provisioning invoke failed key=$key: ${error.message}",
+                )
+                DiagFileLogger.w(
+                    "Broker",
+                    "soft provisioning invoke key=$key subId=$subId: ${error.javaClass.simpleName}: ${error.message}",
+                    error,
+                )
+                return -1
+            }
+            if (soft) {
+                // soft key 但异常类型未知：仍不抛，保持国产/OEM 软键不崩进程
+                android.util.Log.w(
+                    "OneIMS-Broker",
+                    "soft provisioning invoke (any) key=$key: ${error.message}",
+                )
+                DiagFileLogger.w(
+                    "Broker",
+                    "soft provisioning invoke(any) key=$key subId=$subId: ${error.message}",
+                    error,
+                )
+                return -1
+            }
+            DiagFileLogger.e(
+                "Broker",
+                "provisioning invoke hard-fail key=$key subId=$subId",
+                error,
+            )
+            throw error
+        }
+        if (result == 0) {
+            lastStrategy = "shizuku-direct"
+            DiagFileLogger.i("Broker", "provisioning ok key=$key subId=$subId")
+            return 0
+        }
+        if (soft) {
+            android.util.Log.w(
+                "OneIMS-Broker",
+                "OEM soft-reject provisioning key=$key result=$result (no throw)",
+            )
+            DiagFileLogger.w(
+                "Broker",
+                "OEM soft-reject provisioning key=$key result=$result subId=$subId",
+            )
+            lastStrategy = "shizuku-oem-soft"
+            return result
+        }
         check(result == 0) { "IMS provisioning rejected key=$key, result=$result" }
-        lastStrategy = "shizuku-direct"
         return result
     }
 
-    /** 优先读用户 WFC 模式；接口缺失时退到 provisioning key 27，仍保留真实失败。 */
-    fun getVoWiFiModeSetting(subId: Int): Int {
-        val telephony = telephonyInterface()
-        val telephonyClass = Class.forName("com.android.internal.telephony.ITelephony")
-        return runCatching {
-            telephonyClass.getMethod(
-                "getVoWiFiModeSetting",
-                Int::class.javaPrimitiveType,
-            ).invoke(telephony, subId) as Int
-        }.getOrElse {
-            telephonyClass.getMethod(
-                "getImsProvisioningInt",
-                Int::class.javaPrimitiveType,
-                Int::class.javaPrimitiveType,
-            ).invoke(telephony, subId, ProvisioningKeys.KEY_VOICE_OVER_WIFI_MODE) as Int
+    private fun isSoftProvisioningThrowable(error: Throwable): Boolean {
+        var cur: Throwable? = error
+        while (cur != null) {
+            when (cur) {
+                is SecurityException,
+                is ReflectiveOperationException,
+                -> return true
+            }
+            val name = cur.javaClass.name
+            if (name.contains("RemoteException") || name.contains("DeadObjectException")) {
+                return true
+            }
+            cur = cur.cause
         }
+        return false
+    }
+
+    /** 优先读用户 WFC 模式；接口缺失/OEM 异常时返回 -1，不向上抛。 */
+    fun getVoWiFiModeSetting(subId: Int): Int {
+        return runCatching {
+            val telephony = telephonyInterface()
+            val telephonyClass = Class.forName("com.android.internal.telephony.ITelephony")
+            runCatching {
+                telephonyClass.getMethod(
+                    "getVoWiFiModeSetting",
+                    Int::class.javaPrimitiveType,
+                ).invoke(telephony, subId) as Int
+            }.getOrElse {
+                telephonyClass.getMethod(
+                    "getImsProvisioningInt",
+                    Int::class.javaPrimitiveType,
+                    Int::class.javaPrimitiveType,
+                ).invoke(telephony, subId, ProvisioningKeys.KEY_VOICE_OVER_WIFI_MODE) as Int
+            }
+        }.getOrDefault(-1)
     }
 
     /**
@@ -444,6 +537,21 @@ object SystemApiBroker {
                 return
             }
             Thread.sleep(RESULT_POLL_INTERVAL_MS)
+        }
+        val keys = expected.keySet().joinToString(",")
+        // 国产 VoWIFI OEM 常见：写已接受但回读延迟/被过滤；硬抛只会放大闪退面。
+        // Writer 仍会对逐 key 做 verify；Pixel 不进此门控。
+        if (OemDeviceCompat.softenCarrierConfigReadback()) {
+            android.util.Log.w(
+                "OneIMS-Broker",
+                "CarrierConfig readback soft-timeout subId=$subId keys=$keys oem=${OemDeviceCompat.summaryLine()}",
+            )
+            DiagFileLogger.w(
+                "Broker",
+                "CarrierConfig readback soft-timeout subId=$subId keys=$keys",
+            )
+            lastStrategy = "override-readback-soft"
+            return
         }
         error("CarrierConfig write accepted, but readback did not match within 5 seconds")
     }
@@ -492,10 +600,8 @@ object SystemApiBroker {
     }
 
     /**
-     * 切换默认移动数据 subId（AOSP `ISub.setDefaultDataSubId(int)`）——应用内与控制中心磁贴
-     * 共用的唯一真实执行路径，走与 [resetIms]/[queryImsRegistration] 同一套 Shizuku 直调 binder 模式，
-     * 不经 Instrumentation 委托（该操作不受 2025 新补丁的 shell 委托限制）。
-     * 调用方（[DataSimSwitchManager]）负责切换前校验与切换后延迟回读，这里只做一次系统调用。
+     * 切换默认移动数据 subId（AOSP `ISub.setDefaultDataSubId(int)`）。
+     * 控制中心切卡已迁出 OneIMS；保留底层 binder 直调供诊断/将来调用。
      */
     fun setDefaultDataSubId(subId: Int) {
         require(subId >= 0) { "Invalid subscription id: $subId" }

@@ -115,8 +115,6 @@ fun CapabilitiesScreen(
 
         item {
             // 五项主能力连排：VoLTE / VoWiFi / VoNR / 5G NR / 5G信号强度调整。
-            // 「信号格显示样式」在独家页，与本开关偏好/写入彼此独立。
-            // 去掉区块副说明：标题自明，细则落在各开关 subtitle。
             SectionBlock(
                 title = stringResource(R.string.cap_group_radio_title),
             ) {
@@ -150,15 +148,6 @@ fun CapabilitiesScreen(
                     checked = state.nr5g,
                     onCheckedChange = actions.onNr5gChange,
                     icon = Icons.Filled.Phone,
-                )
-                GroupDivider()
-                SettingsSwitchRow(
-                    title = stringResource(R.string.signal_strength_adjust_title),
-                    subtitle = stringResource(R.string.signal_strength_adjust_subtitle),
-                    checked = state.signalStrengthAdjustmentEnabled,
-                    onCheckedChange = actions.onSignalStrengthAdjustmentChange,
-                    enabled = state.actionsEnabled,
-                    icon = Icons.Filled.Settings,
                 )
                 Column(
                     modifier = Modifier.padding(20.dp),

@@ -32,8 +32,6 @@ object OneKukuSnapshotFactory {
         val caps = ConfigStore.capabilityUiState(context, sim.subscriptionId)
         val applied = ConfigStore.lastApplied(context)
             ?.takeIf { it.subId == sim.subscriptionId }
-        val fiveG = ConfigStore.fiveGDisplayConfig(context)
-        val signal = ConfigStore.signalStrengthAdjustmentEnabled(context, sim.subscriptionId)
         val vowifi = VoWifiNameFormatManager.readSelection(context, sim.subscriptionId)
         val identity = ConfigStore.identityDraft(context, sim.subscriptionId)
         val now = System.currentTimeMillis()
@@ -55,12 +53,11 @@ object OneKukuSnapshotFactory {
                 SnapshotEntry(
                     "nr5g",
                     "enabled",
-                    (caps?.nr5g == true || fiveG.enabled).toString(),
+                    (caps?.nr5g == true).toString(),
                     method,
                     true,
                 ),
             )
-            add(SnapshotEntry("signal", "adjustment", signal.toString(), method, true))
             vowifi.formatIndex?.let {
                 add(SnapshotEntry("vowifi_name", "formatIndex", it.toString(), method, true))
             }
@@ -125,11 +122,6 @@ object OneKukuSnapshotFactory {
                 add(SnapshotEntry("advanced", "show_ims_status", opt.showImsStatus.toString(), method, true))
                 add(SnapshotEntry("advanced", "ss_over_cdma", opt.ssOverCdma.toString(), method, true))
                 add(SnapshotEntry("advanced", "enhanced_4g", opt.enhanced4g.toString(), method, true))
-            }
-            // 5G 显示：仅归属卡记录
-            if (fiveG.enabled && ConfigStore.lastFiveGDisplaySubId(context) == sim.subscriptionId) {
-                add(SnapshotEntry("five_g_display", "enabled", "true", method, true))
-                add(SnapshotEntry("five_g_display", "mode", fiveG.mode, method, true))
             }
             // 运营商附加能力（ViLTE / UT / Cross-SIM）
             caps?.let { c ->

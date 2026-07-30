@@ -319,11 +319,9 @@ object OneKukuBootRestoreCoordinator {
         // 有 soft 条目则本开机需要走一次 RESTORE（markAttempted 防同轮循环）。
         val softGroups = setOf(
             "identity",
-            "signal",
             "vowifi_name",
             "advanced",
             "extras",
-            "five_g_display",
         )
         val hasSoftRestore = snapshot.entries.any { entry ->
             entry.configGroup in softGroups && entry.configValue.isNotBlank()

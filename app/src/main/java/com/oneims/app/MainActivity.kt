@@ -47,15 +47,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import android.content.Intent
+import androidx.core.content.FileProvider
 import androidx.core.util.Consumer
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.oneims.app.core.CarrierProfiles
 import com.oneims.app.core.ApnCatalogEntry
-import com.oneims.app.core.CompatChecker
 import com.oneims.app.core.ConfigStore
 import com.oneims.app.core.DodoPaySupportClient
 import com.oneims.app.core.DeviceInfo
+import com.oneims.app.core.DiagFileLogger
 import com.oneims.app.core.EpdgChecker
 import com.oneims.app.core.GuardService
 import com.oneims.app.core.ImsController
@@ -70,11 +71,7 @@ import com.oneims.app.core.RootPersistenceSupport
 import com.oneims.app.core.SandboxPersistSupport
 import com.oneims.app.core.SafetyGuard
 import com.oneims.app.core.SystemUpdateShield
-import com.oneims.app.core.DataSimSwitchManagerImpl
-import com.oneims.app.core.DataSimSwitchResult
 import com.oneims.app.core.OneClickDiagnosticsManager
-import com.oneims.app.core.QuickSettingsTileHelper
-import com.oneims.app.core.SimCardInfo
 import com.oneims.app.core.ShizukuSetupHelper
 import com.oneims.app.core.OneKukuCoreComponent
 import com.oneims.app.core.OneKukuEmbeddedAdbActivator
@@ -85,9 +82,6 @@ import com.oneims.app.core.OneKukuActivationPhase
 import com.oneims.app.core.ChannelLine
 import com.oneims.app.core.OneKukuManager
 import com.oneims.app.core.WirelessPairingCodeReceiver
-import com.oneims.app.core.SimpleFiveGDisplayConfig
-import com.oneims.app.core.SystemDisplayOverrideManager
-import com.oneims.app.core.SignalBarSystemStyleManager
 import com.oneims.app.core.SimCountryIsoManager
 import com.oneims.app.core.UpdateChecker
 import com.oneims.app.core.VoWifiNameFormatManager
@@ -135,9 +129,12 @@ import com.oneims.app.ui.SettingsUiState
 import com.oneims.app.ui.SponsorScreen
 import com.oneims.app.ui.ThemeMode
 import com.oneims.app.ui.theme.OneImsTheme
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.plus
 import kotlinx.coroutines.withContext
 import com.oneims.app.core.privilege.PrivilegeBridge
 import com.oneims.app.core.privilege.PrivilegeBridges
@@ -149,6 +146,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        DiagFileLogger.breadcrumb("MainActivity.onCreate")
         // 启动页使用正式品牌红色，首帧先用浅色系统栏图标保证对比度。
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
@@ -220,8 +218,18 @@ private fun AppRoot(
     onDynamicColorChange: (Boolean) -> Unit,
 ) {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
+    // 国产 OEM 上 binder/反射偶发异常若漏出协程会直接闪退；Supervisor + 落盘后继续可用。
+    val uiExceptionHandler = remember {
+        CoroutineExceptionHandler { _, error ->
+            DiagFileLogger.e("UI", "uncaught coroutine: ${error.message}", error)
+            // 不在此处 showSnackbar：handler 线程不确定，避免二次崩。
+        }
+    }
+    val baseScope = rememberCoroutineScope()
+    val scope = remember(baseScope, uiExceptionHandler) {
+        baseScope + SupervisorJob() + uiExceptionHandler
+    }
 
     var destination by remember { mutableStateOf(AppDestination.HOME) }
     var membershipPaywallVisible by remember { mutableStateOf(false) }
@@ -317,27 +325,8 @@ private fun AppRoot(
     var sandboxPersistBypass by remember {
         mutableStateOf(ConfigStore.isSandboxPersistBypass(context))
     }
-    var fiveGDisplayConfig by remember {
-        mutableStateOf(ConfigStore.fiveGDisplayConfig(context))
-    }
-    var signalBarDisplayMode by remember {
-        mutableStateOf(ConfigStore.signalBarDisplayMode(context, selectedSubId))
-    }
-    var signalStrengthAdjustmentEnabled by remember {
-        mutableStateOf(ConfigStore.signalStrengthAdjustmentEnabled(context, selectedSubId))
-    }
     var voWifiNameFormatIndex by remember { mutableStateOf<Int?>(null) }
     var voWifiCustomCarrierName by remember { mutableStateOf("") }
-    var activeDataSims by remember { mutableStateOf(emptyList<SimCardInfo>()) }
-
-    fun refreshDataSimStatus() {
-        scope.launch {
-            activeDataSims = withContext(Dispatchers.IO) {
-                DataSimSwitchManagerImpl.getActiveSims(context)
-            }
-        }
-    }
-
     var checkingUpdate by remember { mutableStateOf(false) }
     var updateInfo by remember { mutableStateOf<UpdateInfo?>(null) }
     var phonePermissionResultCount by remember { mutableIntStateOf(0) }
@@ -410,10 +399,17 @@ private fun AppRoot(
         else -> null
     }
 
+    /** 从特权桥重读 running/granted，避免 binder 瞬断后 UI 假掉。 */
+    fun syncPrivilegeFlagsFromBridge() {
+        shizukuRunning = runCatching { OneKukuManager.isRunning() }.getOrDefault(false)
+        shizukuGranted = runCatching { OneKukuManager.isGranted() }.getOrDefault(false)
+    }
+
     /**
      * 通道就绪后的收尾（对齐 Shizuku）：
      * 特权活在桥接进程，不靠 App 前台常驻。
      * 前台收尾一律标「就绪」；关 App / 退后台由生命周期切入「休眠」。
+     * 须定义在 [syncPrivilegeFlagsFromBridge] 之后（本地函数不可前向引用）。
      */
     fun settleOneKukuChannelAfterReady() {
         // 硬门禁：仅 binder+授权双真才收尾，避免「假就绪」后误标 Active。
@@ -423,13 +419,21 @@ private fun AppRoot(
         }
         OneKukuHiddenRunner.installBridge(OneKukuPrivilegeBridgeImpl)
         OneKukuHiddenRunner.markActive()
+        // 划掉后台再开：桥已就绪时必须清掉 NEEDS_ACTIVATION，否则
+        // serviceReady=…&&!bootForceInactive 会把卡片钉死在「未激活」（一加/小米常见）。
+        if (bootUiHint == OneKukuBootUiHint.NEEDS_ACTIVATION ||
+            bootUiHint == OneKukuBootUiHint.WAITING_WIFI
+        ) {
+            val hint = if (OneKukuBootRestoreStore.shouldShowNoSnapshotNote(context)) {
+                OneKukuBootUiHint.NO_SNAPSHOT_SLEEPING
+            } else {
+                OneKukuBootUiHint.READY_SLEEPING
+            }
+            OneKukuBootRestoreStore.writeHint(context, hint)
+            bootUiHint = hint
+        }
+        syncPrivilegeFlagsFromBridge()
         activationEpoch++
-    }
-
-    /** 从特权桥重读 running/granted，避免 binder 瞬断后 UI 假掉。 */
-    fun syncPrivilegeFlagsFromBridge() {
-        shizukuRunning = runCatching { OneKukuManager.isRunning() }.getOrDefault(false)
-        shizukuGranted = runCatching { OneKukuManager.isGranted() }.getOrDefault(false)
     }
 
     /** App 退后台 / 关闭：已授权则进入休眠（不拆桥、不要求重配对）。 */
@@ -473,6 +477,9 @@ private fun AppRoot(
             }
             OneKukuActivationUi.setPhase(OneKukuActivationPhase.IDLE)
             settleOneKukuChannelAfterReady()
+        } else if (ChannelLine.usesShizuku) {
+            // OneLink：前台只靠 Shizuku binder 轮询复连，禁止 enqueue BootRestore FGS
+            // （小米/一加划掉后台再开会 ForegroundServiceDidNotStartInTime → 进程被杀 → 假未激活）。
         } else if (ConfigStore.isOneKukuBootAutoCheck(context) &&
             OneKukuEmbeddedAdbActivator.hasPairedOnce(context)
         ) {
@@ -492,20 +499,32 @@ private fun AppRoot(
         }
         while (true) {
             kotlinx.coroutines.delay(1_000L)
-            val latest = OneKukuBootRestoreStore.readHint(context)
-            if (latest != bootUiHint) {
-                bootUiHint = latest
-            }
-            val running = OneKukuManager.isRunning()
-            val granted = OneKukuManager.isGranted()
-            if (running != shizukuRunning || granted != shizukuGranted) {
+            runCatching {
+                val running = OneKukuManager.isRunning()
+                val granted = OneKukuManager.isGranted()
                 shizukuRunning = running
                 shizukuGranted = granted
-                if (running && granted && bootUiHint == OneKukuBootUiHint.NEEDS_ACTIVATION) {
-                    // 实时 binder 状态优先于一次失败留下的持久化提示。
-                    OneKukuBootRestoreStore.writeHint(context, OneKukuBootUiHint.READY_SLEEPING)
-                    bootUiHint = OneKukuBootUiHint.READY_SLEEPING
+                var latest = OneKukuBootRestoreStore.readHint(context)
+                // 桥已就绪时，禁止把持久化 NEEDS_ACTIVATION 刷回 UI（开机编排/划掉后台会写脏 hint）。
+                if (running && granted &&
+                    (
+                        latest == OneKukuBootUiHint.NEEDS_ACTIVATION ||
+                            latest == OneKukuBootUiHint.WAITING_WIFI
+                        )
+                ) {
+                    val hint = if (OneKukuBootRestoreStore.shouldShowNoSnapshotNote(context)) {
+                        OneKukuBootUiHint.NO_SNAPSHOT_SLEEPING
+                    } else {
+                        OneKukuBootUiHint.READY_SLEEPING
+                    }
+                    OneKukuBootRestoreStore.writeHint(context, hint)
+                    latest = hint
                 }
+                if (latest != bootUiHint) {
+                    bootUiHint = latest
+                }
+            }.onFailure { error ->
+                DiagFileLogger.w("UI", "boot/privilege poll failed: ${error.message}", error)
             }
         }
     }
@@ -578,6 +597,7 @@ private fun AppRoot(
         val normalized = message.trim().take(MAX_DIAGNOSTIC_ENTRY_CHARS)
         if (normalized.isNotEmpty()) {
             log = "• $normalized\n$log".take(MAX_DIAGNOSTIC_LOG_CHARS)
+            DiagFileLogger.ui(normalized)
         }
     }
 
@@ -1022,8 +1042,11 @@ private fun AppRoot(
                 Lifecycle.Event.ON_STOP -> sleepChannelWhenBackgrounded()
                 Lifecycle.Event.ON_START -> wakeChannelWhenForegrounded()
                 Lifecycle.Event.ON_RESUME -> {
-                    // 每次回前台再对一次桥状态，防止小米上偶发 UI 与 binder 脱节。
+                    // 每次回前台再对一次桥状态，防止小米/一加上偶发 UI 与 binder 脱节。
                     syncPrivilegeFlagsFromBridge()
+                    if (OneKukuManager.isReady()) {
+                        settleOneKukuChannelAfterReady()
+                    }
                     if (!awaitingCoreInstall) return@LifecycleEventObserver
                     if (!OneKukuCoreComponent.isInstalled(context)) return@LifecycleEventObserver
                     // 装完从系统安装器 / 通道页返回：自动关掉「还没装」并进入配对
@@ -1091,19 +1114,33 @@ private fun AppRoot(
     }
 
     fun refreshAll(showFeedback: Boolean = false) {
-        sims = ImsController.listSims(context)
-        if (sims.none { it.subscriptionId == selectedSubId }) {
-            val restored = ConfigStore.getSelectedSubId(context)
-            val fallback = sims.firstOrNull { it.subscriptionId == restored }?.subscriptionId
-                ?: sims.firstOrNull()?.subscriptionId
-                ?: -1
-            selectSim(fallback)
-        }
-        shizukuRunning = OneKukuManager.isRunning()
-        shizukuGranted = OneKukuManager.isGranted()
-        deviceInfo = DeviceInfo.summary(context)
-        if (showFeedback) {
-            publish(context.getString(R.string.refreshed))
+        runCatching {
+            sims = ImsController.listSims(context)
+            if (sims.none { it.subscriptionId == selectedSubId }) {
+                val restored = ConfigStore.getSelectedSubId(context)
+                val fallback = sims.firstOrNull { it.subscriptionId == restored }?.subscriptionId
+                    ?: sims.firstOrNull()?.subscriptionId
+                    ?: -1
+                selectSim(fallback)
+            }
+            shizukuRunning = runCatching { OneKukuManager.isRunning() }.getOrDefault(false)
+            shizukuGranted = runCatching { OneKukuManager.isGranted() }.getOrDefault(false)
+            deviceInfo = runCatching { DeviceInfo.summary(context) }
+                .getOrElse { error ->
+                    DiagFileLogger.w("UI", "DeviceInfo.summary failed: ${error.message}", error)
+                    error.message.orEmpty()
+                }
+            if (showFeedback) {
+                publish(context.getString(R.string.refreshed))
+            }
+        }.onFailure { error ->
+            DiagFileLogger.e("UI", "refreshAll failed: ${error.message}", error)
+            publish(
+                context.getString(
+                    R.string.operation_failed,
+                    OperationErrors.describe(error),
+                ),
+            )
         }
     }
 
@@ -1149,74 +1186,6 @@ private fun AppRoot(
         confirmation = ConfirmationRequest(title, message, confirmLabel, onConfirm)
     }
 
-    fun switchDataSim(targetSubId: Int) {
-        val sim = activeDataSims.firstOrNull { it.subId == targetSubId }
-            ?: run {
-                publish(context.getString(R.string.data_switch_invalid_target))
-                return
-            }
-        if (targetSubId == DataSimSwitchManagerImpl.getDefaultDataSubId()) {
-            publish(context.getString(R.string.data_switch_already_current))
-            return
-        }
-        if (activeDataSims.size <= 1) {
-            publish(context.getString(R.string.data_switch_single_sim))
-            return
-        }
-        val executeSwitch: () -> Unit = {
-            if (busyLabel != null) {
-                scope.launch {
-                    snackbarHostState.showSnackbar(
-                        context.getString(R.string.operation_already_running),
-                    )
-                }
-            } else {
-                scope.launch {
-                    busyLabel = context.getString(R.string.data_switch_switching)
-                    val result = withContext(Dispatchers.IO) {
-                        runCatching {
-                            DataSimSwitchManagerImpl.switchDefaultDataSubId(context, targetSubId)
-                        }.getOrElse { error ->
-                            DataSimSwitchResult.Failed(
-                                error.message ?: context.getString(R.string.operation_unknown_error),
-                            )
-                        }
-                    }
-                    busyLabel = null
-                    when (result) {
-                        is DataSimSwitchResult.Success -> {
-                            refreshDataSimStatus()
-                            publish(
-                                result.warning ?: context.getString(
-                                    R.string.data_switch_success,
-                                    sim.slotIndex + 1,
-                                ),
-                            )
-                        }
-                        is DataSimSwitchResult.Failed -> {
-                            publish(
-                                context.getString(
-                                    R.string.data_switch_failed,
-                                    result.reason,
-                                ),
-                            )
-                        }
-                    }
-                }
-            }
-        }
-        requestConfirmation(
-            title = context.getString(
-                R.string.data_switch_confirm_title,
-                sim.slotIndex + 1,
-                sim.carrierName,
-            ),
-            message = context.getString(R.string.data_switch_confirm_message),
-            confirmLabel = context.getString(R.string.data_switch_confirm_action),
-            onConfirm = executeSwitch,
-        )
-    }
-
     fun ensurePrivilegedAccess(): Boolean {
         shizukuRunning = OneKukuManager.isRunning()
         shizukuGranted = OneKukuManager.isGranted()
@@ -1247,9 +1216,6 @@ private fun AppRoot(
 
     LaunchedEffect(selectedSubId, shizukuGranted) {
         reapplyStatus = ConfigStore.lastReapplyStatus(context)
-        signalBarDisplayMode = ConfigStore.signalBarDisplayMode(context, selectedSubId)
-        signalStrengthAdjustmentEnabled =
-            ConfigStore.signalStrengthAdjustmentEnabled(context, selectedSubId)
         if (selectedSubId >= 0 && shizukuGranted) {
             advancedOptions = withContext(Dispatchers.IO) {
                 runCatching {
@@ -1391,13 +1357,6 @@ private fun AppRoot(
         activeSimCountryIso = runCatching {
             SimCountryIsoManager.readCurrent(context, subId).orEmpty()
         }.getOrDefault("")
-    }
-
-    // 应用内切卡和控制中心磁贴都以同一份活动 SIM 列表为依据。
-    LaunchedEffect(sims) {
-        activeDataSims = withContext(Dispatchers.IO) {
-            DataSimSwitchManagerImpl.getActiveSims(context)
-        }
     }
 
     DisposableEffect(Unit) {
@@ -1723,15 +1682,6 @@ private fun AppRoot(
                                                     it.carrierName,
                                                 )
                                             } ?: context.getString(R.string.onekuku_status_no_sim)
-                                            val fiveG = ConfigStore.fiveGDisplayConfig(context)
-                                            val fiveGLine = context.getString(
-                                                R.string.onekuku_status_5g,
-                                                if (fiveG.enabled) {
-                                                    context.getString(R.string.onekuku_value_on)
-                                                } else {
-                                                    context.getString(R.string.onekuku_value_off)
-                                                },
-                                            )
                                             val imsLine = if (targetSubId >= 0 && granted) {
                                                 OneKukuHomeTools.sanitizeUserText(
                                                     ImsController.queryImsStatus(
@@ -1751,8 +1701,6 @@ private fun AppRoot(
                                                 )
                                                 append('\n')
                                                 append(simLine)
-                                                append('\n')
-                                                append(fiveGLine)
                                                 append('\n')
                                                 append(imsLine)
                                             }
@@ -1881,7 +1829,6 @@ private fun AppRoot(
                         ut = ut,
                         crossSim = crossSim,
                         nr5g = nr5g,
-                        signalStrengthAdjustmentEnabled = signalStrengthAdjustmentEnabled,
                         wfcMode = wfcMode,
                         voWifiNameFormatIndex = voWifiNameFormatIndex,
                         voWifiCustomCarrierName = voWifiCustomCarrierName,
@@ -1928,16 +1875,6 @@ private fun AppRoot(
                             nr5g = it
                             persistCapabilityUi()
                         },
-                        onSignalStrengthAdjustmentChange = { enabled ->
-                            signalStrengthAdjustmentEnabled = enabled
-                            if (selectedSubId >= 0) {
-                                ConfigStore.setSignalStrengthAdjustmentEnabled(
-                                    context,
-                                    selectedSubId,
-                                    enabled,
-                                )
-                            }
-                        },
                         onWfcModeChange = {
                             wfcMode = it
                             persistCapabilityUi()
@@ -1954,7 +1891,6 @@ private fun AppRoot(
                             val targetVonr = vonr
                             val targetWfcMode = wfcMode
                             val targetNr5g = nr5g
-                            val targetSignal = signalStrengthAdjustmentEnabled
                             persistCapabilityUi(targetSubId)
                             // 实时门禁：UI 上 stale granted 时禁止进入写链路（一加假就绪 + 闪退）。
                             if (!ensurePrivilegedAccess()) return@CapabilitiesActions
@@ -1967,46 +1903,23 @@ private fun AppRoot(
                                     targetVonr,
                                     targetWfcMode,
                                 )
+                                // 不再 throw：一加等机会把「操作失败」链路放大成体感闪退/中断。
                                 if (!coreResult.success) {
-                                    throw IllegalStateException(coreResult.message)
+                                    return@runOperation coreResult.message
                                 }
-                                // 同区「5G NR + 信号阈值」并入一键；格子样式由独家页独立应用。
+                                // 仅保留 5G NR 能力写入；信号格 / 5G 显示增强已迁出 OneIMS。
                                 val nrResult = ImsController.apply5g(
                                     context,
                                     targetSubId,
                                     targetNr5g,
                                 )
                                 if (!nrResult.success) {
-                                    throw IllegalStateException(nrResult.message)
+                                    return@runOperation listOf(
+                                        coreResult.message,
+                                        nrResult.message,
+                                    ).joinToString("\n")
                                 }
-                                val signalMessage = when {
-                                    targetSignal && !targetNr5g -> {
-                                        runCatching {
-                                            SystemDisplayOverrideManager.applySignalStrengthAdjustment(
-                                                context = context,
-                                                subId = targetSubId,
-                                                enabled = false,
-                                                preferenceEnabled = true,
-                                            )
-                                        }
-                                        context.getString(R.string.signal_bar_needs_nr_enabled)
-                                    }
-                                    else -> runCatching {
-                                        SystemDisplayOverrideManager.applySignalStrengthAdjustment(
-                                            context = context,
-                                            subId = targetSubId,
-                                            enabled = targetSignal && targetNr5g,
-                                            preferenceEnabled = targetSignal,
-                                        )
-                                    }.getOrElse { error ->
-                                        context.getString(
-                                            R.string.signal_bar_system_apply_failed,
-                                            OperationErrors.describe(error),
-                                        )
-                                    }
-                                }
-                                val message =
-                                    "${coreResult.message}\n${nrResult.message}\n$signalMessage"
+                                val message = "${coreResult.message}\n${nrResult.message}"
                                 sims.firstOrNull { it.subscriptionId == targetSubId }?.let { sim ->
                                     OneKukuSnapshotStore.save(
                                         context,
@@ -2122,10 +2035,6 @@ private fun AppRoot(
                         forceTemporaryOverride = forceTemporaryOverride,
                         systemUpdateShield = systemUpdateShield,
                         rootPersistStatusDetail = RootPersistenceSupport.statusDetail(context),
-                        fiveGDisplayConfig = fiveGDisplayConfig,
-                        signalBarDisplayMode = signalBarDisplayMode,
-                        nr5g = nr5g,
-                        activeDataSims = activeDataSims,
                         prerequisitesMet = selectedSubId >= 0 && shizukuGranted,
                         actionsEnabled = selectedSubId >= 0 &&
                             shizukuGranted &&
@@ -2320,49 +2229,6 @@ private fun AppRoot(
                             }
                         },
                         onOpenApnCatalog = { apnCatalogVisible = true },
-                        onFiveGDisplayConfigChange = { config: SimpleFiveGDisplayConfig ->
-                            fiveGDisplayConfig = config
-                        },
-                        onApplyFiveGDisplay = {
-                            val targetSubId = selectedSubId
-                            val configToApply = fiveGDisplayConfig
-                            runOperation(context.getString(R.string.five_g_apply)) {
-                                SystemDisplayOverrideManager.applyFiveGDisplay(
-                                    context = context,
-                                    subId = targetSubId,
-                                    config = configToApply,
-                                )
-                            }
-                        },
-                        onSignalBarDisplayModeChange = { mode ->
-                            signalBarDisplayMode = mode
-                            if (selectedSubId >= 0) {
-                                ConfigStore.setSignalBarDisplayMode(
-                                    context,
-                                    selectedSubId,
-                                    mode,
-                                )
-                            }
-                        },
-                        onApplySignalBarStyle = {
-                            val targetSubId = selectedSubId
-                            val targetMode = signalBarDisplayMode
-                            runOperation(context.getString(R.string.signal_bar_style_apply)) {
-                                // 系统全局尝试：只写 UI 当前 selectedSubId，不默认卡1/数据卡/slot0。
-                                SignalBarSystemStyleManager.apply(
-                                    context = context,
-                                    subId = targetSubId,
-                                    mode = targetMode,
-                                )
-                            }
-                        },
-                        onRefreshDataSims = { refreshDataSimStatus() },
-                        onSwitchDataSim = { targetSubId -> switchDataSim(targetSubId) },
-                        onOpenTileSettings = {
-                            if (!QuickSettingsTileHelper.openTileEditor(context)) {
-                                publish(context.getString(R.string.qs_tile_manual_guide))
-                            }
-                        },
                         onApplyExpertValue = { key, value ->
                             if (ensurePrivilegedAccess()) {
                                 val targetSubId = selectedSubId
@@ -2469,10 +2335,52 @@ private fun AppRoot(
                         },
                         onClearLog = {
                             log = context.getString(R.string.log_ready)
+                            DiagFileLogger.clearSession()
                             scope.launch {
                                 snackbarHostState.showSnackbar(
                                     context.getString(R.string.log_cleared),
                                 )
+                            }
+                        },
+                        onExportDetailLog = {
+                            val file = DiagFileLogger.exportBundle(context)
+                            if (file == null) {
+                                publish(context.getString(R.string.log_detail_export_failed))
+                            } else {
+                                val uri = FileProvider.getUriForFile(
+                                    context,
+                                    "${context.packageName}.fileprovider",
+                                    file,
+                                )
+                                val share = Intent(Intent.ACTION_SEND).apply {
+                                    type = "text/plain"
+                                    putExtra(Intent.EXTRA_STREAM, uri)
+                                    putExtra(
+                                        Intent.EXTRA_SUBJECT,
+                                        context.getString(R.string.log_detail_share_title),
+                                    )
+                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                }
+                                runCatching {
+                                    context.startActivity(
+                                        Intent.createChooser(
+                                            share,
+                                            context.getString(R.string.log_detail_share_title),
+                                        ),
+                                    )
+                                    publish(context.getString(R.string.log_detail_exported))
+                                }.onFailure {
+                                    // 无分享目标时至少复制全文到剪贴板
+                                    val clipboard =
+                                        context.getSystemService(ClipboardManager::class.java)
+                                    clipboard?.setPrimaryClip(
+                                        ClipData.newPlainText(
+                                            context.getString(R.string.log_detail_share_title),
+                                            DiagFileLogger.buildExportText(context),
+                                        ),
+                                    )
+                                    publish(context.getString(R.string.log_copied))
+                                }
                             }
                         },
                         onReapply = {

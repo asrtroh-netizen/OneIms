@@ -97,33 +97,7 @@ object ReapplyManager {
             reapplyPerSimPersisted(context, subId, ::note)
         }
 
-        // 5G 显示增强：仅写回上次成功应用的那张卡。
-        val fiveG = ConfigStore.fiveGDisplayConfig(context)
-        if (fiveG.enabled) {
-            val ownedSubId = ConfigStore.lastFiveGDisplaySubId(context)
-            val displaySubId = when {
-                targetSubId != null && targetSubId >= 0 -> {
-                    if (ownedSubId < 0 || ownedSubId == targetSubId) targetSubId else null
-                }
-                ownedSubId >= 0 -> ownedSubId
-                else -> null
-            }
-            if (displaySubId != null) {
-                val fiveGResult = runCatching {
-                    val message = SystemDisplayOverrideManager.applyFiveGDisplay(
-                        context = context,
-                        subId = displaySubId,
-                        config = fiveG,
-                    )
-                    ConfigResult(true, message)
-                }.getOrElse { error ->
-                    ConfigResult(false, error.message ?: "five_g_display failed")
-                }
-                note("five_g_display", fiveGResult)
-            } else {
-                Log.i(TAG, "skip five_g_display reapply: ownedSubId=$ownedSubId target=$targetSubId")
-            }
-        }
+        // 信号格 / 5G 显示增强已迁出 OneIMS，不再开机重放。
 
         val result = if (!attempted) {
             ConfigResult(false, context.getString(R.string.msg_no_history))
@@ -148,21 +122,16 @@ object ReapplyManager {
     }
 
     /**
-     * 是否存在任何可开机重放的持久源（核心 / 高级 / 按卡能力 / 5G 显示）。
+     * 是否存在任何可开机重放的持久源（核心 / 高级 / 按卡能力）。
      * 供开机编排在「无 lastApplied」时仍进入重放，而不是整段跳过。
+     * 信号格 / 5G 显示增强 / 切卡已迁出，不再计入重放源。
      */
     fun hasPersistedReapplySource(context: Context): Boolean {
         if (ConfigStore.lastApplied(context) != null) return true
         if (ConfigStore.hasAnyAdvancedOptions(context)) return true
-        if (ConfigStore.fiveGDisplayConfig(context).enabled) return true
         return ImsController.listSims(context).any { sim ->
             val caps = ConfigStore.capabilityUiState(context, sim.subscriptionId)
-            caps != null && (
-                caps.vilte || caps.ut || caps.crossSim || caps.nr5g ||
-                    ConfigStore.signalStrengthAdjustmentEnabled(context, sim.subscriptionId) ||
-                    ConfigStore.signalBarDisplayMode(context, sim.subscriptionId) !=
-                    ConfigStore.SignalBarDisplayMode.AUTO
-                )
+            caps != null && (caps.vilte || caps.ut || caps.crossSim || caps.nr5g)
         }
     }
 
@@ -186,33 +155,6 @@ object ReapplyManager {
         }
         if (caps?.nr5g == true) {
             note("nr5g@$subId", ImsController.apply5g(context, subId, true))
-        }
-
-        val signalOn = ConfigStore.signalStrengthAdjustmentEnabled(context, subId)
-        if (signalOn) {
-            val signalResult = runCatching {
-                val message = SystemDisplayOverrideManager.applySignalStrengthAdjustment(
-                    context = context,
-                    subId = subId,
-                    enabled = caps?.nr5g == true,
-                    preferenceEnabled = true,
-                )
-                ConfigResult(true, message)
-            }.getOrElse { error ->
-                ConfigResult(false, error.message ?: "signal failed")
-            }
-            note("signal@$subId", signalResult)
-        }
-
-        val barMode = ConfigStore.signalBarDisplayMode(context, subId)
-        if (barMode != ConfigStore.SignalBarDisplayMode.AUTO) {
-            val barResult = runCatching {
-                val message = SignalBarSystemStyleManager.apply(context, subId, barMode)
-                ConfigResult(true, message)
-            }.getOrElse { error ->
-                ConfigResult(false, error.message ?: "signal_bar failed")
-            }
-            note("signal_bar@$subId", barResult)
         }
     }
 

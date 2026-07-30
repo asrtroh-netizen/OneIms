@@ -67,6 +67,17 @@ class BrokerInstrumentation : Instrumentation() {
 
     override fun onCreate(arguments: Bundle?) {
         super.onCreate(arguments)
+        // Instrumentation 与 UI 同 UID；尽早挂诊断，避免 Instr 路径崩溃时无落盘。
+        runCatching {
+            val ctx = targetContext?.applicationContext
+            if (ctx != null) {
+                DiagFileLogger.init(ctx)
+                DiagFileLogger.installCrashHandler()
+                DiagFileLogger.breadcrumb(
+                    "BrokerInstrumentation.onCreate oem=${OemDeviceCompat.summaryLine()}",
+                )
+            }
+        }
         startupArguments = arguments
         start()
     }
@@ -133,13 +144,14 @@ class BrokerInstrumentation : Instrumentation() {
             BrokerProtocol.OP_OVERRIDE_CONFIG -> {
                 val subId = arguments.getInt(BrokerProtocol.ARG_SUB_ID, -1)
                 require(subId >= 0) { "Invalid subscription id: $subId" }
+                // 对齐 kyujin-cho/pixel-volte-patch：同一委托会话内 persistent→temporary，
+                // 避免 SecurityException 冒到 UI 进程直接闪退（Issue #398 同类）。
                 overrideConfig(
                     context = context,
                     subId = subId,
                     overrides = arguments.parcelable(BrokerProtocol.ARG_OVERRIDES),
                     persistent = arguments.getInt(BrokerProtocol.ARG_PERSISTENT, 0) != 0,
                 )
-                "ok"
             }
 
             BrokerProtocol.OP_WRITE_GLOBAL_INT -> {
@@ -172,8 +184,38 @@ class BrokerInstrumentation : Instrumentation() {
         }
     }
 
+    /**
+     * @return `"ok"` 表示按请求模式写入成功；`"ok-temporary"` 表示 persistent 被拒后同会话降级。
+     */
     @SuppressLint("MissingPermission")
     private fun overrideConfig(
+        context: Context,
+        subId: Int,
+        overrides: PersistableBundle?,
+        persistent: Boolean,
+    ): String {
+        return try {
+            invokeOverrideConfig(context, subId, overrides, persistent)
+            if (persistent) "ok" else "ok-temporary"
+        } catch (error: Throwable) {
+            if (!persistent || !isPersistentPrivilegeDenied(error)) throw unwrapReflect(error)
+            Log.w(
+                TAG,
+                "persistent=true denied in-broker, fallback temporary: ${error.message}",
+            )
+            runCatching {
+                DiagFileLogger.w(
+                    "BrokerInstr",
+                    "persistent denied → temporary subId=$subId: ${OperationErrors.describe(error)}",
+                )
+            }
+            invokeOverrideConfig(context, subId, overrides, persistent = false)
+            "ok-temporary"
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun invokeOverrideConfig(
         context: Context,
         subId: Int,
         overrides: PersistableBundle?,
@@ -188,23 +230,54 @@ class BrokerInstrumentation : Instrumentation() {
                 method.parameterTypes[0] == Int::class.javaPrimitiveType &&
                 method.parameterTypes[1] == PersistableBundle::class.java
         }
-        if (threeArgumentMethod != null) {
-            // 部分预览版把 boolean persistent 改成 int overrideType；1 表示持久覆盖。
-            val overrideMode = when (threeArgumentMethod.parameterTypes[2]) {
-                Boolean::class.javaPrimitiveType -> persistent
-                Int::class.javaPrimitiveType -> if (persistent) 1 else 0
-                else -> error("Unsupported overrideConfig third parameter")
+        try {
+            if (threeArgumentMethod != null) {
+                // 部分预览版把 boolean persistent 改成 int overrideType；1 表示持久覆盖。
+                val overrideMode = when (threeArgumentMethod.parameterTypes[2]) {
+                    Boolean::class.javaPrimitiveType -> persistent
+                    Int::class.javaPrimitiveType -> if (persistent) 1 else 0
+                    else -> error("Unsupported overrideConfig third parameter")
+                }
+                threeArgumentMethod.invoke(manager, subId, overrides, overrideMode)
+                return
             }
-            threeArgumentMethod.invoke(manager, subId, overrides, overrideMode)
-            return
-        }
 
-        val twoArgumentMethod = managerClass.getMethod(
-            "overrideConfig",
-            Int::class.javaPrimitiveType,
-            PersistableBundle::class.java,
-        )
-        twoArgumentMethod.invoke(manager, subId, overrides)
+            val twoArgumentMethod = managerClass.getMethod(
+                "overrideConfig",
+                Int::class.javaPrimitiveType,
+                PersistableBundle::class.java,
+            )
+            twoArgumentMethod.invoke(manager, subId, overrides)
+        } catch (error: Throwable) {
+            throw unwrapReflect(error)
+        }
+    }
+
+    private fun unwrapReflect(error: Throwable): Throwable {
+        var cur = error
+        while (cur is ReflectiveOperationException && cur.cause != null) {
+            cur = cur.cause!!
+        }
+        return cur
+    }
+
+    private fun isPersistentPrivilegeDenied(error: Throwable): Boolean {
+        val root = unwrapReflect(error)
+        val messages = generateSequence(root) { it.cause }
+            .mapNotNull { it.message }
+            .joinToString(" ")
+        val security = generateSequence(root) { it.cause }.any { it is SecurityException }
+        return messages.contains("only can be invoked by system app", ignoreCase = true) ||
+            (
+                messages.contains("persistent=true", ignoreCase = true) &&
+                    messages.contains("system app", ignoreCase = true)
+                ) ||
+            (
+                // 部分 OEM（含 HyperOS）文案变体：仍要求 SecurityException 链，避免误伤读回失败
+                security &&
+                    messages.contains("persistent", ignoreCase = true) &&
+                    messages.contains("system", ignoreCase = true)
+                )
     }
 
     /**
