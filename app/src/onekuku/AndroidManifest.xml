@@ -5,8 +5,9 @@
     <!-- 内嵌 ADB mDNS 发现配对/连接端口 -->
     <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
 
-    <!-- 提示卸载旧独立 OneBridge 包残留 -->
+    <!-- Care 融合优先；旧独立 OneBridge 包残留作兼容探测 -->
     <queries>
+        <package android:name="com.onekuku.care" />
         <package android:name="com.oneims.bridge" />
     </queries>
 

@@ -39,11 +39,12 @@ class OneKukuCoreComponentTest {
     }
 
     @Test
-    fun candidatePackages_hostFirstAfterPhase4() {
+    fun candidatePackages_careFirstDuringFusion() {
         assertEquals(
-            OneKukuCoreComponent.HOST_PACKAGE,
+            OneKukuCoreComponent.CARE_PACKAGE,
             OneKukuCoreComponent.CANDIDATE_PACKAGES.first(),
         )
+        assertTrue(OneKukuCoreComponent.CANDIDATE_PACKAGES.contains(OneKukuCoreComponent.HOST_PACKAGE))
         assertTrue(OneKukuCoreComponent.CANDIDATE_PACKAGES.contains("com.oneims.bridge"))
     }
 

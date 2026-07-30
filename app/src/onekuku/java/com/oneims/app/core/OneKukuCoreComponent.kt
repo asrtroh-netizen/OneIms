@@ -24,8 +24,11 @@ import java.net.URL
  */
 object OneKukuCoreComponent {
 
-    /** 宿主包：通道类已内嵌于此（Phase4）。 */
+    /** 宿主包：Phase4 内嵌 OneBridge（待 Care 融合后退役，见 care-home-fusion 文档）。 */
     const val HOST_PACKAGE: String = "com.oneims.app"
+
+    /** OneKuku Care / MINI 外置通道包（融合目标真源）。 */
+    const val CARE_PACKAGE: String = ShizukuSetupHelper.CARE_PACKAGE
 
     /**
      * 历史独立桥包名。Phase4 起不再作为安装目标；
@@ -34,8 +37,8 @@ object OneKukuCoreComponent {
     @Deprecated("Phase4 embedded into host app", ReplaceWith("HOST_PACKAGE"))
     const val BRIDGE_PACKAGE: String = HOST_PACKAGE
 
-    /** @deprecated Phase3 已卸；保留常量避免旧引用编译炸掉。 */
-    @Deprecated("Phase3 removed branded core path")
+    /** @deprecated 旧 MINI 试验包名；现用 [CARE_PACKAGE]。 */
+    @Deprecated("Renamed to com.onekuku.care", ReplaceWith("CARE_PACKAGE"))
     const val BRANDED_CORE_PACKAGE: String = "com.oneims.onekuku.core"
 
     /** @deprecated Phase3 已卸；保留常量避免旧引用编译炸掉。 */
@@ -45,8 +48,11 @@ object OneKukuCoreComponent {
     /** @deprecated 使用 [resolveCorePackage]；指向宿主包。 */
     const val CORE_PACKAGE: String = HOST_PACKAGE
 
-    /** 拉起时优先宿主包；旧独立桥包仅作兼容探测。 */
-    val CANDIDATE_PACKAGES: List<String> = listOf(HOST_PACKAGE, "com.oneims.bridge")
+    /**
+     * 拉起探测候选：Care 优先（融合中），其次宿主内嵌桥，最后旧独立桥包。
+     * 真源切换完成前 [bridgeBootShellCommand] 仍打 onebridge_server。
+     */
+    val CANDIDATE_PACKAGES: List<String> = listOf(CARE_PACKAGE, HOST_PACKAGE, "com.oneims.bridge")
 
     /** 内置 OneBridge APK。 */
     const val BUNDLED_BRIDGE_ASSET_NAME: String = "oneims-bridge.apk"

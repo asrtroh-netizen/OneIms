@@ -20,7 +20,11 @@ object ShizukuSetupHelper {
 
     private const val TAG = "OneIMS-WirelessDbg"
     private const val GLOBAL_ADB_WIFI = "adb_wifi_enabled"
+    /** OneKuku Care（MINI）优先；官方/旧包名作回落（OneLink 仍可用）。 */
+    const val CARE_PACKAGE: String = "com.onekuku.care"
+
     val SHIZUKU_MANAGER_PACKAGES: List<String> = listOf(
+        CARE_PACKAGE,
         "moe.shizuku.privileged.api",
         "moe.shizuku.manager",
     )
