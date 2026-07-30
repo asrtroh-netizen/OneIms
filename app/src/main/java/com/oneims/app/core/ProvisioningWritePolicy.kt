@@ -3,12 +3,12 @@ package com.oneims.app.core
 /**
  * Provisioning 写入结果分级：区分「OEM 随缘软失败」与「核心写入硬失败」。
  *
- * 产品边界：
- * - **Pixel**：通信主链路；VoLTE key=10 **硬**；开机自启硬保证。
- * - **国产 VoWIFI OEM**（vivo / OPPO / 一加 / 小米等）：不走通信主战场，以 VoWIFI 为主；
- *   VoLTE 拒写可软，避免挡 VoWIFI 成功。
+ * 产品边界（权重）：
+ * - **P0 Pixel VoWIFI**：`provision_vowifi` / key=28 **硬**（第一权重，失败必须可见，不得 soft）。
+ * - **P0 Pixel 其它通信 + 开机**：VoLTE key=10 **硬**；开机自启硬保证。
+ * - **P1 其它机子 VoWIFI**：vivo/OPPO/一加/小米/三星/荣耀等；key=28 可 soft，VoLTE 拒写可 soft。
  *
- * 全机型软：26/27/68。国产额外软：28 + VoLTE(10) 的 detail 分级。
+ * 全机型软：26/27/68（漫游/模式/opt-in 旁路）。国产额外软：28 + VoLTE(10)。
  */
 object ProvisioningWritePolicy {
 

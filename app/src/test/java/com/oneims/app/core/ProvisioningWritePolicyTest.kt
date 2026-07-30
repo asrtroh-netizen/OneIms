@@ -70,6 +70,27 @@ class ProvisioningWritePolicyTest {
     }
 
     @Test
+    fun classify_pixelVowifiEnableIsFirstWeightHard() {
+        // P0：Pixel VoWIFI 开关失败必须整单硬失败，绝不能 soft 吞掉。
+        val outcome = ProvisioningWritePolicy.classifyApplyOutcome(
+            mapOf(
+                "carrier_config_override" to true,
+                "provision_volte" to true,
+                "provision_vowifi" to false,
+                "provision_vowifi_roaming" to true,
+                "provision_wfc_mode" to true,
+            ),
+            domesticVowifiOem = false,
+        )
+        assertEquals(ProvisioningWritePolicy.OutcomeKind.HARD_PARTIAL, outcome.kind)
+        assertFalse(outcome.treatAsSuccess)
+        assertTrue(outcome.hardFailedKeys.contains("provision_vowifi"))
+        assertFalse(
+            ProvisioningWritePolicy.isSoftProvisioningIntKey(28, domesticVowifiOem = false),
+        )
+    }
+
+    @Test
     fun classify_domesticVowifiAllowsVolteSoftFail() {
         // 国产不走通信主战场：VoLTE 拒写 + VoWIFI 键软失败仍可整单软成功。
         val outcome = ProvisioningWritePolicy.classifyApplyOutcome(
