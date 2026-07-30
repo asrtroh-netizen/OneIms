@@ -250,8 +250,18 @@ object CarrierConfigOverrideWriter {
         subId: Int,
         bundle: PersistableBundle?,
     ): Boolean {
-        if (ConfigStore.isForceTemporaryOverride(context)) {
-            Log.i(TAG, "force_temporary_override=on → skip persistent=true")
+        if (ConfigStore.isForceTemporaryOverride(context) ||
+            OemDeviceCompat.preferTemporaryCarrierOverride()
+        ) {
+            val reason = when {
+                ConfigStore.isForceTemporaryOverride(context) -> "force_temporary_override"
+                else -> "domestic-vowifi-oem"
+            }
+            Log.i(TAG, "$reason → skip persistent=true, write temporary")
+            DiagFileLogger.i(
+                "CarrierConfig",
+                "temporary-first subId=$subId reason=$reason oem=${OemDeviceCompat.summaryLine()}",
+            )
             SystemApiBroker.overrideConfig(
                 context = context,
                 subId = subId,

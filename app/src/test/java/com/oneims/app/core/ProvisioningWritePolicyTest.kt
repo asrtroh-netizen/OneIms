@@ -91,6 +91,38 @@ class ProvisioningWritePolicyTest {
     }
 
     @Test
+    fun classify_domesticCarrierConfigFailStillSoftSuccess() {
+        // 小米等：CC 整批拒写不得挡 VoWIFI 软成功路径。
+        val outcome = ProvisioningWritePolicy.classifyApplyOutcome(
+            mapOf(
+                "carrier_config_override" to false,
+                "provision_vowifi" to true,
+                "provision_vowifi_roaming" to true,
+                "provision_wfc_mode" to true,
+            ),
+            domesticVowifiOem = true,
+        )
+        assertEquals(ProvisioningWritePolicy.OutcomeKind.OEM_SOFT_PARTIAL, outcome.kind)
+        assertTrue(outcome.treatAsSuccess)
+        assertTrue(outcome.softFailedKeys.contains("carrier_config_override"))
+        assertTrue(outcome.hardFailedKeys.isEmpty())
+    }
+
+    @Test
+    fun classify_pixelCarrierConfigFailStillHard() {
+        val outcome = ProvisioningWritePolicy.classifyApplyOutcome(
+            mapOf(
+                "carrier_config_override" to false,
+                "provision_volte" to true,
+                "provision_vowifi" to true,
+            ),
+            domesticVowifiOem = false,
+        )
+        assertEquals(ProvisioningWritePolicy.OutcomeKind.HARD_PARTIAL, outcome.kind)
+        assertFalse(outcome.treatAsSuccess)
+    }
+
+    @Test
     fun classify_domesticVowifiAllowsVolteSoftFail() {
         // 国产不走通信主战场：VoLTE 拒写 + VoWIFI 键软失败仍可整单软成功。
         val outcome = ProvisioningWritePolicy.classifyApplyOutcome(
@@ -110,16 +142,19 @@ class ProvisioningWritePolicyTest {
     }
 
     @Test
-    fun classify_hardFailWhenCarrierMissing() {
+    fun classify_hardFailWhenDomesticHasNonSoftHardKey() {
+        // 国产 CC 可 soft；若出现未列入 soft 的硬键仍应整单硬失败。
         val outcome = ProvisioningWritePolicy.classifyApplyOutcome(
             mapOf(
                 "carrier_config_override" to false,
                 "provision_vowifi" to true,
+                "some_unknown_hard_key" to false,
             ),
             domesticVowifiOem = true,
         )
         assertEquals(ProvisioningWritePolicy.OutcomeKind.HARD_PARTIAL, outcome.kind)
         assertFalse(outcome.treatAsSuccess)
+        assertTrue(outcome.hardFailedKeys.contains("some_unknown_hard_key"))
     }
 
     @Test

@@ -61,6 +61,19 @@ object OemDeviceCompat {
      */
     fun softenCarrierConfigReadback(): Boolean = isDomesticVowifiOem()
 
+    /**
+     * 国产 VoWIFI OEM：CarrierConfig 直接走 temporary，跳过 persistent / 沙盒旁路。
+     * 对齐 PixelIMS「拒持久就降级」的爆炸半径控制，并避开 HyperOS 等对
+     * persistent=true 更苛刻的杀进程面。Pixel 仍优先 persistent。
+     */
+    fun preferTemporaryCarrierOverride(): Boolean = isDomesticVowifiOem()
+
+    /**
+     * 国产机不写 VoLTE/VoNR 通信类 CarrierConfig 大键集，只保 VoWIFI。
+     * Pixel 通信主战场不受影响。
+     */
+    fun skipCommunicationCarrierConfigKeys(): Boolean = isDomesticVowifiOem()
+
     fun summaryLine(): String = buildString {
         append(manufacturer())
         append('/')

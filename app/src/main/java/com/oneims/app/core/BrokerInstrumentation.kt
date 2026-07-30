@@ -67,6 +67,17 @@ class BrokerInstrumentation : Instrumentation() {
 
     override fun onCreate(arguments: Bundle?) {
         super.onCreate(arguments)
+        // Instrumentation 与 UI 同 UID；尽早挂诊断，避免 Instr 路径崩溃时无落盘。
+        runCatching {
+            val ctx = targetContext?.applicationContext
+            if (ctx != null) {
+                DiagFileLogger.init(ctx)
+                DiagFileLogger.installCrashHandler()
+                DiagFileLogger.breadcrumb(
+                    "BrokerInstrumentation.onCreate oem=${OemDeviceCompat.summaryLine()}",
+                )
+            }
+        }
         startupArguments = arguments
         start()
     }

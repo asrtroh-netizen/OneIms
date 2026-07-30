@@ -64,15 +64,17 @@ object ImsController {
         val detail = LinkedHashMap<String, Boolean>()
         return try {
             // 每个写操作内部各自处理「委托绕过 / Shizuku 直调」双策略与降级
+            val domesticVowifi = OemDeviceCompat.skipCommunicationCarrierConfigKeys()
             val bundle = PersistableBundle()
-            if (enableVolte) {
+            // 国产 VoWIFI OEM：不写 VoLTE/VoNR 通信大键集，缩小 HyperOS 等闪退面；Pixel 仍全写。
+            if (enableVolte && !domesticVowifi) {
                 CarrierConfigKeys.volteBooleanTrueKeys.forEach { bundle.putBoolean(it, true) }
                 bundle.putBoolean(CarrierConfigKeys.HIDE_ENHANCED_4G_LTE, false)
             }
             if (enableVowifi) {
                 CarrierConfigKeys.vowifiBooleanTrueKeys.forEach { bundle.putBoolean(it, true) }
             }
-            if (enableVonr) {
+            if (enableVonr && !domesticVowifi) {
                 CarrierConfigKeys.vonrBooleanTrueKeys.forEach { bundle.putBoolean(it, true) }
                 // AOSP Settings VoNR 入口：visibility + 设备 5G + NR availabilities 非空，三者缺一不显示。
                 // 开 VoNR 时一并写入 NSA+SA，避免「只开 VoNR、未开 5G NR」时系统只剩 VoLTE。
@@ -81,20 +83,38 @@ object ImsController {
                     CarrierConfigKeys.NR_AVAILABILITIES_NSA_AND_SA,
                 )
             }
-            // OneKuku：persistent override + 同 subId 回读；单项失败记入 detail
-            val write = CarrierConfigOverrideWriter.applyPersistentOverride(
-                context = context,
-                subId = subId,
-                values = bundle,
-                reason = "applyAll",
-            )
-            detail["carrier_config_override"] = write.success
-            if (!write.success && write.detail.values.none { it }) {
-                throw IllegalStateException(write.message)
+            if (domesticVowifi) {
+                DiagFileLogger.i(
+                    "ImsController",
+                    "domestic VoWIFI OEM: skip VoLTE/VoNR CarrierConfig keys oem=${OemDeviceCompat.summaryLine()}",
+                )
             }
-            write.detail.forEach { (key, ok) -> detail["cc:$key"] = ok }
+            if (bundle.keySet().isNotEmpty()) {
+                // OneKuku：persistent override + 同 subId 回读；单项失败记入 detail
+                val write = CarrierConfigOverrideWriter.applyPersistentOverride(
+                    context = context,
+                    subId = subId,
+                    values = bundle,
+                    reason = "applyAll",
+                )
+                detail["carrier_config_override"] = write.success
+                if (!write.success && write.detail.values.none { it }) {
+                    // 国产：CC 整批失败不中断，继续走 VoWIFI provisioning（soft）。
+                    if (domesticVowifi) {
+                        DiagFileLogger.w(
+                            "ImsController",
+                            "domestic CC batch failed, continue provisioning: ${write.message}",
+                        )
+                    } else {
+                        throw IllegalStateException(write.message)
+                    }
+                }
+                write.detail.forEach { (key, ok) -> detail["cc:$key"] = ok }
+            } else {
+                detail["carrier_config_override"] = true
+            }
 
-            if (enableVolte) {
+            if (enableVolte && !domesticVowifi) {
                 // 必须以返回码 0 判成功：软键可返回 -1 且不抛，`.isSuccess` 会假成功。
                 detail["provision_volte"] = runCatching {
                     SystemApiBroker.setProvisioningInt(

@@ -22,10 +22,12 @@ object ProvisioningWritePolicy {
     /**
      * 国产 VoWIFI OEM 额外软失败 detail。
      * 含 provision_volte：国产不依赖通信主链路，VoLTE 拒写不得挡 VoWIFI。
+     * 含 carrier_config_override：国产只保 VoWIFI，CC 整批拒写不得挡 provisioning。
      */
     val DOMESTIC_VOWIFI_SOFT_PROVISIONING_KEYS: Set<String> = setOf(
         "provision_vowifi",
         "provision_volte",
+        "carrier_config_override",
     )
 
     /** AOSP provisioning int key：全机型软失败、禁止向上抛崩进程。 */
@@ -82,7 +84,9 @@ object ProvisioningWritePolicy {
         }
         val soft = failed.filter { it in softKeys }
         val hard = failed.filter { it !in softKeys }
-        val carrierOk = detail["carrier_config_override"] != false
+        // Pixel：CC 失败仍算硬门槛；国产 VoWIFI：CC 已进 softKeys，不必再单独卡死。
+        val carrierOk = detail["carrier_config_override"] != false ||
+            (domesticVowifiOem && "carrier_config_override" in softKeys)
         return if (hard.isEmpty() && carrierOk) {
             ApplyOutcome(
                 kind = OutcomeKind.OEM_SOFT_PARTIAL,

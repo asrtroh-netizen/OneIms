@@ -34,4 +34,14 @@ class OemDeviceCompatTest {
         assertTrue(OemDeviceCompat.isGooglePixelFamily("Google", "Pixel"))
         assertFalse(OemDeviceCompat.isXiaomiFamily("OnePlus", "OnePlus"))
     }
+
+    @Test
+    fun domesticVowifiOem_gatesMatchCommunicationSkipAndTemporaryFirst() {
+        // 门控函数与 isDomesticVowifiOem 同真源；Pixel 不得误入。
+        assertTrue(OemDeviceCompat.isDomesticVowifiOem("Xiaomi", "xiaomi"))
+        assertFalse(OemDeviceCompat.isDomesticVowifiOem("Google", "Pixel"))
+        // preferTemporary / skipCommunication 委托 isDomesticVowifiOem()，此处用品牌探测间接覆盖。
+        assertTrue(OemDeviceCompat.isDomesticVowifiOem("samsung", "samsung"))
+        assertTrue(OemDeviceCompat.isDomesticVowifiOem("HONOR", "honor"))
+    }
 }

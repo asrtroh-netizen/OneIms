@@ -129,9 +129,12 @@ import com.oneims.app.ui.SettingsUiState
 import com.oneims.app.ui.SponsorScreen
 import com.oneims.app.ui.ThemeMode
 import com.oneims.app.ui.theme.OneImsTheme
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.plus
 import kotlinx.coroutines.withContext
 import com.oneims.app.core.privilege.PrivilegeBridge
 import com.oneims.app.core.privilege.PrivilegeBridges
@@ -215,8 +218,18 @@ private fun AppRoot(
     onDynamicColorChange: (Boolean) -> Unit,
 ) {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
+    // 国产 OEM 上 binder/反射偶发异常若漏出协程会直接闪退；Supervisor + 落盘后继续可用。
+    val uiExceptionHandler = remember {
+        CoroutineExceptionHandler { _, error ->
+            DiagFileLogger.e("UI", "uncaught coroutine: ${error.message}", error)
+            // 不在此处 showSnackbar：handler 线程不确定，避免二次崩。
+        }
+    }
+    val baseScope = rememberCoroutineScope()
+    val scope = remember(baseScope, uiExceptionHandler) {
+        baseScope + SupervisorJob() + uiExceptionHandler
+    }
 
     var destination by remember { mutableStateOf(AppDestination.HOME) }
     var membershipPaywallVisible by remember { mutableStateOf(false) }
@@ -473,20 +486,24 @@ private fun AppRoot(
         }
         while (true) {
             kotlinx.coroutines.delay(1_000L)
-            val latest = OneKukuBootRestoreStore.readHint(context)
-            if (latest != bootUiHint) {
-                bootUiHint = latest
-            }
-            val running = OneKukuManager.isRunning()
-            val granted = OneKukuManager.isGranted()
-            if (running != shizukuRunning || granted != shizukuGranted) {
-                shizukuRunning = running
-                shizukuGranted = granted
-                if (running && granted && bootUiHint == OneKukuBootUiHint.NEEDS_ACTIVATION) {
-                    // 实时 binder 状态优先于一次失败留下的持久化提示。
-                    OneKukuBootRestoreStore.writeHint(context, OneKukuBootUiHint.READY_SLEEPING)
-                    bootUiHint = OneKukuBootUiHint.READY_SLEEPING
+            runCatching {
+                val latest = OneKukuBootRestoreStore.readHint(context)
+                if (latest != bootUiHint) {
+                    bootUiHint = latest
                 }
+                val running = OneKukuManager.isRunning()
+                val granted = OneKukuManager.isGranted()
+                if (running != shizukuRunning || granted != shizukuGranted) {
+                    shizukuRunning = running
+                    shizukuGranted = granted
+                    if (running && granted && bootUiHint == OneKukuBootUiHint.NEEDS_ACTIVATION) {
+                        // 实时 binder 状态优先于一次失败留下的持久化提示。
+                        OneKukuBootRestoreStore.writeHint(context, OneKukuBootUiHint.READY_SLEEPING)
+                        bootUiHint = OneKukuBootUiHint.READY_SLEEPING
+                    }
+                }
+            }.onFailure { error ->
+                DiagFileLogger.w("UI", "boot/privilege poll failed: ${error.message}", error)
             }
         }
     }
@@ -993,19 +1010,33 @@ private fun AppRoot(
     }
 
     fun refreshAll(showFeedback: Boolean = false) {
-        sims = ImsController.listSims(context)
-        if (sims.none { it.subscriptionId == selectedSubId }) {
-            val restored = ConfigStore.getSelectedSubId(context)
-            val fallback = sims.firstOrNull { it.subscriptionId == restored }?.subscriptionId
-                ?: sims.firstOrNull()?.subscriptionId
-                ?: -1
-            selectSim(fallback)
-        }
-        shizukuRunning = OneKukuManager.isRunning()
-        shizukuGranted = OneKukuManager.isGranted()
-        deviceInfo = DeviceInfo.summary(context)
-        if (showFeedback) {
-            publish(context.getString(R.string.refreshed))
+        runCatching {
+            sims = ImsController.listSims(context)
+            if (sims.none { it.subscriptionId == selectedSubId }) {
+                val restored = ConfigStore.getSelectedSubId(context)
+                val fallback = sims.firstOrNull { it.subscriptionId == restored }?.subscriptionId
+                    ?: sims.firstOrNull()?.subscriptionId
+                    ?: -1
+                selectSim(fallback)
+            }
+            shizukuRunning = runCatching { OneKukuManager.isRunning() }.getOrDefault(false)
+            shizukuGranted = runCatching { OneKukuManager.isGranted() }.getOrDefault(false)
+            deviceInfo = runCatching { DeviceInfo.summary(context) }
+                .getOrElse { error ->
+                    DiagFileLogger.w("UI", "DeviceInfo.summary failed: ${error.message}", error)
+                    error.message.orEmpty()
+                }
+            if (showFeedback) {
+                publish(context.getString(R.string.refreshed))
+            }
+        }.onFailure { error ->
+            DiagFileLogger.e("UI", "refreshAll failed: ${error.message}", error)
+            publish(
+                context.getString(
+                    R.string.operation_failed,
+                    OperationErrors.describe(error),
+                ),
+            )
         }
     }
 
