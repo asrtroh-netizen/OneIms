@@ -6,7 +6,9 @@ import android.os.Bundle
 import android.os.IBinder
 import android.os.IInterface
 import android.os.Looper
+import android.os.Parcel
 import android.util.Log
+import java.lang.reflect.Proxy
 import java.util.concurrent.CopyOnWriteArrayList
 
 /**
@@ -49,6 +51,7 @@ object BridgeService {
                 Log.e(TAG, "binder retry still failed")
             }
         }
+        // 必须返回 Boolean：投递失败时清 PID/UID 缓存，否则永远不再重试（对齐 V15 #319）。
         ClientBinderSender.register(onClientReady = { trySend() })
         Looper.loop()
     }
@@ -58,9 +61,13 @@ object BridgeService {
  * 对齐 Shizuku [BinderSender]：客户端 UID/进程起来时再投递 binder，
  * 代替「死循环 sleep 重投」。
  *
- * 关键：ProcessObserver 必须按 **PID** 去重（与 V15 一致）。
- * 仅按 UID 去重时，划掉 App 后若 OEM 未及时 `onUidGone`，新进程会被
- * 「Uid already starts」挡掉而不重投——表现为「V15 划掉还能活、OneKuku 假死」。
+ * 关键：
+ * 1. ProcessObserver 必须按 **PID** 去重（与 V15 一致）。
+ *    仅按 UID 去重时，划掉 App 后若 OEM 未及时 `onUidGone`，新进程会被
+ *    「Uid already starts」挡掉而不重投——表现为「V15 划掉还能活、OneKuku 假死」。
+ * 2. `asBinder()` 必须返回能处理 AIDL `onTransact` 的真实 Stub Binder。
+ *    旧实现用空 [Binder]，系统回调全部 `UNKNOWN_TRANSACTION`，server 活着也不重投。
+ * 3. 投递失败必须移出 PID/UID 列表，允许后续 observer 事件重试（V15 #319）。
  */
 @SuppressLint("PrivateApi")
 object ClientBinderSender {
@@ -73,7 +80,8 @@ object ClientBinderSender {
     private val startedUids = CopyOnWriteArrayList<Int>()
     private val startedPids = CopyOnWriteArrayList<Int>()
 
-    fun register(onClientReady: () -> Unit) {
+    /** @param onClientReady 投递成功返回 true；失败返回 false 以便清缓存重试。 */
+    fun register(onClientReady: () -> Boolean) {
         val am = activityManager() ?: run {
             Log.w(TAG, "ActivityManager unavailable; skip BinderSender-style observers")
             return
@@ -103,7 +111,7 @@ object ClientBinderSender {
     private fun isOneImsClient(uid: Int): Boolean =
         packagesForUid(uid).any { it == BridgeProtocol.CLIENT_PACKAGE }
 
-    private fun onUidStarts(uid: Int, onClientReady: () -> Unit) {
+    private fun onUidStarts(uid: Int, onClientReady: () -> Boolean) {
         if (!isOneImsClient(uid)) return
         if (startedUids.contains(uid)) {
             Log.v(TAG, "Uid $uid already starts")
@@ -111,40 +119,52 @@ object ClientBinderSender {
         }
         startedUids.add(uid)
         Log.i(TAG, "OneIMS uid=$uid starts; send binder")
-        onClientReady()
+        if (!onClientReady()) {
+            startedUids.remove(uid)
+            Log.w(TAG, "Uid $uid send failed; allow retry")
+        }
     }
 
     private fun onUidGone(uid: Int) {
         startedUids.remove(uid)
-        Log.v(TAG, "Uid $uid gone")
+        Log.i(TAG, "Uid $uid gone")
     }
 
-    private fun registerUidObserver(am: Any, onClientReady: () -> Unit) {
+    private fun registerUidObserver(am: Any, onClientReady: () -> Boolean) {
         runCatching {
-            val stubClz = Class.forName("android.app.IUidObserver\$Stub")
-            val proxy = java.lang.reflect.Proxy.newProxyInstance(
-                stubClz.classLoader,
-                arrayOf(Class.forName("android.app.IUidObserver")),
-            ) { _, method, args ->
-                when (method.name) {
+            val iface = Class.forName("android.app.IUidObserver")
+            val stubBinder = aidlStubBinder(
+                stubClassName = "android.app.IUidObserver\$Stub",
+            ) { name, data ->
+                when (name) {
                     "onUidActive" -> {
-                        val uid = args?.getOrNull(0) as? Int ?: return@newProxyInstance null
+                        val uid = data.readInt()
                         onUidStarts(uid, onClientReady)
                     }
                     "onUidIdle" -> {
-                        val uid = args?.getOrNull(0) as? Int ?: return@newProxyInstance null
+                        val uid = data.readInt()
+                        // 部分版本还有 boolean disabled，可读可不读
+                        runCatching { if (data.dataAvail() >= 4) data.readInt() }
                         onUidStarts(uid, onClientReady)
                     }
                     "onUidCachedChanged" -> {
-                        val uid = args?.getOrNull(0) as? Int ?: return@newProxyInstance null
-                        val cached = args.getOrNull(1) as? Boolean ?: true
+                        val uid = data.readInt()
+                        val cached = data.readInt() != 0
                         if (!cached) onUidStarts(uid, onClientReady)
                     }
                     "onUidGone" -> {
-                        val uid = args?.getOrNull(0) as? Int ?: return@newProxyInstance null
+                        val uid = data.readInt()
                         onUidGone(uid)
                     }
-                    "asBinder" -> Binder()
+                    else -> {
+                        // 未知回调（如 onUidStateChanged）忽略，避免 UNKNOWN_TRANSACTION 刷屏
+                        Log.v(TAG, "IUidObserver ignore $name")
+                    }
+                }
+            }
+            val proxy = Proxy.newProxyInstance(iface.classLoader, arrayOf(iface)) { _, method, _ ->
+                when (method.name) {
+                    "asBinder" -> stubBinder
                     else -> null
                 }
             }
@@ -171,44 +191,58 @@ object ClientBinderSender {
         }.onFailure { Log.w(TAG, "registerUidObserver failed", it) }
     }
 
-    private fun registerProcessObserver(am: Any, onClientReady: () -> Unit) {
+    private fun registerProcessObserver(am: Any, onClientReady: () -> Boolean) {
         runCatching {
-            val proxy = java.lang.reflect.Proxy.newProxyInstance(
-                Class.forName("android.app.IProcessObserver").classLoader,
-                arrayOf(Class.forName("android.app.IProcessObserver")),
-            ) { _, method, args ->
-                when (method.name) {
-                    // (pid, uid, foregroundActivities) — 对齐 V15 ProcessObserver
+            val iface = Class.forName("android.app.IProcessObserver")
+            val stubBinder = aidlStubBinder(
+                stubClassName = "android.app.IProcessObserver\$Stub",
+            ) { name, data ->
+                when (name) {
                     "onForegroundActivitiesChanged" -> {
-                        val pid = args?.getOrNull(0) as? Int ?: return@newProxyInstance null
-                        val uid = args.getOrNull(1) as? Int ?: return@newProxyInstance null
-                        val fg = args.getOrNull(2) as? Boolean ?: false
+                        val pid = data.readInt()
+                        val uid = data.readInt()
+                        val fg = data.readInt() != 0
                         if (fg) onProcessStarts(pid, uid, onClientReady)
                     }
-                    // (pid, uid, procState)
                     "onProcessStateChanged" -> {
-                        val pid = args?.getOrNull(0) as? Int ?: return@newProxyInstance null
-                        val uid = args.getOrNull(1) as? Int ?: return@newProxyInstance null
+                        val pid = data.readInt()
+                        val uid = data.readInt()
+                        runCatching { if (data.dataAvail() >= 4) data.readInt() } // procState
                         onProcessStarts(pid, uid, onClientReady)
                     }
-                    // (pid, uid) — 划掉/强停后必须清 PID，否则永远不再投
                     "onProcessDied" -> {
-                        val pid = args?.getOrNull(0) as? Int ?: return@newProxyInstance null
+                        val pid = data.readInt()
                         startedPids.remove(pid)
-                        Log.v(TAG, "pid $pid died")
+                        Log.i(TAG, "pid $pid died")
                     }
-                    "asBinder" -> Binder()
+                    "onForegroundServicesChanged", "onProcessStarted" -> {
+                        // 新版本附加回调：有 pid/uid 时也尝试投递
+                        if (data.dataAvail() >= 8) {
+                            val pid = data.readInt()
+                            val uid = data.readInt()
+                            onProcessStarts(pid, uid, onClientReady)
+                        }
+                    }
+                    else -> Log.v(TAG, "IProcessObserver ignore $name")
+                }
+            }
+            val proxy = Proxy.newProxyInstance(iface.classLoader, arrayOf(iface)) { _, method, _ ->
+                when (method.name) {
+                    "asBinder" -> stubBinder
                     else -> null
                 }
             }
             val m = am.javaClass.methods.first { it.name == "registerProcessObserver" }
             m.invoke(am, proxy)
-            Log.i(TAG, "registerProcessObserver ok (pid-tracked)")
+            Log.i(TAG, "registerProcessObserver ok (pid-tracked, stub-binder)")
         }.onFailure { Log.w(TAG, "registerProcessObserver failed", it) }
     }
 
-    /** 新 PID 才投递；同一进程内的重复前台回调忽略（对齐 V15 PID_LIST）。 */
-    private fun onProcessStarts(pid: Int, uid: Int, onClientReady: () -> Unit) {
+    /**
+     * 新 PID 才投递；同一进程内的重复前台回调忽略（对齐 V15 PID_LIST）。
+     * 投递失败则移出列表，允许后续事件重试（V15 #319）。
+     */
+    private fun onProcessStarts(pid: Int, uid: Int, onClientReady: () -> Boolean) {
         if (!isOneImsClient(uid)) return
         if (startedPids.contains(pid)) {
             Log.v(TAG, "pid $pid already starts")
@@ -216,7 +250,62 @@ object ClientBinderSender {
         }
         startedPids.add(pid)
         Log.i(TAG, "OneIMS pid=$pid uid=$uid starts; send binder")
-        onClientReady()
+        if (!onClientReady()) {
+            startedPids.remove(pid)
+            Log.w(TAG, "pid $pid send failed; allow retry")
+        }
+    }
+
+    /**
+     * 反射读取 `Xxx$Stub` 的 DESCRIPTOR / TRANSACTION_*，用真实 [Binder.onTransact]
+     * 承接系统回调。Java Proxy 本身不能继承 Stub，只能把 asBinder 指到这里。
+     */
+    private fun aidlStubBinder(
+        stubClassName: String,
+        dispatch: (methodName: String, data: Parcel) -> Unit,
+    ): Binder {
+        val stubClz = Class.forName(stubClassName)
+        val descriptor = stubClz.declaredFields
+            .first { it.name == "DESCRIPTOR" }
+            .apply { isAccessible = true }
+            .get(null) as String
+        val codeToName = stubClz.declaredFields
+            .filter { it.name.startsWith("TRANSACTION_") }
+            .associate { field ->
+                field.isAccessible = true
+                field.getInt(null) to field.name.removePrefix("TRANSACTION_")
+            }
+        Log.i(
+            TAG,
+            "stub $stubClassName descriptor=$descriptor tx=${codeToName.size}",
+        )
+        return object : Binder(), IInterface {
+            init {
+                attachInterface(this, descriptor)
+            }
+
+            override fun asBinder(): IBinder = this
+
+            override fun onTransact(
+                code: Int,
+                data: Parcel,
+                reply: Parcel?,
+                flags: Int,
+            ): Boolean {
+                val name = codeToName[code]
+                if (name == null) {
+                    return super.onTransact(code, data, reply, flags)
+                }
+                data.enforceInterface(descriptor)
+                try {
+                    dispatch(name, data)
+                } catch (t: Throwable) {
+                    Log.w(TAG, "stub dispatch $name failed: ${t.message}")
+                }
+                reply?.writeNoException()
+                return true
+            }
+        }
     }
 }
 

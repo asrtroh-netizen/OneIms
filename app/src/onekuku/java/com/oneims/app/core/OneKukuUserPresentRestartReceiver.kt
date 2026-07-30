@@ -11,6 +11,9 @@ import android.util.Log
 
 /**
  * 对齐 V15 `UserPresentRestartReceiver`：解锁后立即 + 5s + 15s 强制续跑开机激活。
+ *
+ * 延后 enqueue 必须 [goAsync] 撑住 PendingResult，否则 15s 后主线程回调时
+ * 会踩 `Broadcast already finished`（dropbox 已见 com.oneims.app）。
  */
 class OneKukuUserPresentRestartReceiver : BroadcastReceiver() {
 
@@ -24,13 +27,19 @@ class OneKukuUserPresentRestartReceiver : BroadcastReceiver() {
 
         setEnabled(context, false)
         val app = context.applicationContext
+        val pending = goAsync()
         Log.i(TAG, "USER_PRESENT: force boot restore (immediate + delayed)")
         OneKukuBootRestoreService.enqueue(app, debounceMs = 0L)
-        Handler(Looper.getMainLooper()).postDelayed({
+        val handler = Handler(Looper.getMainLooper())
+        handler.postDelayed({
             OneKukuBootRestoreService.enqueue(app, debounceMs = 0L)
         }, 5_000L)
-        Handler(Looper.getMainLooper()).postDelayed({
-            OneKukuBootRestoreService.enqueue(app, debounceMs = 0L)
+        handler.postDelayed({
+            try {
+                OneKukuBootRestoreService.enqueue(app, debounceMs = 0L)
+            } finally {
+                runCatching { pending.finish() }
+            }
         }, 15_000L)
     }
 
