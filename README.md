@@ -69,10 +69,10 @@
 
 ## 📦 双版本产品线（备注）
 
-| 对外名称 | 包名 | 特权通道 | Release 文件名 |
+| 对外名称 | 包名 | 特权通道 | 最新版下载 |
 |---|---|---|---|
-| **OneIms · OneKuku** `3.0.8-onekuku` | `com.oneims.app` | 内嵌 OneBridge + 无线调试配对 | `OneIms-OneKuku-standalone-3.0.8.apk`（备注：独立激活） |
-| **OneIms · OneIms Lite** `3.0.8-onelink` | `com.oneims.onelink` | 官方 Shizuku | `OneIms-Lite-Shizuku-3.0.8.apk`（备注：Shizuku） |
+| **OneIms · OneKuku** `3.0.8-onekuku` | `com.oneims.app` | 内嵌 OneBridge + 无线调试配对 | [OneIms-OneKuku-standalone-3.0.8.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.0.8/OneIms-OneKuku-standalone-3.0.8.apk) |
+| **OneIms · OneIms Lite** `3.0.8-onelink` | `com.oneims.onelink` | 官方 Shizuku | [OneIms-Lite-Shizuku-3.0.8.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.0.8/OneIms-Lite-Shizuku-3.0.8.apk) |
 
 > **双包同版号一起更新**；请只从本页 Release 链接下载，勿混装未知来源包。
 
