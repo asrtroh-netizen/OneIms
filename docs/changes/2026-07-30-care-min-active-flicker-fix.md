@@ -34,3 +34,16 @@
 
 机制：为少弹 ADB 窗学了 V15「先等 binder」，宿主已死时却空等 → 开 App 像「还要点激活」。  
 追加收敛：宿主已死时跳过 binder-only，立刻 prepare（对齐 3.0.4）。
+
+## 重启摸测（2026-07-30 晚）
+
+包：`3.0.9-onekuku` vc79 · Pixel 9 Pro Fold。
+
+| 时刻 | 证据 |
+|---|---|
+| boot_completed | `onekuku_server` 暂无 |
+| 解锁后 ~45s | `server` 有 pid、`:5555` LISTEN |
+| 激活日志 | `__OB_BOOT_OK__`、`fast path :5555 connected` |
+| 开 App 复连 | `host dead → prepare immediately (3.0.4-like) reason=binder_dead` |
+
+Hero UI 字符串（Active）因 adbd 切 tcpip 导致 USB/无线会话闪断，**本轮 dump NOT RUN**；请目视确认首页 pill。
