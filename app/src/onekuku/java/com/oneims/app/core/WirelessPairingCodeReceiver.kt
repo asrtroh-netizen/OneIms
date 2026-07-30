@@ -105,7 +105,8 @@ class WirelessPairingCodeReceiver : BroadcastReceiver() {
                     }
                 }
             } finally {
-                pending.finish()
+                // goAsync 超时后 AMS 可能已 finish；再调会抛 Broadcast already finished 杀进程。
+                runCatching { pending.finish() }
             }
         }
     }

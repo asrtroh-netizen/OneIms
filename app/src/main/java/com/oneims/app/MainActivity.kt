@@ -37,6 +37,7 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -606,6 +607,9 @@ private fun AppRoot(
         }
     }
 
+    /** 抑制「已激活」连发（复连路径可能同秒多次 settle）。 */
+    var lastActivatedPublishAt by remember { mutableLongStateOf(0L) }
+
     /** 同步 running/granted 并按真实状态给 snackbar（避免「请确认授权」与 Hero 就绪打架）。 */
     fun syncPrivilegeUiAndPublishActivation() {
         shizukuRunning = OneKukuManager.isRunning()
@@ -613,7 +617,11 @@ private fun AppRoot(
         when {
             OneKukuManager.isReady() -> {
                 settleOneKukuChannelAfterReady()
-                publish(context.getString(R.string.onekuku_msg_activated))
+                val now = System.currentTimeMillis()
+                if (now - lastActivatedPublishAt >= 2_500L) {
+                    lastActivatedPublishAt = now
+                    publish(context.getString(R.string.onekuku_msg_activated))
+                }
             }
             OneKukuManager.isRunning() && !OneKukuManager.isGranted() -> {
                 OneKukuManager.requestActivation()
@@ -628,6 +636,9 @@ private fun AppRoot(
      * 不装 OneBridge、不收六位码、不钉「激活中」；配对/Start 全在官方 Shizuku 里完成。
      * 须定义在 [beginWirelessPairGuide] / [prepareOneKukuCore] 之前（本地函数不可前向引用）。
      */
+    /** 抑制冷启/复连路径短时间反复把官方 Shizuku 拉到前台。 */
+    var lastShizukuOpenAt by remember { mutableLongStateOf(0L) }
+
     fun prepareOneLinkShizukuChannel() {
         awaitingCoreInstall = false
         coreMissingDialogVisible = false
@@ -649,16 +660,22 @@ private fun AppRoot(
                 publish(context.getString(R.string.onekuku_msg_permission_requested))
             }
             else -> {
-                val result = ShizukuSetupHelper.openShizukuApp(context)
-                publish(
-                    context.getString(
-                        when (result) {
-                            0 -> R.string.log_shizuku_opened
-                            1 -> R.string.log_shizuku_not_installed
-                            else -> R.string.log_open_failed
-                        },
-                    ),
-                )
+                val now = System.currentTimeMillis()
+                if (now - lastShizukuOpenAt < 15_000L) {
+                    publish(context.getString(R.string.onekuku_msg_need_prepare))
+                } else {
+                    lastShizukuOpenAt = now
+                    val result = ShizukuSetupHelper.openShizukuApp(context)
+                    publish(
+                        context.getString(
+                            when (result) {
+                                0 -> R.string.log_shizuku_opened
+                                1 -> R.string.log_shizuku_not_installed
+                                else -> R.string.log_open_failed
+                            },
+                        ),
+                    )
+                }
             }
         }
         shizukuRunning = OneKukuManager.isRunning()
@@ -924,6 +941,9 @@ private fun AppRoot(
                 return@launch
             }
             if (OneKukuEmbeddedAdbActivator.hasPairedOnce(context)) {
+                // 复连窗口显示「激活中」，避免划掉再开先闪红「未激活」再变绿。
+                OneKukuActivationUi.setPhase(OneKukuActivationPhase.CONNECTING)
+                activationEpoch++
                 prepareOneKukuCore(forceRestart = false)
             } else {
                 syncPrivilegeFlagsFromBridge()
