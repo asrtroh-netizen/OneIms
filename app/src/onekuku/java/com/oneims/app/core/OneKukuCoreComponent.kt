@@ -12,6 +12,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.oneims.app.R
 import com.oneims.app.core.privilege.ChannelEngine
+import com.oneims.caremin.CareMinHostConstants
 import org.json.JSONObject
 import java.io.File
 import java.net.HttpURLConnection
@@ -175,7 +176,7 @@ object OneKukuCoreComponent {
         val nice = ChannelEngine.processNiceName()
         val entryClass = when (ChannelEngine.current()) {
             ChannelEngine.ONEBRIDGE -> ENTRY_CLASS_ONEBRIDGE
-            ChannelEngine.CARE_MIN -> ENTRY_CLASS_CARE_MIN
+            ChannelEngine.CARE_MIN -> CareMinHostConstants.SERVER_ENTRY_CLASS
         }
         // setsid+stdin 断开：libadb 的 shell: 流关闭时否则会 SIGHUP 带走刚拉起的 server，
         // 表现为 binder 收到后约 2s 就 dead（与 V15「划掉还能活」差一截）。
@@ -202,10 +203,9 @@ object OneKukuCoreComponent {
 
     /**
      * CARE_MIN 目标入口（邻仓 server 最小面）。
-     * P3a：命令字符串先写出；类进 APK 依赖 server 模块迁入（见
-     * `docs/architecture/2026-07-30-care-min-server-import-whitelist.md`）。
+     * 真源：[CareMinHostConstants.SERVER_ENTRY_CLASS]；类进 APK 见白名单迁入。
      */
-    const val ENTRY_CLASS_CARE_MIN: String = "rikka.shizuku.server.ShizukuService"
+    val ENTRY_CLASS_CARE_MIN: String get() = CareMinHostConstants.SERVER_ENTRY_CLASS
 
     /** shell 成功标记（整行）；勿改成会出现在命令正文其它位置的子串。 */
     const val SHELL_BOOT_OK: String = "__OB_BOOT_OK__"

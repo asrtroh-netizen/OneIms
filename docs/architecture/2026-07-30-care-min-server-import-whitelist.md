@@ -48,9 +48,10 @@
 ## 4. 迁移顺序闸门
 
 1. **P0（已开）**：`ChannelEngine` 默认 `ONEBRIDGE` + 本文档  
-2. **P3a**：按本白名单迁入并 `assembleOnekuku*` 绿；默认仍不启用  
-3. **P3b**：`CHANNEL_ENGINE=CARE_MIN`；starter + Provider + 客户端接线；真机写配置 PASS  
-4. **P3c**：退役 `:bridge` / `onebridge_server`
+2. **P3a 客户端+模块骨架（已开）**：`:care-min` 常量/boot；onekuku 挂 Shizuku API + Provider；`CARE_MIN`→`ShizukuPrivilegeBridge`；boot 命令按引擎选入口；**server 源码闭包尚未打进 APK**  
+3. **P3a 续**：按本白名单把 server 最小面编进 `:care-min` / 宿主；默认仍不启用  
+4. **P3b**：`CHANNEL_ENGINE=CARE_MIN`；真机写配置 PASS  
+5. **P3c**：退役 `:bridge` / `onebridge_server`
 
 ## 5. 验证（P3a 起）
 
