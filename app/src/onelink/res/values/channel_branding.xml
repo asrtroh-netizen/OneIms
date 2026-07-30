@@ -4,7 +4,7 @@
     <string name="channel_display_name">OneLink</string>
     <string name="app_name">OneIms Lite</string>
 
-    <string name="onekuku_card_eyebrow">OneLink 通道</string>
+    <string name="onekuku_card_eyebrow"></string>
     <string name="onekuku_title_active">OneLink 已激活</string>
     <string name="onekuku_title_ready">OneLink 已就绪</string>
     <string name="onekuku_title_sleeping">OneLink 休眠中</string>
