@@ -728,7 +728,7 @@ private fun ActionTile(
 
 /**
  * 首页顶部通道总控卡：三态（未激活 / 激活中 / 就绪），对齐 V15。
- * 大标题只显示通道名；使用状态胶囊紧跟大字后面（就绪显示 Active）。
+ * 大标题只显示通道名；使用状态胶囊与标题同一行（就绪显示 Active），标题过长省略号。
  */
 @Composable
 fun StatusHero(
@@ -887,21 +887,27 @@ fun StatusHero(
                             }
                         }
                     }
-                    // 标题独占整行：禁止与「未激活」胶囊并排抢宽（截图像「还差 —— ...」）。
-                    Text(
-                        title,
-                        style = if (compact) {
-                            MaterialTheme.typography.titleMedium
-                        } else {
-                            MaterialTheme.typography.titleLarge
-                        },
-                        color = contentColor,
+                    // 标题 + Active 同排：胶囊 intrinsic 宽度优先，标题 weight 省略，避免 Active 被挤到下一行。
+                    Row(
                         modifier = Modifier.fillMaxWidth(),
-                        maxLines = 2,
-                        softWrap = true,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    StatusPillChip()
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Text(
+                            title,
+                            style = if (compact) {
+                                MaterialTheme.typography.titleMedium
+                            } else {
+                                MaterialTheme.typography.titleLarge
+                            },
+                            color = contentColor,
+                            modifier = Modifier.weight(1f),
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        StatusPillChip()
+                    }
                     if (!settled) {
                         Text(
                             subtitle,
