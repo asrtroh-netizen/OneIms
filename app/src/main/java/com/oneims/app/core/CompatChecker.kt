@@ -83,7 +83,7 @@ object CompatChecker {
             if (simCount > 0) context.getString(R.string.compat_yes) else context.getString(R.string.compat_sim_no),
         )
 
-        // 软件开门：非 Tensor（含国内高通）不再标「不支持」，改为降级可用；仅 API 过低才硬拒。
+        // 血统纪律（对齐 3.0.4）：非 Tensor 一律 UNSUPPORTED，不标「可尝试」。
         val level = resolveSupportLevel(
             sdkOk = sdkOk,
             shizukuGranted = shizukuGranted,
@@ -92,20 +92,18 @@ object CompatChecker {
         )
         lines += context.getString(R.string.compat_conclusion, context.getString(level.labelRes))
         lines += context.getString(
-            when {
-                level == SupportLevel.FULL -> R.string.compat_advice_full
-                level == SupportLevel.NEED_SHIZUKU -> R.string.compat_advice_need_shizuku
-                level == SupportLevel.UNSUPPORTED -> R.string.compat_advice_unsupported
-                !tensor && mediaTek -> R.string.compat_advice_mediatek_vowifi
-                !tensor -> R.string.compat_advice_nontensor
-                else -> R.string.compat_advice_degraded
+            when (level) {
+                SupportLevel.FULL -> R.string.compat_advice_full
+                SupportLevel.DEGRADED -> R.string.compat_advice_degraded
+                SupportLevel.NEED_SHIZUKU -> R.string.compat_advice_need_shizuku
+                SupportLevel.UNSUPPORTED -> R.string.compat_advice_unsupported
             },
         )
         return CompatReport(level, lines)
     }
 
     /**
-     * 纯判定：便于单测。非 Tensor 走降级（可试 VoWiFi），不再一刀切 UNSUPPORTED。
+     * 纯判定：便于单测。血统锁定 3.0.4——非 Tensor 一刀切 UNSUPPORTED。
      */
     internal fun resolveSupportLevel(
         sdkOk: Boolean,
@@ -113,9 +111,10 @@ object CompatChecker {
         tensor: Boolean,
         delegate: Boolean,
     ): SupportLevel = when {
+        !tensor -> SupportLevel.UNSUPPORTED
         !sdkOk -> SupportLevel.UNSUPPORTED
         !shizukuGranted -> SupportLevel.NEED_SHIZUKU
-        tensor && delegate -> SupportLevel.FULL
+        delegate -> SupportLevel.FULL
         else -> SupportLevel.DEGRADED
     }
 }

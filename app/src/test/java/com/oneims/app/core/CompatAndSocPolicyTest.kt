@@ -8,9 +8,9 @@ import org.junit.Test
 class CompatAndSocPolicyTest {
 
     @Test
-    fun resolveSupportLevel_nonTensorIsDegradedNotUnsupported() {
+    fun resolveSupportLevel_nonTensorIsUnsupported() {
         assertEquals(
-            SupportLevel.DEGRADED,
+            SupportLevel.UNSUPPORTED,
             CompatChecker.resolveSupportLevel(
                 sdkOk = true,
                 shizukuGranted = true,
@@ -47,9 +47,22 @@ class CompatAndSocPolicyTest {
     }
 
     @Test
-    fun resolveSupportLevel_needChannelWhenNotGranted() {
+    fun resolveSupportLevel_needChannelWhenTensorNotGranted() {
         assertEquals(
             SupportLevel.NEED_SHIZUKU,
+            CompatChecker.resolveSupportLevel(
+                sdkOk = true,
+                shizukuGranted = false,
+                tensor = true,
+                delegate = false,
+            ),
+        )
+    }
+
+    @Test
+    fun resolveSupportLevel_nonTensorBeatsMissingChannel() {
+        assertEquals(
+            SupportLevel.UNSUPPORTED,
             CompatChecker.resolveSupportLevel(
                 sdkOk = true,
                 shizukuGranted = false,
