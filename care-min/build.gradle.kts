@@ -1,16 +1,23 @@
 plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
+    id("dev.rikka.tools.refine")
 }
 
 android {
     namespace = "com.oneims.caremin"
     compileSdk = 36
+    ndkVersion = "27.0.12077973"
 
     defaultConfig {
         minSdk = 31
         ndk {
             abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64")
+        }
+        externalNativeBuild {
+            cmake {
+                arguments += listOf("-DANDROID_STL=none")
+            }
         }
     }
 
@@ -23,6 +30,7 @@ android {
     buildFeatures {
         aidl = true
         buildConfig = false
+        prefab = true
     }
 
     compileOptions {
@@ -31,6 +39,19 @@ android {
     }
     kotlinOptions {
         jvmTarget = "17"
+    }
+
+    externalNativeBuild {
+        cmake {
+            path = file("vendor/rish/cpp/CMakeLists.txt")
+            version = "3.22.1"
+        }
+    }
+
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true
+        }
     }
 
     sourceSets {
@@ -71,4 +92,6 @@ dependencies {
     compileOnly("dev.rikka.hidden:stub:4.4.0")
     implementation("dev.rikka.tools.refine:runtime:4.4.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
+    // rish CMake: find_package(cxx REQUIRED CONFIG)
+    implementation("org.lsposed.libcxx:libcxx:27.0.12077973")
 }

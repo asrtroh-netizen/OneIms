@@ -12,6 +12,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.oneims.app.R
 import com.oneims.app.core.privilege.ChannelEngine
+import com.oneims.caremin.CareMinBootShell
 import com.oneims.caremin.CareMinHostConstants
 import org.json.JSONObject
 import java.io.File
@@ -173,11 +174,12 @@ object OneKukuCoreComponent {
         packageName: String = HOST_PACKAGE,
         forceRestart: Boolean = false,
     ): String {
-        val nice = ChannelEngine.processNiceName()
-        val entryClass = when (ChannelEngine.current()) {
-            ChannelEngine.ONEBRIDGE -> ENTRY_CLASS_ONEBRIDGE
-            ChannelEngine.CARE_MIN -> CareMinHostConstants.SERVER_ENTRY_CLASS
+        if (ChannelEngine.current() == ChannelEngine.CARE_MIN) {
+            // CARE_MIN：必须带 -Dshizuku.library.path（见 CareMinBootShell），否则缺 librish.so 秒退。
+            return CareMinBootShell.command(packageName = packageName, forceRestart = forceRestart)
         }
+        val nice = ChannelEngine.processNiceName()
+        val entryClass = ENTRY_CLASS_ONEBRIDGE
         // setsid+stdin 断开：libadb 的 shell: 流关闭时否则会 SIGHUP 带走刚拉起的 server，
         // 表现为 binder 收到后约 2s 就 dead（与 V15「划掉还能活」差一截）。
         val start =

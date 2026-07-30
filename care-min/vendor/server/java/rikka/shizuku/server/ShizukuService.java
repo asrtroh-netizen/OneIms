@@ -457,7 +457,34 @@ public class ShizukuService extends Service<ShizukuUserServiceManager, ShizukuCl
         reply.putInt(BIND_APPLICATION_SERVER_VERSION, replyServerVersion);
         reply.putString(BIND_APPLICATION_SERVER_SECONTEXT, OsUtils.getSELinuxContext());
         reply.putInt(BIND_APPLICATION_SERVER_PATCH_VERSION, ShizukuApiConstants.SERVER_PATCH_VERSION);
-        if (!isManager) {
+        // CARE_MIN：宿主既是 Manager 又是唯一客户端。邻仓 Manager UI 路径不写
+        // BIND_APPLICATION_PERMISSION_GRANTED；宿主若走同一分支，Shizuku.checkSelfPermission
+        // 会一直拒绝 → wake: inactive。宿主必须显式带 granted=true。
+        boolean hostAsClient = ServerConstants.HOST_APPLICATION_ID.equals(requestPackageName);
+        if (isManager && hostAsClient) {
+            ClientRecord record = Objects.requireNonNull(clientRecord);
+            record.allowed = true;
+            reply.putBoolean(BIND_APPLICATION_PERMISSION_GRANTED, true);
+            reply.putBoolean(BIND_APPLICATION_SHOULD_SHOW_REQUEST_PERMISSION_RATIONALE, false);
+            int userId = UserHandleCompat.getUserId(callingUid);
+            // 只授宿主已请求、且系统里存在定义的权限（LEGACY 名常未安装定义，grant 会刷 IllegalArgument）。
+            for (String perm : new String[]{
+                    ServerConstants.PERMISSION_ORIGINAL,
+                    ServerConstants.PERMISSION,
+            }) {
+                try {
+                    Android17Compat.grantRuntimePermission(requestPackageName, perm, userId);
+                } catch (Throwable e) {
+                    LOGGER.w("grant %s to host skipped: %s", perm, e.getMessage());
+                }
+            }
+            try {
+                Android17Compat.grantRuntimePermission(requestPackageName,
+                        WRITE_SECURE_SETTINGS, userId);
+            } catch (Throwable e) {
+                LOGGER.w(e, "grant WRITE_SECURE_SETTINGS");
+            }
+        } else if (!isManager) {
             ClientRecord record = Objects.requireNonNull(clientRecord);
             // When the server runs as root, all attached clients are automatically granted access.
             // This lets apps like Swift Backup work without an explicit grant dialog in root mode.

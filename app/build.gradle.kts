@@ -2,6 +2,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
+    id("dev.rikka.tools.refine")
 }
 
 val oneImsVersionName = "3.0.9"
@@ -27,8 +28,8 @@ android {
             versionNameSuffix = "-onekuku"
             buildConfigField("String", "CHANNEL_LINE", "\"onekuku\"")
             buildConfigField("boolean", "CHANNEL_USES_EMBEDDED_BRIDGE", "true")
-            // 内循环引擎：默认 ONEBRIDGE；P3 验收后可切 CARE_MIN（宿主内嵌 MINI server）
-            buildConfigField("String", "CHANNEL_ENGINE", "\"ONEBRIDGE\"")
+            // 内循环引擎：CARE_MIN = 宿主内嵌 Shizuku MINI（onekuku_server + librish.so）
+            buildConfigField("String", "CHANNEL_ENGINE", "\"CARE_MIN\"")
         }
         create("onelink") {
             dimension = "channel"
@@ -62,12 +63,23 @@ android {
     }
     packaging {
         resources.excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        // CARE_MIN：librish.so 需解压到 nativeLibraryDir，供 app_process -Dshizuku.library.path 加载。
+        jniLibs {
+            useLegacyPackaging = true
+        }
     }
 
     // HiddenApiBypass 会触发 Play 依赖元数据审查；本应用不走商店分发，直接关掉上报。
     dependenciesInfo {
         includeInApk = false
         includeInBundle = false
+    }
+}
+
+configurations.configureEach {
+    resolutionStrategy {
+        force("androidx.core:core:1.13.1")
+        force("androidx.core:core-ktx:1.13.1")
     }
 }
 

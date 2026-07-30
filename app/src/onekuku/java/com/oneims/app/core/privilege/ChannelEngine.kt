@@ -5,11 +5,11 @@ import com.oneims.app.BuildConfig
 /**
  * OneKuku 内循环通道引擎选择点（单一真源）。
  *
- * - [ONEBRIDGE]：现网内嵌 `onebridge_server`（默认，迁移窗）
- * - [CARE_MIN]：宿主内嵌 Care/Shizuku server 最小面（P3 目标态；见
+ * - [ONEBRIDGE]：旧内嵌 `onebridge_server`（回滚用）
+ * - [CARE_MIN]：宿主内嵌 Care/Shizuku server 最小面（当前默认；见
  *   `docs/architecture/2026-07-30-onekuku-care-home-fusion.md`）
  *
- * 默认必须为 [ONEBRIDGE]，直到 CARE_MIN 真机验收通过再切 BuildConfig。
+ * BuildConfig.CHANNEL_ENGINE 为单一真源；回滚时改回 `"ONEBRIDGE"`。
  */
 enum class ChannelEngine {
     ONEBRIDGE,
