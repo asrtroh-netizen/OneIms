@@ -20,6 +20,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.oneims.app.BuildConfig
 import com.oneims.app.R
+import com.oneims.app.core.ChannelLine
 import com.oneims.app.core.UpdateChecker
 
 @Composable
@@ -147,23 +148,26 @@ fun SettingsScreen(
                     },
                     trailingText = stringResource(R.string.about_author_github_badge),
                 )
-                GroupDivider()
-                SettingsActionRow(
-                    icon = Icons.Filled.Favorite,
-                    title = stringResource(R.string.about_recommend_shizuku_title),
-                    subtitle = stringResource(R.string.about_recommend_shizuku_sub),
-                    onClick = {
-                        runCatching {
-                            context.startActivity(
-                                Intent(
-                                    Intent.ACTION_VIEW,
-                                    Uri.parse("https://github.com/asrtroh-netizen/shizuku"),
-                                ),
-                            )
-                        }
-                    },
-                    trailingText = stringResource(R.string.about_recommend_shizuku_badge),
-                )
+                // OneKuku 内循环：不展示「去装/打开第二套 Shizuku」入口；OneLink 仍保留推荐行。
+                if (!ChannelLine.usesEmbeddedBridge) {
+                    GroupDivider()
+                    SettingsActionRow(
+                        icon = Icons.Filled.Favorite,
+                        title = stringResource(R.string.about_recommend_shizuku_title),
+                        subtitle = stringResource(R.string.about_recommend_shizuku_sub),
+                        onClick = {
+                            runCatching {
+                                context.startActivity(
+                                    Intent(
+                                        Intent.ACTION_VIEW,
+                                        Uri.parse("https://github.com/asrtroh-netizen/shizuku"),
+                                    ),
+                                )
+                            }
+                        },
+                        trailingText = stringResource(R.string.about_recommend_shizuku_badge),
+                    )
+                }
             }
         }
     }

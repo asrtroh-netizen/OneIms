@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- OneKuku internal loop: home must not send users to a second channel app. -->
+<resources>
+    <string name="setup_open_shizuku">Start channel in this app</string>
+    <string name="setup_open_shizuku_sub">Tap Activate on Home and enter the pairing code from the notification — no other app to install</string>
+    <string name="log_shizuku_opened">In-app channel prep started</string>
+    <string name="log_shizuku_not_installed">Channel not ready — tap Activate on Home to finish on-device pairing</string>
+
+    <string name="onekuku_msg_installing_bundled_core">Channel is built into this app; starting…</string>
+    <string name="onekuku_msg_downloading_core">Preparing on-device channel…</string>
+    <string name="onekuku_msg_core_download_started">Channel is built-in — continue activation on Home</string>
+    <string name="onekuku_msg_core_download_failed">Could not start the on-device channel. Return to Home, tap Activate, and finish wireless pairing from the notification</string>
+    <string name="onekuku_msg_core_missing_hint">Channel is built into OneIMS. Tap Activate on Home and enter the 6-digit code from the notification.</string>
+
+    <string name="onekuku_core_missing_title">Start on-device activation</string>
+    <string name="onekuku_core_missing_body">No second app to install. Tap Continue to begin wireless pairing in this app; enter the 6-digit code from the notification shade.</string>
+    <string name="onekuku_core_missing_install">Continue</string>
+
+    <string name="home_adb_prep_title">Activate OneKuku</string>
+    <string name="home_adb_prep_sub">Stay in this app: tap Activate, then enter the pairing code from the notification. Do not install or open another channel app.</string>
+    <string name="home_adb_prep_steps">1) Connect Wi‑Fi\n2) Enable Wireless debugging → Pair with pairing code\n3) Enter the 6-digit code from the notification (stay in OneIMS)</string>
+
+    <string name="onekuku_adb_guide_script">Activate OneKuku inside this app (wireless debugging + ADB; Termux works without a PC):\n1) Enable Wireless debugging in Developer options\n2) Tap \"Pair device with pairing code\" and note the pair-port and code\n3) In Termux (pkg install android-tools) run:\n   adb pair localhost:pair-port code\n4) Then: adb connect localhost:connect-port\n5) Start channel:\n   %1$s\n6) Return to OneIMS and tap Activate OneKuku\n\nNote: The channel is built into OneIMS — do not install a second privilege app from the store.</string>
+
+    <string name="about_recommend_shizuku_title">About the channel</string>
+    <string name="about_recommend_shizuku_sub">Privilege channel is built into this app — activate on Home, no extra app</string>
+    <string name="about_recommend_shizuku_badge">Built-in</string>
+</resources>

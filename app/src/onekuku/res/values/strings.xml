@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- OneKuku 内循环：首页主路径不引导去开第二 App / 商店安装通道。 -->
+<resources>
+    <string name="setup_open_shizuku">在本应用启动通道</string>
+    <string name="setup_open_shizuku_sub">点首页「立即激活」，按通知填六位码即可，无需安装其它 App</string>
+    <string name="log_shizuku_opened">已开始本应用内通道准备</string>
+    <string name="log_shizuku_not_installed">通道未就绪，请在首页点「立即激活」完成本机配对</string>
+
+    <string name="onekuku_msg_installing_bundled_core">通道已内置在本应用，正在拉起…</string>
+    <string name="onekuku_msg_downloading_core">正在准备本机通道…</string>
+    <string name="onekuku_msg_core_download_started">通道已内置，请在首页继续激活</string>
+    <string name="onekuku_msg_core_download_failed">本机通道未能拉起。请回到首页点「立即激活」，按通知完成无线调试配对</string>
+    <string name="onekuku_msg_core_missing_hint">通道已内置在 OneIMS。请在首页点「立即激活」，用通知栏六位码完成本机配对。</string>
+
+    <string name="onekuku_core_missing_title">开始本机通道激活</string>
+    <string name="onekuku_core_missing_body">无需安装第二个 App。点「继续」后将在本应用内拉起无线调试配对；请下拉通知栏输入六位码。</string>
+    <string name="onekuku_core_missing_install">继续</string>
+
+    <string name="home_adb_prep_title">激活 OneKuku</string>
+    <string name="home_adb_prep_sub">全程在本应用内完成：点「立即激活」→ 下拉通知栏填六位码。不要去安装或打开其它通道 App。</string>
+    <string name="home_adb_prep_steps">① 连上 Wi‑Fi\n② 打开系统无线调试 → 使用配对码配对设备\n③ 下拉通知栏输入 6 位码（留在 OneIMS，无需切到其它 App）</string>
+
+    <string name="onekuku_adb_guide_script">OneKuku 在本应用内激活（无线调试 + ADB，免电脑可用 Termux）：\n1) 系统「开发者选项」打开无线调试\n2) 点「使用配对码配对设备」，记下配对端口与配对码\n3) Termux（pkg install android-tools）执行：\n   adb pair localhost:配对端口 配对码\n4) 再执行：adb connect localhost:连接端口\n5) 启动通道：\n   %1$s\n6) 回到 OneIMS 点「立即激活 OneKuku」\n\n说明：通道已内置，不要去应用商店安装第二个提权 App。</string>
+
+    <!-- 设置页「推荐 Shizuku」对内循环无意义；文案改成不诱导装第二 App（行仍可藏） -->
+    <string name="about_recommend_shizuku_title">通道说明</string>
+    <string name="about_recommend_shizuku_sub">特权通道已内置在本应用，首页即可激活，无需另装 App</string>
+    <string name="about_recommend_shizuku_badge">内置</string>
+</resources>
