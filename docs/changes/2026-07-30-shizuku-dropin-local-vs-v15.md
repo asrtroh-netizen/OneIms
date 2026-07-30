@@ -6,7 +6,7 @@
 | 线 | 路径 | HEAD（本轮采证） |
 |---|---|---|
 | Pixel / V15 主线 | `E:\GQ\One\_forks\HSSkyBoy-Shizuku-clean` | `1ba7389` |
-| 小米 / Drop-In 融合 | `E:\GQ\One\_forks\ShizukuDropIn-Local` | `14cb738`（+oem4） |
+| 小米 / Drop-In 融合 | `E:\GQ\One\_forks\ShizukuDropIn-Local` | oem5：对外 `V15.1.0` / 151000 |
 
 **策略前提（既定）**：Pixel 继续用 V15；小米用 DropIn-Local；不推 thejaustin 远端；不改 V15 仓做本线融合。
 
@@ -28,8 +28,8 @@
 
 | 项 | V15（clean） | DropIn-Local +oem4 |
 |---|---|---|
-| 版本名 | `V15.0.0` | `Shizuku DropIn-Local 13.6.0.r2185+oem4` |
-| versionCode | `150000` | `gitCount/upstream×10 + localOemPatch(4)` |
+| 版本名 | `V15.0.0` | **`V15.1.0`**（oem5 起；不再暴露 Plus/r2185/+oem） |
+| versionCode | `150000` | **`151000`** |
 | 默认 applicationId | `moe.shizuku.privileged.api` | **dropin** flavor：`moe.shizuku.privileged.api`（`isDefault=true`） |
 | 可选另一包名 | 无 | `shizukuplus` → `af.shizuku.plus.api` |
 | Manager namespace | `moe.shizuku.manager` | `af.shizuku.manager` |
@@ -50,7 +50,7 @@ DropIn:  MainActivity → V15SkinHomeActivity → HomeComposeScreen → LibraryS
 | 项 | V15 | DropIn-Local |
 |---|---|---|
 | 首页皮肤 | 原生 `HomeActivity` + LibrarySkin | `V15SkinHomeActivity` 挂同一套皮肤 |
-| 授权数显示 | `appsModel.grantedCount` 实传 | **`grantedCount = null`（缺口）** |
+| 授权数显示 | `appsModel.grantedCount` 实传 | **已接** `AppsViewModel.grantedCount`（oem5） |
 | 设置体量 | `ShizukuSettings.java` ~4KB | ~49KB（大量 Plus 开关） |
 | 模块目录 | 精简（home/adb/starter/watchdog…） | 另有 automation/plugin/ota/security/di/health… |
 
