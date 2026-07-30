@@ -71,6 +71,25 @@
 
 ---
 
+## ✨ What's New · 3.0.9
+
+**本版主线：相对 3.0.8 的本地优化包（砍三项独家运行时 + 小米防崩/假态补丁）；versionCode `79`。**
+
+> ⚠️ **未发 GitHub Release**：公开下载区仍指向下方 **3.0.8**；本号仅用于本地构建产物命名与覆盖安装区分。
+
+### 相对发版 3.0.8
+
+* 砍掉 OneIMS 内信号格 / 5G 显示增强 / 控制中心切卡的运行时路径（能力在 OneTools）
+* 小米 / HyperOS：VoWIFI 写入收窄、前台桥恢复、假未激活清理、重连 toast 降噪
+* 保留三态通道 / 矮屏紧凑 / 假就绪门禁 / Hero 吃字修复（3.0.6–3.0.7 已有）
+
+### 🔄 本地构建
+
+* 产物名：`OneIms-OneKuku-standalone-3.0.9.apk` / `OneIms-Lite-Shizuku-3.0.9.apk`
+* versionCode `79`（相对发版 3.0.8 的 `78` 会提示升级）
+
+---
+
 ## ✨ What's New · 3.0.8
 
 **本版主线：Pixel VoWIFI 第一权重硬保证；对齐 PixelIMS 式 OEM 容错；国产机 VoWIFI 统一门控；详细诊断日志。**

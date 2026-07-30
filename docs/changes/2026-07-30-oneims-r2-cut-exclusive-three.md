@@ -38,11 +38,12 @@
 - 未升 versionCode
 - 「加上三态/矮屏/假就绪/吃字」**无需再合代码**（已在树内）
 
-## 命名与发包（用户 2026-07-30 拍板）
+## 命名与发包（用户 2026-07-30 拍板 · 已更正）
 
 - **不发包**：不新建 GitHub Release、不上传 APK、不改远程 tag。
-- **命名保持 `3.0.8` / versionCode `78`**：优化后与商店发版同号；本地覆盖安装区分，**刻意不升 3.0.9**。
-- 证据：`app/build.gradle.kts` → `oneImsVersionName = "3.0.8"`，`versionCode = 78`。
+- **命名为 `3.0.9` / versionCode `79`**（更正：不是继续叫 3.0.8）。
+- 公开下载区仍可指向已发版的 3.0.8；本地产物文件名随 gradle 变为 `…-3.0.9.apk`。
+- 证据：`app/build.gradle.kts` → `oneImsVersionName = "3.0.9"`，`versionCode = 79`。
 
 ## 人工验证清单（编译后）
 
