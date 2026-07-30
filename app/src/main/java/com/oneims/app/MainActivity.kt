@@ -415,6 +415,8 @@ private fun AppRoot(
      * 前台收尾一律标「就绪」；关 App / 退后台由生命周期切入「休眠」。
      */
     fun settleOneKukuChannelAfterReady() {
+        // 硬门禁：仅 binder+授权双真才收尾，避免「假就绪」后误标 Active。
+        if (!OneKukuManager.isReady()) return
         if (ChannelLine.usesEmbeddedBridge) {
             OneKukuResidentService.stop(context)
         }
@@ -606,6 +608,23 @@ private fun AppRoot(
         }
     }
 
+    /** 同步 running/granted 并按真实状态给 snackbar（避免「请确认授权」与 Hero 就绪打架）。 */
+    fun syncPrivilegeUiAndPublishActivation() {
+        shizukuRunning = OneKukuManager.isRunning()
+        shizukuGranted = OneKukuManager.isGranted()
+        when {
+            OneKukuManager.isReady() -> {
+                settleOneKukuChannelAfterReady()
+                publish(context.getString(R.string.onekuku_msg_activated))
+            }
+            OneKukuManager.isRunning() && !OneKukuManager.isGranted() -> {
+                OneKukuManager.requestActivation()
+                publish(context.getString(R.string.onekuku_msg_permission_requested))
+            }
+            else -> publish(context.getString(R.string.onekuku_msg_need_active))
+        }
+    }
+
     /**
      * OneLink 线激活：复刻 2.0.8/2.0.9（接入 OneKuku 内嵌栈之前）的纯 Shizuku 路径。
      * 不装 OneBridge、不收六位码、不钉「激活中」；配对/Start 全在官方 Shizuku 里完成。
@@ -734,9 +753,6 @@ private fun AppRoot(
                     OneKukuActivationUi.setPhase(OneKukuActivationPhase.IDLE)
                     activationEpoch++
                     OneKukuPairingNotification.cancel(context)
-                    settleOneKukuChannelAfterReady()
-                    shizukuRunning = OneKukuManager.isRunning()
-                    shizukuGranted = OneKukuManager.isGranted()
                     if (bootUiHint == OneKukuBootUiHint.NEEDS_ACTIVATION ||
                         bootUiHint == OneKukuBootUiHint.WAITING_WIFI
                     ) {
@@ -748,7 +764,7 @@ private fun AppRoot(
                         OneKukuBootRestoreStore.writeHint(context, hint)
                         bootUiHint = hint
                     }
-                    publish(context.getString(R.string.onekuku_msg_embedded_adb_ok))
+                    syncPrivilegeUiAndPublishActivation()
                     return@launch
                 }
                 val binderDeadline = System.currentTimeMillis() + 9_000L
@@ -765,9 +781,6 @@ private fun AppRoot(
                     OneKukuActivationUi.setPhase(OneKukuActivationPhase.IDLE)
                     activationEpoch++
                     OneKukuPairingNotification.cancel(context)
-                    settleOneKukuChannelAfterReady()
-                    shizukuRunning = OneKukuManager.isRunning()
-                    shizukuGranted = OneKukuManager.isGranted()
                     if (bootUiHint == OneKukuBootUiHint.NEEDS_ACTIVATION ||
                         bootUiHint == OneKukuBootUiHint.WAITING_WIFI
                     ) {
@@ -779,7 +792,7 @@ private fun AppRoot(
                         OneKukuBootRestoreStore.writeHint(context, hint)
                         bootUiHint = hint
                     }
-                    publish(context.getString(R.string.onekuku_msg_embedded_adb_ok))
+                    syncPrivilegeUiAndPublishActivation()
                     return@launch
                 }
             }
@@ -833,17 +846,13 @@ private fun AppRoot(
                     OneKukuActivationUi.setPhase(OneKukuActivationPhase.IDLE)
                     activationEpoch++
                     OneKukuPairingNotification.cancel(context)
-                    settleOneKukuChannelAfterReady()
-                    shizukuRunning = OneKukuManager.isRunning()
-                    if (OneKukuManager.isRunning() && !OneKukuManager.isGranted()) {
-                        OneKukuManager.requestActivation()
-                        publish(context.getString(R.string.onekuku_msg_permission_requested))
-                    } else {
-                        publish(context.getString(R.string.onekuku_msg_embedded_adb_ok))
-                    }
+                    // Success 只保证 binder 曾就绪；必须同步 granted，禁止 stale 假 READY。
+                    syncPrivilegeUiAndPublishActivation()
                     if (OneKukuActivationUi.pendingRestoreAfterPair) {
                         OneKukuActivationUi.pendingRestoreAfterPair = false
-                        publish(context.getString(R.string.onekuku_msg_embedded_adb_ok))
+                        if (OneKukuManager.isReady()) {
+                            publish(context.getString(R.string.onekuku_msg_activated))
+                        }
                     }
                 }
                 is OneKukuMiniAdbClient.Outcome.Failed -> {
@@ -975,14 +984,7 @@ private fun AppRoot(
                         adbPairDialogVisible = false
                         OneKukuPairingNotification.cancel(context)
                         OneKukuActivationUi.setPhase(OneKukuActivationPhase.IDLE)
-                        settleOneKukuChannelAfterReady()
-                        shizukuRunning = OneKukuManager.isRunning()
-                        if (OneKukuManager.isRunning() && !OneKukuManager.isGranted()) {
-                            OneKukuManager.requestActivation()
-                            publish(context.getString(R.string.onekuku_msg_permission_requested))
-                        } else {
-                            publish(context.getString(R.string.onekuku_msg_embedded_adb_ok))
-                        }
+                        syncPrivilegeUiAndPublishActivation()
                     }
                     is OneKukuEmbeddedAdbActivator.Outcome.Failed -> {
                         OneKukuPairingNotification.showWaiting(context)
@@ -1869,6 +1871,8 @@ private fun AppRoot(
                             val targetNr5g = nr5g
                             val targetSignal = signalStrengthAdjustmentEnabled
                             persistCapabilityUi(targetSubId)
+                            // 实时门禁：UI 上 stale granted 时禁止进入写链路（一加假就绪 + 闪退）。
+                            if (!ensurePrivilegedAccess()) return@CapabilitiesActions
                             runOperation(context.getString(R.string.action_apply_core)) {
                                 val coreResult = ImsController.applyAll(
                                     context,
@@ -1892,20 +1896,29 @@ private fun AppRoot(
                                 }
                                 val signalMessage = when {
                                     targetSignal && !targetNr5g -> {
+                                        runCatching {
+                                            SystemDisplayOverrideManager.applySignalStrengthAdjustment(
+                                                context = context,
+                                                subId = targetSubId,
+                                                enabled = false,
+                                                preferenceEnabled = true,
+                                            )
+                                        }
+                                        context.getString(R.string.signal_bar_needs_nr_enabled)
+                                    }
+                                    else -> runCatching {
                                         SystemDisplayOverrideManager.applySignalStrengthAdjustment(
                                             context = context,
                                             subId = targetSubId,
-                                            enabled = false,
-                                            preferenceEnabled = true,
+                                            enabled = targetSignal && targetNr5g,
+                                            preferenceEnabled = targetSignal,
                                         )
-                                        context.getString(R.string.signal_bar_needs_nr_enabled)
+                                    }.getOrElse { error ->
+                                        context.getString(
+                                            R.string.signal_bar_system_apply_failed,
+                                            OperationErrors.describe(error),
+                                        )
                                     }
-                                    else -> SystemDisplayOverrideManager.applySignalStrengthAdjustment(
-                                        context = context,
-                                        subId = targetSubId,
-                                        enabled = targetSignal && targetNr5g,
-                                        preferenceEnabled = targetSignal,
-                                    )
                                 }
                                 val message =
                                     "${coreResult.message}\n${nrResult.message}\n$signalMessage"

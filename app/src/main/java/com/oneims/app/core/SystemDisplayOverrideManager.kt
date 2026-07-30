@@ -500,12 +500,10 @@ object SystemDisplayOverrideManager {
                 else -> context.getString(R.string.signal_bar_system_applied)
             }
         }.getOrElse { error ->
-            throw IllegalStateException(
-                context.getString(
-                    R.string.signal_bar_system_apply_failed,
-                    OperationErrors.describe(error),
-                ),
-                error,
+            // 不抛：一加等机上 Instrumentation 失败会被放大成「点应用闪退」。
+            context.getString(
+                R.string.signal_bar_system_apply_failed,
+                OperationErrors.describe(error),
             )
         }
     }
