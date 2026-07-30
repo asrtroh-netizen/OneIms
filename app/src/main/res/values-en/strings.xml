@@ -241,7 +241,7 @@
     <string name="about_author_name">小喵崽</string>
     <string name="about_author_github_sub">Open the GitHub project page · product site coming soon</string>
     <string name="about_author_github_badge">GitHub</string>
-    <string name="about_recommend_shizuku_title">XiaoMiaoZai patched Shizuku</string>
+    <string name="about_recommend_shizuku_title">Shizuku (XiaoMiaoZai patched)</string>
     <string name="about_recommend_shizuku_sub">Pair once · auto Wi‑Fi reconnect · stabler boot · open GitHub</string>
     <string name="about_recommend_shizuku_badge">Rec</string>
     <string name="about_donate_title">Support the project</string>
