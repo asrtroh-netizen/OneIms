@@ -5,8 +5,8 @@ import android.os.Build
 /**
  * OEM 兼容策略入口：只做识别与策略开关，不硬拦业务写入。
  *
- * 产品优先级：Pixel 通信 + 开机自启是硬保证。
- * 国产机（vivo / OPPO / 一加 / 小米等）**不走通信主战场**，以 VoWIFI 容错为主
+ * 产品优先级：**第一 Pixel**（通信 + 开机自启硬保证）→ **第二** 其它机子 VoWIFI 容错
+ * （vivo / OPPO / 一加 / 小米 / 三星 / 荣耀等）。Google/Pixel 永不进入国产 soft 门控。
  * （见 docs/architecture/2026-07-30-product-priority-pixel-first.md）。
  */
 object OemDeviceCompat {
