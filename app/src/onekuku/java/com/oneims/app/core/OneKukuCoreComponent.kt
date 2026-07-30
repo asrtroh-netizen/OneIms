@@ -151,12 +151,16 @@ object OneKukuCoreComponent {
         packageName: String = HOST_PACKAGE,
         forceRestart: Boolean = false,
     ): String {
+        // setsid+stdin 断开：libadb 的 shell: 流关闭时否则会 SIGHUP 带走刚拉起的 server，
+        // 表现为 binder 收到后约 2s 就 dead（与 V15「划掉还能活」差一截）。
         val start =
             "APK=\$(pm path $packageName 2>/dev/null | head -n 1 | cut -d: -f2 | tr -d '\\r'); " +
                 "if [ -z \"\$APK\" ]; then printf '%s\\n' $SHELL_BOOT_MISS; exit 1; fi; " +
                 "export CLASSPATH=\"\$APK\"; " +
-                "(/system/bin/app_process /system/bin --nice-name=onebridge_server " +
-                "com.oneims.bridge.server.BridgeService >/dev/null 2>&1 &); " +
+                "(setsid /system/bin/app_process /system/bin --nice-name=onebridge_server " +
+                "com.oneims.bridge.server.BridgeService >/dev/null 2>&1 </dev/null &) || " +
+                "(nohup /system/bin/app_process /system/bin --nice-name=onebridge_server " +
+                "com.oneims.bridge.server.BridgeService >/dev/null 2>&1 </dev/null &); " +
                 "printf '%s\\n' $SHELL_BOOT_OK"
         return if (forceRestart) {
             "pkill -f onebridge_server 2>/dev/null || true; $start"

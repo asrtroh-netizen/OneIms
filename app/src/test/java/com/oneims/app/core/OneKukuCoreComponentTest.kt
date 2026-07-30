@@ -25,7 +25,8 @@ class OneKukuCoreComponentTest {
         assertTrue(cmd.contains("printf"))
         assertTrue(cmd.contains("pidof onebridge_server"))
         assertTrue(!cmd.contains("pkill"))
-        assertTrue(!cmd.contains("nohup"))
+        // Detach from adb shell: setsid (preferred) or nohup fallback — avoid SIGHUP kill.
+        assertTrue(cmd.contains("setsid") || cmd.contains("nohup"))
         assertTrue(!cmd.contains(" exec "))
         assertTrue(!cmd.contains("Android/data/"))
     }

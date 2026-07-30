@@ -935,7 +935,12 @@ private fun AppRoot(
     fun schedulePrivilegeReconnectShots(reason: String) {
         if (ChannelLine.usesShizuku) return
         if (!OneKukuEmbeddedAdbActivator.hasPairedOnce(context)) return
-        privilegeReconnectJobHolder[0]?.cancel()
+        // 已有一轮在跑：勿因 binder_dead 抖动反复 cancel→重开，否则 ADB attempt>0 会 pkill 把自己打死。
+        val running = privilegeReconnectJobHolder[0]
+        if (running?.isActive == true) {
+            DiagFileLogger.i("Privilege", "reconnect shots already active; ignore reason=$reason")
+            return
+        }
         privilegeReconnectJobHolder[0] = scope.launch {
             DiagFileLogger.i("Privilege", "v15-style reconnect shots reason=$reason")
             suspend fun fireShot(label: String, forceRestart: Boolean) {
@@ -970,7 +975,8 @@ private fun AppRoot(
                 activationEpoch++
                 return@launch
             }
-            fireShot("t15", forceRestart = true)
+            // 末拍仍不 forceRestart：避免与仍存活的 onebridge_server 互杀；真要重建走设置「重新激活」。
+            fireShot("t15", forceRestart = false)
             // 给最后一拍 ADB/binder 窗口收尾，避免相位永远钉在 CONNECTING。
             val settleDeadline = System.currentTimeMillis() + 12_000L
             while (System.currentTimeMillis() < settleDeadline) {
@@ -1447,6 +1453,9 @@ private fun AppRoot(
             syncPrivilegeFlagsFromBridge()
             refreshAll()
             if (OneKukuManager.isReady()) {
+                // 已接回：停掉错峰复连，避免后续 t5/t15 再触发 ADB 把刚活的 server 打掉。
+                privilegeReconnectJobHolder[0]?.cancel()
+                privilegeReconnectJobHolder[0] = null
                 settleOneKukuChannelAfterReady()
             }
         }

@@ -24,5 +24,7 @@ if pidof "$NICE" >/dev/null 2>&1; then
 fi
 
 export CLASSPATH="$APK"
-/system/bin/app_process /system/bin --nice-name="$NICE" "$CLASS" "$@" >/dev/null 2>&1 &
+# Detach from adb shell session so SIGHUP on stream close does not kill the server.
+(setsid /system/bin/app_process /system/bin --nice-name="$NICE" "$CLASS" "$@" >/dev/null 2>&1 </dev/null &) || \
+(nohup /system/bin/app_process /system/bin --nice-name="$NICE" "$CLASS" "$@" >/dev/null 2>&1 </dev/null &)
 printf '%s\n' "__OB_BOOT_OK__"
