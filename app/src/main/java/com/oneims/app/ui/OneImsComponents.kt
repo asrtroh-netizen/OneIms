@@ -797,8 +797,15 @@ fun StatusHero(
     }
     val actionEnabled = !busy
     val actionLoading = busy
-    val cardPad = if (compact) 14.dp else 24.dp
-    val blockGap = if (compact) 10.dp else 18.dp
+    // 去掉眉题后收紧卡片上下占用，避免 ✓ 旁留白过大。
+    val cardPad = if (compact) 12.dp else 18.dp
+    val blockGap = if (compact) 8.dp else 12.dp
+    val eyebrow = if (compact) {
+        ""
+    } else {
+        stringResource(R.string.onekuku_card_eyebrow).trim()
+    }
+    val showEyebrow = eyebrow.isNotEmpty()
 
     @Composable
     fun StatusPillChip() {
@@ -810,7 +817,7 @@ fun StatusHero(
                 text = statusPill,
                 modifier = Modifier.padding(
                     horizontal = if (compact) 8.dp else 12.dp,
-                    vertical = if (compact) 4.dp else 6.dp,
+                    vertical = if (compact) 3.dp else 4.dp,
                 ),
                 style = if (compact) {
                     MaterialTheme.typography.labelMedium
@@ -819,6 +826,27 @@ fun StatusHero(
                 },
                 fontWeight = FontWeight.SemiBold,
                 color = contentColor,
+                maxLines = 1,
+            )
+        }
+    }
+
+    @Composable
+    fun DeviceDetailsChip() {
+        if (onOpenDeviceDetails == null) return
+        Surface(
+            onClick = onOpenDeviceDetails,
+            shape = RoundedCornerShape(percent = 50),
+            color = contentColor.copy(alpha = 0.10f),
+        ) {
+            Text(
+                text = stringResource(R.string.home_device_details),
+                modifier = Modifier.padding(
+                    horizontal = 10.dp,
+                    vertical = 4.dp,
+                ),
+                style = MaterialTheme.typography.labelSmall,
+                color = contentColor.copy(alpha = 0.88f),
                 maxLines = 1,
             )
         }
@@ -835,9 +863,30 @@ fun StatusHero(
             modifier = Modifier.padding(cardPad),
             verticalArrangement = Arrangement.spacedBy(blockGap),
         ) {
+            // 有眉题时单独占一行；无眉题不再留空行顶开 ✓。
+            if (showEyebrow) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Text(
+                        text = eyebrow,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = contentColor.copy(alpha = 0.72f),
+                        modifier = Modifier.weight(1f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    DeviceDetailsChip()
+                }
+            }
+            // ✓ 只与大字标题同行居中；副文案另起，避免把图标拽到整块中间。
+            val iconSize = if (compact) 26.dp else 32.dp
+            val titleIconGap = if (compact) 10.dp else 14.dp
             Row(
-                verticalAlignment = Alignment.Top,
-                horizontalArrangement = Arrangement.spacedBy(if (compact) 10.dp else 18.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(titleIconGap),
             ) {
                 Icon(
                     imageVector = when {
@@ -846,98 +895,60 @@ fun StatusHero(
                         else -> Icons.Filled.CheckCircle
                     },
                     contentDescription = null,
-                    modifier = Modifier.size(if (compact) 28.dp else 38.dp),
+                    modifier = Modifier.size(iconSize),
                     tint = contentColor,
                 )
-                Column(
+                // 标题 + Active 同排且紧贴；无眉题时设备详情跟在右侧。
+                Row(
                     modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(if (compact) 4.dp else 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    // OneLink：不显示「OneLink 通道」眉题；OneKuku 仍显示「OneKuku 通道」。
-                    if (!compact) {
-                        val eyebrow = stringResource(R.string.onekuku_card_eyebrow).trim()
-                        if (eyebrow.isNotEmpty() || onOpenDeviceDetails != null) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                            ) {
-                                if (eyebrow.isNotEmpty()) {
-                                    Text(
-                                        text = eyebrow,
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = contentColor.copy(alpha = 0.72f),
-                                        modifier = Modifier.weight(1f),
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                    )
-                                } else {
-                                    Box(modifier = Modifier.weight(1f))
-                                }
-                                if (onOpenDeviceDetails != null) {
-                                    Surface(
-                                        onClick = onOpenDeviceDetails,
-                                        shape = RoundedCornerShape(percent = 50),
-                                        color = contentColor.copy(alpha = 0.10f),
-                                    ) {
-                                        Text(
-                                            text = stringResource(R.string.home_device_details),
-                                            modifier = Modifier.padding(
-                                                horizontal = 10.dp,
-                                                vertical = 4.dp,
-                                            ),
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = contentColor.copy(alpha = 0.88f),
-                                            maxLines = 1,
-                                        )
-                                    }
-                                }
-                            }
-                        }
+                    Text(
+                        title,
+                        style = if (compact) {
+                            MaterialTheme.typography.titleMedium
+                        } else {
+                            MaterialTheme.typography.titleLarge
+                        },
+                        color = contentColor,
+                        modifier = Modifier.weight(1f, fill = false),
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    StatusPillChip()
+                    if (!showEyebrow) {
+                        Spacer(modifier = Modifier.weight(1f))
+                        DeviceDetailsChip()
                     }
-                    // 标题 + Active 同排且紧贴：fill=false 不把标题拉满整行，胶囊跟在字后。
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        Text(
-                            title,
-                            style = if (compact) {
-                                MaterialTheme.typography.titleMedium
-                            } else {
-                                MaterialTheme.typography.titleLarge
-                            },
-                            color = contentColor,
-                            modifier = Modifier.weight(1f, fill = false),
-                            maxLines = 1,
-                            softWrap = false,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                        StatusPillChip()
-                    }
-                    if (!settled) {
-                        Text(
-                            subtitle,
-                            style = if (compact) {
-                                MaterialTheme.typography.bodyMedium
-                            } else {
-                                MaterialTheme.typography.bodyLarge
-                            },
-                            color = contentColor,
-                            maxLines = if (compact) 2 else 3,
-                            softWrap = true,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                        Text(
-                            detail,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = contentColor.copy(alpha = 0.78f),
-                            maxLines = if (compact) 2 else 4,
-                            softWrap = true,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
+                }
+            }
+            if (!settled) {
+                Column(
+                    modifier = Modifier.padding(start = iconSize + titleIconGap),
+                    verticalArrangement = Arrangement.spacedBy(if (compact) 2.dp else 4.dp),
+                ) {
+                    Text(
+                        subtitle,
+                        style = if (compact) {
+                            MaterialTheme.typography.bodyMedium
+                        } else {
+                            MaterialTheme.typography.bodyLarge
+                        },
+                        color = contentColor,
+                        maxLines = if (compact) 2 else 3,
+                        softWrap = true,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        detail,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = contentColor.copy(alpha = 0.78f),
+                        maxLines = if (compact) 2 else 4,
+                        softWrap = true,
+                        overflow = TextOverflow.Ellipsis,
+                    )
                 }
             }
 
