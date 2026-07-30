@@ -25,12 +25,17 @@
 - `ShizukuReceiverStarter.rootStartViaSuC` 兜底
 - Manifest 注册 `UserPresentRestartReceiver`（默认 disabled，boot 时启用）
 
-## oem2 已落地（V15 皮 + 去糟粕）
+## oem2 已落地（色板精简）
 
 - 主题主色 / `colors.xml` / mipmap 对齐 V15
 - Plus 增强能力与非核心首页卡默认关闭并隐藏
-- 保留无线启动卡与核心授权/冷启路径
-- 版本后缀 `+oem2`
+- 版本后缀曾为 `+oem2`
+
+## oem3 已落地（整套 V15 皮 · 优先）
+
+- `LibrarySkinHome` / `HomeComposeScreen` / `ShizukuComposeTheme` 迁入
+- `MainActivity` → `V15SkinHomeActivity`（Plus Drop-In 底 + V15 首页）
+- 版本后缀 `+oem3`
 
 ## 验证
 
