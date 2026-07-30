@@ -16,7 +16,8 @@
 
 ### ⬇️ 下载 APK（最新 · v3.1.0 · 请自选产品线）
 
-> **两个包功能相同（IMS/诊断/恢复），差别只在「特权通道怎么激活」——看下方选购指南，**只装其中一个**即可；进阶用户也可同机并存对比。
+> **两个包功能相同（IMS/诊断/恢复），差别只在「特权通道怎么激活」——看下方选购指南，务必只装其中一个。**  
+> ⚠️ **不要同机共存**：OneKuku 内嵌通道会与 Shizuku **抢权限 / 抢 binder**，双开容易互相踩脚、激活失败或反复掉线。换线请先卸载当前包再装另一条。
 
 | 推荐给… | 包 | 下载 |
 |---|---|---|
@@ -57,13 +58,13 @@
 | **激活方式** | 内嵌 OneBridge · 无线调试配对 · 可通知栏六位码 | **推荐搭配** [asrtroh 修缮版 Shizuku](https://github.com/asrtroh-netizen/shizuku)（开机自启更稳）；也可使用官方 [RikkaApps/Shizuku](https://shizuku.rikka.app/) |
 | **额外依赖** | 无（通道打进包内） | 需安装 Shizuku；日常保持 **Active** 即可 |
 | **体积** | 较大（含内嵌 ADB/Bridge） | 较小 |
-| **同机并存** | ✅ 可与 OneIms Lite 同时安装 | ✅ 可与 OneKuku 同时安装 |
+| **同机共存** | ❌ **不建议**与 Lite / 独立 Shizuku 同机 | ❌ **不建议**与 OneKuku 同机（会抢权限） |
 
 **怎么选（一句话）：**
 
-* 你是 **「我只想在一个 App 里搞定」** → 下 **OneKuku（独立激活）**
-* 你是 **「我手机本来就有 / 想用 Shizuku」** → 下 **OneIms Lite** + **[asrtroh Shizuku](https://github.com/asrtroh-netizen/shizuku/releases)**（Pixel 两版都可用；国产机优先组合版 `V15.1.0`）
-* 不确定 → 先试 **OneKuku**；若你本来就在用 Shizuku 生态，再换 **OneIms Lite** 也行
+* 你是 **「我只想在一个 App 里搞定」** → 下 **OneKuku（独立激活）**（请卸掉本机 Shizuku / Lite）
+* 你是 **「我手机本来就有 / 想用 Shizuku」** → 下 **OneIms Lite** + **[asrtroh Shizuku](https://github.com/asrtroh-netizen/shizuku/releases)**（请先卸掉 OneKuku）
+* 不确定 → 先试 **OneKuku**；若要用 Shizuku 生态，**先卸载 OneKuku** 再装 Lite，别两条一起留着
 
 ---
 
@@ -74,7 +75,8 @@
 | **OneIms · OneKuku** `3.1.0-onekuku` | `com.oneims.app` | 内嵌 OneBridge + 无线调试配对 | [OneIms-OneKuku-standalone-3.1.0.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.1.0/OneIms-OneKuku-standalone-3.1.0.apk) |
 | **OneIms · OneIms Lite** `3.1.0-onelink` | `com.oneims.onelink` | 官方 Shizuku | [OneIms-Lite-Shizuku-3.1.0.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.1.0/OneIms-Lite-Shizuku-3.1.0.apk) |
 
-> **双包同版号一起更新**；请只从本页 Release 链接下载，勿混装未知来源包。
+> **双包同版号一起更新**；请只从本页 Release 链接下载，勿混装未知来源包。  
+> **两线二选一**：OneKuku 与 Shizuku（含 Lite）同机共存会抢权限，安装前请清掉另一条线。
 
 ---
 
