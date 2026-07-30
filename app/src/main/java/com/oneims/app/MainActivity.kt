@@ -418,20 +418,18 @@ private fun AppRoot(
         activationEpoch++
     }
 
+    /** 从特权桥重读 running/granted，避免 binder 瞬断后 UI 假掉。 */
+    fun syncPrivilegeFlagsFromBridge() {
+        shizukuRunning = runCatching { OneKukuManager.isRunning() }.getOrDefault(false)
+        shizukuGranted = runCatching { OneKukuManager.isGranted() }.getOrDefault(false)
+    }
+
     /** App 退后台 / 关闭：已授权则进入休眠（不拆桥、不要求重配对）。 */
     fun sleepChannelWhenBackgrounded() {
         if (!OneKukuManager.isReady()) return
         if (OneKukuCardPolicy.isBusy(oneKukuState)) return
         OneKukuHiddenRunner.installBridge(OneKukuPrivilegeBridgeImpl)
         OneKukuSleepController.sleep(context)
-        activationEpoch++
-    }
-
-    /** App 回到前台：已授权则从休眠拉回就绪。 */
-    fun wakeChannelWhenForegrounded() {
-        if (!OneKukuManager.isReady()) return
-        OneKukuHiddenRunner.installBridge(OneKukuPrivilegeBridgeImpl)
-        OneKukuHiddenRunner.wake()
         activationEpoch++
     }
 
@@ -887,15 +885,74 @@ private fun AppRoot(
         }
     }
 
-    // OneKuku：已配对且通道未就绪时，进首页自动无码直连。
-    // OneLink：轻壳，不在此自动跑内嵌 ADB；未就绪时由用户点总控 → 打开 Shizuku。
+    /**
+     * App 回到前台：桥仍在则秒级唤醒；桥已掉（小米杀进程/ binder 死）则主动复连，
+     * 避免状态框卡在「未激活」。须定义在 [prepareOneKukuCore] 之后（本地函数不可前向引用）。
+     */
+    fun wakeChannelWhenForegrounded() {
+        OneKukuHiddenRunner.installBridge(OneKukuPrivilegeBridgeImpl)
+        syncPrivilegeFlagsFromBridge()
+        if (OneKukuManager.isReady()) {
+            OneKukuHiddenRunner.wake()
+            settleOneKukuChannelAfterReady()
+            activationEpoch++
+            return
+        }
+        scope.launch {
+            DiagFileLogger.i(
+                "Privilege",
+                "foreground reconnect channel=${ChannelLine.id} " +
+                    "running=$shizukuRunning granted=$shizukuGranted",
+            )
+            if (ChannelLine.usesShizuku) {
+                repeat(15) {
+                    syncPrivilegeFlagsFromBridge()
+                    if (OneKukuManager.isReady()) {
+                        settleOneKukuChannelAfterReady()
+                        activationEpoch++
+                        return@launch
+                    }
+                    if (OneKukuManager.isRunning() && !OneKukuManager.isGranted()) {
+                        OneKukuManager.requestActivation()
+                    }
+                    delay(200)
+                }
+                syncPrivilegeFlagsFromBridge()
+                activationEpoch++
+                return@launch
+            }
+            if (OneKukuEmbeddedAdbActivator.hasPairedOnce(context)) {
+                prepareOneKukuCore(forceRestart = false)
+            } else {
+                syncPrivilegeFlagsFromBridge()
+                activationEpoch++
+            }
+        }
+    }
+
+    // 冷启复连：OneKuku 已配对无码直连；OneLink 等 Shizuku binder 晚到后自动对齐状态。
     LaunchedEffect(Unit) {
         if (OneKukuManager.isReady()) {
             OneKukuActivationUi.setPhase(OneKukuActivationPhase.IDLE)
             settleOneKukuChannelAfterReady()
             return@LaunchedEffect
         }
-        if (!ChannelLine.usesEmbeddedBridge) return@LaunchedEffect
+        if (ChannelLine.usesShizuku) {
+            repeat(15) {
+                syncPrivilegeFlagsFromBridge()
+                if (OneKukuManager.isReady()) {
+                    OneKukuActivationUi.setPhase(OneKukuActivationPhase.IDLE)
+                    settleOneKukuChannelAfterReady()
+                    return@LaunchedEffect
+                }
+                if (OneKukuManager.isRunning() && !OneKukuManager.isGranted()) {
+                    OneKukuManager.requestActivation()
+                }
+                delay(200)
+            }
+            syncPrivilegeFlagsFromBridge()
+            return@LaunchedEffect
+        }
         if (!OneKukuEmbeddedAdbActivator.hasPairedOnce(context)) return@LaunchedEffect
         val phase = OneKukuActivationUi.phase
         if (phase == OneKukuActivationPhase.CONNECTING ||
@@ -943,6 +1000,8 @@ private fun AppRoot(
                 Lifecycle.Event.ON_STOP -> sleepChannelWhenBackgrounded()
                 Lifecycle.Event.ON_START -> wakeChannelWhenForegrounded()
                 Lifecycle.Event.ON_RESUME -> {
+                    // 每次回前台再对一次桥状态，防止小米上偶发 UI 与 binder 脱节。
+                    syncPrivilegeFlagsFromBridge()
                     if (!awaitingCoreInstall) return@LifecycleEventObserver
                     if (!OneKukuCoreComponent.isInstalled(context)) return@LifecycleEventObserver
                     // 装完从系统安装器 / 通道页返回：自动关掉「还没装」并进入配对
@@ -1274,13 +1333,19 @@ private fun AppRoot(
             }
         }
         val binderReceivedListener: () -> Unit = {
+            syncPrivilegeFlagsFromBridge()
             refreshAll()
+            if (OneKukuManager.isReady()) {
+                settleOneKukuChannelAfterReady()
+            }
         }
         val binderDeadListener: () -> Unit = {
-            shizukuRunning = false
-            shizukuGranted = false
+            // 只按桥真值刷新，禁止强行把 granted 打成 false（Shizuku 授权可粘滞）。
+            DiagFileLogger.w("Privilege", "binder dead → resync flags")
+            syncPrivilegeFlagsFromBridge()
             oneKukuTaskComplete = false
             oneKukuRestoring = false
+            activationEpoch++
         }
 
         runCatching { bridge.addRequestPermissionResultListener(permissionListener) }
