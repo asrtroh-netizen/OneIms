@@ -4,7 +4,8 @@
 **状态**：方案已按用户澄清纠偏（原「外置 Care 双 APK」作废）  
 **澄清原话**：总之就是相当于一个**内循环**  
 **产品定调（更新）**：见 `2026-07-30-onekuku-mirrors-lite-shizuku.md` ——  
-OneIMS 内循环 = Lite⊕Shizuku 的分工镜像，通道侧是**增强旧 OneKuku**（非外置第二 App）。
+OneIMS 内循环 = Lite⊕Shizuku 的分工镜像，通道侧是**增强旧 OneKuku**（非外置第二 App）。  
+**独立 vs 分割**：与组合版（Lite+Shizuku）**逻辑无差异**，差异只是一体打包还是拆成两个 App；业务逻辑不借机分叉。
 
 **P3 目标态（2026-07-30 升格）**：宿主内嵌 Care/Shizuku **server 最小面**（内置 Shizuku MINI / 新特权桥 / OneKuku 增强）**替换**旧 `onebridge_server` 引擎；  
 `PrivilegeBridge → SystemApiBroker` 门面保留。工程开关：`ChannelEngine`（默认 `ONEBRIDGE`，验收后切 `CARE_MIN`）。  
