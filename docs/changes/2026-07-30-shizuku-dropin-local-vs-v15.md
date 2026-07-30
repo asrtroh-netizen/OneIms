@@ -64,9 +64,9 @@ DropIn:  MainActivity → V15SkinHomeActivity → HomeComposeScreen → LibraryS
 | `UserPresentRestartReceiver` 0/5/15s | ✅ | ✅（oem1） | 解锁后强制重试 |
 | `WifiReadyMonitor` | ✅ | ✅（oem1） | Wi‑Fi 就绪再拉起 |
 | root `su -c` 兜底 | ✅ | ✅（oem1） | libsu 失败再试原生 su |
-| `SelfStarterService` 热路径 FGS | ✅ | ❌ 未迁 | V15 冷启主轴之一 |
-| `WirelessBootStartWorker` | ✅ | ❌ 未迁 | 含 TLS 端口发现细逻辑 |
-| `AdbStartWorker` | ❌ | ✅（Plus 原有） | DropIn 无线启动主路径 |
+| `SelfStarterService` 热路径 FGS | ✅ | ✅ oem6 已迁 | ADB 路径优先直拉 FGS |
+| `WirelessBootStartWorker` | ✅ | ✅ oem6 已迁 | 软备份 + TLS 端口发现 |
+| `AdbStartWorker` | ❌ | ✅（Plus 回落） | SelfStarter 失败时仍可用 |
 | `WatchdogService` | ✅ | ✅ | 两边都有；DropIn 默认开 |
 
 **含义**：冷启「保险绳」（解锁重试 / Wi‑Fi 再拉 / su 兜底）两边对齐；**无线热路径实现仍不同**——小米线若冷启不稳，优先补 SelfStarter，而不是再堆 UI。
