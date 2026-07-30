@@ -9,6 +9,7 @@
 .cxx
 /app/build/
 /bridge/build/
+/care-min/build/
 /onetools/build/
 /onebattery/build/
 *.apk
