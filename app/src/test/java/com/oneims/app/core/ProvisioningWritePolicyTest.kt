@@ -44,7 +44,24 @@ class ProvisioningWritePolicyTest {
     }
 
     @Test
-    fun classify_xiaomiSoftKeysStillSuccess() {
+    fun classify_pixelKeepsSuccessWhenVoimsOptInSoftFails() {
+        // Pixel 主路径：CarrierConfig/VoLTE OK，仅 key=68 拒写不得整单失败。
+        val outcome = ProvisioningWritePolicy.classifyApplyOutcome(
+            mapOf(
+                "carrier_config_override" to true,
+                "provision_volte" to true,
+                "provision_voims_opt_in" to false,
+                "provision_vowifi" to true,
+            ),
+            xiaomiFamily = false,
+        )
+        assertEquals(ProvisioningWritePolicy.OutcomeKind.OEM_SOFT_PARTIAL, outcome.kind)
+        assertTrue(outcome.treatAsSuccess)
+        assertTrue(outcome.hardFailedKeys.isEmpty())
+    }
+
+    @Test
+    fun classify_xiaomiVowifiSoftKeysStillSuccess() {
         val outcome = ProvisioningWritePolicy.classifyApplyOutcome(
             mapOf(
                 "carrier_config_override" to true,
@@ -102,15 +119,16 @@ class ProvisioningWritePolicyTest {
     }
 
     @Test
-    fun softIntKeys_include26And27() {
+    fun softIntKeys_include26And27And68_not28OnPixel() {
         assertTrue(ProvisioningWritePolicy.isSoftProvisioningIntKey(26, xiaomiFamily = false))
         assertTrue(ProvisioningWritePolicy.isSoftProvisioningIntKey(27, xiaomiFamily = false))
+        assertTrue(ProvisioningWritePolicy.isSoftProvisioningIntKey(68, xiaomiFamily = false))
         assertFalse(ProvisioningWritePolicy.isSoftProvisioningIntKey(28, xiaomiFamily = false))
         assertFalse(ProvisioningWritePolicy.isSoftProvisioningIntKey(10, xiaomiFamily = false))
     }
 
     @Test
-    fun softIntKeys_xiaomiAdds28And68() {
+    fun softIntKeys_xiaomiAddsVowifi28_neverVolte10() {
         assertTrue(ProvisioningWritePolicy.isSoftProvisioningIntKey(28, xiaomiFamily = true))
         assertTrue(ProvisioningWritePolicy.isSoftProvisioningIntKey(68, xiaomiFamily = true))
         assertFalse(ProvisioningWritePolicy.isSoftProvisioningIntKey(10, xiaomiFamily = true))

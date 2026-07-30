@@ -3,34 +3,38 @@ package com.oneims.app.core
 /**
  * Provisioning 写入结果分级：区分「OEM 随缘软失败」与「核心写入硬失败」。
  *
- * 一加 / 高通常见：CarrierConfig 已生效，但 key=26（漫游）/ key=27（WFC 模式）返回 result=1。
- * 小米 / HyperOS：key=28（VoWiFi 开关）与 key=68（VoIMS opt-in）也常拒写或反射失败；
- * 这类不得把整单打成操作失败，更不得向上抛崩进程。
+ * 产品边界（勿扩）：
+ * - **主战场 Pixel / Tensor**：CarrierConfig + VoLTE 硬路径必须硬；不得因旁路 soft 把整单打挂。
+ * - **非 Pixel**：额外兜底以 **VoWIFI 相关** 为主（小米 key=28），不把 VoLTE key=10 软化。
+ *
+ * 一加 / 高通：key=26/27 常拒写。
+ * 全机型：key=68（VoIMS opt-in）拒写不应当整单失败（对齐 pixel-volte-patch 容错面）。
+ * 小米 / HyperOS：额外软化 key=28（VoWiFi 开关）。
  */
 object ProvisioningWritePolicy {
 
-    /** 非关键：拒写也不应整单失败的 detail key（全 OEM）。 */
+    /** 非关键：拒写也不应整单失败的 detail key（全 OEM，含 Pixel）。 */
     val SOFT_PROVISIONING_KEYS: Set<String> = setOf(
         "provision_vowifi_roaming",
         "provision_wfc_mode",
-    )
-
-    /** 小米系额外软失败 detail key（对齐 PixelIMS「只写 68 + 吞异常」的容错面）。 */
-    val XIAOMI_SOFT_PROVISIONING_KEYS: Set<String> = setOf(
-        "provision_vowifi",
         "provision_voims_opt_in",
     )
 
-    /** AOSP provisioning int key：一加/高通常拒写，禁止向上抛崩进程。 */
+    /** 小米系额外：非 Pixel VoWIFI 相关软失败。 */
+    val XIAOMI_SOFT_PROVISIONING_KEYS: Set<String> = setOf(
+        "provision_vowifi",
+    )
+
+    /** AOSP provisioning int key：全机型软失败、禁止向上抛崩进程。 */
     val SOFT_PROVISIONING_INT_KEYS: Set<Int> = setOf(
         ProvisioningKeys.KEY_VOICE_OVER_WIFI_ROAMING, // 26
         ProvisioningKeys.KEY_VOICE_OVER_WIFI_MODE, // 27
+        ProvisioningKeys.KEY_VOIMS_OPT_IN_STATUS, // 68
     )
 
-    /** 小米系额外软 int key。 */
+    /** 小米系额外软 int key（VoWIFI）。VoLTE key=10 永不进入此集合。 */
     val XIAOMI_SOFT_PROVISIONING_INT_KEYS: Set<Int> = setOf(
         ProvisioningKeys.KEY_VOICE_OVER_WIFI_ENABLED, // 28
-        ProvisioningKeys.KEY_VOIMS_OPT_IN_STATUS, // 68
     )
 
     fun softDetailKeys(xiaomiFamily: Boolean = OemDeviceCompat.isXiaomiFamily()): Set<String> =

@@ -17,9 +17,9 @@
    - 识别小米 / Redmi / POCO / MIUI·HyperOS 属性
 
 3. **兼容软失败（对齐一加先例，不抄 GPL）**
-   - 小米系：provisioning key **28 / 68** 软失败不抛（含 invoke 异常）
-   - 小米系：CarrierConfig 5s 回读超时软放行（Writer 仍逐 key 验真）
-   - **硬键（含 VoLTE key=10）invoke 失败仍上抛**；`ImsController` 一律按 `== 0` 判成功
+   - 全机型：key **26 / 27 / 68** 软失败不抛（68 保护 Pixel 主路径）
+   - 小米系额外：key **28**（VoWIFI）软失败；CarrierConfig 5s 回读软放行
+   - **VoLTE key=10 永不软化**；`ImsController` 按 `== 0` 判成功
 
 ## 验证
 
