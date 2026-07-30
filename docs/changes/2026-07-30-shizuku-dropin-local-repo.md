@@ -25,6 +25,13 @@
 - `ShizukuReceiverStarter.rootStartViaSuC` 兜底
 - Manifest 注册 `UserPresentRestartReceiver`（默认 disabled，boot 时启用）
 
+## oem2 已落地（V15 皮 + 去糟粕）
+
+- 主题主色 / `colors.xml` / mipmap 对齐 V15
+- Plus 增强能力与非核心首页卡默认关闭并隐藏
+- 保留无线启动卡与核心授权/冷启路径
+- 版本后缀 `+oem2`
+
 ## 验证
 
 见交付总结；全量 `assembleDropinRelease` 依赖本机 SDK/签名，可能 NOT RUN。
