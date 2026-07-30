@@ -270,7 +270,7 @@
     <string name="compat_soc_mediatek">MediaTek / Dimensity — VoWiFi may have no effect (still try unlock)</string>
     <string name="compat_soc_other">Non-Tensor</string>
     <string name="compat_yes">Yes ✅</string>
-    <string name="compat_tensor_no">No (non-Tensor; software unlock, OEM decides)</string>
+    <string name="compat_tensor_no">No (non-Tensor; force-enable unsupported in this build)</string>
     <string name="compat_soc_qualcomm">Qualcomm / Snapdragon — VoWiFi best-effort write</string>
     <string name="compat_advice_nontensor">Non-Tensor (incl. Qualcomm): unsupported under the 3.0.4 bloodline policy; do not attempt force-enable. Use Pixel/Tensor as the primary path.</string>
     <string name="compat_os">③ OS: Android %1$s (API %2$d) %3$s</string>
@@ -300,7 +300,7 @@
     <string name="dev_patch">Security patch: %1$s</string>
     <string name="dev_tensor">Tensor chip: %1$s</string>
     <string name="dev_tensor_yes">Yes (supported)</string>
-    <string name="dev_tensor_no">No (non-Tensor; software unlock, OEM decides)</string>
+    <string name="dev_tensor_no">No (non-Tensor; unsupported under bloodline policy)</string>
     <string name="dev_soc">SoC: %1$s</string>
     <string name="dev_mediatek_vowifi_note">MediaTek: VoWiFi may have no effect</string>
     <string name="dev_sim_count">Active SIMs: %1$d</string>

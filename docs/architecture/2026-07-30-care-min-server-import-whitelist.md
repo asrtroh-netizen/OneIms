@@ -1,3 +1,5 @@
+﻿> ⚠️ **已废止现行方案（2026-07-30）**：OneKuku 迷你版 / CARE_MIN 已清除。见 `docs/changes/2026-07-30-abolish-onekuku-mini-care-min.md`。下文仅考古。
+
 # 2026-07-30 · Care / Shizuku MINI server 迁入白名单（宿主内嵌）
 
 **状态**：冻结（P3a 执行依据）  
@@ -61,3 +63,4 @@
 | 默认引擎 | 未改 BuildConfig 时仍为 OneBridge 行为 |
 | 体积/入口 | APK 无 Manager 主界面 Activity |
 | 负向 | 不要求安装 `com.onekuku.care` |
+

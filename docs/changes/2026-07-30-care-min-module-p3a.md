@@ -1,3 +1,5 @@
+﻿> ⚠️ **已废止现行方案（2026-07-30）**：见 `docs/changes/2026-07-30-abolish-onekuku-mini-care-min.md`。下文仅考古。
+
 # 2026-07-30 · P3a：`:care-min` 模块骨架
 
 ## 做了什么
@@ -12,3 +14,4 @@
 ```bat
 ./gradlew :care-min:compileDebugKotlin
 ```
+

@@ -1,3 +1,5 @@
+﻿> ⚠️ **已废止现行方案（2026-07-30）**：见 `docs/changes/2026-07-30-abolish-onekuku-mini-care-min.md`。下文仅考古。
+
 # 2026-07-30 · ChannelEngine P0：为内置 Shizuku MINI 替换旧桥开开关
 
 ## 动机
@@ -23,3 +25,4 @@
 ## 不做（本拍）
 
 迁 server 源码、改 starter、加 `*.shizuku` Provider、删 `:bridge`。
+

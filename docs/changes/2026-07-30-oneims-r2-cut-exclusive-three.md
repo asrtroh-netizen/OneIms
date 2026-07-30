@@ -43,9 +43,9 @@
 ## 命名与发包（用户 2026-07-30 拍板 · 已更正）
 
 - **不发包**：不新建 GitHub Release、不上传 APK、不改远程 tag。
-- **命名为 `3.0.9` / versionCode `79`**（更正：不是继续叫 3.0.8）。
-- 公开下载区仍可指向已发版的 3.0.8；本地产物文件名随 gradle 变为 `…-3.0.9.apk`。
-- 证据：`app/build.gradle.kts` → `oneImsVersionName = "3.0.9"`，`versionCode = 79`。
+- ~~命名为 `3.0.9` / versionCode `79`~~ → **已废止**（见 `2026-07-30-abolish-local-3.0.9.md`）；当前本地身份回底包 `3.0.4` / `74`。
+- 公开下载区仍可指向已发版的 3.0.8。
+- 当时证据（考古）：曾短暂 `oneImsVersionName = "3.0.9"` / `versionCode = 79`。
 
 ## 人工验证清单（编译后）
 

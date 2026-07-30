@@ -5,7 +5,7 @@ plugins {
     id("dev.rikka.tools.refine")
 }
 
-val oneImsVersionName = "3.0.9"
+val oneImsVersionName = "3.0.4"
 
 android {
     namespace = "com.oneims.app"
@@ -16,7 +16,7 @@ android {
         applicationId = "com.oneims.app"
         minSdk = 31          // Tensor Pixel（Pixel 6 起）最低 Android 12
         targetSdk = 36
-        versionCode = 79
+        versionCode = 74
         versionName = oneImsVersionName
     }
 
@@ -28,7 +28,7 @@ android {
             versionNameSuffix = "-onekuku"
             buildConfigField("String", "CHANNEL_LINE", "\"onekuku\"")
             buildConfigField("boolean", "CHANNEL_USES_EMBEDDED_BRIDGE", "true")
-            // 内循环引擎：默认 OneBridge（onebridge_server）。CARE_MIN 保留可切，暂不默认。
+            // 内循环固定 OneBridge（onebridge_server）；迷你版 CARE_MIN 已清除。
             buildConfigField("String", "CHANNEL_ENGINE", "\"ONEBRIDGE\"")
         }
         create("onelink") {
@@ -37,7 +37,7 @@ android {
             versionNameSuffix = "-onelink"
             buildConfigField("String", "CHANNEL_LINE", "\"onelink\"")
             buildConfigField("boolean", "CHANNEL_USES_EMBEDDED_BRIDGE", "false")
-            // onelink 走外置 Shizuku；此字段仅占位，业务不读 ChannelEngine
+            // onelink 走外置 Shizuku；此字段仅占位
             buildConfigField("String", "CHANNEL_ENGINE", "\"EXTERNAL_SHIZUKU\"")
         }
     }
@@ -63,7 +63,6 @@ android {
     }
     packaging {
         resources.excludes += "/META-INF/{AL2.0,LGPL2.1}"
-        // CARE_MIN：librish.so 需解压到 nativeLibraryDir，供 app_process -Dshizuku.library.path 加载。
         jniLibs {
             useLegacyPackaging = true
         }
@@ -86,7 +85,6 @@ configurations.configureEach {
 dependencies {
     // OneKuku ????????OneBridge starter + ????? ADB??OneLink ??????????src/onelink ???
     "onekukuImplementation"(project(":bridge"))
-    "onekukuImplementation"(project(":care-min"))
     "onekukuImplementation"("com.github.MuntashirAkon:libadb-android:3.1.1")
     "onekukuImplementation"("org.conscrypt:conscrypt-android:2.5.3")
     "onekukuImplementation"("com.github.MuntashirAkon:sun-security-android:1.1")
@@ -101,7 +99,7 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     debugImplementation("androidx.compose.ui:ui-tooling")
 
-    // Shizuku API/Provider：onelink=外置；onekuku=CARE_MIN 客户端面（默认引擎仍为 ONEBRIDGE）
+    // Shizuku API：onelink 外置通道；onekuku 因 main 源码仍含 ShizukuPrivilegeBridge 类需编译依赖（运行时 OneBridge 不走它）。
     "onelinkImplementation"("dev.rikka.shizuku:api:13.1.5")
     "onelinkImplementation"("dev.rikka.shizuku:provider:13.1.5")
     "onekukuImplementation"("dev.rikka.shizuku:api:13.1.5")

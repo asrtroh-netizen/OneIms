@@ -1,7 +1,9 @@
 # 2026-07-30 · OneIMS 内循环：MINI 能力融进首页（单 APK）
 
+> ⚠️ **已废止现行方案（2026-07-30）**：OneKuku 迷你版 / CARE_MIN 已清除；内循环固定 OneBridge。见 `docs/changes/2026-07-30-abolish-onekuku-mini-care-min.md`。下文仅考古。
+
 **规模**：L  
-**状态**：方案已按用户澄清纠偏（原「外置 Care 双 APK」作废）  
+**状态**：已废止（原「外置 Care 双 APK」与后续 CARE_MIN 融合均不作现行目标）  
 **澄清原话**：总之就是相当于一个**内循环**  
 **产品定调（更新）**：见 `2026-07-30-onekuku-mirrors-lite-shizuku.md` ——  
 OneIMS 内循环 = Lite⊕Shizuku 的分工镜像，通道侧是**增强旧 OneKuku**（非外置第二 App）。  

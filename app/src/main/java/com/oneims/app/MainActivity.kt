@@ -75,14 +75,12 @@ import com.oneims.app.core.OneClickDiagnosticsManager
 import com.oneims.app.core.ShizukuSetupHelper
 import com.oneims.app.core.OneKukuCoreComponent
 import com.oneims.app.core.OneKukuEmbeddedAdbActivator
-import com.oneims.app.core.OneKukuHostServerBootstrap
 import com.oneims.app.core.OneKukuMiniAdbClient
 import com.oneims.app.core.OneKukuPairingNotification
 import com.oneims.app.core.OneKukuActivationUi
 import com.oneims.app.core.OneKukuActivationPhase
 import com.oneims.app.core.ChannelLine
 import com.oneims.app.core.OneKukuManager
-import com.oneims.app.core.privilege.ChannelEngine
 import com.oneims.app.core.WirelessPairingCodeReceiver
 import com.oneims.app.core.SystemDisplayOverrideManager
 import com.oneims.app.core.SimCountryIsoManager
@@ -354,14 +352,9 @@ private fun AppRoot(
     // activationEpoch：生命周期休眠/唤醒后强制重组，才能读到 HiddenRunner 最新态。
     @Suppress("UNUSED_VARIABLE")
     val runnerEpoch = activationEpoch
-    // CARE_MIN：仅 binder+授权不够，宿主 onekuku_server 未稳时勿标 Active，
-    // 否则冷开会出现「Active → 未激活」闪一下（bridgeReady 会盖掉 CONNECTING）。
-    val careMinChannel = !ChannelLine.usesShizuku &&
-        ChannelEngine.current() == ChannelEngine.CARE_MIN
-    val hostStableForUi = !careMinChannel || OneKukuHostServerBootstrap.isHostServerAlive()
     val bridgeReady =
-        shizukuRunning && shizukuGranted && !bootForceInactive && hostStableForUi
-    // 桥+宿主都稳时禁止 CONNECTING/STARTING 相位盖住 Hero（否则日志 ACTIVE、UI「激活中」横跳）。
+        shizukuRunning && shizukuGranted && !bootForceInactive
+    // 桥就绪时禁止 CONNECTING/STARTING 相位盖住 Hero（否则日志 ACTIVE、UI「激活中」横跳）。
     val oneKukuState = if (bridgeReady) {
         OneKukuCardPolicy.resolve(
             serviceReady = true,
@@ -373,28 +366,18 @@ private fun AppRoot(
         )
     } else {
         OneKukuCardPolicy.fromActivationPhase(activationPhase)
-            // CARE_MIN：binder+授权已回但宿主未稳 → 仍显示「激活中」（bridgeReady 已因 host 挡下）。
-            ?: if (
-                careMinChannel &&
-                shizukuRunning &&
-                shizukuGranted &&
-                !hostStableForUi
-            ) {
-                OneKukuCardState.ACTIVATING
-            } else {
-                OneKukuCardPolicy.resolve(
-                    serviceReady = false,
-                    isExecuting = oneKukuRestoring ||
-                        bootUiHint == OneKukuBootUiHint.RESTORING ||
-                        bootUiHint == OneKukuBootUiHint.WAITING_WIFI ||
-                        OneKukuHiddenRunner.currentState() == OneKukuRunnerState.EXECUTING ||
-                        OneKukuHiddenRunner.currentState() == OneKukuRunnerState.STARTING,
-                    channelSleeping = OneKukuCardPolicy.isChannelSleeping(
-                        OneKukuHiddenRunner.currentState(),
-                    ),
-                    taskComplete = oneKukuTaskComplete || bootUiHint == OneKukuBootUiHint.RESTORE_COMPLETE,
-                )
-            }
+            ?: OneKukuCardPolicy.resolve(
+                serviceReady = false,
+                isExecuting = oneKukuRestoring ||
+                    bootUiHint == OneKukuBootUiHint.RESTORING ||
+                    bootUiHint == OneKukuBootUiHint.WAITING_WIFI ||
+                    OneKukuHiddenRunner.currentState() == OneKukuRunnerState.EXECUTING ||
+                    OneKukuHiddenRunner.currentState() == OneKukuRunnerState.STARTING,
+                channelSleeping = OneKukuCardPolicy.isChannelSleeping(
+                    OneKukuHiddenRunner.currentState(),
+                ),
+                taskComplete = oneKukuTaskComplete || bootUiHint == OneKukuBootUiHint.RESTORE_COMPLETE,
+            )
     }
     // 三态后卡片不再有 SLEEPING；内部 runner 待命仍可探测，供调试/兼容字段。
     val oneKukuChannelSleeping = OneKukuCardPolicy.isChannelSleeping(
@@ -454,16 +437,6 @@ private fun AppRoot(
     fun settleOneKukuChannelAfterReady() {
         // 硬门禁：仅 binder+授权双真才收尾，避免「假就绪」后误标 Active。
         if (!OneKukuManager.isReady()) return
-        // CARE_MIN：外置 binder 短暂回弹但 onekuku_server 未稳时勿标 Active，
-        // 否则 UI 会「已激活 → 立刻未激活」闪一下（冷开/复连窗常见）。
-        val careMin = !ChannelLine.usesShizuku &&
-            ChannelEngine.current() == ChannelEngine.CARE_MIN
-        if (careMin && !OneKukuHostServerBootstrap.isHostServerAlive()) {
-            OneKukuActivationUi.setPhase(OneKukuActivationPhase.CONNECTING)
-            syncPrivilegeFlagsFromBridge()
-            activationEpoch++
-            return
-        }
         if (ChannelLine.usesEmbeddedBridge) {
             OneKukuResidentService.stop(context)
         }
@@ -697,14 +670,6 @@ private fun AppRoot(
         shizukuGranted = OneKukuManager.isGranted()
         when {
             OneKukuManager.isReady() -> {
-                val careMin = !ChannelLine.usesShizuku &&
-                    ChannelEngine.current() == ChannelEngine.CARE_MIN
-                if (careMin && !OneKukuHostServerBootstrap.isHostServerAlive()) {
-                    // 宿主未稳：钉「激活中」，勿发「已激活」文案。
-                    OneKukuActivationUi.setPhase(OneKukuActivationPhase.CONNECTING)
-                    activationEpoch++
-                    return
-                }
                 settleOneKukuChannelAfterReady()
                 val now = System.currentTimeMillis()
                 if (now - lastActivatedPublishAt >= 2_500L) {
@@ -856,19 +821,10 @@ private fun AppRoot(
         }
         scope.launch {
             OneKukuHiddenRunner.installBridge(OneKukuPrivilegeBridgeImpl)
-            // CARE_MIN：外置 V15 binder 让 isReady()=true 仍不够，必须有宿主 onekuku_server。
-            val careMin = !ChannelLine.usesShizuku &&
-                ChannelEngine.current() == ChannelEngine.CARE_MIN
-            if (careMin) {
-                withContext(Dispatchers.IO) {
-                    OneKukuHostServerBootstrap.ensureRunning(context)
-                }
-            }
             // 非强制重建：等已存活的通道 server 重投 binder（划掉 App 后再开无需 ADB）。
             if (!forceRestart) {
                 val wake = OneKukuHiddenRunner.wake()
-                val hostOk = !careMin || OneKukuHostServerBootstrap.isHostServerAlive()
-                if (wake.success && OneKukuManager.isReady() && hostOk) {
+                if (wake.success && OneKukuManager.isReady()) {
                     pairingUiPrimed = false
                     OneKukuActivationUi.setPhase(OneKukuActivationPhase.IDLE)
                     activationEpoch++
@@ -896,9 +852,7 @@ private fun AppRoot(
                 if (OneKukuManager.isRunning() && !OneKukuManager.isGranted()) {
                     OneKukuManager.requestActivation()
                 }
-                if (OneKukuManager.isReady() &&
-                    (!careMin || OneKukuHostServerBootstrap.isHostServerAlive())
-                ) {
+                if (OneKukuManager.isReady()) {
                     pairingUiPrimed = false
                     OneKukuActivationUi.setPhase(OneKukuActivationPhase.IDLE)
                     activationEpoch++
@@ -1048,16 +1002,12 @@ private fun AppRoot(
              * 否则每次复连都会拨 adbd，系统弹出「USB 调试已连接/断开」
              * （文案如此，实际多半是无线调试回环，与数据线无关）。
              */
-            fun careMinHostReady(): Boolean {
-                val careMin = ChannelEngine.current() == ChannelEngine.CARE_MIN
-                return !careMin || OneKukuHostServerBootstrap.isHostServerAlive()
-            }
             suspend fun awaitBinderOnly(label: String, windowMs: Long): Boolean {
                 val deadline = System.currentTimeMillis() + windowMs
                 DiagFileLogger.i("Privilege", "reconnect $label wait-binder-only ${windowMs}ms")
                 while (System.currentTimeMillis() < deadline) {
                     syncPrivilegeFlagsFromBridge()
-                    if (OneKukuManager.isReady() && careMinHostReady()) {
+                    if (OneKukuManager.isReady()) {
                         settleOneKukuChannelAfterReady()
                         activationEpoch++
                         return true
@@ -1067,36 +1017,25 @@ private fun AppRoot(
                     delay(300L)
                 }
                 syncPrivilegeFlagsFromBridge()
-                if (OneKukuManager.isReady() && careMinHostReady()) {
+                if (OneKukuManager.isReady()) {
                     settleOneKukuChannelAfterReady()
                     activationEpoch++
                     return true
                 }
                 return false
             }
-            // CARE_MIN：宿主已死时别空等 binder～15s（3.0.4 冷开是立刻 prepare）。
-            // 宿主仍活才走 binder-only，避免无谓拨 ADB 弹「USB 调试」窗。
-            val careMin = ChannelEngine.current() == ChannelEngine.CARE_MIN
-            val hostAliveNow = !careMin || OneKukuHostServerBootstrap.isHostServerAlive()
-            if (!hostAliveNow) {
-                DiagFileLogger.i(
-                    "Privilege",
-                    "reconnect host dead → prepare immediately (3.0.4-like) reason=$reason",
-                )
-            } else {
-                // 0～15s：对齐 V15「server 仍活 → 只重投 binder」，避免刷 ADB 弹窗。
-                if (awaitBinderOnly("t0", 5_000L)) return@launch
-                if (awaitBinderOnly("t5", 10_000L)) return@launch
-                DiagFileLogger.w(
-                    "Privilege",
-                    "reconnect binder-only timeout → fallback ADB once reason=$reason",
-                )
-            }
+            // 0～15s：对齐 V15「server 仍活 → 只重投 binder」，避免刷 ADB 弹窗。
+            if (awaitBinderOnly("t0", 5_000L)) return@launch
+            if (awaitBinderOnly("t5", 10_000L)) return@launch
+            DiagFileLogger.w(
+                "Privilege",
+                "reconnect binder-only timeout → fallback ADB once reason=$reason",
+            )
             activationEpoch++
             prepareOneKukuCore(forceRestart = false)
             val settleDeadline = System.currentTimeMillis() + 12_000L
             while (System.currentTimeMillis() < settleDeadline) {
-                if (OneKukuManager.isReady() && careMinHostReady()) {
+                if (OneKukuManager.isReady()) {
                     settleOneKukuChannelAfterReady()
                     activationEpoch++
                     return@launch
@@ -1104,7 +1043,7 @@ private fun AppRoot(
                 delay(400L)
             }
             syncPrivilegeFlagsFromBridge()
-            if (OneKukuManager.isReady() && careMinHostReady()) {
+            if (OneKukuManager.isReady()) {
                 settleOneKukuChannelAfterReady()
             } else {
                 DiagFileLogger.w("Privilege", "reconnect shots exhausted reason=$reason")

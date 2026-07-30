@@ -1,3 +1,5 @@
+﻿> ⚠️ **已废止现行方案（2026-07-30）**：见 `docs/changes/2026-07-30-abolish-onekuku-mini-care-min.md`。下文仅考古。
+
 # 2026-07-30 · CARE_MIN：邻仓 server 最小面 vendor 进 `:care-min`
 
 **状态**：`:care-min:compileDebugKotlin` BUILD SUCCESSFUL  
@@ -28,3 +30,4 @@
 
 - 挂 app onekuku `implementation(project(":care-min"))` 使类进 APK（P3a 续 / P3b）
 - rish NDK/`libcxx` prefab 真机链路；默认切 `CARE_MIN` 前需真机写配置 PASS
+

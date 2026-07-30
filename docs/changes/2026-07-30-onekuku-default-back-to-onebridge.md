@@ -2,8 +2,9 @@
 
 ## 决策
 
-用户放弃默认 CARE_MIN（`onekuku_server` / 宿主 MINI）：冷窗、tcpip 踢 adb、hostStable 门禁把 3.0.9 体感做退。  
-**保留下午 3.0.9 功能树**，默认引擎改回 **OneBridge**（`onebridge_server`）。
+用户放弃默认 CARE_MIN（`onekuku_server` / 宿主 MINI）：冷窗、tcpip 踢 adb、hostStable 门禁把体感做退。  
+**保留当时功能树**，默认引擎改回 **OneBridge**（`onebridge_server`）。  
+（产品号：本地 `3.0.9` 已废止，身份回底包 `3.0.4`。）
 
 ## 改动
 

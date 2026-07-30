@@ -22,7 +22,6 @@ import com.oneims.app.core.ImsController
 import com.oneims.app.core.OneKukuAdbEnvironment
 import com.oneims.app.core.OneKukuAdbMdns
 import com.oneims.app.core.OneKukuEmbeddedAdbActivator
-import com.oneims.app.core.OneKukuHostServerBootstrap
 import com.oneims.app.core.OneKukuManager
 import com.oneims.app.core.OneKukuMiniAdbClient
 import com.oneims.app.core.OneKukuPairingNotification
@@ -31,7 +30,6 @@ import com.oneims.app.core.ReapplyManager
 import com.oneims.app.core.ReapplyTrigger
 import com.oneims.app.core.ShizukuSetupHelper
 import com.oneims.app.core.SystemUpdateShield
-import com.oneims.app.core.privilege.ChannelEngine
 import com.oneims.app.core.privilege.PrivilegeBridges
 import kotlin.coroutines.resume
 import kotlinx.coroutines.Dispatchers
@@ -455,39 +453,17 @@ object OneKukuBootRestoreCoordinator {
      */
     private suspend fun ensureOneKukuReadyForBoot(context: Context): BootReady {
         OneKukuHiddenRunner.installBridge(OneKukuPrivilegeBridgeImpl)
-        // CARE_MIN：外置 V15 binder 让 isReady()=true 仍不够，必须拉起 onekuku_server。
-        val careMin = !ChannelLine.usesShizuku && ChannelEngine.current() == ChannelEngine.CARE_MIN
-        if (careMin) {
-            val hostUp = withContext(Dispatchers.IO) {
-                OneKukuHostServerBootstrap.ensureRunning(context)
-            }
-            Log.i(TAG, "boot CARE_MIN host server up=$hostUp")
-            if (hostUp) {
-                val wakeHost = OneKukuHiddenRunner.wake()
-                if (OneKukuManager.isRunning() && !OneKukuManager.isGranted()) {
-                    OneKukuManager.requestActivation()
-                }
-                if ((wakeHost.success || OneKukuManager.isReady()) &&
-                    OneKukuHostServerBootstrap.isHostServerAlive()
-                ) {
-                    return BootReady.READY
-                }
-            }
-        } else if (OneKukuManager.isReady()) {
+        if (OneKukuManager.isReady()) {
             return BootReady.READY
         }
 
         val wake = OneKukuHiddenRunner.wake()
         if (wake.success && OneKukuManager.isReady()) {
-            if (!careMin || OneKukuHostServerBootstrap.isHostServerAlive()) {
-                return BootReady.READY
-            }
+            return BootReady.READY
         }
         if (OneKukuManager.isRunning() && !OneKukuManager.isGranted()) {
             OneKukuManager.requestActivation()
-            if (OneKukuManager.isReady() &&
-                (!careMin || OneKukuHostServerBootstrap.isHostServerAlive())
-            ) {
+            if (OneKukuManager.isReady()) {
                 return BootReady.READY
             }
         }

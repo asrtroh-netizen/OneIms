@@ -1,3 +1,5 @@
+﻿> ⚠️ **已废止现行方案（2026-07-30）**：见 `docs/changes/2026-07-30-abolish-onekuku-mini-care-min.md`。下文仅考古。
+
 # 2026-07-30 · CARE_MIN 重启自启：等 adbd 口，勿误报要码
 
 ## 现象
@@ -15,3 +17,4 @@ Pixel 重启解锁后：`has_paired_once=true`、`WRITE_SECURE_SETTINGS` 已授�
 - `OneKukuHostServerBootstrap`：已配对误报要码时轮询端口再激活；`pingBinder` 计存活
 - `OneKukuEmbeddedAdbActivator`：已配对 connect 失败后最长约 40s 等口
 - `OneKukuBootRestoreCoordinator`：`ALREADY_ON` 也轮询口；多轮重试；`NEED_USER` 清 attempted
+

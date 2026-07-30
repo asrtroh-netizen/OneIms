@@ -17,13 +17,13 @@ class OneKukuCoreComponentTest {
     }
 
     @Test
-    fun bridgeBootShellCommand_defaultEngineIsOneBridgeServer() {
+    fun bridgeBootShellCommand_isOneBridgeServer() {
         assertEquals(ChannelEngine.ONEBRIDGE, ChannelEngine.current())
         val cmd = OneKukuCoreComponent.bridgeBootShellCommand()
         assertTrue(cmd.contains("onebridge_server"))
         assertTrue(cmd.contains(OneKukuCoreComponent.ENTRY_CLASS_ONEBRIDGE))
         assertTrue(!cmd.contains("onekuku_server"))
-        assertTrue(!cmd.contains(OneKukuCoreComponent.ENTRY_CLASS_CARE_MIN))
+        assertTrue(!cmd.contains("rikka.shizuku.server.ShizukuService"))
     }
 
     @Test
@@ -38,7 +38,6 @@ class OneKukuCoreComponentTest {
         assertTrue(!cmd.contains("shizuku.library.path"))
         assertTrue(!cmd.contains("librish.so"))
         assertTrue(!cmd.contains("pkill"))
-        // Detach from adb shell: setsid (preferred) or nohup fallback — avoid SIGHUP kill.
         assertTrue(cmd.contains("setsid") || cmd.contains("nohup"))
         assertTrue(!cmd.contains(" exec "))
         assertTrue(!cmd.contains("Android/data/"))
@@ -60,7 +59,7 @@ class OneKukuCoreComponentTest {
             OneKukuCoreComponent.CANDIDATE_PACKAGES.first(),
         )
         assertTrue(OneKukuCoreComponent.CANDIDATE_PACKAGES.contains("com.oneims.bridge"))
-        assertTrue(OneKukuCoreComponent.CANDIDATE_PACKAGES.contains(OneKukuCoreComponent.CARE_PACKAGE))
+        assertTrue(!OneKukuCoreComponent.CANDIDATE_PACKAGES.contains("com.onekuku.care"))
     }
 
     @Test

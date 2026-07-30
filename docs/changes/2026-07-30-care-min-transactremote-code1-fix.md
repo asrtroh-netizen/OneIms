@@ -1,3 +1,5 @@
+﻿> ⚠️ **已废止现行方案（2026-07-30）**：见 `docs/changes/2026-07-30-abolish-onekuku-mini-care-min.md`。下文仅考古。
+
 # 2026-07-30 · CARE_MIN：transactRemote code=1 未处理导致 AM reject
 
 ## 现象（Pixel 9 Pro Fold / Android 17 / 3.0.9-onekuku）
@@ -23,3 +25,4 @@
 
 - 重装 onekuku debug → 杀旧 `onekuku_server` → 激活 → `pidof onekuku_server` 有值
 - 能力页「应用核心能力」：不再出现 AM rejected；CarrierConfig 写入成功或给出真实 Broker 错误
+

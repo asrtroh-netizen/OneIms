@@ -10,9 +10,7 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * 官方 Shizuku API 实现的 [PrivilegeBridge]。
  *
- * - onelink：外置 Shizuku（默认路径）
- * - onekuku + [ChannelEngine.CARE_MIN]：宿主内嵌 MINI server 的客户端面（P3a；
- *   server 类进 APK 属后续里程碑，本类可先编译）
+ * onelink：外置 Shizuku（默认路径）。
  */
 class ShizukuPrivilegeBridge : PrivilegeBridge {
     private val receivedAdapters =

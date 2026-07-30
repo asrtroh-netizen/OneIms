@@ -1,5 +1,7 @@
 # 2026-07-30 · OneIMS / 周边线进展快照
 
+> ⚠️ **版本身份已过时**：下文采证时本地号仍为 3.0.9；其后已废止，现回底包 **3.0.4 / vc74**（`2026-07-30-abolish-local-3.0.9.md`）。其余进度条目仍可作当日考古。
+
 **采证时刻**：2026-07-30 约 16:35（UTC+8）  
 **范围**：只读盘点（本轮未改业务代码）  
 **本仓 HEAD**：`a21342afe`（`main`）
@@ -8,7 +10,7 @@
 
 ## 一句话
 
-本地 **OneIMS 3.0.9（未发 Release）** 已合入血统门禁 + Compose Indication 加固；小米线 **ShizukuDropIn-Local V15.1.0** Release APK 已产出并装过机，冷启仍被 MIUI WakePath 拦；工作树仅剩 **英文文案 2 处未提交** + 若干临时目录。
+本地 **OneIMS**（采证时称 3.0.9，**后已废止**）已合入血统门禁 + Compose Indication 加固；小米线 **ShizukuDropIn-Local V15.1.0** Release APK 已产出并装过机，冷启仍被 MIUI WakePath 拦；工作树仅剩 **英文文案 2 处未提交** + 若干临时目录。
 
 ---
 
@@ -16,8 +18,8 @@
 
 | 项 | 状态 | 证据 |
 |---|---|---|
-| 版本 | `3.0.9` / `versionCode 79` | `app/build.gradle.kts` |
-| 公开发包 | **未发**（约定不建 GitHub Release） | `docs/changes/2026-07-30-bump-3.0.9-local-no-release.md` |
+| 版本（采证时） | 曾 `3.0.9` / `79` → **现** `3.0.4` / `74` | `abolish-local-3.0.9` + `app/build.gradle.kts` |
+| 公开发包 | **未发** 3.0.9（且该本地号已废止）；公开仍指 3.0.8 | `bump-3.0.9`（已作废） / README |
 | 血统 3.0.4 非 Tensor → UNSUPPORTED | **已合入 main** | `5d3a84641` merge + `cb92ade87` 文案对齐 |
 | Compose `clickable` / Indication 加固 | **已提交** | `3231f6539`；说明见 `2026-07-30-compose-indication-clickable-crash.md` |
 | 崩溃归属更正 | 用户栈在 **Shizuku**，非 OneIms；OneIms 加固为防御 | 会话 [XJ033 Compose归属](e0e25663-c055-407f-92aa-a889b93b18af) |

@@ -1,3 +1,5 @@
+﻿> ⚠️ **已废止现行方案（2026-07-30）**：OneKuku 迷你版 / CARE_MIN 已清除。见 `docs/changes/2026-07-30-abolish-onekuku-mini-care-min.md`。下文仅考古。
+
 # 2026-07-30 · OneIMS 专用迷你 OneKuku：在现有保留清单上再砍什么
 
 **类型**：架构建议（本拍不改业务源码）  
@@ -91,3 +93,4 @@
 |---|---|
 | 对照 strip-candidates / privilege-min / mini-from-v1510 | PASS（本轮 Read） |
 | 实际再砍代码 / 编包 | **NOT RUN**（本拍仅建议） |
+

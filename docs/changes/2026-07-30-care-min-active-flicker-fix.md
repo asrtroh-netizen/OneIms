@@ -1,3 +1,5 @@
+﻿> ⚠️ **已废止现行方案（2026-07-30）**：见 `docs/changes/2026-07-30-abolish-onekuku-mini-care-min.md`。下文仅考古。
+
 # CARE_MIN：冷开 Active 闪「未激活」修复
 
 日期：2026-07-30
@@ -47,3 +49,4 @@
 | 开 App 复连 | `host dead → prepare immediately (3.0.4-like) reason=binder_dead` |
 
 Hero UI 字符串（Active）因 adbd 切 tcpip 导致 USB/无线会话闪断，**本轮 dump NOT RUN**；请目视确认首页 pill。
+

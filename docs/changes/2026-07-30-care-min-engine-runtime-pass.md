@@ -1,3 +1,5 @@
+﻿> ⚠️ **已废止现行方案（2026-07-30）**：见 `docs/changes/2026-07-30-abolish-onekuku-mini-care-min.md`。下文仅考古。
+
 # 2026-07-30 · CARE_MIN 引擎真机跑通（onekuku_server）
 
 ## 结论
@@ -32,3 +34,4 @@
 ## 回滚
 
 `app/build.gradle.kts` onekuku flavor：`CHANNEL_ENGINE` 改回 `"ONEBRIDGE"` 后重装。
+

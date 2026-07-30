@@ -1,3 +1,5 @@
+﻿> ⚠️ **已废止现行方案（2026-07-30）**：OneKuku 迷你版 / CARE_MIN 已清除。见 `docs/changes/2026-07-30-abolish-onekuku-mini-care-min.md`。下文仅考古。
+
 # 2026-07-30 · Care MINI server 最小依赖闭包（P3a 续）
 
 **来源**：MCP 子代理只读侦察（主 Agent 复核采纳）  
@@ -22,3 +24,4 @@
 Manager UI、*PlusImpl、AICore、automation、强制装 `com.onekuku.care`。
 
 详见白名单：`2026-07-30-care-min-server-import-whitelist.md`。
+

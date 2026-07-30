@@ -1,3 +1,5 @@
+﻿> ⚠️ **已废止现行方案（2026-07-30）**：见 `docs/changes/2026-07-30-abolish-onekuku-mini-care-min.md`。下文仅考古。
+
 # 2026-07-30 · CARE_MIN P3a：客户端与拉起命令（默认仍 ONEBRIDGE）
 
 **状态**：已落地（编译 + 指定单测绿）  
@@ -21,3 +23,4 @@
 ```
 
 结果：`BUILD SUCCESSFUL`。
+

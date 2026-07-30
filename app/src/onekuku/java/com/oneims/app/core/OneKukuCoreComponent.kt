@@ -12,8 +12,6 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.oneims.app.R
 import com.oneims.app.core.privilege.ChannelEngine
-import com.oneims.caremin.CareMinBootShell
-import com.oneims.caremin.CareMinHostConstants
 import org.json.JSONObject
 import java.io.File
 import java.net.HttpURLConnection
@@ -24,18 +22,11 @@ import java.net.URL
  *
  * Phase4：OneBridge starter 以 library 打进主 App（[HOST_PACKAGE]），
  * **不再要求安装**独立 `com.oneims.bridge` APK。有 Wi‑Fi 时用无线调试配对拉起。
- *
- * P3 目标：用宿主内嵌 Care/Shizuku server 最小面（[ChannelEngine.CARE_MIN] /
- * `onekuku_server`）替换本文件仍指向的 `onebridge_server`；邻仓
- * `com.onekuku.care` 只作编包试验田，不是用户路径。
  */
 object OneKukuCoreComponent {
 
-    /** 宿主包：内循环真源（现 OneBridge；P3 后同宿主内嵌 MINI server）。 */
+    /** 宿主包：内循环真源（OneBridge）。 */
     const val HOST_PACKAGE: String = "com.oneims.app"
-
-    /** 邻仓 Care / MINI 包名：仅实验室对照，主路径不依赖已安装。 */
-    const val CARE_PACKAGE: String = ShizukuSetupHelper.CARE_PACKAGE
 
     /**
      * 历史独立桥包名。Phase4 起不再作为安装目标；
@@ -44,10 +35,6 @@ object OneKukuCoreComponent {
     @Deprecated("Phase4 embedded into host app", ReplaceWith("HOST_PACKAGE"))
     const val BRIDGE_PACKAGE: String = HOST_PACKAGE
 
-    /** @deprecated 旧 MINI 试验包名；现用 [CARE_PACKAGE]。 */
-    @Deprecated("Renamed to com.onekuku.care", ReplaceWith("CARE_PACKAGE"))
-    const val BRANDED_CORE_PACKAGE: String = "com.oneims.onekuku.core"
-
     /** @deprecated Phase3 已卸；保留常量避免旧引用编译炸掉。 */
     @Deprecated("Phase3 removed upstream Shizuku package path")
     const val LEGACY_CORE_PACKAGE: String = "moe.shizuku.privileged.api"
@@ -55,11 +42,8 @@ object OneKukuCoreComponent {
     /** @deprecated 使用 [resolveCorePackage]；指向宿主包。 */
     const val CORE_PACKAGE: String = HOST_PACKAGE
 
-    /**
-     * 内循环真源=宿主包；旧独立桥兼容；Care 仅实验室对照（用户路径不依赖第二 App）。
-     * [bridgeBootShellCommand] 按 [ChannelEngine] 选择 nice-name / 入口类。
-     */
-    val CANDIDATE_PACKAGES: List<String> = listOf(HOST_PACKAGE, "com.oneims.bridge", CARE_PACKAGE)
+    /** 内循环真源=宿主包；旧独立桥兼容。 */
+    val CANDIDATE_PACKAGES: List<String> = listOf(HOST_PACKAGE, "com.oneims.bridge")
 
     /** 内置 OneBridge APK。 */
     const val BUNDLED_BRIDGE_ASSET_NAME: String = "oneims-bridge.apk"
@@ -152,36 +136,19 @@ object OneKukuCoreComponent {
     }
 
     /**
-     * 从指定包 APK 用 app_process 拉起通道 server。
-     *
-     * - [ChannelEngine.ONEBRIDGE]（默认）：`--nice-name=onebridge_server` +
-     *   `com.oneims.bridge.server.BridgeService`（已在 `:bridge` / 主 APK）
-     * - [ChannelEngine.CARE_MIN]：`--nice-name=onekuku_server` +
-     *   `rikka.shizuku.server.ShizukuService`
-     *
-     * **P3a 依赖**：CARE_MIN 入口类需后续迁入 server 最小面后才真正可加载；
-     * 本方法在引擎切到 CARE_MIN 时仍会写出完整命令字符串，便于 starter / 单测接线，
-     * 类未进 APK 前运行时会 ClassNotFound（属预期，非本方法静默回落）。
+     * 从指定包 APK 用 app_process 拉起 OneBridge server
+     *（`--nice-name=onebridge_server` + [ENTRY_CLASS_ONEBRIDGE]）。
      *
      * Phase4：默认宿主包；**不用 exec**，后台拉起后 echo 标记。
-     *
-     * **对齐 Shizuku**：默认不 `pkill` 已在跑的 server——划掉 App 后 shell 进程应继续活着，
-     * 重进只等 binder 再投递。显式 [forceRestart]=true 才杀掉重建（设置里「重新激活」用）。
-     *
-     * 状态标记必须是「整行输出」专用串，且不能用会嵌在脚本正文里被 PTY 回显误判的旧名。
+     * 默认不 `pkill` 已在跑的 server；显式 [forceRestart]=true 才杀掉重建。
      */
     fun bridgeBootShellCommand(
         packageName: String = HOST_PACKAGE,
         forceRestart: Boolean = false,
     ): String {
-        if (ChannelEngine.current() == ChannelEngine.CARE_MIN) {
-            // CARE_MIN：必须带 -Dshizuku.library.path（见 CareMinBootShell），否则缺 librish.so 秒退。
-            return CareMinBootShell.command(packageName = packageName, forceRestart = forceRestart)
-        }
         val nice = ChannelEngine.processNiceName()
         val entryClass = ENTRY_CLASS_ONEBRIDGE
-        // setsid+stdin 断开：libadb 的 shell: 流关闭时否则会 SIGHUP 带走刚拉起的 server，
-        // 表现为 binder 收到后约 2s 就 dead（与 V15「划掉还能活」差一截）。
+        // setsid+stdin 断开：libadb 的 shell: 流关闭时否则会 SIGHUP 带走刚拉起的 server。
         val start =
             "APK=\$(pm path $packageName 2>/dev/null | head -n 1 | cut -d: -f2 | tr -d '\\r'); " +
                 "if [ -z \"\$APK\" ]; then printf '%s\\n' $SHELL_BOOT_MISS; exit 1; fi; " +
@@ -194,7 +161,6 @@ object OneKukuCoreComponent {
         return if (forceRestart) {
             "pkill -f $nice 2>/dev/null || true; $start"
         } else {
-            // 已在跑：直接 OK，由 server 周期重投 binder 给新 App 进程。
             "if pidof $nice >/dev/null 2>&1; then printf '%s\\n' $SHELL_BOOT_OK; " +
                 "else $start; fi"
         }
@@ -202,13 +168,6 @@ object OneKukuCoreComponent {
 
     /** ONEBRIDGE 现网入口（`:bridge` 已打进主 APK）。 */
     const val ENTRY_CLASS_ONEBRIDGE: String = "com.oneims.bridge.server.BridgeService"
-
-    /**
-     * CARE_MIN 目标入口（邻仓 server 最小面）。
-     * 真源：[CareMinHostConstants.SERVER_ENTRY_CLASS]；类进 APK 见白名单迁入。
-     */
-    val ENTRY_CLASS_CARE_MIN: String get() = CareMinHostConstants.SERVER_ENTRY_CLASS
-
     /** shell 成功标记（整行）；勿改成会出现在命令正文其它位置的子串。 */
     const val SHELL_BOOT_OK: String = "__OB_BOOT_OK__"
 

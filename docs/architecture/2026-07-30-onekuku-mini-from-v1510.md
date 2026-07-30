@@ -1,3 +1,5 @@
+﻿> ⚠️ **已废止现行方案（2026-07-30）**：OneKuku 迷你版 / CARE_MIN 已清除。见 `docs/changes/2026-07-30-abolish-onekuku-mini-care-min.md`。下文仅考古。
+
 # 2026-07-30 · OneKuku Care / MINI（V15.1.0 缩减独立包）
 
 **仓**：`E:\GQ\One\_forks\ShizukuDropIn-Local`  
@@ -42,4 +44,5 @@ gradlew :manager:assembleOnekukuMiniRelease
 
 - **不是** stock `moe.shizuku.privileged.api`；邻仓 Care 可与官方/DropIn 同机并存作对照  
 - 宿主融合后 Manager/API 指向 **`com.oneims.app`**，不要求用户安装 Care  
+
 
