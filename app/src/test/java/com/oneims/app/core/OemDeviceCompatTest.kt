@@ -22,6 +22,9 @@ class OemDeviceCompatTest {
         assertTrue(OemDeviceCompat.isDomesticVowifiOem("OnePlus", "OnePlus"))
         assertTrue(OemDeviceCompat.isDomesticVowifiOem("realme", "realme"))
         assertTrue(OemDeviceCompat.isDomesticVowifiOem("vivo", "iQOO"))
+        assertTrue(OemDeviceCompat.isDomesticVowifiOem("samsung", "samsung"))
+        assertTrue(OemDeviceCompat.isDomesticVowifiOem("HONOR", "honor"))
+        assertTrue(OemDeviceCompat.isDomesticVowifiOem("Huawei", "HUAWEI"))
     }
 
     @Test
@@ -30,6 +33,5 @@ class OemDeviceCompatTest {
         assertFalse(OemDeviceCompat.isDomesticVowifiOem("Google", "Pixel"))
         assertTrue(OemDeviceCompat.isGooglePixelFamily("Google", "Pixel"))
         assertFalse(OemDeviceCompat.isXiaomiFamily("OnePlus", "OnePlus"))
-        assertFalse(OemDeviceCompat.isDomesticVowifiOem("samsung", "samsung"))
     }
 }

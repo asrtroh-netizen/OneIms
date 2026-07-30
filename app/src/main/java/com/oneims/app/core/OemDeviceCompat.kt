@@ -39,6 +39,8 @@ object OemDeviceCompat {
         val markers = listOf(
             "vivo", "iqoo",
             "oppo", "realme", "oneplus",
+            // 通信本身正常、主要只要 VoWIFI 的 OEM（含三星 / 荣耀）
+            "samsung",
             "meizu", "honor", "huawei", "hihonor",
         )
         return markers.any { marker -> tokens.any { it.contains(marker) } }

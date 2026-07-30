@@ -13,7 +13,7 @@
 | `BootReceiver` / `GuardService` / `RootBootStarter` / `OneKukuRestore*` / `ReapplyManager` | **未改** | 启动与重放控制流不变 |
 | `ImsController` / `ProvisioningWritePolicy` | 有 | key=10 仍硬；68 软失败不整单失败（防假硬失败） |
 | `BrokerInstrumentation` persistent→temporary | 有 | 对齐 pixel-volte-patch，防拒持久闪退；与既有 Writer 降级同向 |
-| 国产回读 soft-timeout / VoWIFI·VoLTE soft | 有 | **仅** `OemDeviceCompat.isDomesticVowifiOem()`（vivo/OPPO/一加/小米等），Pixel 不进门 |
+| 国产回读 soft-timeout / VoWIFI·VoLTE soft | 有 | **仅** `OemDeviceCompat.isDomesticVowifiOem()`（vivo/OPPO/一加/小米/三星/荣耀等），Pixel 不进门 |
 
 ## 后续改代码铁律
 
