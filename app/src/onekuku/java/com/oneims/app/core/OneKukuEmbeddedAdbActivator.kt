@@ -65,10 +65,15 @@ object OneKukuEmbeddedAdbActivator {
     private const val POST_PAIR_DISCOVER_MS = 3_000L
     /** 已配对设备：等系统连上已记住的 Wi‑Fi（前台重开通常已在线，很少走到上限）。 */
     private const val PAIRED_WIFI_WAIT_MS = 12_000L
-    private const val PAIRED_CONNECT_RETRIES = 2
-    private const val PAIRED_RETRY_GAP_MS = 1_000L
-    /** 已配对首轮 mDNS：不必空等满 6s；端口晚到靠第 2 轮补扫。 */
-    private const val PAIRED_DISCOVER_MS = 3_000L
+    private const val PAIRED_CONNECT_RETRIES = 5
+    private const val PAIRED_RETRY_GAP_MS = 1_200L
+    /** 已配对首轮 mDNS：不必空等满 6s；端口晚到靠后续轮询补扫。 */
+    private const val PAIRED_DISCOVER_MS = 4_000L
+    /**
+     * 已配对无码：connect 全失败后再等 adbd 监听口出现（重启后常见晚起）。
+     * 仍失败才回 NeedPairingCode，避免把「口未起」误报成「要六位码」。
+     */
+    private const val PAIRED_PORT_READY_WAIT_MS = 40_000L
     private const val CONNECT_TLS_TIMEOUT_MS = 4_000L
     private val activateMutex = Mutex()
 
@@ -266,6 +271,19 @@ object OneKukuEmbeddedAdbActivator {
                 }
                 connected = tryConnectOnce(manager, app, ports.connectPort)
                 if (connected) return@repeat
+            }
+            if (!connected && pairedBefore && code.length < 6) {
+                Log.i(TAG, "paired connect miss — poll adbd port up to ${PAIRED_PORT_READY_WAIT_MS}ms")
+                val polled = OneKukuAdbEnvironment.pollStartableConnectPort(
+                    app,
+                    timeoutMs = PAIRED_PORT_READY_WAIT_MS,
+                    pollMs = 500L,
+                )
+                Log.i(TAG, "paired port-ready poll=$polled")
+                if (polled != null) {
+                    ports = ports.copy(connectPort = polled)
+                    connected = tryConnectOnce(manager, app, polled)
+                }
             }
             if (!connected) {
                 return@withContext if (code.length < 6) {

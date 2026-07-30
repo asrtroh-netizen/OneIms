@@ -21,6 +21,8 @@ object OneKukuHostServerBootstrap {
     private const val TAG = "OneIMS-HostServerBoot"
     private const val ALIVE_WAIT_MS = 10_000L
     private const val ALIVE_POLL_MS = 400L
+    /** 重启后 adb_wifi=1 但 tcpip/TLS 口常晚数秒～数十秒才监听。 */
+    private const val PAIRED_BOOT_PORT_WAIT_MS = 45_000L
 
     fun ensureRunning(context: Context): Boolean {
         if (ChannelEngine.current() != ChannelEngine.CARE_MIN) {
@@ -54,6 +56,10 @@ object OneKukuHostServerBootstrap {
     }
 
     fun isHostServerAlive(): Boolean {
+        // binder 已通 ≈ 宿主 onekuku_server 在跑（冷启无 su/pidof 时也要认）。
+        if (runCatching { Shizuku.pingBinder() }.getOrDefault(false)) {
+            return true
+        }
         val nice = CareMinHostConstants.PROCESS_NICE_NAME
         val viaShizuku = execShizukuCapture(arrayOf("pidof", nice))
             ?.trim()
@@ -124,8 +130,30 @@ object OneKukuHostServerBootstrap {
                         true
                     }
                     is OneKukuMiniAdbClient.Outcome.NeedPairingCode -> {
-                        Log.w(TAG, "wireless needs pairing code")
-                        false
+                        // 已配对：多半是重启后 adbd/tcpip 口还没起来，不是真要六位码。
+                        if (!OneKukuEmbeddedAdbActivator.hasPairedOnce(context)) {
+                            Log.w(TAG, "wireless needs pairing code")
+                            return@runBlocking false
+                        }
+                        Log.i(TAG, "paired: poll adbd port then retry activate")
+                        val port = OneKukuAdbEnvironment.pollStartableConnectPort(
+                            context,
+                            timeoutMs = PAIRED_BOOT_PORT_WAIT_MS,
+                            pollMs = 500L,
+                        )
+                        Log.i(TAG, "paired port poll result=$port")
+                        when (
+                            val retry = OneKukuMiniAdbClient.activateExistingOrNeedPair(context)
+                        ) {
+                            is OneKukuMiniAdbClient.Outcome.Success -> {
+                                Log.i(TAG, "wireless activate after port poll detail=${retry.detail}")
+                                true
+                            }
+                            else -> {
+                                Log.w(TAG, "wireless still not ready after port poll: $retry")
+                                false
+                            }
+                        }
                     }
                     is OneKukuMiniAdbClient.Outcome.Failed -> {
                         Log.w(TAG, "wireless failed reason=${o.reason}")
