@@ -30,6 +30,17 @@
                 android:value="Keep OneKuku privilege channel resident and silently reconnect on Wi-Fi" />
         </service>
 
+        <!-- 对齐 V15：FGS 扛住六位码配对通知，减轻一加/小米等清普通 ongoing -->
+        <service
+            android:name=".core.OneKukuPairingHostService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Host wireless ADB pairing code notification until channel activates" />
+        </service>
+
         <!-- 通知栏 RemoteInput 提交无线调试六位码 -->
         <receiver
             android:name=".core.WirelessPairingCodeReceiver"
