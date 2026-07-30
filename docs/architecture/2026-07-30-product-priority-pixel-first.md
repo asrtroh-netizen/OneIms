@@ -4,7 +4,7 @@
 
 1. **Pixel 通信主链路**：VoLTE / IMS CarrierConfig / 应用与重放必须可用；VoLTE provisioning key=10 **永不 soft-fail**。
 2. **Pixel 开机自启与恢复**：`BootReceiver` → 通道拉起 / `Guard` / OneKuku·OneLink 开机重放，语义不得被 OEM 兼容逻辑改弱。
-3. **国产机非主功能兼容**：小米等品牌仅对 **非主战场** 能力做容错（如 VoWIFI 相关 key=28、回读软超时、崩溃日志），**禁止**为兼容国产机而降低 Pixel 通信/开机保证。
+3. **国产机非主功能兼容**：对齐 pixel-volte-patch 那类 OEM 容错（拒持久降临时、异常不炸 UI、软键白名单），详见 `2026-07-30-pixelims-domestic-oem-alignment.md`。**禁止**为兼容国产机而降低 Pixel 通信/开机保证。
 
 ## 本轮改动对照
 
