@@ -5,11 +5,9 @@ import android.os.Build
 /**
  * OEM 兼容策略入口：只做识别与策略开关，不硬拦业务写入。
  *
- * 产品优先级：Pixel 通信 + 开机自启是硬保证；本对象仅服务「国产机非主功能」
- * 容错门控，禁止把 Pixel 默认路径改软（见 docs/architecture/2026-07-30-product-priority-pixel-first.md）。
- *
- * 小米 / Redmi / POCO / HyperOS 对 Instrumentation 委托、CarrierConfig 回读、
- * IMS provisioning 更苛刻；pixel-volte-patch 表面更稳往往只因写集更小、异常多被吞。
+ * 产品优先级：Pixel 通信 + 开机自启是硬保证。
+ * 国产机（vivo / OPPO / 一加 / 小米等）**不走通信主战场**，以 VoWIFI 容错为主
+ * （见 docs/architecture/2026-07-30-product-priority-pixel-first.md）。
  */
 object OemDeviceCompat {
 
@@ -22,32 +20,60 @@ object OemDeviceCompat {
         manufacturer: String = manufacturer(),
         brand: String = brand(),
     ): Boolean {
-        val m = manufacturer.lowercase()
-        val b = brand.lowercase()
-        return m.contains("xiaomi") ||
-            m.contains("redmi") ||
-            b.contains("xiaomi") ||
-            b.contains("redmi") ||
-            b.contains("poco") ||
+        val tokens = identityTokens(manufacturer, brand)
+        return tokens.any { it.contains("xiaomi") || it.contains("redmi") || it.contains("poco") } ||
             hasMiuiOrHyperOsMarker()
+    }
+
+    /**
+     * 国产 VoWIFI 导向 OEM：同一套 PixelIMS 式容错门控。
+     * 不含 Google/Pixel；通信主链路仍仅服务 Pixel。
+     */
+    fun isDomesticVowifiOem(
+        manufacturer: String = manufacturer(),
+        brand: String = brand(),
+    ): Boolean {
+        if (isGooglePixelFamily(manufacturer, brand)) return false
+        if (isXiaomiFamily(manufacturer, brand)) return true
+        val tokens = identityTokens(manufacturer, brand)
+        val markers = listOf(
+            "vivo", "iqoo",
+            "oppo", "realme", "oneplus",
+            "meizu", "honor", "huawei", "hihonor",
+        )
+        return markers.any { marker -> tokens.any { it.contains(marker) } }
+    }
+
+    fun isGooglePixelFamily(
+        manufacturer: String = manufacturer(),
+        brand: String = brand(),
+    ): Boolean {
+        val tokens = identityTokens(manufacturer, brand)
+        return tokens.any { it.contains("google") || it == "pixel" || it.contains("pixel") }
     }
 
     /**
      * 回读验证是否应软化：写已接受但 telephony 侧延迟/过滤导致 5s 内对不上时，
      * 硬抛只会放大闪退面；改为记日志并由 Writer 按 key 验真。
-     * provisioning invoke 软化仅由 [ProvisioningWritePolicy.isSoftProvisioningIntKey] 白名单控制，
-     * 绝不对 VoLTE key=10 等硬键吞异常。
+     * 仅国产 VoWIFI OEM；Pixel 仍硬验真。
      */
-    fun softenCarrierConfigReadback(): Boolean = isXiaomiFamily()
+    fun softenCarrierConfigReadback(): Boolean = isDomesticVowifiOem()
 
     fun summaryLine(): String = buildString {
         append(manufacturer())
         append('/')
         append(brand())
+        when {
+            isGooglePixelFamily() -> append(" · pixel-primary")
+            isDomesticVowifiOem() -> append(" · domestic-vowifi-oem")
+        }
         if (isXiaomiFamily()) append(" · xiaomi-family")
         val marker = miuiVersionMarker()
         if (!marker.isNullOrBlank()) append(" · ").append(marker)
     }
+
+    private fun identityTokens(manufacturer: String, brand: String): List<String> =
+        listOf(manufacturer, brand).map { it.lowercase().trim() }.filter { it.isNotEmpty() }
 
     private fun hasMiuiOrHyperOsMarker(): Boolean {
         val marker = miuiVersionMarker()?.lowercase().orEmpty()

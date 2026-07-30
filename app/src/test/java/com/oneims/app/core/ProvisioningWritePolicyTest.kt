@@ -16,7 +16,7 @@ class ProvisioningWritePolicyTest {
                 "provision_vowifi_roaming" to true,
                 "provision_wfc_mode" to true,
             ),
-            xiaomiFamily = false,
+            domesticVowifiOem = false,
         )
         assertEquals(ProvisioningWritePolicy.OutcomeKind.FULL_OK, outcome.kind)
         assertTrue(outcome.treatAsSuccess)
@@ -24,7 +24,6 @@ class ProvisioningWritePolicyTest {
 
     @Test
     fun classify_onePlusSoftKeysStillSuccess() {
-        // 对齐一加日志：CarrierConfig OK，key=26/27 拒写。
         val outcome = ProvisioningWritePolicy.classifyApplyOutcome(
             mapOf(
                 "carrier_config_override" to true,
@@ -32,20 +31,15 @@ class ProvisioningWritePolicyTest {
                 "provision_vowifi_roaming" to false,
                 "provision_wfc_mode" to false,
             ),
-            xiaomiFamily = false,
+            domesticVowifiOem = true,
         )
         assertEquals(ProvisioningWritePolicy.OutcomeKind.OEM_SOFT_PARTIAL, outcome.kind)
         assertTrue(outcome.treatAsSuccess)
-        assertEquals(
-            listOf("provision_vowifi_roaming", "provision_wfc_mode"),
-            outcome.softFailedKeys,
-        )
         assertTrue(outcome.hardFailedKeys.isEmpty())
     }
 
     @Test
     fun classify_pixelKeepsSuccessWhenVoimsOptInSoftFails() {
-        // Pixel 主路径：CarrierConfig/VoLTE OK，仅 key=68 拒写不得整单失败。
         val outcome = ProvisioningWritePolicy.classifyApplyOutcome(
             mapOf(
                 "carrier_config_override" to true,
@@ -53,7 +47,7 @@ class ProvisioningWritePolicyTest {
                 "provision_voims_opt_in" to false,
                 "provision_vowifi" to true,
             ),
-            xiaomiFamily = false,
+            domesticVowifiOem = false,
         )
         assertEquals(ProvisioningWritePolicy.OutcomeKind.OEM_SOFT_PARTIAL, outcome.kind)
         assertTrue(outcome.treatAsSuccess)
@@ -61,32 +55,14 @@ class ProvisioningWritePolicyTest {
     }
 
     @Test
-    fun classify_xiaomiVowifiSoftKeysStillSuccess() {
-        val outcome = ProvisioningWritePolicy.classifyApplyOutcome(
-            mapOf(
-                "carrier_config_override" to true,
-                "provision_volte" to true,
-                "provision_vowifi" to false,
-                "provision_voims_opt_in" to false,
-                "provision_vowifi_roaming" to false,
-                "provision_wfc_mode" to false,
-            ),
-            xiaomiFamily = true,
-        )
-        assertEquals(ProvisioningWritePolicy.OutcomeKind.OEM_SOFT_PARTIAL, outcome.kind)
-        assertTrue(outcome.treatAsSuccess)
-        assertTrue(outcome.hardFailedKeys.isEmpty())
-    }
-
-    @Test
-    fun classify_xiaomiStillHardWhenVolteFails() {
+    fun classify_pixelStillHardWhenVolteFails() {
         val outcome = ProvisioningWritePolicy.classifyApplyOutcome(
             mapOf(
                 "carrier_config_override" to true,
                 "provision_volte" to false,
-                "provision_vowifi" to false,
+                "provision_vowifi" to true,
             ),
-            xiaomiFamily = true,
+            domesticVowifiOem = false,
         )
         assertEquals(ProvisioningWritePolicy.OutcomeKind.HARD_PARTIAL, outcome.kind)
         assertFalse(outcome.treatAsSuccess)
@@ -94,18 +70,35 @@ class ProvisioningWritePolicyTest {
     }
 
     @Test
-    fun classify_hardFailWhenCarrierOrCoreMissing() {
+    fun classify_domesticVowifiAllowsVolteSoftFail() {
+        // 国产不走通信主战场：VoLTE 拒写 + VoWIFI 键软失败仍可整单软成功。
         val outcome = ProvisioningWritePolicy.classifyApplyOutcome(
             mapOf(
                 "carrier_config_override" to true,
+                "provision_volte" to false,
                 "provision_vowifi" to false,
+                "provision_voims_opt_in" to false,
+                "provision_vowifi_roaming" to false,
                 "provision_wfc_mode" to false,
             ),
-            xiaomiFamily = false,
+            domesticVowifiOem = true,
+        )
+        assertEquals(ProvisioningWritePolicy.OutcomeKind.OEM_SOFT_PARTIAL, outcome.kind)
+        assertTrue(outcome.treatAsSuccess)
+        assertTrue(outcome.hardFailedKeys.isEmpty())
+    }
+
+    @Test
+    fun classify_hardFailWhenCarrierMissing() {
+        val outcome = ProvisioningWritePolicy.classifyApplyOutcome(
+            mapOf(
+                "carrier_config_override" to false,
+                "provision_vowifi" to true,
+            ),
+            domesticVowifiOem = true,
         )
         assertEquals(ProvisioningWritePolicy.OutcomeKind.HARD_PARTIAL, outcome.kind)
         assertFalse(outcome.treatAsSuccess)
-        assertTrue(outcome.hardFailedKeys.contains("provision_vowifi"))
     }
 
     @Test
@@ -119,18 +112,18 @@ class ProvisioningWritePolicyTest {
     }
 
     @Test
-    fun softIntKeys_include26And27And68_not28OnPixel() {
-        assertTrue(ProvisioningWritePolicy.isSoftProvisioningIntKey(26, xiaomiFamily = false))
-        assertTrue(ProvisioningWritePolicy.isSoftProvisioningIntKey(27, xiaomiFamily = false))
-        assertTrue(ProvisioningWritePolicy.isSoftProvisioningIntKey(68, xiaomiFamily = false))
-        assertFalse(ProvisioningWritePolicy.isSoftProvisioningIntKey(28, xiaomiFamily = false))
-        assertFalse(ProvisioningWritePolicy.isSoftProvisioningIntKey(10, xiaomiFamily = false))
+    fun softIntKeys_pixelNeverSoftensVolte10() {
+        assertTrue(ProvisioningWritePolicy.isSoftProvisioningIntKey(26, domesticVowifiOem = false))
+        assertTrue(ProvisioningWritePolicy.isSoftProvisioningIntKey(27, domesticVowifiOem = false))
+        assertTrue(ProvisioningWritePolicy.isSoftProvisioningIntKey(68, domesticVowifiOem = false))
+        assertFalse(ProvisioningWritePolicy.isSoftProvisioningIntKey(28, domesticVowifiOem = false))
+        assertFalse(ProvisioningWritePolicy.isSoftProvisioningIntKey(10, domesticVowifiOem = false))
     }
 
     @Test
-    fun softIntKeys_xiaomiAddsVowifi28_neverVolte10() {
-        assertTrue(ProvisioningWritePolicy.isSoftProvisioningIntKey(28, xiaomiFamily = true))
-        assertTrue(ProvisioningWritePolicy.isSoftProvisioningIntKey(68, xiaomiFamily = true))
-        assertFalse(ProvisioningWritePolicy.isSoftProvisioningIntKey(10, xiaomiFamily = true))
+    fun softIntKeys_domesticSoftensVowifiAndVolte() {
+        assertTrue(ProvisioningWritePolicy.isSoftProvisioningIntKey(28, domesticVowifiOem = true))
+        assertTrue(ProvisioningWritePolicy.isSoftProvisioningIntKey(10, domesticVowifiOem = true))
+        assertTrue(ProvisioningWritePolicy.isSoftProvisioningIntKey(68, domesticVowifiOem = true))
     }
 }

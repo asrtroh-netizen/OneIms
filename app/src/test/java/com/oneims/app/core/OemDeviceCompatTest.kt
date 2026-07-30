@@ -15,9 +15,21 @@ class OemDeviceCompatTest {
     }
 
     @Test
-    fun xiaomiFamily_rejectsGooglePixel() {
-        assertFalse(OemDeviceCompat.isXiaomiFamily("Google", "google"))
+    fun domesticVowifiOem_coversMajorChineseBrands() {
+        assertTrue(OemDeviceCompat.isDomesticVowifiOem("Xiaomi", "Redmi"))
+        assertTrue(OemDeviceCompat.isDomesticVowifiOem("vivo", "vivo"))
+        assertTrue(OemDeviceCompat.isDomesticVowifiOem("OPPO", "OPPO"))
+        assertTrue(OemDeviceCompat.isDomesticVowifiOem("OnePlus", "OnePlus"))
+        assertTrue(OemDeviceCompat.isDomesticVowifiOem("realme", "realme"))
+        assertTrue(OemDeviceCompat.isDomesticVowifiOem("vivo", "iQOO"))
+    }
+
+    @Test
+    fun domesticVowifiOem_rejectsGooglePixel() {
+        assertFalse(OemDeviceCompat.isDomesticVowifiOem("Google", "google"))
+        assertFalse(OemDeviceCompat.isDomesticVowifiOem("Google", "Pixel"))
+        assertTrue(OemDeviceCompat.isGooglePixelFamily("Google", "Pixel"))
         assertFalse(OemDeviceCompat.isXiaomiFamily("OnePlus", "OnePlus"))
-        assertFalse(OemDeviceCompat.isXiaomiFamily("samsung", "samsung"))
+        assertFalse(OemDeviceCompat.isDomesticVowifiOem("samsung", "samsung"))
     }
 }

@@ -414,8 +414,8 @@ object SystemApiBroker {
      * 写入 IMS provisioning。
      * - 返回 0 = 成功
      * - key=26/27（漫游 / WFC 模式）：OEM 拒写只打日志并返回非 0，**绝不抛**（一加闪退根因之一）
-     * - 小米系额外软化 key=28/68；反射/Security 异常也可软返回 -1
-     * - 其它 key：非 0 仍抛 IllegalStateException，由上层 runCatching 消化
+     * - 国产 VoWIFI OEM 额外软化 key=28/10（白名单）；soft 键 invoke 异常返回 -1
+     * - Pixel 上 VoLTE key=10 非 0 仍抛，由上层 runCatching 消化
      */
     fun setProvisioningInt(subId: Int, key: Int, value: Int): Int {
         val soft = ProvisioningWritePolicy.isSoftProvisioningIntKey(key)

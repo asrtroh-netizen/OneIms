@@ -11,7 +11,7 @@
 |---|---|---|---|
 | 1 | `BrokerInstrumentation` 内 `persistent=true` 遇 `SecurityException` → 同会话改 `false` | QPR2/OEM 拒持久导致 **toggle 闪退**（Issue #398） | **DONE**（`BrokerInstrumentation` + `ok-temporary`） |
 | 2 | Writer/调用链外层不把拒写直接炸死进程 | UI 可继续用 | **DONE**（`runOperation`+`runCatching`；Writer 降级） |
-| 3 | 写集偏小（主 CarrierConfig；少碰多键 provisioning） | 接触面小 | **部分**：主路径仍多键；国产侧 soft 26/27/68 + 小米 28 |
+| 3 | 写集偏小（主 CarrierConfig；少碰多键 provisioning） | 接触面小 | **部分**：主路径仍多键；国产 VoWIFI OEM（vivo/OPPO/一加/小米等）soft 26/27/28/68 + VoLTE(10) 软分级；Pixel 上 10 仍硬 |
 | 4 | 订阅 API `NoSuchMethodError` 多签名回退 | OEM/API 漂移 | **既有**（telephony 多处 `runCatching`/探测） |
 | 5 | 无嵌入式 ADB/重 Boot 通道 | 冷启爆炸半径小 | **产品差异**：OneIMS 必须保留 Pixel 开机自启（硬保证） |
 | 6 | 异常打 Log | 可排障 | **增强 DONE**：`DiagFileLogger` 落盘+导出 |
