@@ -131,6 +131,7 @@ import com.oneims.app.ui.ThemeMode
 import com.oneims.app.ui.theme.OneImsTheme
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -230,6 +231,8 @@ private fun AppRoot(
     val scope = remember(baseScope, uiExceptionHandler) {
         baseScope + SupervisorJob() + uiExceptionHandler
     }
+    // V15 UserPresent 风格：前台/binder 死后 0/5/15s 错峰复连（取消旧任务防叠刷）。
+    val privilegeReconnectJobHolder = remember { arrayOf<Job?>(null) }
 
     var destination by remember { mutableStateOf(AppDestination.HOME) }
     var membershipPaywallVisible by remember { mutableStateOf(false) }
@@ -925,6 +928,70 @@ private fun AppRoot(
     }
 
     /**
+     * 学 V15 `UserPresentRestartReceiver`：已配对但桥未就绪时，0 / 5s / 15s 错峰再拉。
+     * 覆盖「前台单次 prepare 失败 / binder 中途死掉」——lite 外置 Manager 不易踩的假死窗。
+     * 须定义在 [prepareOneKukuCore] 之后。
+     */
+    fun schedulePrivilegeReconnectShots(reason: String) {
+        if (ChannelLine.usesShizuku) return
+        if (!OneKukuEmbeddedAdbActivator.hasPairedOnce(context)) return
+        privilegeReconnectJobHolder[0]?.cancel()
+        privilegeReconnectJobHolder[0] = scope.launch {
+            DiagFileLogger.i("Privilege", "v15-style reconnect shots reason=$reason")
+            suspend fun fireShot(label: String, forceRestart: Boolean) {
+                syncPrivilegeFlagsFromBridge()
+                if (OneKukuManager.isReady()) {
+                    // 成功后再 ping 一次语义：isReady 已含 pingBinder；settle 清脏 hint。
+                    settleOneKukuChannelAfterReady()
+                    activationEpoch++
+                    DiagFileLogger.i("Privilege", "reconnect $label already ready")
+                    return
+                }
+                DiagFileLogger.i(
+                    "Privilege",
+                    "reconnect $label force=$forceRestart " +
+                        "running=${OneKukuManager.isRunning()} granted=${OneKukuManager.isGranted()}",
+                )
+                OneKukuActivationUi.setPhase(OneKukuActivationPhase.CONNECTING)
+                activationEpoch++
+                prepareOneKukuCore(forceRestart = forceRestart)
+            }
+            fireShot("t0", forceRestart = false)
+            delay(5_000L)
+            if (OneKukuManager.isReady()) {
+                settleOneKukuChannelAfterReady()
+                activationEpoch++
+                return@launch
+            }
+            fireShot("t5", forceRestart = false)
+            delay(10_000L) // 距 t0 共 15s
+            if (OneKukuManager.isReady()) {
+                settleOneKukuChannelAfterReady()
+                activationEpoch++
+                return@launch
+            }
+            fireShot("t15", forceRestart = true)
+            // 给最后一拍 ADB/binder 窗口收尾，避免相位永远钉在 CONNECTING。
+            val settleDeadline = System.currentTimeMillis() + 12_000L
+            while (System.currentTimeMillis() < settleDeadline) {
+                if (OneKukuManager.isReady()) {
+                    settleOneKukuChannelAfterReady()
+                    activationEpoch++
+                    return@launch
+                }
+                delay(400L)
+            }
+            syncPrivilegeFlagsFromBridge()
+            if (OneKukuManager.isReady()) {
+                settleOneKukuChannelAfterReady()
+            } else {
+                DiagFileLogger.w("Privilege", "reconnect shots exhausted reason=$reason")
+            }
+            activationEpoch++
+        }
+    }
+
+    /**
      * App 回到前台：桥仍在则秒级唤醒；桥已掉（小米杀进程/ binder 死）则主动复连，
      * 避免状态框卡在「未激活」。须定义在 [prepareOneKukuCore] 之后（本地函数不可前向引用）。
      */
@@ -962,9 +1029,10 @@ private fun AppRoot(
             }
             if (OneKukuEmbeddedAdbActivator.hasPairedOnce(context)) {
                 // 复连窗口显示「激活中」，避免划掉再开先闪红「未激活」再变绿。
+                // 单次 prepare 不够：学 V15 错峰多拍（无线口/重投 binder 常晚几秒才到）。
                 OneKukuActivationUi.setPhase(OneKukuActivationPhase.CONNECTING)
                 activationEpoch++
-                prepareOneKukuCore(forceRestart = false)
+                schedulePrivilegeReconnectShots("foreground")
             } else {
                 syncPrivilegeFlagsFromBridge()
                 activationEpoch++
@@ -1384,11 +1452,18 @@ private fun AppRoot(
         }
         val binderDeadListener: () -> Unit = {
             // 只按桥真值刷新，禁止强行把 granted 打成 false（Shizuku 授权可粘滞）。
-            DiagFileLogger.w("Privilege", "binder dead → resync flags")
+            DiagFileLogger.w("Privilege", "binder dead → resync flags + v15 reconnect shots")
             syncPrivilegeFlagsFromBridge()
             oneKukuTaskComplete = false
             oneKukuRestoring = false
             activationEpoch++
+            // Watchdog 负责后台静默重拉；前台 UI 再叠 0/5/15s，避免 Hero 假死在「未激活」。
+            if (!ChannelLine.usesShizuku &&
+                OneKukuEmbeddedAdbActivator.hasPairedOnce(context) &&
+                !OneKukuManager.isReady()
+            ) {
+                schedulePrivilegeReconnectShots("binder_dead")
+            }
         }
 
         runCatching { bridge.addRequestPermissionResultListener(permissionListener) }
@@ -1396,6 +1471,8 @@ private fun AppRoot(
         runCatching { bridge.addBinderDeadListener(binderDeadListener) }
 
         onDispose {
+            privilegeReconnectJobHolder[0]?.cancel()
+            privilegeReconnectJobHolder[0] = null
             runCatching { bridge.removeRequestPermissionResultListener(permissionListener) }
             runCatching { bridge.removeBinderReceivedListener(binderReceivedListener) }
             runCatching { bridge.removeBinderDeadListener(binderDeadListener) }
