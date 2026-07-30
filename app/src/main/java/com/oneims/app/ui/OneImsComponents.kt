@@ -887,7 +887,7 @@ fun StatusHero(
                             }
                         }
                     }
-                    // 标题 + Active 同排：胶囊 intrinsic 宽度优先，标题 weight 省略，避免 Active 被挤到下一行。
+                    // 标题 + Active 同排且紧贴：fill=false 不把标题拉满整行，胶囊跟在字后。
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
@@ -901,7 +901,7 @@ fun StatusHero(
                                 MaterialTheme.typography.titleLarge
                             },
                             color = contentColor,
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.weight(1f, fill = false),
                             maxLines = 1,
                             softWrap = false,
                             overflow = TextOverflow.Ellipsis,
