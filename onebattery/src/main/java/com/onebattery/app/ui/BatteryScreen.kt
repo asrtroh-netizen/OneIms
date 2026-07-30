@@ -2,6 +2,7 @@ package com.onebattery.app.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,6 +22,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -34,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.onebattery.app.R
@@ -740,10 +743,24 @@ private fun SessionCard(
                 BatteryCapacityEstimator.MIN_PERCENT_DELTA,
             )
     }
+    val interactionSource = remember { MutableInteractionSource() }
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+            .then(
+                if (onClick != null) {
+                    Modifier.clickable(
+                        role = Role.Button,
+                        interactionSource = interactionSource,
+                        indication = ripple(
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+                        ),
+                        onClick = onClick,
+                    )
+                } else {
+                    Modifier
+                },
+            )
             .padding(vertical = 4.dp),
     ) {
         Text(

@@ -279,15 +279,7 @@ fun OneToolsInfoCard(
     subtitle: String,
     onClick: (() -> Unit)? = null,
 ) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
-        shape = RoundedCornerShape(OneToolsTokens.cardCornerRadius),
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        tonalElevation = 2.dp,
-        border = BorderStroke(1.dp, OneToolsTokens.dividerColor()),
-    ) {
+    val body: @Composable () -> Unit = {
         Column(
             modifier = Modifier.padding(OneToolsTokens.cardPaddingHorizontal),
             verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -299,6 +291,27 @@ fun OneToolsInfoCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
+    }
+    // 可点时用 Surface(onClick)，避免裸 clickable(onClick) 依赖 LocalIndication NodeFactory。
+    if (onClick != null) {
+        Surface(
+            onClick = onClick,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(OneToolsTokens.cardCornerRadius),
+            color = MaterialTheme.colorScheme.surfaceContainerLow,
+            tonalElevation = 2.dp,
+            border = BorderStroke(1.dp, OneToolsTokens.dividerColor()),
+            content = body,
+        )
+    } else {
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(OneToolsTokens.cardCornerRadius),
+            color = MaterialTheme.colorScheme.surfaceContainerLow,
+            tonalElevation = 2.dp,
+            border = BorderStroke(1.dp, OneToolsTokens.dividerColor()),
+            content = body,
+        )
     }
 }
 

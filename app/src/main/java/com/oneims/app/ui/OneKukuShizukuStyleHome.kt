@@ -1,7 +1,6 @@
 package com.oneims.app.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -365,10 +364,11 @@ private fun QuickTile(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // Surface(onClick) 走带 Indication 参数的 clickable 重载，避免
+    // LocalIndication 非 IndicationNodeFactory 时裸 clickable(onClick) 崩溃。
     Surface(
-        modifier = modifier
-            .alpha(if (dimmed) 0.45f else 1f)
-            .clickable(onClick = onClick),
+        onClick = onClick,
+        modifier = modifier.alpha(if (dimmed) 0.45f else 1f),
         shape = RoundedCornerShape(20.dp),
         color = ShizukuHomePalette.tileSurface(),
         tonalElevation = 1.dp,

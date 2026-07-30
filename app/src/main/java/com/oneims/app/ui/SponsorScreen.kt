@@ -9,6 +9,7 @@ import android.provider.MediaStore
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,6 +22,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,6 +39,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.oneims.app.R
+import com.oneims.app.ui.theme.OneImsTokens
 
 private data class SponsorPreview(
     val title: String,
@@ -185,12 +188,15 @@ private fun SponsorQrImage(
     onLongPress: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
     Box(
         modifier = modifier
             .sizeIn(maxWidth = 420.dp, maxHeight = 420.dp)
             .clip(RoundedCornerShape(24.dp))
             .background(Color.White)
             .combinedClickable(
+                interactionSource = interactionSource,
+                indication = ripple(color = OneImsTokens.pressedOverlay()),
                 onClick = onClick,
                 onLongClick = onLongPress,
             )
