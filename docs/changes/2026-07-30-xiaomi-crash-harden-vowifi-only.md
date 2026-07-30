@@ -22,9 +22,13 @@
 
 - `OemDeviceCompatTest` / `ProvisioningWritePolicyTest`
 - 双 flavor compile
-- 小米真机：NOT RUN（需装新包 + 导出详细日志）
+- **小米真机（2026-07-30 adb）**：Xiaomi 22061218C / HyperOS OS3.0 (V816) / Android 15
+  - 覆盖安装 onekuku+onelink debug（含 `fde9d5391`）
+  - 冷启双包进程存活；`crash-*.log` = 0
+  - 写路径日志：`temporary-first ... domestic-vowifi-oem` + Broker `ok-temporary`
+  - **用户确认**：VoWIFI 正常、不闪退
 
 ## 非目标
 
 - 不削弱 Pixel persistent 优先
-- 无现场栈前不宣称根因已钉死
+- 完整「按推荐一键」自动化未作唯一验收门（用户体感 + temporary-first 写路径已闭环）
