@@ -6,7 +6,7 @@
 | 线 | 路径 | HEAD（本轮采证） |
 |---|---|---|
 | Pixel / V15 主线 | `E:\GQ\One\_forks\HSSkyBoy-Shizuku-clean` | `1ba7389` |
-| 小米 / Drop-In 融合 | `E:\GQ\One\_forks\ShizukuDropIn-Local` | oem5：对外 `V15.1.0` / 151000 |
+| 小米 / Drop-In 融合 | `E:\GQ\One\_forks\ShizukuDropIn-Local` | oem7：`5fb9425`，对外 `V15.1.0` / 151000 |
 
 **策略前提（既定）**：Pixel 继续用 V15；小米用 DropIn-Local；不推 thejaustin 远端；不改 V15 仓做本线融合。
 
@@ -148,7 +148,7 @@ Dhizuku、AVF、Storage Proxy、Activity Manager Plus、NPU/实验 AI、Binder F
 
 ---
 
-## 8. 本轮验证
+## 8. 本轮验证（含 oem7）
 
 | 检查 | 结果 |
 |---|---|
@@ -156,7 +156,10 @@ Dhizuku、AVF、Storage Proxy、Activity Manager Plus、NPU/实验 AI、Binder F
 | 入口继承链 / `grantedCount` | PASS（源码） |
 | 冷启组件有无矩阵 | PASS（文件存在性） |
 | oem4 默认布尔 | PASS（`ShizukuSettings.java` getBoolean 默认值） |
-| APK 编包 / 真机 UI / 冷启实测 | **NOT RUN** |
+| `assembleDropinRelease` | **PASS**（2026-07-30，`BUILD SUCCESSFUL`，APK `manager-dropin-release.apk`） |
+| 真机安装（`22061218C` / `c0b76e3b`） | **PASS**（卸载签名冲突旧包后安装；`versionName=V15.1.0` / `versionCode=151000`） |
+| 冷启广播送达 | **FAIL / 被 OEM 拦截**：`BOOT_COMPLETED`/`LOCKED_BOOT_COMPLETED` → `BootCompleteReceiver` 被 MIUI `Security_WakePath Restrict` **SKIPPED**；需在「安全中心 → 自启动」放行后再测 |
+| 冷启服务真正拉起 | **NOT RUN**（依赖自启动放行 + 用户开「开机自启」后二次复测） |
 
 ---
 
