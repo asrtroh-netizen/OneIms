@@ -1074,13 +1074,24 @@ private fun AppRoot(
                 }
                 return false
             }
-            // 0～15s：对齐 V15「server 仍活 → 只重投 binder」，避免刷 ADB 弹窗。
-            if (awaitBinderOnly("t0", 5_000L)) return@launch
-            if (awaitBinderOnly("t5", 10_000L)) return@launch
-            DiagFileLogger.w(
-                "Privilege",
-                "reconnect binder-only timeout → fallback ADB once reason=$reason",
-            )
+            // CARE_MIN：宿主已死时别空等 binder～15s（3.0.4 冷开是立刻 prepare）。
+            // 宿主仍活才走 binder-only，避免无谓拨 ADB 弹「USB 调试」窗。
+            val careMin = ChannelEngine.current() == ChannelEngine.CARE_MIN
+            val hostAliveNow = !careMin || OneKukuHostServerBootstrap.isHostServerAlive()
+            if (!hostAliveNow) {
+                DiagFileLogger.i(
+                    "Privilege",
+                    "reconnect host dead → prepare immediately (3.0.4-like) reason=$reason",
+                )
+            } else {
+                // 0～15s：对齐 V15「server 仍活 → 只重投 binder」，避免刷 ADB 弹窗。
+                if (awaitBinderOnly("t0", 5_000L)) return@launch
+                if (awaitBinderOnly("t5", 10_000L)) return@launch
+                DiagFileLogger.w(
+                    "Privilege",
+                    "reconnect binder-only timeout → fallback ADB once reason=$reason",
+                )
+            }
             activationEpoch++
             prepareOneKukuCore(forceRestart = false)
             val settleDeadline = System.currentTimeMillis() + 12_000L
