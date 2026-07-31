@@ -75,9 +75,31 @@ rknn_server &
 
 ---
 
-## 回滚
+## 开机自启（已部署 · 2026-07-31）
+
+主机：`bdy,g18-pro` / RK3568。已写入并启用 systemd 单元：
+
+- 单元：`/etc/systemd/system/rknn_server.service`
+- 状态：`enabled` + `active`（`rknn_server` 1.5.2）
+- 内核：`RKNPU driver: v0.9.8`（满足 Immich RKNN ≥0.9.8 前提）
+- 设备节点：`/dev/dri/renderD128`、`/dev/dma_heap`、`/dev/rga` 存在
+
+启动前会 `killall` 旧的 `rknn_server` / `start_rknn.sh` 循环，避免双实例。
+
+### 与飞牛 AI 相册的关系
+
+- 系统已有 `ai_manager.service`（运行中）与模型目录  
+  `/vol1/@sysappmeta/ai-manager/models/{face,img2vec,txt2vec}-*`
+- 当日日志显示模型包已下载；`ai_manager` 侧配置偏 GPU 列表，**未见直接绑定 RKNN**  
+  → 原生相册 AI 可能仍走 CPU；NPU 用户态是给 RKNN 应用（如 Immich `-rknn`）用的地基
+- 相册数据目录线索：`/vol1/1000/Photos`（含 `MobileBackup`）
+
+## 回滚（含自启）
 
 ```bash
+sudo systemctl disable --now rknn_server.service
+sudo rm -f /etc/systemd/system/rknn_server.service
+sudo systemctl daemon-reload
 sudo killall start_rknn.sh rknn_server || true
 sudo rm -f /usr/lib/librknnrt.so /usr/lib/librknn_api.so
 sudo rm -f /usr/bin/rknn_server /usr/bin/start_rknn.sh /usr/bin/restart_rknn.sh
@@ -85,6 +107,7 @@ sudo rm -f /usr/bin/rknn_server /usr/bin/start_rknn.sh /usr/bin/restart_rknn.sh
 
 ## 后续可选
 
+- 飞牛 Web：相册 → 开人脸/智能识别/以文搜图，观察 CPU vs NPU  
+- 若原生相册不走 NPU：部署 Immich `*-rknn` 镜像并挂载 `/dev/dri`  
 - 用业务程序 / `rknn_toolkit_lite2` 实测推理  
-- 配置开机自启（`rknn_server` 或 `restart_rknn.sh`）  
-- 官方仓路径以 `runtime/RK356X/Linux/...` 为准；出网已通时可在机上直接 `git pull` 更新
+- 官方仓路径以 `runtime/RK356X/Linux/...` 为准
