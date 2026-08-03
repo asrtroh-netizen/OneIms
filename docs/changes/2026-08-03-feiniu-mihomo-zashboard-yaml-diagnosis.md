@@ -108,6 +108,41 @@ tun:
 
 ## 未做（待你拍板）
 
-- 尚未在飞牛安装/启动 Mihomo（避免在订阅 500 + DNS:53 风险下硬上）  
-- 未改 sub.itt.fan 服务端  
-- 电视实网拨测 NOT RUN（需装好 TUN 后做）
+- ~~尚未在飞牛安装/启动 Mihomo~~ → **已部署（见续轮）**  
+- 未改 sub.itt.fan 服务端（用户确认节点开关自行处理，放最后）  
+- 电视实网拨测 NOT RUN（需电视改网关后做）
+
+---
+
+## 续轮 · 先装 Mihomo + 接面板（2026-08-03）
+
+用户指示：TAG/MESL 节点开关他自己管，**放到最后一步**；先把机器侧能力立住。
+
+### 已落地
+
+| 项 | 结果 |
+|---|---|
+| 镜像 | `metacubex/mihomo:latest` → `v1.19.29`（aarch64） |
+| 部署 | `/opt/mihomo` + `network_mode: host` + `NET_ADMIN` + `/dev/net/tun` |
+| Overlay | `mixed-port:7890`、`allow-lan:true`、`external-controller:0.0.0.0:9090`、`dns.listen:1053`、`tun.enable` |
+| 端口 | `*:7890` / `*:9090` / `*:1053` LISTEN |
+| TUN | 接口 `Meta` `198.18.0.1/30`，ip rule 2022 已注入 |
+| API | `GET /version` → `{"meta":true,"version":"v1.19.29"}` |
+| 面板 | `ange-clashboard` `setup/api-list` 从 `192.168.2.5:9090` 改为 **`192.168.2.2:9090`**（secret 存 `/opt/mihomo/API_SECRET`，sqlite 已备份） |
+| 面板 URL | `http://192.168.2.2:2048` |
+
+### 电视怎么用（你这边）
+
+1. 电视静态 IP（同网段）  
+2. **网关 = `192.168.2.2`**（飞牛）  
+3. DNS 可先填 `192.168.2.2` 或公共 DNS（TUN 会 hijack 53）  
+
+### 最后一步（等你开 TAG）
+
+在面板点订阅更新 / 测速；MESL 超额可先不管。
+
+### 已知残留风险
+
+- 部分 `rule-providers` 拉 `cdn.jsdelivr.net` 曾 EOF（规则集未齐）；节点通后可在面板重载  
+- 本机经 7890 打 `generate_204` 曾回 502（走 DIRECT）；不影响 API/TUN 已起来的结论  
+- 完整电视 YouTube 实拨：**NOT RUN**
