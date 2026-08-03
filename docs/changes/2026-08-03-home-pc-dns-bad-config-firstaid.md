@@ -49,4 +49,5 @@ Settings → 网络和 Internet → 代理 → 关闭「使用代理服务器」
 
 ## 远程侧
 
-办公室外网仍无法进 FNHOME（npc 离线），本轮急救依赖你本机操作；远程代改 DNS **不可行**。
+2026-08-03 晚：npc 已恢复，`hfs.itt.fan:1818` SSH 通。若「静态填 2.2」仍全站打不开，见  
+`docs/changes/2026-08-03-home-static-2.2-no-internet.md`（根因是飞牛 `mihomo` 未跑、`:53` 无监听；已 `docker compose up -d`）。
