@@ -146,3 +146,13 @@ tun:
 - 部分 `rule-providers` 拉 `cdn.jsdelivr.net` 曾 EOF（规则集未齐）；节点通后可在面板重载  
 - 本机经 7890 打 `generate_204` 曾回 502（走 DIRECT）；不影响 API/TUN 已起来的结论  
 - 完整电视 YouTube 实拨：**NOT RUN**
+
+### 双路径分工（用户确认 · 同日）
+
+| 路径 | 用途 |
+|---|---|
+| **192.168.2.5:7890**（OpenClash） | **日常翻墙**，现阶段先靠它 |
+| **192.168.2.2** Mihomo TUN | 电视/网关模式；面板可切换管理 |
+
+飞牛自身默认路由仍是 `default via 192.168.2.5`；TUN 只吸「网关指向 2.2」的设备。  
+ange-clashboard `setup/api-list` 已并列两项，日常默认选 OpenClash-2.5。
