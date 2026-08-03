@@ -9,9 +9,9 @@
 | 节点 | SSH | Tailscale | 主机名参数 | 状态 |
 |---|---|---|---|---|
 | TTFN | `tfs.itt.fan:4848` 通 | **1.98.10** / `tailscaled` active | `home-feiniu-ttfn` | **NeedsLogin** |
-| FNHOME | `hfs.itt.fan:1818` TCP 通但 **无 SSH banner**（对端复位） | 未装上 | `home-feiniu-haloxfn` | **阻塞：NPS/npc 隧道异常** |
+| FNHOME | `hfs.itt.fan:1818` 通（npc 已恢复） | **1.98.10** / `tailscaled` active | `home-feiniu-haloxfn` | **NeedsLogin**（见下方新 auth URL） |
 
-旁证：`http://hfs.itt.fan/` 返回 **502**（nginx 反代后端不可达），与 SSH banner 空读一致，更像 **FNHOME 侧 npc 客户端离线或隧道挂死**，不是本机脚本逻辑错误。
+旁证（历史）：npc 掉线时 `hfs.itt.fan` 曾 502、1818 无 banner；**当晚 npc 已恢复**，SSH/HTTP 正常，并完成下方 Tailscale 安装。
 
 ## TTFN 登录
 
@@ -46,10 +46,33 @@ TCP hfs.itt.fan:1818 → recv SSH banner
 - TTFN：`tailscale version` → 1.98.10；`systemctl is-active tailscaled` → active；`tailscale status` → Logged out + 上述 URL
 - FNHOME：多次间隔重试（paramiko / OpenSSH）均 `Error reading SSH protocol banner` / `Connection closed by remote host`；HTTP `hfs.itt.fan` → 502
 
+## 2026-08-03 晚 · FNHOME 已装上（接 npc 恢复后）
+
+经 `Halo@hfs.itt.fan:1818`：
+
+```bash
+curl -fsSL https://tailscale.com/install.sh | sh
+systemctl enable --now tailscaled
+tailscale up --hostname=home-feiniu-haloxfn --accept-dns=false
+```
+
+| 检查 | 结果 |
+|---|---|
+| `tailscale version` | **1.98.10** |
+| `systemctl is-active tailscaled` | **active** |
+| `tailscale status` | Logged out / NeedsLogin |
+| Auth URL | `https://login.tailscale.com/a/4cd8b0001fc09` |
+
+请用 tailnet 账号（`asrtroh@`）浏览器打开上述链接授权；授权后应出现 `100.x`。链接过期则在机上重跑：
+
+```bash
+sudo tailscale up --hostname=home-feiniu-haloxfn --accept-dns=false
+```
+
 ## 未做
 
 - 未拆除 NPS（按既定双轨策略）
-- FNHOME 未取得 auth URL / `100.x`
+- FNHOME / TTFN 浏览器授权后的 `100.x` 仍待你点开登录链接
 - 手机端 Tailscale / 私有域名绑定 `100.x` 仍待后续
 
 ## 2026-08-03 续 · FNHOME 开机后 npc 仍掉线
