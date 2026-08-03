@@ -79,3 +79,17 @@
 | `/root` 下 clash/mihomo 路径 | 不存在 |
 | 名称命中 `*clash*/*mihomo*`（home/opt/tmp/root maxdepth3） | 仅剩在用的 `/opt/ange-clashboard` |
 | 四容器状态 | 均仍 Up / oneboard healthy |
+
+---
+
+## 续轮 · `/home/anna` 巡检（同日）
+
+| 项 | 结果 |
+|---|---|
+| `getent passwd anna` / `id anna` | **无此用户** |
+| 目录属主 | `TTFN:Administrators`（孤儿家目录） |
+| 内容 | 仅 Debian 骨架 3 文件：`.bashrc` / `.profile` / `.bash_logout`（2025-11-29） |
+| SSH / cron / systemd --user / 进程 | 皆无 |
+| 处理 | 安全删除 `/home/anna` → `ANNA_GONE_OK`；`/home` 现仅剩 `TTFN` |
+
+附带观察（未动）：passwd 中有 `TT:/home/TT`，当前 `/home` 下无对应目录——可能是另一孤儿映射，需另开任务再确认。
