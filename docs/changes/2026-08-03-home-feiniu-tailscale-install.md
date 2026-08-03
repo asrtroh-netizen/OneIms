@@ -51,3 +51,20 @@ TCP hfs.itt.fan:1818 → recv SSH banner
 - 未拆除 NPS（按既定双轨策略）
 - FNHOME 未取得 auth URL / `100.x`
 - 手机端 Tailscale / 私有域名绑定 `100.x` 仍待后续
+
+## 2026-08-03 续 · FNHOME 开机后 npc 仍掉线
+
+用户反馈：FNHOME 机子已好、远程开机了 PC，但 **npc 掉了**。
+
+本轮外网复测（开机后）：
+
+- `http://hfs.itt.fan/` → **仍 502**
+- `hfs.itt.fan:1818` → TCP 通，**SSH banner 空 / 对端复位**（约 20 次轮询仍 `STILL_DOWN`）
+
+对照 TTFN 正常 npc：
+
+```text
+/var/apps/npc/target/npc -config /var/apps/npc/var/config/npc.conf
+```
+
+**结论**：外网入口依赖 FNHOME 侧 npc；npc 未起时远程无法 SSH，也就无法代启 npc / 代装 Tailscale（鸡生蛋）。需在 **同局域网 PC → HexHub → 应用 npc → 启动**（或本机执行上述命令）后，再继续安装 `home-feiniu-haloxfn`。
