@@ -43,3 +43,4 @@
 - Vaultwarden：`http://192.168.2.2:3013`
 - 2FAuth：`http://192.168.2.2:8008`
 - VoHive：`http://192.168.2.2:7575`
+- Upsnap（远程唤醒）：`http://192.168.2.2:8090`（见 `2026-08-03-fnhome-upsnap-remote-wake.md`）
