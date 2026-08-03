@@ -36,7 +36,7 @@
 
 ## 使用入口（局域网）
 
-> 2026-08-03 晚间瘦身：`2fauth` / `onebord` / `sun-panel` / `vaultwarden` / **`upsnap` / `vohive`** 已删。AnGe-Panel 仅 **3002**。唤醒改向日葵；Vohive 只留玩客云。见 `2026-08-03-fnhome-remove-upsnap-vohive.md`。
+> 2026-08-03 晚间瘦身：飞牛 Docker 已删 upsnap/vohive 等。**Vohive+NPC 在 FNHOME 玩客云**；**TTFN=女友家**。见 `docs/architecture/2026-08-03-three-site-ttfn-fnhome-wankeyun.md`。
 
 - Ange Clash：`http://192.168.2.2:2048`
 - AnGe-Panel：`http://192.168.2.2:3002`
