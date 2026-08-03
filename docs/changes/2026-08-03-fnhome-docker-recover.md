@@ -36,7 +36,7 @@
 
 ## 使用入口（局域网）
 
-> 2026-08-03 晚：`2fauth` / `onebord` / `sun-panel` / `vaultwarden` 已按用户要求彻底删除（数据在 `/root/deleted-bak-20260803-200846/`）。AnGe-Panel 仅保留 **3002**。详见 `2026-08-03-fnhome-purge-four-ange-3002.md`。
+> 2026-08-03 晚：`2fauth` / `onebord` / `sun-panel` / `vaultwarden` 已彻底删除；备份目录 `/root/deleted-bak-20260803-200846/` 亦已永久删除。AnGe-Panel 仅保留 **3002**。详见 `2026-08-03-fnhome-purge-four-ange-3002.md`。
 
 - Ange Clash：`http://192.168.2.2:2048`
 - AnGe-Panel：`http://192.168.2.2:3002`
