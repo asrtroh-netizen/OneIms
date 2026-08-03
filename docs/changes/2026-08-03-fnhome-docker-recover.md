@@ -13,7 +13,8 @@
 | `vohive` | 7575 | `docker start` | 监听中 |
 | `2fauth` | 8008 | `/opt/2fauth` compose up | **200** |
 | `onebord` | 3000 | `/vol1/docker/onebord` compose build+up | **200** |
-| `sun-panel` | 3002 | 补写 compose + 挂原 `/opt/sunpanel` 数据 | **200** |
+| `sun-panel` | **3003**（原误占 3002，已让给 AnGe-Panel） | 补写 compose + 挂原 `/opt/sunpanel` 数据 | **200** |
+| `ange-panel` | **3002**（+3005） | `/opt/ange-panel` + `/root/ange-data:/data` | **200** 见 `2026-08-03-fnhome-ange-panel-restore.md` |
 | `vaultwarden` | 3013 | 补写 compose + 挂原 `/opt/vaultwarden` 数据 | **200** |
 | `upsnap` | host | 补写 compose + 挂原 `/opt/upsnap` | Up（health starting→跑） |
 
@@ -37,7 +38,8 @@
 
 - Ange：`http://192.168.2.2:2048`
 - OneBord：`http://192.168.2.2:3000`
-- Sun-Panel：`http://192.168.2.2:3002`
+- AnGe-Panel：`http://192.168.2.2:3002`
+- Sun-Panel：`http://192.168.2.2:3003`
 - Vaultwarden：`http://192.168.2.2:3013`
 - 2FAuth：`http://192.168.2.2:8008`
 - VoHive：`http://192.168.2.2:7575`
