@@ -54,4 +54,9 @@
 
 - `iptables` 放行 `192.168.1.0/24` 与 `Meta` 进出  
 - `sysctl` 保持 `ip_forward=1`、`rp_filter=0`  
-- systemd：`mihomo-lan-forward.service` → `/opt/mihomo-scripts/enable-lan-forward.sh`
+- systemd：`mihomo-lan-forward.service` → `/opt/mihomo-scripts/enable-lan-forward.sh`  
+- **DNS**：局域网 `UDP/TCP 53` → `REDIRECT 1053`（否则手机 DNS=`192.168.1.99` 会 connection refused）  
+- `tun.auto-redirect: true`、`tun.ipv6: false`  
+- Google 系域名 `nameserver-policy` 走美国节点 DoH（避免解析成污染 IP）  
+
+LAN 侧验证（Windows → `192.168.1.99`）：`www.google.com`→`142.251.*`，`api.telegram.org`→`149.154.166.110`。
