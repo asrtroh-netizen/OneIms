@@ -5,8 +5,8 @@
 ## 决策
 
 - 家用机远程开机改走 **向日葵**（无线 + 离路由远，WoL/Upsnap 不合适）。
-- **Vohive** 跑在 **FNHOME 的玩客云**上（从女友家迁来，兼 NPC）；**不要**再在本台飞牛 Docker 里跑第二份。
-- 站点名 **TTFN = 女朋友家**（现为飞牛业务，不是玩客云本体）。详见 `docs/architecture/2026-08-03-three-site-ttfn-fnhome-wankeyun.md`。
+- **Vohive**：随玩客云迁到 **FNHOME** 后在玩客云上跑（TTFN Mihomo 就绪 → 玩客云从女友家网关下岗）；**不要**在 FNHOME 飞牛 Docker 再跑一份。
+- **TTFN = 女朋友家飞牛**（今日 Mihomo 已弄好）。详见 `docs/architecture/2026-08-03-three-site-ttfn-fnhome-wankeyun.md`。
 - FNHOME Docker 目标：**少而清**。
 
 ## 已删除

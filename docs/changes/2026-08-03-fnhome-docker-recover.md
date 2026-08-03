@@ -36,7 +36,7 @@
 
 ## 使用入口（局域网）
 
-> 2026-08-03 晚间瘦身：飞牛 Docker 已删 upsnap/vohive 等。**Vohive+NPC 在 FNHOME 玩客云**；**TTFN=女友家**。见 `docs/architecture/2026-08-03-three-site-ttfn-fnhome-wankeyun.md`。
+> 拓扑：TTFN=女友家飞牛（今日 Mihomo 就绪）→ 玩客云可下岗并迁 FNHOME 做 NPC+Vohive；FNHOME 飞牛 Docker 已瘦身。见 `docs/architecture/2026-08-03-three-site-ttfn-fnhome-wankeyun.md`。
 
 - Ange Clash：`http://192.168.2.2:2048`
 - AnGe-Panel：`http://192.168.2.2:3002`
