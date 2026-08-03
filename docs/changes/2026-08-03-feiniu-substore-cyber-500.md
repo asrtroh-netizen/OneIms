@@ -32,7 +32,7 @@
 | `http://127.0.0.1:8965/download/Cyber` / `?target=ClashMeta` | **200**（约 31–33KB） |
 | Mihomo `proxy-providers.Cyber` 改为 `type: file` → `./providers/Cyber.yaml` | 已完成 |
 | Provider 加载 | **Cyber count=99**；`🇨🇳 台湾节点` 已出现 Cyber 台湾组 |
-| 配置中为订阅域增加走代理规则（`sbyun.org` 等 → `🚀 节点选择`） | 已写入；出站仍受节点可用性限制 |
+| ~~订阅域改走节点~~（错误） | **已回滚**：`sbyun.org` / `central-world.org` / `mesl.cloud` / `nimenshishangdi.cc` / `dbsur.top` 全部强制 `🎯 全球直连`；HTTP provider 保持 `proxy: DIRECT` |
 | `🐟 漏网之鱼` | 已恢复为 `🎯 全球直连` |
 
 备份：
@@ -41,10 +41,22 @@
 - `/opt/mihomo/config/config.yaml.bak.*`
 - 引导文件：`/opt/sub-store/data/bootstrap/cyber.yaml`
 
+## 订正（2026-08-03 稍后）
+
+用户指出：**机场订阅源网址必须强制直连**。此前把订阅域改走 `🚀 节点选择` / `💬 Ai平台` 是错误方向，已纠正。
+
+运行时日志已确认（节选）：
+
+```text
+yyds.sbyun.org match DomainSuffix(sbyun.org) using 🎯 全球直连[DIRECT]
+em.mesl.cloud match Domain(em.mesl.cloud) using 🎯 全球直连[DIRECT]
+huaikhwang.central-world.org match DomainSuffix(central-world.org) using 🎯 全球直连[DIRECT]
+```
+
 ## 未恢复 / 风险
 
-- Sub-Store **Cyber 现为 local 源**，不会自动跟随机场更新；要恢复 remote 需飞牛具备可用出站后再改回 `source=remote`。
-- TAG / MESL / Guigui / Dabei / DBB / Emby 的 HTTP provider 仍为 **0 节点**（拉 Sub-Store 仍可能 500）。
+- Sub-Store **Cyber 现为 local 源**，不会自动跟随机场更新；直连能通源站后再改回 `source=remote`。
+- TAG / MESL / Guigui / Dabei / DBB / Emby 的 HTTP provider 仍可能为 **0 节点**（Sub-Store 远程拉源仍可能失败）。
 - Cyber 台湾 TUIC 在飞牛上 delay/dial 未通过；**不能**仅凭 provider 计数声称「代理已可用」。
 - 勿把 `sub.itt.fan` 钉到 `192.168.2.2`（会撞系统 nginx `download_auth` → 403）；公网解析应保持 NPC（`8.137.155.86`）。
 
