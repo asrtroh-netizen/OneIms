@@ -47,3 +47,35 @@
 ## 回滚
 
 官方卸载曾把项目挪到 backup，但本轮按「清垃圾」要求已删除 backup。若需重装，只能重新 clone / 安装 clash-for-linux，无法从本机 backup 恢复。
+
+---
+
+## 续轮 · 全盘搜其它历史垃圾（同日）
+
+用户要求：全盘搜索以前其它残留并删除；**目前在用的不折腾**。
+
+### 扫描结论（在用 vs 可删）
+
+| 对象 | 判定 | 理由 |
+|---|---|---|
+| Docker `ange-clashboard` :2048 | **保留** | Up 23h，在用 |
+| Docker `Sub2Store` :8964/8965 | **保留** | Up 2d，`/opt/sub-store/data` 在写 |
+| Docker `kspeeder` :5003/5443 | **保留** | Up 2d，`/root/kspeeder-*` 为其数据 |
+| Docker `oneboard` :8866 | **保留** | healthy，业务栈 |
+| `/vol1/docker/onebord/**` | **保留** | 业务源码/构建物 |
+| 飞牛 `@appdata`（相册/迅雷/AI runtime/npc） | **保留** | 系统应用数据 |
+| `/root/clash-for-linux`（32MiB） | **已删** | root 侧半装残留，无 unit |
+| `/root/clash-for-linux-install`（42MiB，含 mihomo gz） | **已删** | 安装器/归档垃圾 |
+| `/root/.cache/pip`（18MiB） | **已删** | 实验 pip 缓存 |
+| `/tmp/tmp.cFvGIzPBgx`、`img2vec_smoke_stdout.log` | **已删** | 临时烟测残留 |
+| `/opt/sub-store/backup/*before-restore*.tar.gz` | **已删** | 旧恢复备份；活跃数据在 `data/` |
+| Docker volume `onebord-data`（LINKS=0） | **已删** | 悬挂卷；保留在用的 `onebord_onebord-data` |
+
+### 验收
+
+| 检查 | 结果 |
+|---|---|
+| `/root` 体积 | **136K**（清理前约 91MiB 级） |
+| `/root` 下 clash/mihomo 路径 | 不存在 |
+| 名称命中 `*clash*/*mihomo*`（home/opt/tmp/root maxdepth3） | 仅剩在用的 `/opt/ange-clashboard` |
+| 四容器状态 | 均仍 Up / oneboard healthy |
