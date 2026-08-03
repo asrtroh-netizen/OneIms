@@ -70,6 +70,20 @@ AnGe-Panel 局域网 `http://192.168.2.2:3002` 正常，公网打不开。
 
 附：排查中曾误停 TTFN npc（`tfs.itt.fan:4848` 短暂不可达），已通过 Tailscale `100.64.118.44` 拉起，npc 已重新 ESTAB 到 `8.137.155.86:6666`。
 
+## 2026-08-04 再复测（网段 31→2 之后）
+
+| 检查 | 结果 |
+|---|---|
+| DNS `dh.itt.fan` | `8.137.155.86` |
+| `http://dh.itt.fan/` | **仍 502**，`Server: nginx/1.18.0 (Ubuntu)` |
+| `http://dh.itt.fan:81/` / `8.137.155.86:81` | **200** AnGe-Panel；FNHOME npc 有 `192.168.2.2:81` dial |
+| FNHOME 本机 `Host: dh` → `:81/:3002` | 200；本机 `:80` → 302（飞牛系统站） |
+| NPS「主机」列表 | **空**（域名不走 NPS host 模式） |
+| NPS TCP | 狗窝 `:81→2.2:81`；丫头 `:3003→2.2:3002`（TTFN 侧桥） |
+| 本机改 VPS nginx | **BLOCKED**（无 VPS SSH；改的是云上反代，不是 FNHOME） |
+
+一句话：`dh` 坏在 **阿里云 VPS 的 nginx `:80` 上游**，不是飞牛网段，也不是狗窝 npc。临时入口用 `http://dh.itt.fan:81/`。
+
 ## 回滚
 
 ```bash
