@@ -43,3 +43,9 @@ CF Sub-Store 先停；改试「本机容器不走 Mihomo TUN」以修复拉订�
 | 残留 docker DNS RETURN | 已删除 |
 
 说明：上游短链本身可能只返回少量 URI；Sub-Store 聚合/缓存后体积更大。网关离开 2.5 后，OpenClash Fake-IP 污染路径消失，TLS 恢复。
+
+## 收口（用户确认）
+
+- 用户确认：**全好了**。
+- **MESL**：当前无流量，按用户要求暂不处理。
+- 复测保留：default via `192.168.2.1`；Cyber host/Sub-Store download 仍为 200。
