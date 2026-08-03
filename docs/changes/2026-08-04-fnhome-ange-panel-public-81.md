@@ -57,6 +57,19 @@ AnGe-Panel 局域网 `http://192.168.2.2:3002` 正常，公网打不开。
 
 要修根路径，必须改 VPS nginx 或 NPS「主机」`dh.itt.fan` 上游到狗窝 `127.0.0.1:3002`（或 `:81`）。缺 NPS/VPS 凭据时 BLOCKED。
 
+## 2026-08-04 再续 · TTFN 侧证据与桥接
+
+补充采证：
+
+- TTFN（`192.168.2.2`）npc 日志曾反复：`connect to 192.168.2.2:3002 ... connection refused`（与 dh 故障时段重合）。
+- 已在 TTFN 部署 `dh-ange-bridge`（`/opt/dh-ange-bridge`，nginx:alpine，`0.0.0.0:3002` → `http://8.137.155.86:81` → FNHOME AnGe-Panel）。
+- TTFN 本机 `Host: dh.itt.fan` → `:3002` 已 **AnGe-Panel**。
+- 但此后公网 `http://dh.itt.fan/` **仍 502**，且复测时 **TTFN/FNHOME npc 均无新的 :3002 dial** → 当前 :80 的 502 发生在 **VPS nginx 本地上游**，请求没进 NPS 客户端。
+
+结论：家侧/旁路已就绪；根路径仍需在 **VPS nginx 或 NPS 主机规则** 把 `dh.itt.fan` 指回可用上游（TTFN `:3002` 桥或狗窝 `:3002/:81`）。
+
+附：排查中曾误停 TTFN npc（`tfs.itt.fan:4848` 短暂不可达），已通过 Tailscale `100.64.118.44` 拉起，npc 已重新 ESTAB 到 `8.137.155.86:6666`。
+
 ## 回滚
 
 ```bash
