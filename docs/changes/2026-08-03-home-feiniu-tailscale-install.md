@@ -41,10 +41,10 @@ sudo tailscale up --hostname=home-feiniu-haloxfn --accept-dns=false
 TCP hfs.itt.fan:1818 → recv SSH banner
 ```
 
-## 验证摘要（本轮）
+## 验证摘要（当日早间）
 
 - TTFN：`tailscale version` → 1.98.10；`systemctl is-active tailscaled` → active；`tailscale status` → Logged out + 上述 URL
-- FNHOME：多次间隔重试（paramiko / OpenSSH）均 `Error reading SSH protocol banner` / `Connection closed by remote host`；HTTP `hfs.itt.fan` → 502
+- FNHOME：当时 SSH banner 失败 / HTTP 502（见下方「开机后 npc 仍掉线」）；当晚恢复后已装上，见「FNHOME 已装上」
 
 ## 2026-08-03 晚 · FNHOME 已装上（接 npc 恢复后）
 
@@ -61,7 +61,9 @@ tailscale up --hostname=home-feiniu-haloxfn --accept-dns=false
 | `tailscale version` | **1.98.10** |
 | `systemctl is-active tailscaled` | **active** |
 | `tailscale status` | Logged out / NeedsLogin |
-| Auth URL | `https://login.tailscale.com/a/4cd8b0001fc09` |
+| Auth URL | `https://login.tailscale.com/a/1ce4faa101d8dc`（旧 `4cd8b...` 已作废） |
+| 等待进程 | 机上 `ts-up-wait.service` 正在跑 `tailscale up`（点链接时不要让它断） |
+
 
 请用 tailnet 账号（`asrtroh@`）浏览器打开上述链接授权；授权后应出现 `100.x`。链接过期则在机上重跑：
 
