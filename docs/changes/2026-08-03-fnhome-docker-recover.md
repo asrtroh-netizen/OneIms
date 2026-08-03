@@ -36,11 +36,9 @@
 
 ## 使用入口（局域网）
 
-- Ange：`http://192.168.2.2:2048`
-- OneBord：`http://192.168.2.2:3000`
+> 2026-08-03 晚：`2fauth` / `onebord` / `sun-panel` / `vaultwarden` 已按用户要求彻底删除（数据在 `/root/deleted-bak-20260803-200846/`）。AnGe-Panel 仅保留 **3002**。详见 `2026-08-03-fnhome-purge-four-ange-3002.md`。
+
+- Ange Clash：`http://192.168.2.2:2048`
 - AnGe-Panel：`http://192.168.2.2:3002`
-- Sun-Panel：`http://192.168.2.2:3003`
-- Vaultwarden：`http://192.168.2.2:3013`
-- 2FAuth：`http://192.168.2.2:8008`
-- VoHive：`http://192.168.2.2:7575`
 - Upsnap（远程唤醒）：`http://192.168.2.2:8090`（见 `2026-08-03-fnhome-upsnap-remote-wake.md`）
+- VoHive：`http://192.168.2.2:7575`
