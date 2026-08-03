@@ -11,7 +11,7 @@
 | sun-panel | 同上（原 `/opt/sunpanel`） |
 | vaultwarden | 同上（原 `/opt/vaultwarden`） |
 
-数据与 compose 暂存：`/root/deleted-bak-20260803-200846/`（需要永久清空可再 `rm -rf`）。
+数据与 compose 曾暂存：`/root/deleted-bak-20260803-200846/` — **已于同日按用户要求 `rm -rf` 永久删除**（不可恢复）。
 
 ## AnGe-Panel 端口
 
