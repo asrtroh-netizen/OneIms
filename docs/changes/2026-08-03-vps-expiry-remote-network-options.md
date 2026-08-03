@@ -46,11 +46,15 @@
 | 飞牛网页 | 浏览器打开 `http://100.x.y.z:飞牛端口`（常见管理端口以各机实际为准，如 5666/HTTPS） |
 | 大流量 | 不需要；Tailscale 免费档足够个人三节点 |
 | 原阿里云 NPS | 到期可不续；SSH/面板映射可废弃 |
-| `sub.itt.fan` 等公网给别人用的站 | **另案**（CF Tunnel 或极小机器）；与「自己远程管飞牛」拆开 |
+### 域名还能绑吗？（可以）
 
-### 为何不再优先续 NPS VPS
+| 方式 | 做法 | 适合 |
+|---|---|---|
+| 1. MagicDNS | 用 Tailscale 主机名（`某机.尾网.ts.net`） | 最快；域名会换新 |
+| 2. **私有解析到 100.x** | 电脑 hosts / Tailscale split DNS / 家里 DNS：把 `fn.itt.fan` 等指到对应节点 `100.x` | **自己用、保留 itt.fan 名字** ← 推荐 |
+| 3. Cloudflare Tunnel | `fn.itt.fan` CNAME 到 CF，Tunnel 接到飞牛 Web | 手机浏览器不装 Tailscale 也能开；略多一步 |
 
-NPS 适合「很多公网端口 + 给外人的域名反代」。你当前描述是 **自己远程运维**，Mesh 更直接、更便宜、少单点。 
+注意：若 `*.itt.fan` 仍解析到即将到期的阿里云 IP，公网会失效；要么改 DNS 到新入口（CF/新机），要么只在 Tailscale 内用私有解析。 
 
 ## 迁移最小步骤（续杯 NPS 路）
 
