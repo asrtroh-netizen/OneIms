@@ -22,6 +22,15 @@
 | `tailscale ip -4` | **NeedsLogin**（等授权） |
 | 办公室 PC / 其它节点互通 | **NOT RUN** |
 
+## 授权后（用户确认成功）
+
+| 检查 | 结果 |
+|---|---|
+| `tailscale status` | `office-feiniu-ddos` / `asrtroh@` / linux **在线** |
+| IPv4 | **100.82.92.117** |
+| IPv6 | `fd7a:115c:a1e0::d901:5cc6` |
+| 系统 hostname | 仍为 `DDOS`（Tailscale 节点名 `office-feiniu-ddos`） |
+
 ## 回滚
 
 ```bash
