@@ -84,6 +84,41 @@ AnGe-Panel 局域网 `http://192.168.2.2:3002` 正常，公网打不开。
 
 一句话：`dh` 坏在 **阿里云 VPS 的 nginx `:80` 上游**，不是飞牛网段，也不是狗窝 npc。临时入口用 `http://dh.itt.fan:81/`。
 
+## 2026-08-04 修复 · VPS nginx 上游改指 :81
+
+用户授权 SSH 阿里云 VPS `8.137.155.86` 后采证并修复。
+
+### 根因（本轮复验）
+
+| 检查 | 结果 |
+|---|---|
+| `/etc/nginx/nginx.conf` 中 `dh.itt.fan` | `proxy_pass http://127.0.0.1:3002` |
+| VPS 监听端口 | `:80`=nginx；`:81/:3003/:6666/:8888`=nps；**无 `:3002`** |
+| 本机 `Host: dh` → `:80` | **502**（connect 111 → `127.0.0.1:3002`） |
+| 本机 `Host: dh` → `:81` | **200** AnGe-Panel |
+
+### 修复
+
+- 备份：`/etc/nginx/nginx.conf.bak.20260804-143045`
+- 将 `dh.itt.fan` 上游改为 `http://127.0.0.1:81`（NPS 狗窝 → FNHOME `192.168.2.2:81`）
+- 补齐与其它站点一致的 `Host` / `Upgrade` / `X-Forwarded-*` 头
+- `nginx -t` 通过后 `systemctl reload nginx`
+
+### 验证
+
+| 检查 | 结果 |
+|---|---|
+| VPS 本机 `Host: dh.itt.fan` → `:80` | **200** `<title>AnGe-Panel</title>` |
+| 公网 `http://dh.itt.fan/` | **200** AnGe-Panel |
+| 公网 `http://dh.itt.fan:81/` | **200**（旁路仍可用） |
+
+### 回滚（本轮）
+
+```bash
+cp /etc/nginx/nginx.conf.bak.20260804-143045 /etc/nginx/nginx.conf
+nginx -t && systemctl reload nginx
+```
+
 ## 回滚
 
 ```bash
