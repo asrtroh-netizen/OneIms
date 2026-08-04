@@ -72,6 +72,35 @@
 2. VPS+NPS+TTFN 家宽接收能力约 **~95Mbps**（已接近百兆家宽量级；峰值 200M 还受单连接/共享带宽影响）。  
 3. 此前「只有十几 Mbps」主要是 **你所在网络的上行**（办公室/手机上行）在卡，不是阿里云没开 200M、也不是飞牛磁盘慢。
 
+## 2026-08-04 补 · mihomo TUN 干扰 Tailscale
+
+用户反馈「用了 TS 还有点问题」，怀疑 mihomo。
+
+### 证据
+
+| 检查 | 修复前 | 修复后 |
+|---|---|---|
+| TTFN→办公室 `tailscale ping` | **DERP(sfo)** 432–1111ms | **direct** `222.91.151.187` **5–9ms** |
+| TS SFTP 上传 8MB（办公室→TTFN） | 曾掉到 **≈4.4 Mbps** | **≈34.9 Mbps** |
+| mihomo `tun` | `auto-route`+`auto-redirect`，**无** TS 排除 | 增加 `exclude-interface: [tailscale0]` + `route-exclude-address: [100.64.0.0/10]` |
+
+根因：TTFN mihomo TUN 全局接管路由/重定向，未放行 Tailscale 网段与网卡，直连 UDP 被搅成 DERP。
+
+### 改动
+
+- 文件：`/opt/mihomo/config/config.yaml`
+- 临时备份：`/tmp/config.yaml.bak.ts-exclude.*`
+- `docker restart mihomo` 已生效（Meta 接口仍在）
+
+### 备注
+
+- 手机节点若仍显示 `relay`，在手机上开关一次 Tailscale 重新建连。
+- 办公室 Windows 若开着 Clash/Mihomo（出现 Rust Wintun），也可能拖慢本机侧 TS，建议传大文件时对 `100.64.0.0/10` 直连或暂时关闭系统代理。
+
 ## 回滚
 
-N/A（本轮只读采证，未改配置）。
+```bash
+# 若需撤 TS 排除：把 tun 段恢复为无 exclude-interface / route-exclude-address
+# 可用 /tmp/config.yaml.bak.ts-exclude.* 或手工删那两段后：
+docker restart mihomo
+```
