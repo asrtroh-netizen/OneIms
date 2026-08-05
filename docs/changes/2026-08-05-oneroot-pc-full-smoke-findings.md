@@ -121,3 +121,17 @@ Hub HTTP 日志可见；不影响功能。
 
 结论：**carrier 恢复不能让一键 Root 变好** → 提权失败与 carrier 包无关；下一刀继续 exploit（`delta=0` / pipe stage / timeout）。  
 证据：`release/_tmp/hub_retest_after_carrier_{pre,final}.json` · `hub_retest_after_carrier_job.log`
+
+### 再重启复测（用户确认软件+so 曾成功）
+
+动作：`adb reboot` → boot_completed=1 → Hub 实跑。
+
+| 项 | 结果 |
+|---|---|
+| 第 1 轮 LD_PRELOAD | **rc=0**（未再 124 超时），但仍 `verify su: not uid=0`；日志停在 `pipe stage attempt=1/72` |
+| 第 2 轮 | `adb.exe: no devices/emulators found`（设备中途掉线） |
+| 回连后 `/proc/uptime` | **≈13s** → 实跑期间发生**二次重启**（疑似 exploit 触发崩溃/重启，而非单纯 USB 松线） |
+| 总结果 | job **code=1** · 仍无 uid=0 |
+
+解读：与「软件坏了」不符（链路能跑完一轮）；更像 **so/偏移在当前内核态下不稳或走偏导致重启**，与用户「软件+so 成功过」可同时成立（环境/镜像漂移或偶发）。  
+证据：`release/_tmp/hub_retest_reboot2_{pre,final}.json` · `hub_retest_reboot2_job.log`
