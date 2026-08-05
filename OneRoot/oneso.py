@@ -980,56 +980,68 @@ def detect_stale_temp_root() -> str | None:
     return None
 
 
-CLEAN_VIA_SU = (
+# 强力拆除：sock + su 二进制必须一起删，禁止「只拆 sock 留二进制」人造僵尸。
+TEARDOWN_VIA_SU = (
     "/data/local/tmp/su -c '"
     "pkill -9 -f \"timeout .*LD_PRELOAD\" 2>/dev/null; "
     "pkill -9 -f preload-comet.so 2>/dev/null; "
     "killall -9 id 2>/dev/null; "
-    # 半死 socket / 旧 daemon；保留可工作的 su 二进制，只拆 sock
-    "rm -f /data/local/tmp/temp_su.sock 2>/dev/null; "
-    "rm -f /dev/socket/temp_su.sock 2>/dev/null; "
-    "echo CLEAN_SU_OK"
+    "rm -f /data/local/tmp/temp_su.sock /dev/socket/temp_su.sock; "
+    "rm -f /data/local/tmp/su; "
+    "echo TEARDOWN_OK"
     "'"
 )
 
 
 def cleanup_temp_root_residuals(*, aggressive: bool = False) -> dict[str, Any]:
-    """开始前清理残留：杀挂起进程；有 uid=0 时用 su 拆 temp_su.sock。
+    """清理临时 Root 残留。
 
-    aggressive=True 时，在已有 root 下连旧 ``/data/local/tmp/su`` 一并删掉
-    （下次 exploit 会再装）。默认保守：只清 sock + 挂起进程。
+    - 默认（aggressive=False）：只杀挂起 LD_PRELOAD/id。
+      若当前已有可用 uid=0，**绝不拆 sock/su**（旧逻辑只删 sock 会把活 root 变成僵尸）。
+    - 强力（aggressive=True）：在仍有 uid=0 时一次性拆除 sock + su 二进制，不留僵尸。
     """
     steps: list[str] = []
     kcode, kout = adb_shell(KILL_STUCK_PRELOAD, timeout=20.0)
     steps.append(f"kill_stuck rc={kcode} {(kout or '')[:80]}")
 
-    # shell 尽力（通常对 root 属主文件失败，无害）
+    root_ok, root_out = probe_su_uid0(timeout=5.0)
+    if root_ok and not aggressive:
+        return {
+            "ok": True,
+            "mode": "su-keep",
+            "root_before": True,
+            "stale_after": None,
+            "steps": steps,
+            "detail": (
+                "已有可用临时 Root：仅清理挂起 exploit，保留 su daemon。"
+                "若要完全拆除，请用「强力清理」（aggressive）。"
+            ),
+        }
+
+    if root_ok and aggressive:
+        tcode, tout = adb_shell(TEARDOWN_VIA_SU, timeout=15.0)
+        steps.append(f"su_teardown rc={tcode} {(tout or '')[:100]}")
+        still_ok, still_out = probe_su_uid0(timeout=4.0)
+        stale_after = detect_stale_temp_root()
+        return {
+            "ok": (not still_ok) and stale_after is None,
+            "mode": "su-teardown",
+            "root_before": True,
+            "stale_after": stale_after,
+            "steps": steps + [f"probe_after={(still_out or '')[:80]}"],
+            "detail": (
+                "已用 uid=0 完整拆除 temp_su（sock + su 二进制）"
+                if not still_ok and stale_after is None
+                else f"拆除后仍有残留：stale={stale_after} probe={still_out[:80]}"
+            ),
+        }
+
+    # 无可用 root：shell 尽力（通常删不掉 root 属主 sock/su）
     scode, sout = adb_shell(
         "rm -f /data/local/tmp/temp_su.sock 2>/dev/null; echo SHELL_RM_DONE",
         timeout=8.0,
     )
     steps.append(f"shell_rm rc={scode} {(sout or '')[:60]}")
-
-    root_ok, root_out = probe_su_uid0(timeout=5.0)
-    if root_ok:
-        ccode, cout = adb_shell(CLEAN_VIA_SU, timeout=15.0)
-        steps.append(f"su_clean rc={ccode} {(cout or '')[:100]}")
-        if aggressive:
-            acode, aout = adb_shell(
-                "/data/local/tmp/su -c 'rm -f /data/local/tmp/su; echo SU_BIN_REMOVED'",
-                timeout=10.0,
-            )
-            steps.append(f"su_rm_bin rc={acode} {(aout or '')[:80]}")
-        stale_after = detect_stale_temp_root()
-        return {
-            "ok": stale_after is None,
-            "mode": "su",
-            "root_before": True,
-            "stale_after": stale_after,
-            "steps": steps,
-            "detail": "已用 uid=0 清理挂起进程与 temp_su.sock"
-            + ("（并移除旧 su 二进制）" if aggressive else ""),
-        }
 
     stale = detect_stale_temp_root()
     if looks_like_stale_su_daemon(root_out) or stale or _root_owned_su_undeletable():
@@ -1042,8 +1054,8 @@ def cleanup_temp_root_residuals(*, aggressive: bool = False) -> dict[str, Any]:
             "detail": (
                 "当前无可用 uid=0，shell 删不掉 root 属主残留"
                 f"（{(stale or root_out or 'zombie su')[:120]}）。"
-                "可：① 立刻再点「一键临时 Root」让 exploit 以 root 覆盖；"
-                "② 若刚成功过请先别重启、马上点清理；"
+                "可：① 再点「一键临时 Root」覆盖；"
+                "② 成功后若要拆除请用「强力清理」（会同时删 sock+su）；"
                 "③ 仅重启通常清不掉 /data/local/tmp/su。"
             ),
         }
