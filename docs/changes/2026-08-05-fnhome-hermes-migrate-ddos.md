@@ -100,3 +100,11 @@ trim-cli --host 127.0.0.1 --port 9999 login   # 管理员
 
 回滚 agent 包（若需）：在 DDOS 上对应用 Python 执行  
 `…/python3.11.real -m pip install 'hermes-agent==0.18.0'`（或从备份恢复 site-packages）。
+
+### 正式 fpk `hermes-agent` 0.19（待 UI 许可）
+
+| 项 | 状态 |
+|---|---|
+| CLI `install-fpk --yes` | **BLOCKED**：`license confirmation`（无法 CLI 代点） |
+| 安装包位置 | `/vol1/1000/app-packages/fnos-hermes-agent_v0.19.0-50.fpk` 与 `/vol1/1000/应用安装包/` |
+| 装完后迁配置 | `/vol1/1000/hermes-migrate/post-fpk-migrate.sh`（停 trim.hermes、迁 WK config） |
