@@ -729,14 +729,17 @@ private fun ActionTile(
 /**
  * 首页顶部通道总控卡：三态（未激活 / 激活中 / 就绪），对齐 V15。
  * 大标题只显示通道名；使用状态胶囊与标题同一行（就绪显示 Active），标题过长省略号。
+ * 设备详情已下沉到首页底部卡片，本卡不再展示「设备详情」入口。
+ * [showRootBadge]=true 时在右上角显示黑金 ROOT 小标签（临时/永久 Root 探测到才开）。
  */
 @Composable
 fun StatusHero(
     oneKukuState: OneKukuCardState,
     @Suppress("UNUSED_PARAMETER") channelSleeping: Boolean,
     onPrimaryAction: () -> Unit,
-    onOpenDeviceDetails: (() -> Unit)? = null,
+    @Suppress("UNUSED_PARAMETER") onOpenDeviceDetails: (() -> Unit)? = null,
     detailOverride: String? = null,
+    showRootBadge: Boolean = false,
 ) {
     val compact = rememberHomeCompactLayout()
     val alert = OneKukuCardPolicy.isAlert(oneKukuState)
@@ -831,22 +834,30 @@ fun StatusHero(
         }
     }
 
+    /** 黑金 ROOT 小标签：形态对齐 Active 胶囊，仅探测到 Root 时渲染。 */
     @Composable
-    fun DeviceDetailsChip() {
-        if (onOpenDeviceDetails == null) return
+    fun RootBadgeChip() {
+        if (!showRootBadge) return
+        val gold = Color(0xFFD4AF37)
+        val ink = Color(0xFF121212)
         Surface(
-            onClick = onOpenDeviceDetails,
             shape = RoundedCornerShape(percent = 50),
-            color = contentColor.copy(alpha = 0.10f),
+            color = ink,
+            border = androidx.compose.foundation.BorderStroke(1.dp, gold.copy(alpha = 0.85f)),
         ) {
             Text(
-                text = stringResource(R.string.home_device_details),
+                text = stringResource(R.string.home_root_badge),
                 modifier = Modifier.padding(
-                    horizontal = 10.dp,
-                    vertical = 4.dp,
+                    horizontal = if (compact) 8.dp else 10.dp,
+                    vertical = if (compact) 3.dp else 4.dp,
                 ),
-                style = MaterialTheme.typography.labelSmall,
-                color = contentColor.copy(alpha = 0.88f),
+                style = if (compact) {
+                    MaterialTheme.typography.labelMedium
+                } else {
+                    MaterialTheme.typography.labelLarge
+                },
+                fontWeight = FontWeight.Bold,
+                color = gold,
                 maxLines = 1,
             )
         }
@@ -863,22 +874,26 @@ fun StatusHero(
             modifier = Modifier.padding(cardPad),
             verticalArrangement = Arrangement.spacedBy(blockGap),
         ) {
-            // 有眉题时单独占一行；无眉题不再留空行顶开 ✓。
-            if (showEyebrow) {
+            // 有眉题时单独占一行；ROOT 徽标永远贴右上。
+            if (showEyebrow || showRootBadge) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
-                    Text(
-                        text = eyebrow,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = contentColor.copy(alpha = 0.72f),
-                        modifier = Modifier.weight(1f),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    DeviceDetailsChip()
+                    if (showEyebrow) {
+                        Text(
+                            text = eyebrow,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = contentColor.copy(alpha = 0.72f),
+                            modifier = Modifier.weight(1f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    } else {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                    RootBadgeChip()
                 }
             }
             // ✓ 只与大字标题同行居中；副文案另起，避免把图标拽到整块中间。
@@ -898,7 +913,7 @@ fun StatusHero(
                     modifier = Modifier.size(iconSize),
                     tint = contentColor,
                 )
-                // 标题 + Active 同排且紧贴；无眉题时设备详情跟在右侧。
+                // 标题 + Active 同排且紧贴；设备详情已移除（底部独立卡）。
                 Row(
                     modifier = Modifier.weight(1f),
                     verticalAlignment = Alignment.CenterVertically,
@@ -918,10 +933,6 @@ fun StatusHero(
                         overflow = TextOverflow.Ellipsis,
                     )
                     StatusPillChip()
-                    if (!showEyebrow) {
-                        Spacer(modifier = Modifier.weight(1f))
-                        DeviceDetailsChip()
-                    }
                 }
             }
             if (!settled) {

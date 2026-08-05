@@ -706,6 +706,14 @@
     <string name="setup_hotspot_sub">无路由器时创建本机网络</string>
     <string name="setup_copy_cmd_sub">复制 Termux 启动步骤</string>
     <string name="home_device_details">设备详情</string>
+    <string name="home_root_badge">ROOT</string>
+    <string name="temp_root_carrier_persist_title">临时 Root 持久化改运营商</string>
+    <string name="temp_root_carrier_persist_sub">有 Root 时把 VoLTE/VoNR/NR 最小键写入 phone 目录 XML，重启后配置更易留下</string>
+    <string name="temp_root_carrier_persist_on">已开启临时 Root 持久化改运营商</string>
+    <string name="temp_root_carrier_persist_off">已关闭临时 Root 持久化改运营商</string>
+    <string name="temp_root_carrier_persist_applied">已尝试写入 CarrierConfig XML：%1$s</string>
+    <string name="root_persist_xml_suffix_ok"> · XML补写=%1$d</string>
+    <string name="root_persist_xml_suffix_fail"> · XML补写失败(%1$s)</string>
     <string name="home_device_details_sub">型号、系统与兼容策略，方便对照排障</string>
     <string name="home_device_details_expand">展开</string>
     <string name="home_device_details_collapse">收起</string>

@@ -94,8 +94,8 @@ private fun OneKukuStandaloneHome(
                         OneKukuCardState.ACTIVATING -> Unit
                     }
                 },
-                onOpenDeviceDetails = { openDialog = HomeToolDialog.DeviceDetails },
                 detailOverride = state.oneKukuDetailOverride,
+                showRootBadge = state.showRootBadge,
             )
         }
 
@@ -111,6 +111,15 @@ private fun OneKukuStandaloneHome(
                 checked = state.sandboxPersistBypass,
                 onCheckedChange = actions.onSandboxPersistBypassChange,
             )
+        }
+
+        if (state.showTempRootCarrierSwitch) {
+            item {
+                TempRootCarrierPersistHomeCard(
+                    checked = state.tempRootCarrierPersist,
+                    onCheckedChange = actions.onTempRootCarrierPersistChange,
+                )
+            }
         }
 
         item {
@@ -212,8 +221,8 @@ private fun OneLinkHome(
                         OneKukuCardState.ACTIVATING -> Unit
                     }
                 },
-                onOpenDeviceDetails = { openDialog = HomeToolDialog.DeviceDetails },
                 detailOverride = state.oneKukuDetailOverride,
+                showRootBadge = state.showRootBadge,
             )
         }
 
@@ -229,6 +238,15 @@ private fun OneLinkHome(
                 checked = state.sandboxPersistBypass,
                 onCheckedChange = actions.onSandboxPersistBypassChange,
             )
+        }
+
+        if (state.showTempRootCarrierSwitch) {
+            item {
+                TempRootCarrierPersistHomeCard(
+                    checked = state.tempRootCarrierPersist,
+                    onCheckedChange = actions.onTempRootCarrierPersistChange,
+                )
+            }
         }
 
         item {
@@ -344,6 +362,28 @@ private fun SandboxPersistHomeCard(
             checked = checked,
             onCheckedChange = onCheckedChange,
             icon = Icons.Filled.Info,
+        )
+    }
+}
+
+/** 首页「临时 Root 持久化改运营商」：样式对齐上方两开关；仅探测到 Root 时展示。 */
+@Composable
+private fun TempRootCarrierPersistHomeCard(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        tonalElevation = 1.dp,
+    ) {
+        SettingsSwitchRow(
+            title = stringResource(R.string.temp_root_carrier_persist_title),
+            subtitle = stringResource(R.string.temp_root_carrier_persist_sub),
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            icon = Icons.Filled.Star,
         )
     }
 }

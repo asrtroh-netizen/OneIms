@@ -78,14 +78,38 @@ object RootPersistenceSupport {
         result: CarrierConfigOverrideWriter.Result,
     ): CarrierConfigOverrideWriter.Result {
         noteOverrideResult(context, result)
-        if (!isEnhanceEnabled(context) || !isRootChannel()) {
+        if (!isEnhanceEnabled(context)) {
             return result
         }
-        val suffix = if (result.persistent) {
-            context.getString(R.string.root_persist_msg_suffix_yes)
-        } else {
-            context.getString(R.string.root_persist_msg_suffix_no)
+        // 教程同构：开关开启且有可用 Root 时，旁路补写 phone 目录 XML（不改 Writer 主语义）。
+        val xml = runCatching {
+            TempRootCarrierXmlPersist.applyMinimalNetworkIfEnabled(
+                context = context,
+                restartPhone = false,
+            )
+        }.getOrElse { error ->
+            TempRootCarrierXmlPersist.ApplyResult(
+                attempted = true,
+                success = false,
+                patchedCount = 0,
+                message = "xml_error:${error.message}",
+            )
         }
-        return result.copy(message = result.message + suffix)
+        val xmlSuffix = when {
+            !xml.attempted -> ""
+            xml.success -> context.getString(R.string.root_persist_xml_suffix_ok, xml.patchedCount)
+            else -> context.getString(R.string.root_persist_xml_suffix_fail, xml.message)
+        }
+        if (!isRootChannel() && xmlSuffix.isEmpty()) {
+            return result
+        }
+        val suffix = when {
+            isRootChannel() && result.persistent ->
+                context.getString(R.string.root_persist_msg_suffix_yes)
+            isRootChannel() ->
+                context.getString(R.string.root_persist_msg_suffix_no)
+            else -> ""
+        }
+        return result.copy(message = result.message + suffix + xmlSuffix)
     }
 }

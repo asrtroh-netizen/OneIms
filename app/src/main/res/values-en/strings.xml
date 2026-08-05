@@ -699,6 +699,14 @@
     <string name="setup_hotspot_sub">Create a local network without a router</string>
     <string name="setup_copy_cmd_sub">Copy the Termux startup steps</string>
     <string name="home_device_details">Device details</string>
+    <string name="home_root_badge">ROOT</string>
+    <string name="temp_root_carrier_persist_title">Temp-root carrier persist</string>
+    <string name="temp_root_carrier_persist_sub">With root, write minimal VoLTE/VoNR/NR keys into phone CarrierConfig XML so settings survive reboot better</string>
+    <string name="temp_root_carrier_persist_on">Temp-root carrier persist on</string>
+    <string name="temp_root_carrier_persist_off">Temp-root carrier persist off</string>
+    <string name="temp_root_carrier_persist_applied">Tried CarrierConfig XML write: %1$s</string>
+    <string name="root_persist_xml_suffix_ok"> · xml-patch=%1$d</string>
+    <string name="root_persist_xml_suffix_fail"> · xml-patch failed (%1$s)</string>
     <string name="home_device_details_sub">Model, OS, and bypass strategy for troubleshooting</string>
     <string name="home_device_details_expand">Expand</string>
     <string name="home_device_details_collapse">Collapse</string>

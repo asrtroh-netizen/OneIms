@@ -68,7 +68,9 @@ import com.oneims.app.core.PixelImsOptions
 import com.oneims.app.core.ReapplyManager
 import com.oneims.app.core.ReapplyTrigger
 import com.oneims.app.core.RootPersistenceSupport
+import com.oneims.app.core.RootPresenceProbe
 import com.oneims.app.core.SandboxPersistSupport
+import com.oneims.app.core.TempRootCarrierXmlPersist
 import com.oneims.app.core.SafetyGuard
 import com.oneims.app.core.SystemUpdateShield
 import com.oneims.app.core.OneClickDiagnosticsManager
@@ -135,6 +137,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
 import kotlinx.coroutines.withContext
@@ -317,6 +320,8 @@ private fun AppRoot(
     var rootPersistEnhance by remember {
         mutableStateOf(ConfigStore.isRootPersistEnhance(context))
     }
+    var showRootBadge by remember { mutableStateOf(false) }
+    var showTempRootCarrierSwitch by remember { mutableStateOf(false) }
     var rootBootStart by remember {
         mutableStateOf(ConfigStore.isRootBootStart(context))
     }
@@ -1104,6 +1109,16 @@ private fun AppRoot(
         }
     }
 
+    // 首页 ROOT 徽标 / 第三行开关：轮询临时或永久 Root（su 探测放 IO，避免卡 UI）。
+    LaunchedEffect(Unit) {
+        while (isActive) {
+            val snap = withContext(Dispatchers.IO) { RootPresenceProbe.probe() }
+            showRootBadge = snap.showRootBadge
+            showTempRootCarrierSwitch = snap.showCarrierXmlSwitch
+            delay(8_000)
+        }
+    }
+
     // 冷启复连：OneKuku 已配对无码直连；OneLink 等 Shizuku binder 晚到后自动对齐状态。
     LaunchedEffect(Unit) {
         if (OneKukuManager.isReady()) {
@@ -1604,6 +1619,9 @@ private fun AppRoot(
                         autoSleep = oneKukuAutoSleep,
                         rootBootStart = rootBootStart,
                         sandboxPersistBypass = sandboxPersistBypass,
+                        showRootBadge = showRootBadge,
+                        showTempRootCarrierSwitch = showTempRootCarrierSwitch,
+                        tempRootCarrierPersist = rootPersistEnhance,
                         oneKukuDetailOverride = oneKukuDetailOverride,
                     ),
                     actions = HomeActions(
@@ -1926,6 +1944,26 @@ private fun AppRoot(
                                     },
                                 ),
                             )
+                        },
+                        onTempRootCarrierPersistChange = { enabled ->
+                            rootPersistEnhance = enabled
+                            RootPersistenceSupport.setEnhanceEnabled(context, enabled)
+                            if (enabled) {
+                                runOperation(
+                                    label = context.getString(R.string.temp_root_carrier_persist_title),
+                                ) {
+                                    val xml = TempRootCarrierXmlPersist.applyMinimalNetwork(
+                                        context = context,
+                                        restartPhone = true,
+                                    )
+                                    context.getString(
+                                        R.string.temp_root_carrier_persist_applied,
+                                        xml.message,
+                                    )
+                                }
+                            } else {
+                                publish(context.getString(R.string.temp_root_carrier_persist_off))
+                            }
                         },
                         onOpenWirelessDebugging = {
                             publish(

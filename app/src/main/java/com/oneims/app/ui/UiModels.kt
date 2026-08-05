@@ -71,6 +71,12 @@ data class HomeUiState(
     val rootBootStart: Boolean = false,
     /** SDK 沙盒持久写旁路；默认关。 */
     val sandboxPersistBypass: Boolean = false,
+    /** 状态卡右上角黑金 ROOT 徽标。 */
+    val showRootBadge: Boolean = false,
+    /** 第三行「临时 Root 持久化改运营商」开关是否展示。 */
+    val showTempRootCarrierSwitch: Boolean = false,
+    /** 与 [com.oneims.app.core.ConfigStore.isRootPersistEnhance] 同源。 */
+    val tempRootCarrierPersist: Boolean = false,
     val oneKukuDetailOverride: String? = null,
 )
 
@@ -100,6 +106,7 @@ data class HomeActions(
     val onAutoSleepChange: (Boolean) -> Unit,
     val onRootBootStartChange: (Boolean) -> Unit = {},
     val onSandboxPersistBypassChange: (Boolean) -> Unit = {},
+    val onTempRootCarrierPersistChange: (Boolean) -> Unit = {},
     val onOpenWirelessDebugging: () -> Unit = {},
     val onOpenHotspot: () -> Unit = {},
     val onCopyAdbGuide: () -> Unit = {},
