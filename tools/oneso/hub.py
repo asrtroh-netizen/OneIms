@@ -1,26 +1,29 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""OneRoot — 单窗：未解锁 Pixel 运营商配置持久化（so ← GitHub OneSo-assets）。"""
+"""OneRoot — 单窗；UI 用 HTTP API（不依赖 pywebview js_api 桥）。"""
 
 from __future__ import annotations
 
 import atexit
 import io
+import json
 import os
 import sys
 import tempfile
 import threading
+import traceback
 from contextlib import redirect_stderr, redirect_stdout
-from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 import oneso
 
 HERE = Path(__file__).resolve().parent
 WEB = HERE / "web"
 LOCK_NAME = "oneroot-single.lock"
+API: "HubApi | None" = None
 
 
 def _lock_path() -> Path:
@@ -64,20 +67,8 @@ def acquire_single_instance() -> bool:
     return True
 
 
-def start_web_server() -> tuple[ThreadingHTTPServer, int]:
-    """file:// 下 pywebview js_api 常挂；改本机 HTTP 托管 web/。"""
-    handler = partial(SimpleHTTPRequestHandler, directory=str(WEB))
-    httpd = ThreadingHTTPServer(("127.0.0.1", 0), handler)
-    port = int(httpd.server_address[1])
-    thread = threading.Thread(target=httpd.serve_forever, daemon=True)
-    thread.start()
-    return httpd, port
-
-
-class Api:
+class HubApi:
     def __init__(self, config_path: Path | None) -> None:
-        self.cfg_path = config_path
-        # Hub 进程保证能找到平台 adb
         adb_dir = Path(r"E:\GQ\One\_toolchain\android-sdk\platform-tools")
         if adb_dir.is_dir():
             os.environ["PATH"] = str(adb_dir) + os.pathsep + os.environ.get("PATH", "")
@@ -96,9 +87,6 @@ class Api:
             buf.write(f"ERROR: {exc}\n")
             code = 1
         return code, buf.getvalue()
-
-    def ping(self) -> dict[str, Any]:
-        return {"ok": True, "app": "OneRoot"}
 
     def status(self) -> dict[str, Any]:
         device, build = oneso.adb_device_build()
@@ -162,53 +150,138 @@ class Api:
         return {"code": code, "log": log}
 
 
+class OneRootHandler(SimpleHTTPRequestHandler):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, directory=str(WEB), **kwargs)
+
+    def log_message(self, fmt: str, *args: Any) -> None:
+        sys.stderr.write("[http] " + (fmt % args) + "\n")
+
+    def _json(self, code: int, payload: dict[str, Any]) -> None:
+        body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+        self.send_response(code)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        self.wfile.write(body)
+
+    def do_GET(self) -> None:  # noqa: N802
+        path = urlparse(self.path).path
+        if path == "/api/ping":
+            self._json(200, {"ok": True, "app": "OneRoot"})
+            return
+        if path == "/api/status":
+            assert API is not None
+            try:
+                self._json(200, API.status())
+            except Exception as exc:  # noqa: BLE001
+                self._json(
+                    500,
+                    {"ok": False, "error": str(exc), "trace": traceback.format_exc()},
+                )
+            return
+        if path in ("/", ""):
+            self.path = "/index.html"
+        return SimpleHTTPRequestHandler.do_GET(self)
+
+    def do_POST(self) -> None:  # noqa: N802
+        path = urlparse(self.path).path
+        length = int(self.headers.get("Content-Length") or "0")
+        raw = self.rfile.read(length) if length else b"{}"
+        try:
+            data = json.loads(raw.decode("utf-8") or "{}")
+        except json.JSONDecodeError:
+            data = {}
+        if path == "/api/temp-root":
+            assert API is not None
+            run = bool(data.get("run"))
+            try:
+                self._json(200, API.temp_root(run=run))
+            except Exception as exc:  # noqa: BLE001
+                self._json(
+                    500,
+                    {"ok": False, "error": str(exc), "trace": traceback.format_exc()},
+                )
+            return
+        self._json(404, {"ok": False, "error": "not found"})
+
+
+def start_server() -> tuple[ThreadingHTTPServer, int]:
+    httpd = ThreadingHTTPServer(("127.0.0.1", 0), OneRootHandler)
+    port = int(httpd.server_address[1])
+    threading.Thread(target=httpd.serve_forever, daemon=True).start()
+    return httpd, port
+
+
 def run_hub(config_path: Path | None = None) -> int:
+    global API
     if not acquire_single_instance():
         return 0
-    try:
-        import webview
-    except ImportError:
-        print("pywebview required: pip install pywebview", file=sys.stderr)
-        return 2
     if not (WEB / "index.html").is_file():
         print(f"missing {WEB / 'index.html'}", file=sys.stderr)
         return 2
 
-    httpd, port = start_web_server()
+    API = HubApi(config_path)
+    httpd, port = start_server()
     url = f"http://127.0.0.1:{port}/index.html"
-    print(f"[OneRoot] serve {url}", file=sys.stderr)
+    print(f"[OneRoot] {url}", file=sys.stderr)
 
-    api = Api(config_path)
-    window = webview.create_window(
-        "OneRoot",
-        url=url,
-        js_api=api,
-        width=1040,
-        height=720,
-        min_size=(880, 600),
-        background_color="#0a0b12",
-    )
-
-    def _kick_boot() -> None:
-        try:
-            window.evaluate_js(
-                "window.__onerootBoot && window.__onerootBoot()",
-            )
-        except Exception as exc:  # noqa: BLE001
-            print(f"[OneRoot] evaluate_js boot skip: {exc}", file=sys.stderr)
-
+    # 优先 pywebview 壳；失败则 Edge --app=
+    opened = False
     try:
-        window.events.loaded += lambda: _kick_boot()
-    except Exception:  # noqa: BLE001
-        pass
+        import webview
 
-    try:
-        webview.start(debug=False)
-    finally:
+        webview.create_window(
+            "OneRoot",
+            url=url,
+            width=1040,
+            height=720,
+            min_size=(880, 600),
+            background_color="#0a0b12",
+        )
+        opened = True
         try:
+            webview.start(debug=False)
+        finally:
             httpd.shutdown()
-        except Exception:  # noqa: BLE001
+        return 0
+    except Exception as exc:  # noqa: BLE001
+        print(f"[OneRoot] webview unavailable: {exc}", file=sys.stderr)
+
+    edge = Path(os.environ.get("ProgramFiles(x86)", r"C:\Program Files (x86)")) / (
+        r"Microsoft\Edge\Application\msedge.exe"
+    )
+    if not edge.is_file():
+        edge = Path(os.environ.get("ProgramFiles", r"C:\Program Files")) / (
+            r"Microsoft\Edge\Application\msedge.exe"
+        )
+    if edge.is_file():
+        import subprocess
+
+        subprocess.Popen(  # noqa: S603
+            [str(edge), f"--app={url}", "--new-window"],
+        )
+        opened = True
+        print("[OneRoot] opened via Edge --app", file=sys.stderr)
+        try:
+            while True:
+                threading.Event().wait(3600)
+        except KeyboardInterrupt:
             pass
+        finally:
+            httpd.shutdown()
+        return 0
+
+    if not opened:
+        print(f"[OneRoot] open this URL manually: {url}", file=sys.stderr)
+    try:
+        while True:
+            threading.Event().wait(3600)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        httpd.shutdown()
     return 0
 
 

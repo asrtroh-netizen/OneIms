@@ -1,4 +1,4 @@
-/* OneRoot — single window; so from GitHub OneSo-assets */
+/* OneRoot — fetch HTTP API（不依赖 pywebview js_api） */
 (function () {
   const $ = (id) => document.getElementById(id);
   const logEl = $("logPanel");
@@ -47,24 +47,21 @@
     $("btnTempRun").disabled = !ready;
   }
 
-  function sleep(ms) {
-    return new Promise((r) => setTimeout(r, ms));
+  async function apiGet(path) {
+    const r = await fetch(path, { cache: "no-store" });
+    if (!r.ok) throw new Error("HTTP " + r.status + " " + path);
+    return r.json();
   }
 
-  async function waitBridge(maxMs) {
-    const deadline = Date.now() + (maxMs || 10000);
-    while (Date.now() < deadline) {
-      if (window.pywebview && window.pywebview.api) return true;
-      await sleep(150);
-    }
-    return false;
-  }
-
-  async function api(method, ...args) {
-    if (!(await waitBridge(2000))) {
-      throw new Error("pywebview bridge 未就绪");
-    }
-    return window.pywebview.api[method](...args);
+  async function apiPost(path, body) {
+    const r = await fetch(path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body || {}),
+      cache: "no-store",
+    });
+    if (!r.ok) throw new Error("HTTP " + r.status + " " + path);
+    return r.json();
   }
 
   async function boot() {
@@ -76,10 +73,8 @@
     setChip($("soChip"), "so · 扫描中", "muted");
     appendLog("[boot] start");
     try {
-      if (!(await waitBridge(10000))) {
-        throw new Error("等待 bridge 超时（点「开始体检」重试）");
-      }
-      const st = await api("status");
+      await apiGet("/api/ping");
+      const st = await apiGet("/api/status");
       setChip($("adbChip"), st.adb_label, st.adb_ok ? "ok" : "warn");
       setChip($("soChip"), st.so_label, st.so_ok ? "ok" : "warn");
       setChip($("versionChip"), "OneRoot", "muted");
@@ -89,27 +84,14 @@
       appendLog(st.log || "[boot] ok");
     } catch (e) {
       enableActions(false);
-      // bridge = 页面↔Python 通道，不是 adb；勿写成 adb 失败误导
-      setChip($("adbChip"), "ui · 通道超时", "warn");
-      setChip($("soChip"), "so · 未检测", "warn");
+      setChip($("adbChip"), "adb · ?", "warn");
+      setChip($("soChip"), "so · ?", "warn");
       renderChecks(
-        [
-          {
-            name: "页面通道",
-            ok: false,
-            detail: String(e),
-          },
-          {
-            name: "说明",
-            ok: false,
-            detail: "adb 可能已连接；这是 UI↔Python 桥，点「开始体检」重试",
-          },
-        ],
+        [{ name: "本地 API", ok: false, detail: String(e) }],
         "warn",
       );
       summary.className = "check-summary is-warn";
-      summary.textContent =
-        "页面通道未就绪（不是 adb 掉线）。请再点「开始体检」。";
+      summary.textContent = "本地服务未响应，请重开 OneRoot 或点「开始体检」。";
       appendLog("[boot] FAIL " + e);
     } finally {
       booting = false;
@@ -135,19 +117,17 @@
 
   $("btnBoot").addEventListener("click", () => boot());
   $("btnTempDry").addEventListener("click", () =>
-    runAction("temp-root dry", () => api("temp_root", false)),
+    runAction("preview", () => apiPost("/api/temp-root", { run: false })),
   );
   $("btnTempRun").addEventListener("click", async () => {
     const ok = window.confirm(
       "确认一键持久化？\n会从 GitHub 取 so → 临时提权 → 便于写入运营商配置（可能数分钟）。\n无需解锁 Bootloader。",
     );
     if (!ok) return;
-    await runAction("oneroot run", () => api("temp_root", true));
+    await runAction("persist", () => apiPost("/api/temp-root", { run: true }));
   });
 
   window.__onerootBoot = boot;
-  window.addEventListener("pywebviewready", () => boot());
-  // 少拍重试即可；通道好了会立刻刷芯片
-  setTimeout(() => boot(), 500);
-  setTimeout(() => boot(), 2000);
+  boot();
+  setTimeout(() => boot(), 800);
 })();
