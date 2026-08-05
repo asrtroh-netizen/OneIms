@@ -65,15 +65,21 @@ fun SponsorScreen(
         )
 
     fun openWeChatSponsor() {
-        // 个人赞赏码无法官方深链进收款页：先落盘再拉起微信，方便扫一扫选相册。
-        val saved = saveQr("sponsor_wechat.jpg", "OneIMS-wechat-sponsor")
-        if (!SponsorWeChatLauncher.isInstalled(context)) {
+        val hasPayUrl = SponsorWeChatLauncher.configuredPayUrl(context).isNotEmpty()
+        // 有直达链则不必先存相册；没有则落盘方便扫一扫选图。
+        val saved = if (hasPayUrl) {
+            false
+        } else {
+            saveQr("sponsor_wechat.jpg", "OneIMS-wechat-sponsor")
+        }
+        if (!SponsorWeChatLauncher.isInstalled(context) && !hasPayUrl) {
             onPublish(context.getString(R.string.sponsor_wechat_missing))
             return
         }
         val opened = SponsorWeChatLauncher.open(context)
         onPublish(
             when {
+                opened && hasPayUrl -> context.getString(R.string.sponsor_wechat_opened_direct)
                 opened && saved -> context.getString(R.string.sponsor_wechat_opened_with_album)
                 opened -> context.getString(R.string.sponsor_wechat_opened)
                 else -> context.getString(R.string.sponsor_wechat_open_failed)

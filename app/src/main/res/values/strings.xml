@@ -1130,8 +1130,11 @@
     <string name="sponsor_qr_missing">暂未配置赞助码</string>
     <string name="sponsor_qr_interaction_hint">也可点二维码放大；更省事就用下面「打开微信」</string>
     <string name="sponsor_long_press_hint">可截图保存后扫码支持</string>
+    <!-- 可选赞赏直达链（wxp:// 或 https://…）。个人赞赏码通常没有，留空即可。 -->
+    <string name="sponsor_wechat_pay_url" translatable="false"></string>
     <string name="sponsor_open_wechat">打开微信</string>
     <string name="sponsor_wechat_opened">已打开微信</string>
+    <string name="sponsor_wechat_opened_direct">已尝试打开微信赞赏页</string>
     <string name="sponsor_wechat_opened_with_album">已打开微信，赞助码也存进相册了。可在微信点「扫一扫 → 相册」选这张图</string>
     <string name="sponsor_wechat_missing">手机上还没装微信</string>
     <string name="sponsor_wechat_open_failed">打不开微信，请手动打开后再扫相册里的赞助码</string>

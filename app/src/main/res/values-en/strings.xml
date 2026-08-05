@@ -1130,6 +1130,7 @@
     <string name="sponsor_long_press_hint">Take a screenshot to save and scan the sponsorship code</string>
     <string name="sponsor_open_wechat">Open WeChat</string>
     <string name="sponsor_wechat_opened">Opened WeChat</string>
+    <string name="sponsor_wechat_opened_direct">Tried to open the WeChat tip page</string>
     <string name="sponsor_wechat_opened_with_album">Opened WeChat and saved the QR to Photos. In WeChat use Scan → Album and pick that image</string>
     <string name="sponsor_wechat_missing">WeChat is not installed</string>
     <string name="sponsor_wechat_open_failed">Could not open WeChat. Open it manually and scan the QR from Photos</string>

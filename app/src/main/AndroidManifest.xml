@@ -39,6 +39,10 @@
             <action android:name="android.intent.action.VIEW" />
             <data android:scheme="weixin" />
         </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="wxp" />
+        </intent>
     </queries>
 
     <!-- 新补丁禁止 shell 直接覆盖 CarrierConfig，改由活动 Instrumentation 接收权限委托。
