@@ -194,6 +194,29 @@ class HubApi:
             _ = code
         return False, "临时 Root · 未检测到"
 
+    def _shizuku_ps_user(self) -> str:
+        _code, out = oneso.adb_shell(
+            "ps -A | grep shizuku_server || true",
+            timeout=8.0,
+        )
+        line = (out or "").strip().replace("\r", "")
+        if "shizuku_server" not in line:
+            return ""
+        return line.split()[0] if line.split() else ""
+
+    def _shizuku_shell_ok(self) -> bool:
+        return self._shizuku_ps_user() == "shell"
+
+    def _shizuku_label(self) -> str:
+        user = self._shizuku_ps_user()
+        if user == "shell":
+            return "shell · 正常（勿 su 拉）"
+        if user == "root":
+            return "root · 危险（App 会掉线）"
+        if user:
+            return f"{user} · 异常"
+        return "未运行"
+
     def status(self) -> dict[str, Any]:
         device, build = oneso.adb_device_build()
         adb_ok = bool(device and build)
@@ -225,9 +248,14 @@ class HubApi:
                 "detail": "uid=0 已验证" if root_ok else "未检测到 su/uid=0",
             },
             {
+                "name": "Shizuku",
+                "ok": self._shizuku_shell_ok() if adb_ok else False,
+                "detail": self._shizuku_label() if adb_ok else "无设备",
+            },
+            {
                 "name": "本窗职责",
                 "ok": True,
-                "detail": "仅一键临时 Root",
+                "detail": "仅一键临时 Root；成功后 shell 重绑 Shizuku（禁 su 拉）",
             },
             {
                 "name": "非本窗",

@@ -904,6 +904,53 @@ def looks_like_root_success(output: str) -> bool:
     )
 
 
+def rebind_shell_shizuku() -> bool:
+    """临时 Root 成功后：杀掉可能出现的 root 态 shizuku_server，再用 adb shell 拉起。
+
+    **严禁** ``su -c libshizuku.so``：会生成 root/kernel 态 server，
+    App binder 立刻掉线（黑标亮、OneLink 死）。
+    """
+    print("[oneso] rebind Shizuku as shell (FORBIDDEN: su -c libshizuku)…")
+    adb_shell(
+        "/data/local/tmp/su -c '/system/bin/killall -9 shizuku_server' 2>/dev/null; "
+        "/system/bin/killall -9 shizuku_server 2>/dev/null; true",
+        timeout=12.0,
+    )
+    time.sleep(0.4)
+    _code, path_out = adb_shell("pm path moe.shizuku.privileged.api", timeout=10.0)
+    apk = ""
+    for line in (path_out or "").splitlines():
+        line = line.strip()
+        if line.startswith("package:"):
+            apk = line.split("package:", 1)[1].strip()
+            break
+    if not apk:
+        print("[oneso] WARN: Shizuku not installed; skip rebind")
+        return False
+    # …/base.apk → …/lib/arm64/libshizuku.so
+    lib = (
+        apk[: -len("base.apk")] + "lib/arm64/libshizuku.so"
+        if apk.endswith("base.apk")
+        else apk.rstrip("/") + "/lib/arm64/libshizuku.so"
+    )
+    # adb shell → uid shell；绝不用 su 包一层
+    scode, sout = adb_shell(f"{lib} --apk={apk}", timeout=25.0)
+    print(f"[oneso] shell-start shizuku rc={scode} out={sout[:220]}")
+    _pcode, pout = adb_shell("ps -A | grep shizuku_server || true", timeout=8.0)
+    line = (pout or "").strip().replace("\r", "")
+    print(f"[oneso] ps shizuku_server: {line[:180]}")
+    user = line.split()[0] if line.split() else ""
+    if "shizuku_server" in line and user == "root":
+        print(
+            "[oneso] WARN: shizuku_server still root — "
+            "App will try wireless rebind; do NOT su-start again",
+        )
+        return False
+    if "shizuku_server" in line and user == "shell":
+        return True
+    return "shizuku_starter" in sout or "starter exit with 0" in sout or scode == 0
+
+
 def adb_shell(command: str, *, timeout: float) -> tuple[int, str]:
     try:
         proc = subprocess.run(
@@ -1208,6 +1255,9 @@ def cmd_temp_root(
     gcode, gout = adb_shell("getenforce", timeout=8)
     print(f"[oneso] getenforce rc={gcode} {gout}")
     if verified:
+        _progress(96, "重绑 Shizuku（shell，禁用 su 拉起）")
+        rebind_ok = rebind_shell_shizuku()
+        print(f"[oneso] shizuku shell rebind ok={rebind_ok}")
         _progress(100, "成功：已拿到临时 Root")
         print(f"[oneso] SUCCESS root ok: {last_out[:160]}")
         return 0

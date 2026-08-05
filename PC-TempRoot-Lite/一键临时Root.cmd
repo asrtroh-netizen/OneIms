@@ -93,11 +93,29 @@ for /L %%I in (1,1,!ATTEMPTS!) do (
   )
 )
 
-echo [6/6] getenforce
+echo [6/7] getenforce
 "%ADB%" -s !SERIAL! shell getenforce
-if "!OK!"=="1" (echo SUCCESS & goto :ok)
-echo [FAIL] no uid=0
-goto :fail
+if "!OK!"=="0" (
+  echo [FAIL] no uid=0
+  goto :fail
+)
+
+echo [7/7] rebind Shizuku as shell ^(NEVER su -c libshizuku^)
+REM root 态 shizuku_server 会让 App binder 掉线；只允许 adb shell 拉起
+"%ADB%" -s !SERIAL! shell "/data/local/tmp/su -c '/system/bin/killall -9 shizuku_server' 2>/dev/null; /system/bin/killall -9 shizuku_server 2>/dev/null; true" >nul 2>&1
+timeout /t 1 /nobreak >nul
+for /f "tokens=2 delims=:" %%P in ('"%ADB%" -s !SERIAL! shell pm path moe.shizuku.privileged.api 2^>nul') do set "APK=%%P"
+set "APK=!APK: =!"
+if defined APK (
+  set "LIB=!APK:base.apk=lib/arm64/libshizuku.so!"
+  echo     shell-start !LIB!
+  "%ADB%" -s !SERIAL! shell "!LIB! --apk=!APK!"
+  "%ADB%" -s !SERIAL! shell "ps -A | grep shizuku_server || true"
+) else (
+  echo     WARN: Shizuku not installed, skip rebind
+)
+echo SUCCESS
+goto :ok
 
 :ok
 if "!NOPAUSE!"=="0" pause

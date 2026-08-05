@@ -366,6 +366,22 @@ function Start-TempRootJob([bool]$dry) {
         Ui-Monitor $serial $device $build $en 'done'
         Ui-Log ("getenforce: {0}" -f $en)
         if ($ok) {
+            # 禁止 su -c libshizuku：会造 root 态 server，App 立刻掉线
+            Ui-Progress 96 'rebind Shizuku as shell (no su -c libshizuku)'
+            Ui-Log 'rebind: kill shizuku_server then adb-shell start (FORBIDDEN: su -c libshizuku)'
+            [void](Invoke-Adb @('-s', $serial, 'shell', "/data/local/tmp/su -c '/system/bin/killall -9 shizuku_server' 2>/dev/null; /system/bin/killall -9 shizuku_server 2>/dev/null; true") 12)
+            Start-Sleep -Milliseconds 400
+            $apkLine = (Invoke-Adb @('-s', $serial, 'shell', 'pm path moe.shizuku.privileged.api') 10).Text
+            $apk = ($apkLine -replace 'package:', '').Trim()
+            if ($apk) {
+                $lib = $apk -replace 'base\.apk$', 'lib/arm64/libshizuku.so'
+                $st = Invoke-Adb @('-s', $serial, 'shell', "$lib --apk=$apk") 25
+                Ui-Log ("shell-start shizuku: {0}" -f $st.Text)
+                $ps = Invoke-Adb @('-s', $serial, 'shell', 'ps -A | grep shizuku_server || true') 8
+                Ui-Log ("ps: {0}" -f $ps.Text)
+            } else {
+                Ui-Log 'WARN: Shizuku not installed; skip rebind'
+            }
             Ui-Progress 100 'SUCCESS: temp root ok'
             Ui-Log ("SUCCESS: {0}" -f $last)
             Set-Content -LiteralPath $StatusFile -Value "SUCCESS $last" -Encoding UTF8
