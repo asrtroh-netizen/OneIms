@@ -1,18 +1,24 @@
-PC-TempRoot-UI · UI 版
-======================
+PC-TempRoot-UI · 增强版（纯 CMD · 无 PowerShell）
+==============================================
 
-带进度条、设备监测、OneIMS 推荐与微信赞赏码。
-自带 adb + so，不需要 Python（用系统自带 PowerShell 弹窗）。
+全部是 CMD：彩色进度、菜单、OneIMS 推荐、微信赞赏码。
+不调用 powershell.exe，不依赖 .ps1。
 
 用法
 ----
-双击：一键临时Root.cmd
-仅探测：一键临时Root.cmd dry
+双击：弹出菜单
+  1 Start temp root
+  2 Dry-run
+  3 Open OneIMS GitHub
+  4 Open Releases
+  5 Show WeChat sponsor QR
 
-窗口内：
-· Start Temp Root / Dry-run：跑临时 Root / 只探测
-· OneIMS GitHub：打开推荐仓库
-· Sponsor：显示微信赞赏码（与 App 同源）
+命令行：
+  一键临时Root.cmd dry nopause
+  一键临时Root.cmd run
+  一键临时Root.cmd github
+  一键临时Root.cmd sponsor
 
-简易黑窗版请用旁边的：
-  PC-TempRoot-Lite
+赞赏码文件：assets\sponsor_wechat.jpg（与 App 同源）
+
+极简无菜单版 → PC-TempRoot-Lite

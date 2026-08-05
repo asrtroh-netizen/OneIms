@@ -1,8 +1,8 @@
-PC-TempRoot-Lite · 简易版（美化控制台）
-====================================
+PC-TempRoot-Lite · 简易版（纯 CMD · 无 PowerShell）
+===============================================
 
-纯 CMD 一键临时 Root，带彩色横幅与文字进度条。
-自带 adb + so，不需要 Python / WinForms。
+纯 CMD 一键临时 Root：彩色横幅 + 文字进度条。
+不调用 powershell.exe。
 
 用法
 ----
@@ -10,4 +10,4 @@ PC-TempRoot-Lite · 简易版（美化控制台）
 探测：一键临时Root.cmd dry
 无暂停：一键临时Root.cmd dry nopause
 
-需要完整进度窗 / OneIMS 推荐 / 赞赏码 → 用 PC-TempRoot-UI
+需要菜单 / OneIMS 推荐 / 赞赏码 → PC-TempRoot-UI（同样纯 CMD）
