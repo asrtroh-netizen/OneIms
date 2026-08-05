@@ -387,6 +387,93 @@ def patch_0705_label(so_bytes: bytes, device: str) -> bytes:
     return so_bytes[:slot_start] + patched + so_bytes[slot_end:]
 
 
+def catalog_0705_complete(cfg: dict[str, Any]) -> bool:
+    app = oneims_root(cfg)
+    catalog_path = app / "app" / "src" / "main" / "assets" / "temproot" / "catalog.json"
+    if not catalog_path.is_file():
+        return False
+    data = json.loads(catalog_path.read_text(encoding="utf-8"))
+    devices = data.get("devices") or {}
+    for device in DEVICES_0705:
+        entry = devices.get(device) or {}
+        name = entry.get(BUILD_0705)
+        if not name:
+            return False
+        so = app / "app" / "src" / "main" / "assets" / "temproot" / name
+        if not so.is_file():
+            return False
+        label = make_0705_label(device).encode("ascii")
+        if label not in so.read_bytes():
+            return False
+    return True
+
+
+def adb_device_build() -> tuple[str | None, str | None]:
+    """读 adb getprop；失败返回 (None, None)。"""
+    try:
+        device = subprocess.check_output(
+            ["adb", "shell", "getprop", "ro.product.device"],
+            text=True,
+            stderr=subprocess.DEVNULL,
+            timeout=8,
+        ).strip()
+        build = subprocess.check_output(
+            ["adb", "shell", "getprop", "ro.build.id"],
+            text=True,
+            stderr=subprocess.DEVNULL,
+            timeout=8,
+        ).strip()
+        return (device or None, build or None)
+    except Exception:  # noqa: BLE001
+        return (None, None)
+
+
+def cmd_auto(cfg: dict[str, Any], *, force_pack: bool = False) -> int:
+    """
+    尽量自动化：
+    1) 0705 catalog 不齐则 pack-0705
+    2) adb 识别机型并提示对应 PROJECT
+    3) 可选扫描 temp_so_dir 批量 dry 报告
+    """
+    print("[oneso] auto start")
+    complete = catalog_0705_complete(cfg)
+    print(f"[oneso] catalog_0705_complete={complete}")
+    code = 0
+    if force_pack or not complete:
+        code = cmd_pack_0705(cfg, None)
+        if code != 0:
+            return code
+        complete = catalog_0705_complete(cfg)
+        print(f"[oneso] catalog_0705_complete_after={complete}")
+    else:
+        print("[oneso] skip pack-0705 (already complete)")
+
+    device, build = adb_device_build()
+    if device and build:
+        project = f"{device}-{build}"
+        print(f"[oneso] adb device={device} build={build}")
+        print(f"[oneso] suggest PROJECT={project}")
+        if build == BUILD_0705 and device in DEVICES_0705:
+            print("[oneso] adb matches 0705 P9 family — App catalog ready")
+        elif build == BUILD_0705:
+            print("[oneso] WARN build is 0705 but device not in P9 pack list")
+    else:
+        print("[oneso] adb unavailable — skip device detect")
+
+    temp = Path(str(cfg.get("temp_so_dir") or r"E:\Down\TEMP"))
+    if temp.is_dir():
+        print(f"[oneso] scan temp dir {temp}")
+        cmd_import_batch(
+            cfg,
+            temp,
+            recursive=False,
+            dry_run=True,
+            mapping_path=None,
+        )
+    print("[oneso] auto done")
+    return 0 if complete else 1
+
+
 def cmd_pack_0705(
     cfg: dict[str, Any],
     source_so: Path | None,
@@ -520,6 +607,16 @@ def build_parser() -> argparse.ArgumentParser:
         help="source preload.so (default: OneIMS comet 0705 asset)",
     )
 
+    auto = sub.add_parser(
+        "auto",
+        help="automate: ensure 0705 pack + adb detect + temp dry-run",
+    )
+    auto.add_argument(
+        "--force-pack",
+        action="store_true",
+        help="always re-run pack-0705 even if catalog complete",
+    )
+
     sub.add_parser("gui", help="open OneAE-styled Tk GUI")
 
     return p
@@ -555,6 +652,8 @@ def main(argv: list[str] | None = None) -> int:
         )
     if args.cmd == "pack-0705":
         return cmd_pack_0705(cfg, args.source)
+    if args.cmd == "auto":
+        return cmd_auto(cfg, force_pack=bool(args.force_pack))
     raise SystemExit(f"unknown cmd {args.cmd}")
 
 

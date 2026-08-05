@@ -33,7 +33,11 @@ python oneso.py gui
 python gui.py
 # 0705 P9 全家桶：改 label → tokay/caiman/komodo/comet 并写入 catalog
 python oneso.py pack-0705
+# 尽量自动化：catalog 不齐则 pack + adb 认机 + TEMP dry-run
+python oneso.py auto
 ```
+
+GUI 启动默认跑一遍 `auto`（`config.auto_pack_0705_on_gui_start`，可关）。主按钮「一键自动化」无确认。
 
 说明：`comet-CP2A.260705.006` 的 `target.h` 若仍是 `#error` 脚手架，`build` 会失败——用 `pack-0705` / `import-so` 入库已验证成品。  
 `preload.so` 这种无型号文件名会被 SKIP，可用 `--map mapping.json` 指定。

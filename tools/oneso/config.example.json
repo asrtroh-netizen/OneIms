@@ -4,5 +4,8 @@
   "use_wsl": true,
   "wsl_distro": "",
   "ndk_root_wsl": "",
-  "api": 35
+  "api": 35,
+  "auto_pack_0705_on_gui_start": true,
+  "auto_import_temp_on_gui_start": false,
+  "temp_so_dir": "E:/Down/TEMP"
 }

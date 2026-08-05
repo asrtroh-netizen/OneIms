@@ -54,6 +54,9 @@ class OneSoApp(tk.Tk):
             f"oneims  {self.cfg.get('oneims_root')}\n"
             f"0705    {', '.join(oneso.DEVICES_0705)} @ {oneso.BUILD_0705}\n",
         )
+        # 启动尽量自动化：补齐 0705 + adb 认机
+        if bool(self.cfg.get("auto_pack_0705_on_gui_start", True)):
+            self.after(200, self.on_auto)
 
     def _card(self, parent: tk.Misc, **kw: Any) -> tk.Frame:
         return tk.Frame(parent, bg=BG2, highlightbackground=LINE, highlightthickness=1, **kw)
@@ -174,10 +177,16 @@ class OneSoApp(tk.Tk):
         ).pack(anchor="w", pady=(4, 10))
         hero_btns = tk.Frame(hero_i, bg=BG2)
         hero_btns.pack(anchor="w")
-        self._btn(hero_btns, "生成 0705 全家桶", self.on_pack_0705, primary=True).pack(
+        self._btn(hero_btns, "一键自动化", self.on_auto, primary=True).pack(side=tk.LEFT)
+        self._btn(hero_btns, "强制重打包 0705", self.on_pack_0705).pack(
             side=tk.LEFT,
+            padx=(8, 0),
         )
-        self._btn(hero_btns, "仅 Dry 预览映射", self.on_import_batch_dry).pack(
+        self._btn(hero_btns, "adb 认机", self.on_adb_select).pack(
+            side=tk.LEFT,
+            padx=(8, 0),
+        )
+        self._btn(hero_btns, "TEMP Dry-Run", self.on_import_batch_dry).pack(
             side=tk.LEFT,
             padx=(8, 0),
         )
@@ -359,14 +368,50 @@ class OneSoApp(tk.Tk):
             self._batch(True)
 
     def on_pack_0705(self) -> None:
+        # 强制重打包：仍要确认，避免误覆盖
         if not messagebox.askyesno(
             "OneSo",
-            "从已验证 0705 so 改 label，生成并入库：\n"
-            + ", ".join(oneso.DEVICES_0705)
-            + f"\n构建 {oneso.BUILD_0705}",
+            "强制重跑 pack-0705？\n" + ", ".join(oneso.DEVICES_0705),
         ):
             return
         self.run_bg("pack-0705", lambda: oneso.cmd_pack_0705(self.cfg, None))
+
+    def on_auto(self) -> None:
+        """无确认：缺啥补啥 + adb 认机 + TEMP dry-run。"""
+
+        def job() -> int:
+            code = oneso.cmd_auto(self.cfg, force_pack=False)
+            device, build = oneso.adb_device_build()
+            if device and build:
+                self.after(0, lambda: self.select_project(f"{device}-{build}"))
+            return code
+
+        self.run_bg("auto", job)
+
+    def on_adb_select(self) -> None:
+        device, build = oneso.adb_device_build()
+        if not device or not build:
+            messagebox.showwarning("OneSo", "adb 读不到设备（未连接或无 adb）")
+            return
+        project = f"{device}-{build}"
+        self.append(f"[adb] device={device} build={build} -> {project}")
+        self.select_project(project)
+        self.set_status(f"adb {project}")
+
+    def select_project(self, project: str) -> None:
+        values = list(self.combo.get(0, tk.END))
+        if project in values:
+            idx = values.index(project)
+            self.combo.selection_clear(0, tk.END)
+            self.combo.selection_set(idx)
+            self.combo.see(idx)
+            self.project_var.set(project)
+            return
+        # 不在 list：插入顶部虚拟项
+        self.combo.insert(0, project)
+        self.combo.selection_clear(0, tk.END)
+        self.combo.selection_set(0)
+        self.project_var.set(project)
 
 
 def run_gui(config_path: Path | None = None) -> None:
