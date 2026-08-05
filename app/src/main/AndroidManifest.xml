@@ -33,6 +33,12 @@
             <action android:name="android.intent.action.VIEW" />
             <data android:mimeType="application/vnd.android.package-archive" />
         </intent>
+        <!-- 赞助页「打开微信」：检测安装与 weixin:// 跳转 -->
+        <package android:name="com.tencent.mm" />
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="weixin" />
+        </intent>
     </queries>
 
     <!-- 新补丁禁止 shell 直接覆盖 CarrierConfig，改由活动 Instrumentation 接收权限委托。

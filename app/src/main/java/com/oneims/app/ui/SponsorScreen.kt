@@ -39,6 +39,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.oneims.app.R
+import com.oneims.app.core.SponsorWeChatLauncher
 import com.oneims.app.ui.theme.OneImsTokens
 
 private data class SponsorPreview(
@@ -56,13 +57,28 @@ fun SponsorScreen(
     val longPressMessage = stringResource(R.string.sponsor_long_press_hint)
     var preview by remember { mutableStateOf<SponsorPreview?>(null) }
 
-    fun saveQr(assetName: String, fileLabel: String) {
-        val ok = saveSponsorQrToGallery(
+    fun saveQr(assetName: String, fileLabel: String): Boolean =
+        saveSponsorQrToGallery(
             context = context,
             assetName = assetName,
             fileLabel = fileLabel,
         )
-        onPublish(if (ok) savedMessage else saveFailedMessage)
+
+    fun openWeChatSponsor() {
+        // 个人赞赏码无法官方深链进收款页：先落盘再拉起微信，方便扫一扫选相册。
+        val saved = saveQr("sponsor_wechat.jpg", "OneIMS-wechat-sponsor")
+        if (!SponsorWeChatLauncher.isInstalled(context)) {
+            onPublish(context.getString(R.string.sponsor_wechat_missing))
+            return
+        }
+        val opened = SponsorWeChatLauncher.open(context)
+        onPublish(
+            when {
+                opened && saved -> context.getString(R.string.sponsor_wechat_opened_with_album)
+                opened -> context.getString(R.string.sponsor_wechat_opened)
+                else -> context.getString(R.string.sponsor_wechat_open_failed)
+            },
+        )
     }
 
     OneImsPage(
@@ -85,8 +101,10 @@ fun SponsorScreen(
                 title = stringResource(R.string.sponsor_wechat_title),
                 description = stringResource(R.string.sponsor_wechat_desc),
                 assetName = "sponsor_wechat.jpg",
+                onOpenWeChat = { openWeChatSponsor() },
                 onSave = {
-                    saveQr("sponsor_wechat.jpg", "OneIMS-wechat-sponsor")
+                    val ok = saveQr("sponsor_wechat.jpg", "OneIMS-wechat-sponsor")
+                    onPublish(if (ok) savedMessage else saveFailedMessage)
                 },
                 onPreview = { bitmap ->
                     preview = SponsorPreview(
@@ -130,6 +148,7 @@ private fun SponsorQrSection(
     title: String,
     description: String,
     assetName: String,
+    onOpenWeChat: () -> Unit,
     onSave: () -> Unit,
     onPreview: (ImageBitmap) -> Unit,
     onLongPress: () -> Unit,
@@ -168,13 +187,16 @@ private fun SponsorQrSection(
                 InlineNotice(text = stringResource(R.string.sponsor_qr_missing))
             }
             OneImsPrimaryButton(
-                text = stringResource(R.string.sponsor_save_local),
-                onClick = onSave,
+                text = stringResource(R.string.sponsor_open_wechat),
+                onClick = onOpenWeChat,
                 enabled = bitmap != null,
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(min = 52.dp),
             )
+            TextButton(onClick = onSave, enabled = bitmap != null) {
+                Text(stringResource(R.string.sponsor_save_local))
+            }
         }
     }
 }

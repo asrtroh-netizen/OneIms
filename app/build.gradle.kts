@@ -5,7 +5,7 @@ plugins {
     id("dev.rikka.tools.refine")
 }
 
-val oneImsVersionName = "3.2.14"
+val oneImsVersionName = "3.2.15"
 
 android {
     namespace = "com.oneims.app"
@@ -16,7 +16,7 @@ android {
         applicationId = "com.oneims.app"
         minSdk = 31          // Tensor Pixel（Pixel 6 起）最低 Android 12
         targetSdk = 36
-        versionCode = 96
+        versionCode = 97
         versionName = oneImsVersionName
     }
 
