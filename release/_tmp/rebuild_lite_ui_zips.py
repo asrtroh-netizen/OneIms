@@ -70,13 +70,21 @@ def main() -> None:
     with zipfile.ZipFile(RELEASE / "OneRoot-Lite.zip") as zf:
         zf.extractall(nested)
 
-    # verify keywords
+    # verify keywords + cloud-only so (no bundled preload-*.so)
     with zipfile.ZipFile(RELEASE / "OneRoot-Lite.zip") as zf:
+        names = zf.namelist()
+        assert not any(n.endswith(".so") for n in names), "Lite zip must not bundle .so"
+        assert any(n.endswith("fetch-cloud-so.ps1") for n in names), "Lite missing fetch-cloud-so.ps1"
         cmd = zf.read("OneRoot-Lite/一键临时Root.cmd").decode("utf-8", "replace")
+        assert "fetch-cloud-so.ps1" in cmd, "Lite cmd must call cloud fetch"
         assert "su-keep" in cmd, "Lite missing su-keep"
         assert "su-teardown" in cmd or "TEARDOWN_OK" in cmd, "Lite missing teardown"
     with zipfile.ZipFile(RELEASE / "OneRoot-UI.zip") as zf:
+        names = zf.namelist()
+        assert not any(n.endswith(".so") for n in names), "UI zip must not bundle .so"
+        assert any(n.endswith("fetch-cloud-so.ps1") for n in names), "UI missing fetch-cloud-so.ps1"
         ps1 = zf.read("OneRoot-UI/ui/TempRoot-UI.ps1").decode("utf-8", "replace")
+        assert "fetch-cloud-so.ps1" in ps1, "UI must call cloud fetch"
         assert "su-keep" in ps1, "UI missing su-keep"
         assert "su-teardown" in ps1 or "TEARDOWN_OK" in ps1, "UI missing teardown"
 
