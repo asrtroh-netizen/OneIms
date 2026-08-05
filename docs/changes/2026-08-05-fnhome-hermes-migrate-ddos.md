@@ -133,3 +133,4 @@ trim-cli --host 127.0.0.1 --port 9999 login   # 管理员
 | 目标 | DDOS：合并同源 `QQ_*`（sha 对齐）、`qqbot.enabled=true` + platforms 目录；`POST /api/start` 后 Gateway/Dashboard **healthy** |
 | 备份 | FNHOME：`/vol1/1000/hermes-migrate/qq-disable-*`；DDOS：`qq-import-*` |
 | 验收 | FNHOME `NO_GATEWAY`；DDOS gateway PID 在跑、端口 8642/9119；QQ 实聊需在 QQ 侧人工确认（本轮 NOT RUN） |
+| Home channel | 迁移后缺 `QQBOT_HOME_CHANNEL` 会提示 `/sethome`。已用近期 QQ DM `chat_id` 写入 `.env` + `platforms.qqbot.home_channel`；`hermes status` 显示 `QQBot ✓ configured (home: …)` |
