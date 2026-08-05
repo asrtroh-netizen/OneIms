@@ -86,3 +86,17 @@ trim-cli --host 127.0.0.1 --port 9999 login   # 管理员
 | wrapper | 经 socket 访问时**会自动 spawn** dashboard（已实测：杀 dashboard 后 sock 一打即起） |
 | 截图 Retry | dashboard 已 `200` 时再 `hermes dashboard` → 精确复现 `address already in use`（exit 1）；**点 Retry 会自己制造报错** |
 | 用法 | 管理员登录飞牛 → 打开 Hermes；见该错时**关掉窗口勿 Retry**，刷新/重开入口即可 |
+
+## 2026-08-05 续 · 更新 Hermes Agent 至 0.19.0
+
+| 路径 | 结果 |
+|---|---|
+| `install-fpk` 同包 `hermes-agent` 0.19 | **仍 BLOCKED**：`license confirmation`（需应用中心 UI） |
+| 云端 `app update trim.hermes` | 下载失败 code `-6` |
+| 应用内 `uv pip install --python …/python3.11.real --upgrade hermes-agent` | **成功**：`0.18.0 → 0.19.0`（包外壳仍显示 `trim.hermes 0.18.0-1`） |
+| `hermes config migrate` | 配置版本 `v0 → v33` |
+| 服务 | 官方 env start；dashboard `200`；`status=running` |
+| WK 复验 | 升级后遇 `wkapi.vip`：**路由器 DNS 给 NXDOMAIN**；写 `/etc/hosts` 后 **TLS/连接被重置**；办公网 Windows 同步超时——属外网/CDN，非包升级逻辑回归。升级前同日曾 `WK_OK`。 |
+
+回滚 agent 包（若需）：在 DDOS 上对应用 Python 执行  
+`…/python3.11.real -m pip install 'hermes-agent==0.18.0'`（或从备份恢复 site-packages）。
