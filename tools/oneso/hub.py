@@ -149,6 +149,23 @@ class HubApi:
         )
         return {"code": code, "log": log}
 
+    def open_url(self, url: str) -> dict[str, Any]:
+        """在系统浏览器打开白名单外链（GitHub / 赞赏相关），避免壳内导航跑飞。"""
+        import webbrowser
+
+        raw = (url or "").strip()
+        parsed = urlparse(raw)
+        host = (parsed.hostname or "").lower()
+        allowed = {
+            "github.com",
+            "www.github.com",
+            "raw.githubusercontent.com",
+        }
+        if parsed.scheme not in ("http", "https") or host not in allowed:
+            return {"ok": False, "error": f"url not allowed: {raw}"}
+        webbrowser.open(raw)
+        return {"ok": True, "url": raw}
+
 
 class OneRootHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -198,6 +215,16 @@ class OneRootHandler(SimpleHTTPRequestHandler):
             run = bool(data.get("run"))
             try:
                 self._json(200, API.temp_root(run=run))
+            except Exception as exc:  # noqa: BLE001
+                self._json(
+                    500,
+                    {"ok": False, "error": str(exc), "trace": traceback.format_exc()},
+                )
+            return
+        if path == "/api/open-url":
+            assert API is not None
+            try:
+                self._json(200, API.open_url(str(data.get("url") or "")))
             except Exception as exc:  # noqa: BLE001
                 self._json(
                     500,

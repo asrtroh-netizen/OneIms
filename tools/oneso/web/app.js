@@ -7,17 +7,20 @@
   let booting = false;
 
   function appendLog(text) {
+    if (!logEl) return;
     const line = String(text || "").trimEnd();
     logEl.textContent = (logEl.textContent + "\n" + line).slice(-8000);
     logEl.scrollTop = logEl.scrollHeight;
   }
 
   function setChip(el, text, kind) {
+    if (!el) return;
     el.textContent = text;
     el.className = "chip" + (kind ? " chip-" + kind : " chip-muted");
   }
 
   function renderChecks(items, overall) {
+    if (!list || !summary) return;
     list.innerHTML = "";
     for (const it of items || []) {
       const li = document.createElement("li");
@@ -43,8 +46,10 @@
   }
 
   function enableActions(ready) {
-    $("btnTempDry").disabled = !ready;
-    $("btnTempRun").disabled = !ready;
+    const dry = $("btnTempDry");
+    const run = $("btnTempRun");
+    if (dry) dry.disabled = !ready;
+    if (run) run.disabled = !ready;
   }
 
   async function apiGet(path) {
@@ -64,7 +69,24 @@
     return r.json();
   }
 
+  function wireOpenUrls() {
+    document.querySelectorAll("[data-open-url]").forEach((el) => {
+      el.addEventListener("click", async (ev) => {
+        ev.preventDefault();
+        const url = el.getAttribute("data-open-url") || "";
+        try {
+          const r = await apiPost("/api/open-url", { url });
+          if (!r.ok) appendLog("[open-url] " + (r.error || "fail"));
+        } catch (e) {
+          // 无本地 API 时直接交给系统（浏览器打开静态页的场景）
+          window.open(url, "_blank", "noopener");
+        }
+      });
+    });
+  }
+
   async function boot() {
+    if (!summary || !list) return;
     if (booting) return;
     booting = true;
     summary.className = "check-summary is-scan";
@@ -78,7 +100,8 @@
       setChip($("adbChip"), st.adb_label, st.adb_ok ? "ok" : "warn");
       setChip($("soChip"), st.so_label, st.so_ok ? "ok" : "warn");
       setChip($("versionChip"), "OneRoot", "muted");
-      $("footerMeta").textContent = st.footer || "OneRoot";
+      const footerMeta = $("footerMeta");
+      if (footerMeta) footerMeta.textContent = st.footer || "OneRoot";
       renderChecks(st.checks, st.overall);
       enableActions(true);
       appendLog(st.log || "[boot] ok");
@@ -100,7 +123,8 @@
 
   async function runAction(name, fn) {
     enableActions(false);
-    $("btnBoot").disabled = true;
+    const btnBoot = $("btnBoot");
+    if (btnBoot) btnBoot.disabled = true;
     appendLog("── " + name + " ──");
     try {
       const r = await fn();
@@ -111,23 +135,27 @@
       appendLog("[" + name + "] ERROR " + e);
       enableActions(true);
     } finally {
-      $("btnBoot").disabled = false;
+      if (btnBoot) btnBoot.disabled = false;
     }
   }
 
-  $("btnBoot").addEventListener("click", () => boot());
-  $("btnTempDry").addEventListener("click", () =>
-    runAction("preview", () => apiPost("/api/temp-root", { run: false })),
-  );
-  $("btnTempRun").addEventListener("click", async () => {
-    const ok = window.confirm(
-      "确认一键临时 Root？\n会从 GitHub 取 so 并跑 LD_PRELOAD（可能数分钟）。\n本窗不做运营商持久化。",
-    );
-    if (!ok) return;
-    await runAction("temp-root", () => apiPost("/api/temp-root", { run: true }));
-  });
+  wireOpenUrls();
 
-  window.__onerootBoot = boot;
-  boot();
-  setTimeout(() => boot(), 800);
+  const btnBoot = $("btnBoot");
+  if (btnBoot) {
+    btnBoot.addEventListener("click", () => boot());
+    $("btnTempDry").addEventListener("click", () =>
+      runAction("preview", () => apiPost("/api/temp-root", { run: false })),
+    );
+    $("btnTempRun").addEventListener("click", async () => {
+      const ok = window.confirm(
+        "确认一键临时 Root？\n会从 GitHub 取 so 并跑 LD_PRELOAD（可能数分钟）。\n本窗不做运营商持久化。",
+      );
+      if (!ok) return;
+      await runAction("temp-root", () => apiPost("/api/temp-root", { run: true }));
+    });
+    window.__onerootBoot = boot;
+    boot();
+    setTimeout(() => boot(), 800);
+  }
 })();

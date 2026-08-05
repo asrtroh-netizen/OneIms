@@ -240,6 +240,22 @@ html, body {
   color: var(--text-soft);
   max-width: 42em;
 }
+.home-recommend {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+.home-recommend a,
+.footer-links a {
+  color: var(--accent-bright);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(74, 240, 220, 0.28);
+}
+.home-recommend a:hover,
+.footer-links a:hover {
+  color: var(--teal-hi);
+  border-bottom-color: var(--accent-bright);
+}
 .home-actions {
   display: flex;
   flex-wrap: wrap;
@@ -357,6 +373,21 @@ html, body {
   font-size: 11px;
   display: flex;
   justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+.footer-links {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.footer-links .dot { opacity: 0.55; }
+a.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
 }
 
 @media (max-width: 900px) {

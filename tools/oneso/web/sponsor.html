@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OneRoot · 赞赏</title>
+  <link rel="stylesheet" href="app.css" />
+  <style>
+    .sponsor-page {
+      min-height: 100%;
+      display: grid;
+      place-items: center;
+      padding: 32px 24px;
+    }
+    .sponsor-card {
+      width: min(420px, 100%);
+      text-align: center;
+      padding: 28px 24px 22px;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius-xl);
+      background: linear-gradient(180deg, rgba(31, 34, 51, 0.92), rgba(18, 19, 28, 0.96));
+      box-shadow: var(--shadow);
+    }
+    .sponsor-card h1 {
+      margin: 0 0 8px;
+      font-family: var(--font-display);
+      font-size: 22px;
+      letter-spacing: 0.02em;
+    }
+    .sponsor-card p {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+    .sponsor-qr {
+      width: min(260px, 72vw);
+      height: auto;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: #fff;
+      padding: 10px;
+    }
+    .sponsor-actions {
+      margin-top: 18px;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="sponsor-page">
+      <div class="sponsor-card">
+        <p class="eyebrow" style="margin-bottom:10px">OneIMS · 支持作者</p>
+        <h1>微信赞赏</h1>
+        <p>与手机 App「支持」页同一张微信赞助码。<br/>完全自愿，不影响任何功能。</p>
+        <img class="sponsor-qr" src="sponsor_wechat.jpg" alt="OneIMS 微信赞赏码" />
+        <div class="sponsor-actions">
+          <a class="btn ghost" href="index.html">返回 OneRoot</a>
+          <a class="btn primary" href="#" data-open-url="https://github.com/asrtroh-netizen/OneIms">打开 GitHub</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
