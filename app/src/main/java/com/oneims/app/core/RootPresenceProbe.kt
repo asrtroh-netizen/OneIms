@@ -17,12 +17,9 @@ object RootPresenceProbe {
         val permanent: Boolean,
     ) {
         val any: Boolean get() = temporary || permanent
-        /** 右上角 ROOT 标签：临时或永久任一成立即显示。 */
+        /** 右上角 ROOT 标签：有 Root（临时或永久）即显示。 */
         val showRootBadge: Boolean get() = any
-        /**
-         * 首页第三行开关：有可用 Root 才显示。
-         * （产品诉求含临时 Root 写 CarrierConfig；严格「仅永久」会挡住 Fold 临时 Root。）
-         */
+        /** 首页第三行开关：有 Root（临时或永久）即显示，不是「仅永久 Root」。 */
         val showCarrierXmlSwitch: Boolean get() = any
     }
 
