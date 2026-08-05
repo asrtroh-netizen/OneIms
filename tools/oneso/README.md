@@ -45,7 +45,10 @@ python oneso.py temp-root
 python oneso.py temp-root --run
 # 单窗 PC 一键临时 Root（推荐；so 生成请走 GitHub OneSo-assets，本窗不打包）
 python oneso.py hub
-# 或仓库根：
+# 仓库根一键（双击或 cmd）：
+#   OneRoot.bat
+# 或 scripts：
+#   .\scripts\OneRoot.ps1
 #   .\scripts\oneso-hub.ps1
 #   .\scripts\temp-root-pc.ps1 -Hub
 #   .\scripts\temp-root-pc.ps1 [-Run]
