@@ -134,3 +134,4 @@ trim-cli --host 127.0.0.1 --port 9999 login   # 管理员
 | 备份 | FNHOME：`/vol1/1000/hermes-migrate/qq-disable-*`；DDOS：`qq-import-*` |
 | 验收 | FNHOME `NO_GATEWAY`；DDOS gateway PID 在跑、端口 8642/9119；QQ 实聊需在 QQ 侧人工确认（本轮 NOT RUN） |
 | Home channel | 迁移后缺 `QQBOT_HOME_CHANNEL` 会提示 `/sethome`。已用近期 QQ DM `chat_id` 写入 `.env` + `platforms.qqbot.home_channel`；`hermes status` 显示 `QQBot ✓ configured (home: …)` |
+| QQ 无响应根因 | ① 双 monitor 互相 stop → Gateway 挂死；② `/etc/hosts` 把 `wkapi.vip` 钉到坏 IP `107.149.90.94` → TLS EOF，模型调不通。已单实例重启 + **删 hosts 钉扎**；`hermes -z` → **WK_OK**；qqbot Ready |
