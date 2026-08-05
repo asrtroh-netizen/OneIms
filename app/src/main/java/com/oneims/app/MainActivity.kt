@@ -2049,6 +2049,7 @@ private fun AppRoot(
                                                 "exploit_failed_under_enforcing",
                                                 "no_uid0_in_output",
                                                 "ld_preload_failed",
+                                                "timeout",
                                                 ->
                                                     context.getString(
                                                         R.string.temp_root_oneclick_fail_exploit,
