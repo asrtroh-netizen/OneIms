@@ -11,3 +11,10 @@
 仓库根 `OneRoot.bat` 也会转到这里。
 
 公开分发请用 OneSo-assets 的 `OneRoot-Lite.zip` / `OneRoot-UI.zip`（不是本目录）。
+
+## 他机若出现「本地服务未响应 / Failed to fetch」
+
+1. 必须用 `一键启动.cmd` / `OneRoot.ps1` 启动，不要双击 `web\index.html`。
+2. 不要关闭启动后的黑窗（关掉 Python 进程 = API 立刻死）。
+3. `config.json` 里作者机器的 `oneims_root` / `exploit_root` 在他机可以无效；Hub 状态页不应再因此崩掉（2026-08-05 已修）。
+4. 仍失败时：删 `%TEMP%\oneroot-single.lock`，关掉残留 Edge OneRoot 窗，再启动；系统代理请放行 `127.0.0.1`。
