@@ -1,10 +1,10 @@
-﻿两个便携包怎么选（全部纯 CMD，无 PowerShell）
-========================================
+﻿两个便携包怎么选
+================
 
 1) PC-TempRoot-Lite
-   简易版：双击直接跑，彩色进度条。
+   简易版：纯 CMD，彩色横幅 + 文字进度条。不调用 PowerShell。
 
 2) PC-TempRoot-UI
-   增强版：菜单 + OneIMS 推荐 + 微信赞赏码（仍是纯 CMD）。
+   UI 版：PowerShell 窗体（进度条 / 监测 / OneIMS 推荐 / 微信赞赏码）。
 
 旧目录 pc-temp-root 已移除。

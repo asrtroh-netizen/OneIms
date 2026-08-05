@@ -144,7 +144,7 @@ goto :fail
 
 :ok
 echo.
-echo %C_MUTE%  tip: menu + OneIMS recommend + sponsor = PC-TempRoot-UI%C_RST%
+echo %C_MUTE%  tip: PowerShell UI pack = PC-TempRoot-UI%C_RST%
 echo.
 if "!NOPAUSE!"=="0" pause
 exit /b 0

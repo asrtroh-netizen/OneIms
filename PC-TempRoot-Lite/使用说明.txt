@@ -10,4 +10,4 @@ PC-TempRoot-Lite · 简易版（纯 CMD · 无 PowerShell）
 探测：一键临时Root.cmd dry
 无暂停：一键临时Root.cmd dry nopause
 
-需要菜单 / OneIMS 推荐 / 赞赏码 → PC-TempRoot-UI（同样纯 CMD）
+需要进度窗 / OneIMS 推荐 / 赞赏码 → PC-TempRoot-UI（PowerShell 窗体）
