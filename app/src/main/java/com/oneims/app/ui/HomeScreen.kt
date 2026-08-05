@@ -98,6 +98,7 @@ private fun OneKukuStandaloneHome(
                 },
                 detailOverride = state.oneKukuDetailOverride,
                 showRootBadge = state.showRootBadge,
+                rootBadgePermanent = state.rootBadgePermanent,
             )
         }
 
@@ -243,6 +244,7 @@ private fun OneLinkHome(
                 },
                 detailOverride = state.oneKukuDetailOverride,
                 showRootBadge = state.showRootBadge,
+                rootBadgePermanent = state.rootBadgePermanent,
             )
         }
 

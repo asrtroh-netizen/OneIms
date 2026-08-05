@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit
  * 探测临时 / 永久 Root，供首页 ROOT 徽标与「临时 Root 持久化改运营商」开关显隐。
  *
  * - 永久：Magisk / KernelSU 痕迹，或系统路径 `su` 可用
- * - 临时：特权桥 uid=0，或教程常见临时 `su` 路径存在/可用
+ * - 临时：特权桥 uid=0，或临时 `su` **可执行且 uid=0**（仅文件残留不算）
  */
 object RootPresenceProbe {
 
@@ -17,10 +17,12 @@ object RootPresenceProbe {
         val permanent: Boolean,
     ) {
         val any: Boolean get() = temporary || permanent
-        /** 右上角 ROOT 标签：有 Root（临时或永久）即显示。 */
+        /** 右上角 ROOT 标签：有真实 Root（临时或永久）才显示。 */
         val showRootBadge: Boolean get() = any
-        /** 首页第三行开关：有 Root（临时或永久）即显示，不是「仅永久 Root」。 */
+        /** 首页 Root 功能区：有真实 Root 才显示。 */
         val showCarrierXmlSwitch: Boolean get() = any
+        /** 徽标样式：永久优先于临时。 */
+        val badgePermanent: Boolean get() = permanent
     }
 
     private val permanentSuCandidates = listOf(
@@ -45,12 +47,22 @@ object RootPresenceProbe {
     fun probe(): Snapshot {
         val bridgeRoot = runCatching { PrivilegeBridges.current.getUid() == 0 }.getOrDefault(false)
         val markerPermanent = permanentMarkers.any { pathExists(it) }
-        val tempPath = temporarySuCandidates.any { pathExists(it) }
         val permanentSu = permanentSuCandidates.any { canExecSu(it) }
         val temporarySu = temporarySuCandidates.any { canExecSu(it) }
+        return resolve(bridgeRoot, markerPermanent, permanentSu, temporarySu)
+    }
 
+    /**
+     * 纯判定（可单测）：不再把「临时 su 路径存在」当成 Root。
+     */
+    internal fun resolve(
+        bridgeRoot: Boolean,
+        markerPermanent: Boolean,
+        permanentSu: Boolean,
+        temporarySu: Boolean,
+    ): Snapshot {
         val permanent = markerPermanent || permanentSu
-        val temporary = bridgeRoot || temporarySu || (tempPath && !permanent)
+        val temporary = bridgeRoot || temporarySu
         return Snapshot(temporary = temporary, permanent = permanent)
     }
 

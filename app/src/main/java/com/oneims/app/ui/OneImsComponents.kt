@@ -74,6 +74,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.oneims.app.R
 import com.oneims.app.core.formatCarrierShortName
 import com.oneims.app.model.SimInfo
@@ -730,7 +731,7 @@ private fun ActionTile(
  * 首页顶部通道总控卡：三态（未激活 / 激活中 / 就绪），对齐 V15。
  * 大标题只显示通道名；使用状态胶囊与标题同一行（就绪显示 Active），标题过长省略号。
  * 设备详情已下沉到首页底部卡片，本卡不再展示「设备详情」入口。
- * [showRootBadge]=true 时在右上角显示黑金 ROOT 小标签（临时/永久 Root 探测到才开）。
+ * [showRootBadge]=true 时在右上角显示 ROOT 小标签（须真实探测到 Root；临时/永久样式不同）。
  */
 @Composable
 fun StatusHero(
@@ -740,6 +741,7 @@ fun StatusHero(
     @Suppress("UNUSED_PARAMETER") onOpenDeviceDetails: (() -> Unit)? = null,
     detailOverride: String? = null,
     showRootBadge: Boolean = false,
+    rootBadgePermanent: Boolean = false,
 ) {
     val compact = rememberHomeCompactLayout()
     val alert = OneKukuCardPolicy.isAlert(oneKukuState)
@@ -834,21 +836,28 @@ fun StatusHero(
         }
     }
 
-    /** 黑金 ROOT 小标签：形态对齐 Active 胶囊，仅探测到 Root 时渲染。 */
+    /**
+     * ROOT 徽标：永久=炭黑+香槟金；临时=深蓝灰+暖琥珀（避免「没 Root 还硬黑金」的廉价感）。
+     */
     @Composable
     fun RootBadgeChip() {
         if (!showRootBadge) return
-        val gold = Color(0xFFD4AF37)
-        val ink = Color(0xFF121212)
+        val permanent = rootBadgePermanent
+        val fill = if (permanent) Color(0xFF1C1C1E) else Color(0xFF1B2430)
+        val accent = if (permanent) Color(0xFFC9A962) else Color(0xFFE0A84A)
+        val label = stringResource(
+            if (permanent) R.string.home_root_badge else R.string.home_root_badge_temp,
+        )
         Surface(
             shape = RoundedCornerShape(percent = 50),
-            color = ink,
-            border = androidx.compose.foundation.BorderStroke(1.dp, gold.copy(alpha = 0.85f)),
+            color = fill,
+            border = androidx.compose.foundation.BorderStroke(1.dp, accent.copy(alpha = 0.72f)),
+            shadowElevation = 1.dp,
         ) {
             Text(
-                text = stringResource(R.string.home_root_badge),
+                text = label,
                 modifier = Modifier.padding(
-                    horizontal = if (compact) 8.dp else 10.dp,
+                    horizontal = if (compact) 8.dp else 11.dp,
                     vertical = if (compact) 3.dp else 4.dp,
                 ),
                 style = if (compact) {
@@ -856,8 +865,9 @@ fun StatusHero(
                 } else {
                     MaterialTheme.typography.labelLarge
                 },
-                fontWeight = FontWeight.Bold,
-                color = gold,
+                fontWeight = FontWeight.SemiBold,
+                color = accent,
+                letterSpacing = 0.4.sp,
                 maxLines = 1,
             )
         }

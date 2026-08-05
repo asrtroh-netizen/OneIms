@@ -71,8 +71,10 @@ data class HomeUiState(
     val rootBootStart: Boolean = false,
     /** SDK 沙盒持久写旁路；默认关。 */
     val sandboxPersistBypass: Boolean = false,
-    /** 状态卡右上角黑金 ROOT 徽标。 */
+    /** 状态卡右上角 ROOT 徽标（仅真实 Root）。 */
     val showRootBadge: Boolean = false,
+    /** 徽标为永久 Root 样式；false 且 [showRootBadge] 时为临时样式。 */
+    val rootBadgePermanent: Boolean = false,
     /** Root 功能区（开机自启 / 临时 Root 持久化 / 工具）是否展示；有可用 Root 才为 true。 */
     val showRootFeatures: Boolean = false,
     /** 显示「一键临时 Root」实验入口（OneKuku / Lite 均可）。 */

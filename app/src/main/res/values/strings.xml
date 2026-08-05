@@ -707,6 +707,7 @@
     <string name="setup_copy_cmd_sub">复制 Termux 启动步骤</string>
     <string name="home_device_details">设备详情</string>
     <string name="home_root_badge">ROOT</string>
+    <string name="home_root_badge_temp">临时 ROOT</string>
     <string name="temp_root_carrier_persist_title">临时 Root 持久化改运营商</string>
     <string name="temp_root_carrier_persist_sub">有 Root 时写入参考最小网络键到 phone XML，并同时重放你已存的核心与高级选项（双卡按卡、不串写）</string>
     <string name="temp_root_carrier_persist_on">已开启临时 Root 持久化改运营商</string>

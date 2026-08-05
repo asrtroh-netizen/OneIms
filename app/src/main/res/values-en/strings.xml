@@ -700,6 +700,7 @@
     <string name="setup_copy_cmd_sub">Copy the Termux startup steps</string>
     <string name="home_device_details">Device details</string>
     <string name="home_root_badge">ROOT</string>
+    <string name="home_root_badge_temp">TEMP ROOT</string>
     <string name="temp_root_carrier_persist_title">Temp-root carrier persist</string>
     <string name="temp_root_carrier_persist_sub">With root, write reference minimal network keys into phone XML and reapply your saved core + advanced options (per-SIM, no cross-SIM writes)</string>
     <string name="temp_root_carrier_persist_on">Temp-root carrier persist on</string>
