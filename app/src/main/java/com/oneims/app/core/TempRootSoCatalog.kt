@@ -5,8 +5,8 @@ import android.os.Build
 import org.json.JSONObject
 
 /**
- * 临时 Root so 目录：按 [Build.DEVICE] + [Build.ID] 选资产。
- * 首发仅收录 comet / CP2A.260705.006。
+ * 临时 Root so 本地目录：按 [Build.DEVICE] + [Build.ID] 选 APK assets。
+ * 远端补齐见 [TempRootSoProvider]（OneSo-assets）。
  */
 object TempRootSoCatalog {
     data class Match(
@@ -32,13 +32,38 @@ object TempRootSoCatalog {
             val builds = devices.optJSONObject(device) ?: return null
             val fileName = builds.optString(buildId, "").trim()
             if (fileName.isEmpty()) return null
+            val assetPath =
+                if (fileName.startsWith("temproot/")) fileName
+                else "temproot/${fileName.substringAfterLast('/')}"
             Match(
                 device = device,
                 buildId = buildId,
-                assetPath = "temproot/$fileName",
+                assetPath = assetPath,
             )
         }.getOrNull()
     }
 
-    fun isCurrentDeviceSupported(context: Context): Boolean = resolve(context) != null
+    /**
+     * 本地 catalog 若写成 `so/<BuildId>/preload-….so`，可供远端 URL 拼接提示。
+     * 仅文件名时返回 null（避免瞎猜目录）。
+     */
+    fun resolveRemoteHint(context: Context, device: String, buildId: String): String? {
+        return runCatching {
+            val json = context.assets.open("temproot/catalog.json")
+                .bufferedReader()
+                .use { it.readText() }
+            val root = JSONObject(json)
+            val devices = root.optJSONObject("devices") ?: return null
+            val builds = devices.optJSONObject(device) ?: return null
+            val raw = builds.optString(buildId, "").trim()
+            when {
+                raw.startsWith("so/") -> raw
+                raw.startsWith("https://") -> raw
+                else -> null
+            }
+        }.getOrNull()
+    }
+
+    fun isCurrentDeviceSupported(context: Context): Boolean =
+        TempRootSoProvider.isLikelySupported(context)
 }

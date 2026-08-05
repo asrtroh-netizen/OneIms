@@ -41,13 +41,18 @@ object OneKukuTempRootActivator {
     suspend fun runExperimental(context: Context): Outcome =
         withContext(Dispatchers.IO) {
             val app = context.applicationContext
-            val match = TempRootSoCatalog.resolve(app)
+            // 本地 assets 优先；没有则从 OneSo-assets 拉 catalog/so（点一下自动取）。
+            val ready = TempRootSoProvider.ensure(app)
                 ?: return@withContext Outcome.UnsupportedDevice
-            val device = match.device
-            val buildId = match.buildId
-            val assetSo = match.assetPath
+            val device = ready.device
+            val buildId = ready.buildId
             val via = if (ChannelLine.usesEmbeddedBridge) "embedded_adb" else "shizuku"
-            Log.i(TAG, "start via=$via device=$device build=$buildId asset=$assetSo")
+            val sourceLabel = when (val src = ready.source) {
+                is TempRootSoProvider.SoSource.Asset -> "asset:${src.assetPath}"
+                is TempRootSoProvider.SoSource.CachedFile ->
+                    if (src.fetchedRemote) "remote:${src.file.name}" else "cache:${src.file.name}"
+            }
+            Log.i(TAG, "start via=$via device=$device build=$buildId so=$sourceLabel")
 
             val probe = exec(app, TempRootShellCommands.PROBE_SO, 20_000L)
             when {
@@ -65,8 +70,17 @@ object OneKukuTempRootActivator {
             }
 
             if (!probe.output.contains("HAS_SO")) {
-                if (!stageAssetSoToPublicDownload(app, assetSo)) {
-                    return@withContext Outcome.Failed("stage_so_failed")
+                val staged = when (val src = ready.source) {
+                    is TempRootSoProvider.SoSource.Asset ->
+                        stageAssetSoToPublicDownload(app, src.assetPath)
+                    is TempRootSoProvider.SoSource.CachedFile ->
+                        stageFileSoToPublicDownload(app, src.file)
+                }
+                if (!staged) {
+                    return@withContext Outcome.Failed(
+                        "stage_so_failed",
+                        sourceLabel,
+                    )
                 }
                 val copied = exec(app, TempRootShellCommands.cpPublicSoToTmp(), 60_000L)
                 if (!copied.ok || !copied.output.contains("CP_OK")) {
@@ -90,7 +104,7 @@ object OneKukuTempRootActivator {
                     verifyRootHonest(app)
             if (verified) {
                 Outcome.Success(
-                    "root_ok via=$via device=$device build=$buildId out=${exploit.output.take(160)}",
+                    "root_ok via=$via device=$device build=$buildId so=$sourceLabel out=${exploit.output.take(120)}",
                 )
             } else {
                 Outcome.Failed(
@@ -168,6 +182,22 @@ object OneKukuTempRootActivator {
     }
 
     private fun stageAssetSoToPublicDownload(context: Context, assetPath: String): Boolean {
+        return stageToPublicDownload(context) { output ->
+            context.assets.open(assetPath).use { input -> input.copyTo(output) }
+        }
+    }
+
+    private fun stageFileSoToPublicDownload(context: Context, file: File): Boolean {
+        if (!file.isFile || file.length() <= 0L) return false
+        return stageToPublicDownload(context) { output ->
+            file.inputStream().use { input -> input.copyTo(output) }
+        }
+    }
+
+    private fun stageToPublicDownload(
+        context: Context,
+        write: (java.io.OutputStream) -> Unit,
+    ): Boolean {
         return runCatching {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 val resolver = context.contentResolver
@@ -178,11 +208,7 @@ object OneKukuTempRootActivator {
                 }
                 val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
                     ?: return false
-                resolver.openOutputStream(uri)?.use { output ->
-                    context.assets.open(assetPath).use { input ->
-                        input.copyTo(output)
-                    }
-                } ?: return false
+                resolver.openOutputStream(uri)?.use { output -> write(output) } ?: return false
                 values.clear()
                 values.put(MediaStore.Downloads.IS_PENDING, 0)
                 resolver.update(uri, values, null, null)
@@ -192,9 +218,7 @@ object OneKukuTempRootActivator {
                 val dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
                 if (!dir.exists()) dir.mkdirs()
                 val out = File(dir, TempRootShellCommands.PUBLIC_SO_NAME)
-                context.assets.open(assetPath).use { input ->
-                    out.outputStream().use { output -> input.copyTo(output) }
-                }
+                out.outputStream().use { output -> write(output) }
                 out.isFile && out.length() > 0L
             }
         }.getOrElse {
