@@ -542,6 +542,170 @@ def cmd_pack_p10(
     return 0 if ok == len(devices) else 1
 
 
+def _assets_so_name(device: str, build: str) -> str:
+    return f"preload-{device}-{build}.so"
+
+
+def _assets_rel_path(device: str, build: str) -> str:
+    return f"so/{build}/{_assets_so_name(device, build)}"
+
+
+def _rewrite_assets_catalog_and_sums(root: Path) -> tuple[int, int]:
+    """Scan so/ and rewrite catalog.json + SHA256SUMS. Returns (files, entries)."""
+    so_root = root / "so"
+    if not so_root.is_dir():
+        raise SystemExit(f"assets so/ missing: {so_root}")
+
+    devices_map: dict[str, dict[str, str]] = {}
+    sum_lines: list[str] = []
+    file_count = 0
+    for so in sorted(so_root.rglob("preload-*.so")):
+        if not so.is_file():
+            continue
+        build = so.parent.name
+        # preload-<device>-<build>.so
+        prefix = "preload-"
+        suffix = f"-{build}.so"
+        if not (so.name.startswith(prefix) and so.name.endswith(suffix)):
+            print(f"[oneso] WARN skip unexpected name: {so}", file=sys.stderr)
+            continue
+        device = so.name[len(prefix) : -len(suffix)]
+        rel = _assets_rel_path(device, build).replace("\\", "/")
+        digest = hashlib.sha256(so.read_bytes()).hexdigest()
+        sum_lines.append(f"{digest}  {rel}")
+        devices_map.setdefault(device, {})[build] = rel
+        file_count += 1
+
+    catalog = {
+        "version": 1,
+        "note": (
+            "P9: tokay/caiman/komodo/comet · P10: blazer/frankel/mustang/rango. "
+            "0705 P9 uses per-device labels; 0605 P9 family shares identical blobs."
+        ),
+        "base_url": "https://raw.githubusercontent.com/asrtroh-netizen/OneSo-assets/main/",
+        "devices": devices_map,
+    }
+    catalog_path = root / "catalog.json"
+    catalog_path.write_text(
+        json.dumps(catalog, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    (root / "SHA256SUMS").write_text("\n".join(sum_lines) + "\n", encoding="utf-8")
+    print(f"[oneso] wrote {catalog_path} devices={len(devices_map)} files={file_count}")
+    print(f"[oneso] wrote {root / 'SHA256SUMS'} lines={len(sum_lines)}")
+    return file_count, sum(len(v) for v in devices_map.values())
+
+
+def cmd_complete_assets(
+    cfg: dict[str, Any],
+    *,
+    assets_root: Path | None = None,
+    dry_run: bool = False,
+) -> int:
+    """
+    完善 OneSo-assets：补齐同构建下可安全复制的 P9 缺口，刷新 catalog/SHA256SUMS。
+
+    - P9 @ 0705：若有源 so，用 label retarget 补齐缺失机型
+    - P9 @ 其它 build：仅当已有机型 blob 两两相同（或只剩一份）时复制补齐
+    - P10：只报告缺口，不伪造二进制
+    """
+    root = (assets_root or oneso_assets_root(cfg)).expanduser().resolve()
+    so_root = root / "so"
+    if not so_root.is_dir():
+        raise SystemExit(f"assets so/ missing: {so_root}")
+
+    print(f"[oneso] complete-assets root={root} dry_run={dry_run}")
+    created = 0
+    skipped_p10_gap = 0
+
+    builds = sorted(p.name for p in so_root.iterdir() if p.is_dir())
+    for build in builds:
+        so_dir = so_root / build
+        present_p9 = {
+            d: so_dir / _assets_so_name(d, build)
+            for d in DEVICES_0705
+            if (so_dir / _assets_so_name(d, build)).is_file()
+        }
+        missing_p9 = [d for d in DEVICES_0705 if d not in present_p9]
+        present_p10 = {
+            d: so_dir / _assets_so_name(d, build)
+            for d in DEVICES_P10
+            if (so_dir / _assets_so_name(d, build)).is_file()
+        }
+        missing_p10 = [d for d in DEVICES_P10 if d not in present_p10]
+
+        if missing_p10 and present_p10:
+            print(
+                f"[oneso] P10 {build}: have={list(present_p10)} "
+                f"missing={missing_p10} (no invent)",
+                file=sys.stderr,
+            )
+            skipped_p10_gap += len(missing_p10)
+        elif missing_p10 and not present_p10:
+            # 纯 P9 build，忽略
+            pass
+        elif present_p10 and not missing_p10:
+            print(f"[oneso] P10 {build}: complete {list(DEVICES_P10)}")
+
+        if not missing_p9:
+            if present_p9:
+                print(f"[oneso] P9 {build}: complete {list(present_p9)}")
+            continue
+        if not present_p9:
+            # 纯 P10 build 没有 P9 源，不报错；只有混装/未知目录才提示。
+            if not present_p10:
+                print(
+                    f"[oneso] P9 {build}: empty, cannot fill {missing_p9}",
+                    file=sys.stderr,
+                )
+            continue
+
+        src_path = next(iter(present_p9.values()))
+        raw = src_path.read_bytes()
+        identical = all(p.read_bytes() == raw for p in present_p9.values())
+        is_0705 = build == BUILD_0705 or (LABEL_0705_SUFFIX.encode() in raw)
+
+        print(
+            f"[oneso] P9 {build}: have={list(present_p9)} missing={missing_p9} "
+            f"identical={identical} label0705={is_0705}",
+        )
+
+        for device in missing_p9:
+            dst = so_dir / _assets_so_name(device, build)
+            if is_0705:
+                try:
+                    out = patch_0705_label(raw, device)
+                except Exception as exc:  # noqa: BLE001
+                    print(f"[oneso] FAIL patch {device}-{build}: {exc}", file=sys.stderr)
+                    continue
+                mode = "label-0705"
+            elif identical:
+                out = raw
+                mode = "copy-identical"
+            else:
+                print(
+                    f"[oneso] SKIP {device}-{build}: blobs differ, not safe to copy",
+                    file=sys.stderr,
+                )
+                continue
+            print(f"[oneso] {'DRY ' if dry_run else ''}FILL {dst.name} via {mode}")
+            if not dry_run:
+                dst.write_bytes(out)
+            created += 1
+
+    if not dry_run:
+        _rewrite_assets_catalog_and_sums(root)
+    else:
+        print("[oneso] dry-run: catalog/SHA256SUMS not rewritten")
+
+    print(
+        f"[oneso] complete-assets done created={created} "
+        f"p10_gaps_reported={skipped_p10_gap}",
+        file=sys.stderr,
+    )
+    return 0 if skipped_p10_gap == 0 or created >= 0 else 1
+
+
 def cmd_pack_0705(
     cfg: dict[str, Any],
     source_so: Path | None,
@@ -954,6 +1118,22 @@ def build_parser() -> argparse.ArgumentParser:
         help="OneSo-assets root (default config oneso_assets_root or E:/GQ/One/OneSo-assets)",
     )
 
+    complete = sub.add_parser(
+        "complete-assets",
+        help="fill safe P9 gaps in OneSo-assets and rewrite catalog/SHA256SUMS",
+    )
+    complete.add_argument(
+        "--assets-root",
+        type=Path,
+        default=None,
+        help="OneSo-assets root (default config oneso_assets_root)",
+    )
+    complete.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="report fills only, do not write files",
+    )
+
     auto = sub.add_parser(
         "auto",
         help="automate: ensure 0705 pack + adb detect + temp dry-run",
@@ -1048,6 +1228,12 @@ def main(argv: list[str] | None = None) -> int:
             cfg,
             build=str(args.build),
             assets_root=args.assets_root,
+        )
+    if args.cmd == "complete-assets":
+        return cmd_complete_assets(
+            cfg,
+            assets_root=args.assets_root,
+            dry_run=bool(args.dry_run),
         )
     if args.cmd == "auto":
         return cmd_auto(cfg, force_pack=bool(args.force_pack))
