@@ -5,19 +5,19 @@
   "devices": {
     "tokay": {
       "CP2A.260705.006": "preload-tokay-CP2A.260705.006.so",
-      "CP2A.260805.006": "preload-tokay-CP2A.260805.006.so"
+      "CP2A.260805.005": "preload-tokay-CP2A.260805.005.so"
     },
     "caiman": {
       "CP2A.260705.006": "preload-caiman-CP2A.260705.006.so",
-      "CP2A.260805.006": "preload-caiman-CP2A.260805.006.so"
+      "CP2A.260805.005": "preload-caiman-CP2A.260805.005.so"
     },
     "komodo": {
       "CP2A.260705.006": "preload-komodo-CP2A.260705.006.so",
-      "CP2A.260805.006": "preload-komodo-CP2A.260805.006.so"
+      "CP2A.260805.005": "preload-komodo-CP2A.260805.005.so"
     },
     "comet": {
       "CP2A.260705.006": "preload-comet-CP2A.260705.006.so",
-      "CP2A.260805.006": "preload-comet-CP2A.260805.006.so"
+      "CP2A.260805.005": "preload-comet-CP2A.260805.005.so"
     },
     "blazer": {
       "CP2A.260605.012": "preload-blazer-CP2A.260605.012.so"

@@ -32,8 +32,8 @@ DEVICES_0705 = ("tokay", "caiman", "komodo", "comet")
 
 # Pixel 9 · 0805：尚无官方 OTA/偏移时，从已验证 0705 so 改 label 克隆（同槽长）。
 # 注意：若 0805 内核偏移变了，需换真源 so；此包仅作 catalog/目录占位与邻近 build 试验。
-BUILD_0805 = "CP2A.260805.006"
-LABEL_0805_SUFFIX = "_cp2a_260805_006"
+BUILD_0805 = "CP2A.260805.005"
+LABEL_0805_SUFFIX = "_cp2a_260805_005"
 
 # Pixel 10 家族：blazer / frankel / mustang / rango（与 P9 二进制不同，不可交叉改 label）。
 # OneSo-assets 当前最新齐套档：CP2A.260605.012（尚无 0705 P10 成品）。
@@ -1292,7 +1292,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     pack08 = sub.add_parser(
         "pack-0805",
-        help="clone 0705 so → CP2A.260805.006 labels into OneSo-assets (P9 family)",
+        help="clone 0705 so → CP2A.260805.005 labels into OneSo-assets (P9 family)",
     )
     pack08.add_argument(
         "--source",
