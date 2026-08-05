@@ -4,16 +4,20 @@
   "base_url": "https://raw.githubusercontent.com/asrtroh-netizen/OneSo-assets/main/",
   "devices": {
     "tokay": {
-      "CP2A.260705.006": "preload-tokay-CP2A.260705.006.so"
+      "CP2A.260705.006": "preload-tokay-CP2A.260705.006.so",
+      "CP2A.260805.006": "preload-tokay-CP2A.260805.006.so"
     },
     "caiman": {
-      "CP2A.260705.006": "preload-caiman-CP2A.260705.006.so"
+      "CP2A.260705.006": "preload-caiman-CP2A.260705.006.so",
+      "CP2A.260805.006": "preload-caiman-CP2A.260805.006.so"
     },
     "komodo": {
-      "CP2A.260705.006": "preload-komodo-CP2A.260705.006.so"
+      "CP2A.260705.006": "preload-komodo-CP2A.260705.006.so",
+      "CP2A.260805.006": "preload-komodo-CP2A.260805.006.so"
     },
     "comet": {
-      "CP2A.260705.006": "preload-comet-CP2A.260705.006.so"
+      "CP2A.260705.006": "preload-comet-CP2A.260705.006.so",
+      "CP2A.260805.006": "preload-comet-CP2A.260805.006.so"
     },
     "blazer": {
       "CP2A.260605.012": "preload-blazer-CP2A.260605.012.so"

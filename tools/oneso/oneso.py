@@ -30,6 +30,11 @@ LABEL_0705_SUFFIX = "_cp2a_260705_006"
 LABEL_0705_MAX = 22
 DEVICES_0705 = ("tokay", "caiman", "komodo", "comet")
 
+# Pixel 9 · 0805：尚无官方 OTA/偏移时，从已验证 0705 so 改 label 克隆（同槽长）。
+# 注意：若 0805 内核偏移变了，需换真源 so；此包仅作 catalog/目录占位与邻近 build 试验。
+BUILD_0805 = "CP2A.260805.006"
+LABEL_0805_SUFFIX = "_cp2a_260805_006"
+
 # Pixel 10 家族：blazer / frankel / mustang / rango（与 P9 二进制不同，不可交叉改 label）。
 # OneSo-assets 当前最新齐套档：CP2A.260605.012（尚无 0705 P10 成品）。
 BUILD_P10 = "CP2A.260605.012"
@@ -381,19 +386,62 @@ def make_0705_label(device: str) -> str:
 
 def patch_0705_label(so_bytes: bytes, device: str) -> bytes:
     """把 so 内 `*_cp2a_260705_006` 标签改成目标机型（利用尾随 NUL 填充槽）。"""
-    m = re.search(rb"([a-z0-9]+_cp2a_260705_006)(\x00+)", so_bytes)
+    return _patch_cp2a_label(
+        so_bytes,
+        device,
+        from_suffixes=(LABEL_0705_SUFFIX,),
+        to_suffix=LABEL_0705_SUFFIX,
+    )
+
+
+def make_0805_label(device: str) -> str:
+    label = f"{device}{LABEL_0805_SUFFIX}"
+    if len(label) > LABEL_0705_MAX:
+        raise ValueError(f"label too long for in-place patch: {label} ({len(label)})")
+    return label
+
+
+def _patch_cp2a_label(
+    so_bytes: bytes,
+    device: str,
+    *,
+    from_suffixes: tuple[str, ...],
+    to_suffix: str,
+) -> bytes:
+    """通用：替换 so 内 `*<suffix>` 标签槽为目标 `{device}{to_suffix}`。"""
+    m = None
+    for suf in from_suffixes:
+        pat = re.escape(suf.encode("ascii"))
+        m = re.search(rb"([a-z0-9]+" + pat + rb")(\x00+)", so_bytes)
+        if m:
+            break
     if not m:
-        raise ValueError("source so missing *_cp2a_260705_006 label")
+        raise ValueError(
+            "source so missing label suffixes "
+            + "/".join(from_suffixes),
+        )
     slot_start = m.start(1)
-    slot_end = m.end(2)  # 含全部尾随 \\0
+    slot_end = m.end(2)
     slot = slot_end - slot_start
-    new_label = make_0705_label(device).encode("ascii")
+    new_label = f"{device}{to_suffix}".encode("ascii")
+    if len(new_label) > LABEL_0705_MAX:
+        raise ValueError(f"label too long: {new_label.decode()}")
     if len(new_label) + 1 > slot:
         raise ValueError(
             f"label {new_label.decode()} does not fit slot={slot}",
         )
     patched = new_label + b"\x00" * (slot - len(new_label))
     return so_bytes[:slot_start] + patched + so_bytes[slot_end:]
+
+
+def patch_0805_label(so_bytes: bytes, device: str) -> bytes:
+    """从 0705（或已是 0805）标签改成目标机型的 0805 标签。"""
+    return _patch_cp2a_label(
+        so_bytes,
+        device,
+        from_suffixes=(LABEL_0705_SUFFIX, LABEL_0805_SUFFIX),
+        to_suffix=LABEL_0805_SUFFIX,
+    )
 
 
 def catalog_0705_complete(cfg: dict[str, Any]) -> bool:
@@ -751,6 +799,69 @@ def cmd_pack_0705(
         )
         ok += 1
     print(f"[oneso] pack-0705 done ok={ok}/{len(devices)}", file=sys.stderr)
+    return 0 if ok == len(devices) else 1
+
+
+def cmd_pack_0805(
+    cfg: dict[str, Any],
+    source_so: Path | None,
+    *,
+    devices: tuple[str, ...] = DEVICES_0705,
+    assets_root: Path | None = None,
+    also_oneims: bool = True,
+) -> int:
+    """
+    从已验证 0705 so 改 label → CP2A.260805.006 P9 四机，写入 OneSo-assets
+    （可选同步 OneIMS temproot catalog）。
+    """
+    root = (assets_root or oneso_assets_root(cfg)).expanduser().resolve()
+    app = oneims_root(cfg)
+    default_src = (
+        app
+        / "app"
+        / "src"
+        / "main"
+        / "assets"
+        / "temproot"
+        / f"preload-comet-{BUILD_0705}.so"
+    )
+    assets_src = root / "so" / BUILD_0705 / f"preload-comet-{BUILD_0705}.so"
+    if source_so is None:
+        source_so = default_src if default_src.is_file() else assets_src
+    src = source_so.expanduser().resolve()
+    if not src.is_file():
+        raise SystemExit(f"source so not found: {source_so}")
+    raw = src.read_bytes()
+    print(f"[oneso] pack-0805 source={src} bytes={len(raw)} -> {BUILD_0805}")
+    out_dir = root / "so" / BUILD_0805
+    out_dir.mkdir(parents=True, exist_ok=True)
+    ok = 0
+    for device in devices:
+        try:
+            out_bytes = patch_0805_label(raw, device)
+        except Exception as exc:  # noqa: BLE001
+            print(f"[oneso] FAIL {device}: {exc}", file=sys.stderr)
+            continue
+        name = f"preload-{device}-{BUILD_0805}.so"
+        dst = out_dir / name
+        dst.write_bytes(out_bytes)
+        label = make_0805_label(device)
+        if label.encode() not in dst.read_bytes():
+            print(f"[oneso] WARN label not found after write: {label}")
+        print(f"[oneso] OK assets {device}-{BUILD_0805} -> {dst}")
+        if also_oneims:
+            project = f"{device}-{BUILD_0805}"
+            try:
+                result = import_so_core(cfg, project, dst)
+                print(
+                    f"[oneso] OK oneims {project} -> {result['asset']} "
+                    f"({result['sha256'][:12]}…)",
+                )
+            except Exception as exc:  # noqa: BLE001
+                print(f"[oneso] WARN oneims import {project}: {exc}", file=sys.stderr)
+        ok += 1
+    _rewrite_assets_catalog_and_sums(root)
+    print(f"[oneso] pack-0805 done ok={ok}/{len(devices)}", file=sys.stderr)
     return 0 if ok == len(devices) else 1
 
 
@@ -1179,6 +1290,28 @@ def build_parser() -> argparse.ArgumentParser:
         help="source preload.so (default: OneIMS comet 0705 asset)",
     )
 
+    pack08 = sub.add_parser(
+        "pack-0805",
+        help="clone 0705 so → CP2A.260805.006 labels into OneSo-assets (P9 family)",
+    )
+    pack08.add_argument(
+        "--source",
+        type=Path,
+        default=None,
+        help="source 0705 preload.so (default: OneIMS/assets comet 0705)",
+    )
+    pack08.add_argument(
+        "--assets-root",
+        type=Path,
+        default=None,
+        help="OneSo-assets root",
+    )
+    pack08.add_argument(
+        "--no-oneims",
+        action="store_true",
+        help="only write OneSo-assets, skip OneIMS temproot import",
+    )
+
     pack10 = sub.add_parser(
         "pack-p10",
         help="import P10 family (blazer/frankel/mustang/rango) from OneSo-assets",
@@ -1300,6 +1433,13 @@ def main(argv: list[str] | None = None) -> int:
         )
     if args.cmd == "pack-0705":
         return cmd_pack_0705(cfg, args.source)
+    if args.cmd == "pack-0805":
+        return cmd_pack_0805(
+            cfg,
+            args.source,
+            assets_root=args.assets_root,
+            also_oneims=not bool(args.no_oneims),
+        )
     if args.cmd == "pack-p10":
         return cmd_pack_p10(
             cfg,
