@@ -812,6 +812,55 @@ def adb_shell(command: str, *, timeout: float) -> tuple[int, str]:
         return 124, (out or "").strip() + "\n[timeout]"
 
 
+def adb_shell_heartbeat(
+    command: str,
+    *,
+    timeout: float,
+    label: str = "adb",
+    beat_sec: float = 5.0,
+) -> tuple[int, str]:
+    """长 adb shell：等待期间周期性打心跳，避免 UI/终端干等无输出。"""
+    proc = subprocess.Popen(
+        ["adb", "shell", command],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
+    started = time.time()
+    last_beat = started
+    try:
+        while proc.poll() is None:
+            now = time.time()
+            elapsed = now - started
+            if elapsed >= timeout:
+                proc.kill()
+                out, err = proc.communicate()
+                text = ((out or "") + (err or "")).strip()
+                print(
+                    f"[oneso] {label} TIMEOUT after {int(elapsed)}s",
+                    file=sys.stderr,
+                )
+                return 124, (text + "\n[timeout]").strip()
+            if now - last_beat >= beat_sec:
+                print(
+                    f"[oneso] …仍在执行 {label} "
+                    f"已等待 {int(elapsed)}s / {int(timeout)}s",
+                )
+                last_beat = now
+            time.sleep(0.4)
+        out, err = proc.communicate()
+        text = ((out or "") + (err or "")).strip()
+        return int(proc.returncode or 0), text
+    finally:
+        if proc.poll() is None:
+            try:
+                proc.kill()
+            except Exception:  # noqa: BLE001
+                pass
+
+
 ONESO_ASSETS_RAW = (
     "https://raw.githubusercontent.com/asrtroh-netizen/OneSo-assets/main/"
 )
@@ -951,7 +1000,12 @@ def cmd_temp_root(
         device=device,
         build=build,
     )
+    def _progress(pct: int, stage: str) -> None:
+        pct = max(0, min(100, int(pct)))
+        print(f"[progress] {pct}% · {stage}")
+
     print("[oneso] OneRoot · one-tap temp root only (so ← GitHub)")
+    _progress(5, "探测设备 / 解析 so")
     print(f"[oneso] adb device={device or '?'} build={build or '?'}")
     if so is None:
         print(
@@ -959,6 +1013,7 @@ def cmd_temp_root(
             "(or local cache / --so)",
             file=sys.stderr,
         )
+        _progress(100, "失败：无匹配 so")
         return 2
     sha = hashlib.sha256(so.read_bytes()).hexdigest()
     print(f"[oneso] so={so} sha256={sha[:16]}…")
@@ -968,10 +1023,12 @@ def cmd_temp_root(
         f"LD_PRELOAD×{attempts} (timeout={timeout_sec}s) → su verify",
     )
     if not run:
+        _progress(100, "预览完成（未执行）")
         print("[oneso] dry-run only. Re-run with --run / OneRoot 一键临时 Root。")
         print("[oneso] tip: .\\scripts\\OneRoot.ps1")
         return 0
 
+    _progress(15, "推送 preload.so 到设备")
     print(f"[oneso] adb push {so} {REMOTE_SO}")
     push = subprocess.run(
         ["adb", "push", str(so), REMOTE_SO],
@@ -986,25 +1043,39 @@ def cmd_temp_root(
             f"[oneso] FAIL push: {(push.stdout or '') + (push.stderr or '')}",
             file=sys.stderr,
         )
+        _progress(100, "失败：adb push")
         return 3
     chmod_code, chmod_out = adb_shell(f"chmod 644 {REMOTE_SO}", timeout=15)
     print(f"[oneso] chmod rc={chmod_code} {chmod_out[:120]}")
 
     last_out = ""
     verified = False
-    for attempt in range(1, max(1, attempts) + 1):
+    total = max(1, attempts)
+    for attempt in range(1, total + 1):
+        base = 25 + int(60 * (attempt - 1) / total)
+        _progress(base, f"清理卡住进程 · 第 {attempt}/{total} 轮")
         kcode, kout = adb_shell(KILL_STUCK_PRELOAD, timeout=20)
         print(f"[oneso] kill rc={kcode} {kout[:80]}")
+        _progress(
+            base + 5,
+            f"LD_PRELOAD exploit · 第 {attempt}/{total} 轮（最长 {timeout_sec}s）",
+        )
         print(
             f"[oneso] exploit attempt={attempt}/{attempts} "
             f"timeout={timeout_sec}s …",
         )
-        code, out = adb_shell(LD_PRELOAD_CMD, timeout=float(timeout_sec))
+        code, out = adb_shell_heartbeat(
+            LD_PRELOAD_CMD,
+            timeout=float(timeout_sec),
+            label=f"LD_PRELOAD#{attempt}",
+            beat_sec=5.0,
+        )
         last_out = out
         print(f"[oneso] ld_preload rc={code} out={out[:240]}")
         if looks_like_root_success(out):
             verified = True
             break
+        _progress(base + 12, f"校验 su · 第 {attempt}/{total} 轮")
         # 立即补验绝对路径 su（与 App verifyRootHonest 对齐意图）
         for su_cmd in (VERIFY_SU_TMP, VERIFY_SU_APEX):
             scode, sout = adb_shell(su_cmd, timeout=12)
@@ -1016,13 +1087,17 @@ def cmd_temp_root(
         if verified:
             break
         if attempt < attempts:
+            print(f"[oneso] 本轮未拿到 uid=0，{retry_gap_sec}s 后重试…")
             time.sleep(max(0.0, retry_gap_sec))
 
+    _progress(92, "读取 SELinux / 汇总")
     gcode, gout = adb_shell("getenforce", timeout=8)
     print(f"[oneso] getenforce rc={gcode} {gout}")
     if verified:
+        _progress(100, "成功：已拿到临时 Root")
         print(f"[oneso] SUCCESS root ok: {last_out[:160]}")
         return 0
+    _progress(100, f"失败：{attempts} 轮后仍无 uid=0")
     print(
         f"[oneso] FAIL: no uid=0 after {attempts} attempt(s). "
         f"last={last_out[:200]}",

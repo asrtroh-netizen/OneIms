@@ -351,6 +351,41 @@ html, body {
 .check-list .bad { color: var(--danger); }
 .check-list .soft { color: var(--muted); }
 
+.progress-panel {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: rgba(31, 34, 51, 0.72);
+}
+.progress-panel[hidden] { display: none !important; }
+.progress-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: var(--text-soft);
+}
+#progressPct {
+  font-family: var(--font-mono);
+  color: var(--accent-bright);
+  font-weight: 700;
+}
+.progress-track {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+.progress-bar {
+  height: 100%;
+  width: 0%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--teal-lo), var(--teal-hi));
+  box-shadow: 0 0 16px var(--teal-glow);
+  transition: width 220ms var(--ease);
+}
 .log-panel {
   margin-top: 14px;
   border: 1px solid var(--line);

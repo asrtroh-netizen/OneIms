@@ -8,6 +8,7 @@ import atexit
 import io
 import json
 import os
+import re
 import sys
 import tempfile
 import threading
@@ -24,6 +25,85 @@ HERE = Path(__file__).resolve().parent
 WEB = HERE / "web"
 LOCK_NAME = "oneroot-single.lock"
 API: "HubApi | None" = None
+_PROGRESS_RE = re.compile(r"\[progress\]\s*(\d+)%\s*·\s*(.+)")
+
+
+class _LiveLog(io.TextIOBase):
+    """把 print 实时写入 Job 日志，供前端轮询。"""
+
+    def __init__(self, job: "JobState") -> None:
+        super().__init__()
+        self._job = job
+        self._buf = ""
+
+    def write(self, s: str) -> int:  # type: ignore[override]
+        if not s:
+            return 0
+        self._buf += s
+        while "\n" in self._buf:
+            line, self._buf = self._buf.split("\n", 1)
+            self._job.append_line(line + "\n")
+        return len(s)
+
+    def flush(self) -> None:
+        if self._buf:
+            self._job.append_line(self._buf)
+            self._buf = ""
+
+
+class JobState:
+    def __init__(self) -> None:
+        self.lock = threading.Lock()
+        self.running = False
+        self.done = False
+        self.code: int | None = None
+        self.percent = 0
+        self.stage = "空闲"
+        self.log = ""
+        self.kind = ""
+
+    def reset(self, kind: str) -> None:
+        with self.lock:
+            self.running = True
+            self.done = False
+            self.code = None
+            self.percent = 1
+            self.stage = "启动中…"
+            self.log = ""
+            self.kind = kind
+
+    def append_line(self, line: str) -> None:
+        m = _PROGRESS_RE.search(line)
+        with self.lock:
+            self.log = (self.log + line)[-12000:]
+            if m:
+                self.percent = int(m.group(1))
+                self.stage = m.group(2).strip()
+
+    def finish(self, code: int) -> None:
+        with self.lock:
+            self.code = int(code)
+            self.running = False
+            self.done = True
+            if self.percent < 100:
+                self.percent = 100
+            if code == 0 and "失败" not in self.stage:
+                if "预览" not in self.stage and "成功" not in self.stage:
+                    self.stage = "完成"
+            elif code != 0 and "失败" not in self.stage:
+                self.stage = f"结束（exit={code}）"
+
+    def snapshot(self) -> dict[str, Any]:
+        with self.lock:
+            return {
+                "running": self.running,
+                "done": self.done,
+                "code": self.code,
+                "percent": self.percent,
+                "stage": self.stage,
+                "log": self.log,
+                "kind": self.kind,
+            }
 
 
 def _lock_path() -> Path:
@@ -73,6 +153,8 @@ class HubApi:
         if adb_dir.is_dir():
             os.environ["PATH"] = str(adb_dir) + os.pathsep + os.environ.get("PATH", "")
         self.cfg = oneso.load_config(config_path)
+        self.job = JobState()
+        self._job_thread: threading.Thread | None = None
 
     def _capture(self, fn) -> tuple[int, str]:
         buf = io.StringIO()
@@ -137,6 +219,7 @@ class HubApi:
         }
 
     def temp_root(self, run: bool = False) -> dict[str, Any]:
+        """兼容旧同步调用（完整捕获后返回）。"""
         code, log = self._capture(
             lambda: oneso.cmd_temp_root(
                 self.cfg,
@@ -148,6 +231,49 @@ class HubApi:
             ),
         )
         return {"code": code, "log": log}
+
+    def start_temp_root(self, run: bool = False) -> dict[str, Any]:
+        """后台跑 temp-root，前端轮询 /api/job 看实时进度。"""
+        if self.job.running:
+            return {"ok": False, "error": "已有任务在跑", **self.job.snapshot()}
+        kind = "temp-root" if run else "preview"
+        self.job.reset(kind)
+        live = _LiveLog(self.job)
+
+        def _worker() -> None:
+            code = 1
+            try:
+                with redirect_stdout(live), redirect_stderr(live):
+                    code = int(
+                        oneso.cmd_temp_root(
+                            self.cfg,
+                            run=bool(run),
+                            so_override=None,
+                            attempts=4,
+                            timeout_sec=180,
+                            retry_gap_sec=3.0,
+                        ),
+                    )
+            except SystemExit as exc:
+                live.write(f"FAIL: {exc}\n")
+                code = int(exc.code) if isinstance(exc.code, int) else 1
+            except Exception as exc:  # noqa: BLE001
+                live.write(f"ERROR: {exc}\n{traceback.format_exc()}\n")
+                code = 1
+            finally:
+                live.flush()
+                self.job.finish(code)
+
+        self._job_thread = threading.Thread(
+            target=_worker,
+            name="oneroot-job",
+            daemon=True,
+        )
+        self._job_thread.start()
+        return {"ok": True, "started": True, **self.job.snapshot()}
+
+    def job_status(self) -> dict[str, Any]:
+        return {"ok": True, **self.job.snapshot()}
 
     def open_url(self, url: str) -> dict[str, Any]:
         """在系统浏览器打开白名单外链（GitHub / 赞赏相关），避免壳内导航跑飞。"""
@@ -198,6 +324,10 @@ class OneRootHandler(SimpleHTTPRequestHandler):
                     {"ok": False, "error": str(exc), "trace": traceback.format_exc()},
                 )
             return
+        if path == "/api/job":
+            assert API is not None
+            self._json(200, API.job_status())
+            return
         if path in ("/", ""):
             self.path = "/index.html"
         return SimpleHTTPRequestHandler.do_GET(self)
@@ -214,7 +344,11 @@ class OneRootHandler(SimpleHTTPRequestHandler):
             assert API is not None
             run = bool(data.get("run"))
             try:
-                self._json(200, API.temp_root(run=run))
+                # 默认异步（实时进度）；sync=true 保留旧同步行为
+                if bool(data.get("sync")):
+                    self._json(200, API.temp_root(run=run))
+                else:
+                    self._json(200, API.start_temp_root(run=run))
             except Exception as exc:  # noqa: BLE001
                 self._json(
                     500,

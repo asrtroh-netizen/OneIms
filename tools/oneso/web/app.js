@@ -4,13 +4,36 @@
   const logEl = $("logPanel");
   const summary = $("checkSummary");
   const list = $("checkList");
+  const progressPanel = $("progressPanel");
+  const progressBar = $("progressBar");
+  const progressStage = $("progressStage");
+  const progressPct = $("progressPct");
   let booting = false;
+  let lastJobLog = "";
 
   function appendLog(text) {
     if (!logEl) return;
     const line = String(text || "").trimEnd();
     logEl.textContent = (logEl.textContent + "\n" + line).slice(-8000);
     logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  function setLog(text) {
+    if (!logEl) return;
+    logEl.textContent = String(text || "");
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  function showProgress(show) {
+    if (!progressPanel) return;
+    progressPanel.hidden = !show;
+  }
+
+  function setProgress(percent, stage) {
+    const pct = Math.max(0, Math.min(100, Number(percent) || 0));
+    if (progressBar) progressBar.style.width = pct + "%";
+    if (progressPct) progressPct.textContent = pct + "%";
+    if (progressStage) progressStage.textContent = stage || "进行中…";
   }
 
   function setChip(el, text, kind) {
@@ -78,7 +101,6 @@
           const r = await apiPost("/api/open-url", { url });
           if (!r.ok) appendLog("[open-url] " + (r.error || "fail"));
         } catch (e) {
-          // 无本地 API 时直接交给系统（浏览器打开静态页的场景）
           window.open(url, "_blank", "noopener");
         }
       });
@@ -121,18 +143,66 @@
     }
   }
 
-  async function runAction(name, fn) {
+  function sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  async function pollJob(name) {
+    lastJobLog = "";
+    showProgress(true);
+    setProgress(1, name === "temp-root" ? "开始一键临时 Root…" : "生成预览…");
+    if (summary) {
+      summary.className = "check-summary is-scan";
+      summary.textContent =
+        name === "temp-root"
+          ? "正在执行一键临时 Root，请看进度条与日志（可能数分钟）。"
+          : "正在生成预览计划…";
+    }
+    for (;;) {
+      const st = await apiGet("/api/job");
+      setProgress(st.percent || 0, st.stage || "进行中…");
+      if (typeof st.log === "string" && st.log !== lastJobLog) {
+        setLog(st.log);
+        lastJobLog = st.log;
+      }
+      if (st.done) {
+        appendLog("[" + name + "] exit=" + (st.code ?? "?"));
+        if (summary) {
+          if (st.code === 0) {
+            summary.className = "check-summary is-ok";
+            summary.textContent =
+              name === "temp-root"
+                ? "临时 Root 流程结束（成功）。本窗不做运营商持久化。"
+                : "预览完成。确认后可点「一键临时 Root」。";
+          } else {
+            summary.className = "check-summary is-warn";
+            summary.textContent = "流程结束但未成功（exit=" + st.code + "）。详见日志。";
+          }
+        }
+        return st;
+      }
+      await sleep(500);
+    }
+  }
+
+  async function runAction(name, run) {
     enableActions(false);
     const btnBoot = $("btnBoot");
     if (btnBoot) btnBoot.disabled = true;
     appendLog("── " + name + " ──");
     try {
-      const r = await fn();
-      appendLog(r.log || JSON.stringify(r));
-      appendLog("[" + name + "] exit=" + (r.code ?? "?"));
+      const started = await apiPost("/api/temp-root", { run: !!run });
+      if (!started.ok) {
+        appendLog("[job] " + (started.error || "无法启动"));
+        enableActions(true);
+        return;
+      }
+      await pollJob(name);
       await boot();
     } catch (e) {
       appendLog("[" + name + "] ERROR " + e);
+      showProgress(true);
+      setProgress(100, "出错：" + e);
       enableActions(true);
     } finally {
       if (btnBoot) btnBoot.disabled = false;
@@ -144,15 +214,13 @@
   const btnBoot = $("btnBoot");
   if (btnBoot) {
     btnBoot.addEventListener("click", () => boot());
-    $("btnTempDry").addEventListener("click", () =>
-      runAction("preview", () => apiPost("/api/temp-root", { run: false })),
-    );
+    $("btnTempDry").addEventListener("click", () => runAction("preview", false));
     $("btnTempRun").addEventListener("click", async () => {
       const ok = window.confirm(
-        "确认一键临时 Root？\n会从 GitHub 取 so 并跑 LD_PRELOAD（可能数分钟）。\n本窗不做运营商持久化。",
+        "确认一键临时 Root？\n会从 GitHub 取 so 并跑 LD_PRELOAD（可能数分钟）。\n过程中会显示进度条与心跳日志。\n本窗不做运营商持久化。",
       );
       if (!ok) return;
-      await runAction("temp-root", () => apiPost("/api/temp-root", { run: true }));
+      await runAction("temp-root", true);
     });
     window.__onerootBoot = boot;
     boot();
