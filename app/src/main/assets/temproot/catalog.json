@@ -1,34 +1,62 @@
 {
   "version": 2,
-  "note": "Local offline pack for CP2A.260705.006. Missing device/build → App fetches https://github.com/asrtroh-netizen/OneSo-assets (raw catalog + so).",
+  "note": "Local offline pack aligned to OneSo-assets SHA256SUMS (P9/P10 verified set; 2026-08-05). Missing remote fetch still via OneSo-assets.",
   "base_url": "https://raw.githubusercontent.com/asrtroh-netizen/OneSo-assets/main/",
   "devices": {
-    "tokay": {
-      "CP2A.260705.006": "preload-tokay-CP2A.260705.006.so",
-      "CP2A.260805.005": "preload-tokay-CP2A.260805.005.so"
-    },
     "caiman": {
       "CP2A.260705.006": "preload-caiman-CP2A.260705.006.so",
-      "CP2A.260805.005": "preload-caiman-CP2A.260805.005.so"
-    },
-    "komodo": {
-      "CP2A.260705.006": "preload-komodo-CP2A.260705.006.so",
-      "CP2A.260805.005": "preload-komodo-CP2A.260805.005.so"
+      "CP2A.260805.005": "preload-caiman-CP2A.260805.005.so",
+      "CP2A.260605.012.C1": "preload-caiman-CP2A.260605.012.C1.so",
+      "CP2A.260605.012": "preload-caiman-CP2A.260605.012.so"
     },
     "comet": {
       "CP2A.260705.006": "preload-comet-CP2A.260705.006.so",
-      "CP2A.260805.005": "preload-comet-CP2A.260805.005.so"
+      "CP2A.260805.005": "preload-comet-CP2A.260805.005.so",
+      "CP2A.260605.012.C1": "preload-comet-CP2A.260605.012.C1.so",
+      "CP2A.260605.012": "preload-comet-CP2A.260605.012.so"
+    },
+    "komodo": {
+      "CP2A.260705.006": "preload-komodo-CP2A.260705.006.so",
+      "CP2A.260805.005": "preload-komodo-CP2A.260805.005.so",
+      "CP2A.260605.012.C1": "preload-komodo-CP2A.260605.012.C1.so",
+      "CP2A.260605.012": "preload-komodo-CP2A.260605.012.so"
+    },
+    "tokay": {
+      "CP2A.260705.006": "preload-tokay-CP2A.260705.006.so",
+      "CP2A.260805.005": "preload-tokay-CP2A.260805.005.so",
+      "CP2A.260605.012.C1": "preload-tokay-CP2A.260605.012.C1.so",
+      "CP2A.260605.012": "preload-tokay-CP2A.260605.012.so"
     },
     "blazer": {
+      "CP1A.260305.018": "preload-blazer-CP1A.260305.018.so",
+      "CP1A.260405.005": "preload-blazer-CP1A.260405.005.so",
+      "CP1A.260505.005.A1": "preload-blazer-CP1A.260505.005.A1.so",
+      "CP1A.260505.005": "preload-blazer-CP1A.260505.005.so",
+      "CP2A.260605.012.C1": "preload-blazer-CP2A.260605.012.C1.so",
       "CP2A.260605.012": "preload-blazer-CP2A.260605.012.so"
     },
     "frankel": {
+      "CP1A.260305.018": "preload-frankel-CP1A.260305.018.so",
+      "CP1A.260405.005": "preload-frankel-CP1A.260405.005.so",
+      "CP1A.260505.005.A1": "preload-frankel-CP1A.260505.005.A1.so",
+      "CP1A.260505.005": "preload-frankel-CP1A.260505.005.so",
+      "CP2A.260605.012.C1": "preload-frankel-CP2A.260605.012.C1.so",
       "CP2A.260605.012": "preload-frankel-CP2A.260605.012.so"
     },
     "mustang": {
+      "CP1A.260305.018": "preload-mustang-CP1A.260305.018.so",
+      "CP1A.260405.005": "preload-mustang-CP1A.260405.005.so",
+      "CP1A.260505.005.A1": "preload-mustang-CP1A.260505.005.A1.so",
+      "CP1A.260505.005": "preload-mustang-CP1A.260505.005.so",
+      "CP2A.260605.012.C1": "preload-mustang-CP2A.260605.012.C1.so",
       "CP2A.260605.012": "preload-mustang-CP2A.260605.012.so"
     },
     "rango": {
+      "CP1A.260305.018": "preload-rango-CP1A.260305.018.so",
+      "CP1A.260405.005": "preload-rango-CP1A.260405.005.so",
+      "CP1A.260505.005.A1": "preload-rango-CP1A.260505.005.A1.so",
+      "CP1A.260505.005": "preload-rango-CP1A.260505.005.so",
+      "CP2A.260605.012.C1": "preload-rango-CP2A.260605.012.C1.so",
       "CP2A.260605.012": "preload-rango-CP2A.260605.012.so"
     }
   }
