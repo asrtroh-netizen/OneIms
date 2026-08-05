@@ -1,19 +1,24 @@
 package com.oneims.app.core
 
+import android.annotation.SuppressLint
 import android.content.Context
+import android.telephony.SubscriptionManager
 import android.util.Log
 import java.io.File
 import java.util.concurrent.TimeUnit
 
 /**
- * 教程同构：在已有 `carrierconfig-*.xml` 上写入最小网络键，并 `chown radio`。
+ * 教程同构：写入最小网络键到 `carrierconfig-*.xml`，并 `chown radio`。
  *
- * 仅覆盖已存在文件，绝不新建；失败不抬升为业务硬失败（由调用方决定是否提示）。
+ * 优先改已存在文件；若电话服务从未落盘 XML（常见于干净 Pixel），
+ * 则按当前 SIM 安全 seed 最小 `<bundle/>` 后再补丁（仍不碰分区镜像）。
  */
 object TempRootCarrierXmlPersist {
     private const val TAG = "OneIMS-TempRootCcXml"
     private const val REMOTE_BASE = "/data/user_de/0/com.android.phone/files"
     private const val STAGE_DIR = "/data/local/tmp/oneims-carrierconfig-staged"
+    private const val EMPTY_BUNDLE =
+        "<?xml version='1.0' encoding='utf-8' standalone='yes' ?>\n<bundle>\n</bundle>\n"
 
     data class ApplyResult(
         val attempted: Boolean,
@@ -45,13 +50,18 @@ object TempRootCarrierXmlPersist {
         val su = resolveWorkingSu()
             ?: return ApplyResult(true, false, 0, "su_unavailable")
 
-        val listOut = execSuCapture(su, "ls -1 $REMOTE_BASE/carrierconfig-*.xml 2>/dev/null || true")
-            ?: return ApplyResult(true, false, 0, "list_failed")
-        val remoteFiles = listOut.lines()
-            .map { it.trim() }
-            .filter { it.startsWith(REMOTE_BASE) && it.endsWith(".xml") }
+        var remoteFiles = listCarrierConfigFiles(su)
+        var seeded = 0
         if (remoteFiles.isEmpty()) {
-            return ApplyResult(true, false, 0, "no_carrierconfig_xml")
+            seeded = seedMissingCarrierConfigFiles(context, su)
+            if (seeded <= 0) {
+                return ApplyResult(true, false, 0, "no_carrierconfig_xml")
+            }
+            remoteFiles = listCarrierConfigFiles(su)
+            if (remoteFiles.isEmpty()) {
+                return ApplyResult(true, false, 0, "no_carrierconfig_xml")
+            }
+            Log.i(TAG, "seeded $seeded carrierconfig xml before patch")
         }
 
         val stagedLocal = File(context.cacheDir, "oneims-cc-stage").apply {
@@ -78,7 +88,7 @@ object TempRootCarrierXmlPersist {
                     Log.w(TAG, "stage push failed $name")
                     continue
                 }
-                val install = buildInstallSnippet(name, restartPhone = false)
+                val install = buildInstallSnippet(name, allowCreate = true)
                 val installed = execSuCapture(su, install)?.contains("ok:$name") == true
                 if (installed) {
                     patched++
@@ -90,7 +100,11 @@ object TempRootCarrierXmlPersist {
                 execSuCapture(su, "killall com.android.phone 2>/dev/null || true")
             }
             val ok = patched > 0
-            val msg = if (ok) "xml_patched=$patched" else "xml_patch_none"
+            val msg = when {
+                ok && seeded > 0 -> "xml_patched=$patched,seeded=$seeded"
+                ok -> "xml_patched=$patched"
+                else -> "xml_patch_none"
+            }
             Log.i(TAG, msg)
             return ApplyResult(true, ok, patched, msg)
         } finally {
@@ -98,20 +112,72 @@ object TempRootCarrierXmlPersist {
         }
     }
 
-    private fun buildInstallSnippet(name: String, restartPhone: Boolean): String {
-        val restart = if (restartPhone) {
-            "killall com.android.phone 2>/dev/null || true"
-        } else {
-            ":"
+    private fun listCarrierConfigFiles(su: String): List<String> {
+        val listOut = execSuCapture(
+            su,
+            "ls -1 $REMOTE_BASE/carrierconfig-*.xml 2>/dev/null || true",
+        ) ?: return emptyList()
+        return listOut.lines()
+            .map { it.trim() }
+            .filter { it.endsWith(".xml") && it.contains("carrierconfig-") }
+            .map { line ->
+                if (line.startsWith("/")) line else "$REMOTE_BASE/${line.substringAfterLast('/')}"
+            }
+            .distinct()
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun seedMissingCarrierConfigFiles(context: Context, su: String): Int {
+        val sm = context.getSystemService(SubscriptionManager::class.java) ?: return 0
+        val subs = runCatching { sm.activeSubscriptionInfoList }.getOrNull().orEmpty()
+        if (subs.isEmpty()) {
+            Log.w(TAG, "seed skipped: no active subscriptions")
+            return 0
         }
+        var created = 0
+        for (sub in subs) {
+            val iccid = sub.iccId?.trim().orEmpty()
+            if (iccid.isEmpty()) {
+                Log.w(TAG, "seed skip subId=${sub.subscriptionId}: empty iccid")
+                continue
+            }
+            val carrierId = sub.carrierId
+            val name = "carrierconfig-com.google.android.carrier-$iccid-$carrierId.xml"
+            val local = File(context.cacheDir, "oneims-cc-seed-$name")
+            try {
+                local.writeText(EMPTY_BUNDLE)
+                if (!pushViaSu(su, local, "$STAGE_DIR/$name")) {
+                    Log.w(TAG, "seed stage failed $name")
+                    continue
+                }
+                val installed = execSuCapture(su, buildInstallSnippet(name, allowCreate = true))
+                    ?.contains("ok:$name") == true
+                if (installed) {
+                    created++
+                } else {
+                    Log.w(TAG, "seed install failed $name")
+                }
+            } finally {
+                local.delete()
+            }
+        }
+        return created
+    }
+
+    private fun buildInstallSnippet(name: String, allowCreate: Boolean): String {
         val src = "$STAGE_DIR/$name"
         val dst = "$REMOTE_BASE/$name"
         val bak = "/data/local/tmp/oneims-cc-bak-$name"
+        val requireDst = if (allowCreate) {
+            "mkdir -p '$REMOTE_BASE'"
+        } else {
+            "[ -f '$dst' ]"
+        }
         return """
             set -eu
             [ -f '$src' ]
-            [ -f '$dst' ]
-            cp '$dst' '$bak'
+            $requireDst
+            if [ -f '$dst' ]; then cp '$dst' '$bak'; fi
             cp '$src' '$dst'
             chown radio:radio '$dst'
             chmod 0600 '$dst'
@@ -121,7 +187,6 @@ object TempRootCarrierXmlPersist {
               chcon u:object_r:radio_data_file:s0 '$dst' || true
             fi
             cmp -s '$src' '$dst'
-            $restart
             echo ok:$name
         """.trimIndent()
     }

@@ -2034,6 +2034,10 @@ private fun AppRoot(
                                     post.xmlMessage == "su_unavailable" ||
                                         post.xmlMessage == "no_root" ->
                                         context.getString(R.string.temp_root_carrier_apply_need_root)
+                                    post.xmlMessage == "no_carrierconfig_xml" ->
+                                        context.getString(
+                                            R.string.temp_root_carrier_apply_no_xml,
+                                        )
                                     else ->
                                         context.getString(
                                             R.string.temp_root_carrier_apply_done,
