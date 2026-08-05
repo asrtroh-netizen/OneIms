@@ -44,57 +44,81 @@ object TempRootSoProvider {
         val source: SoSource,
     )
 
-    /** IO 线程调用：点一键时确保本机有可 stage 的 so。 */
+    /**
+     * IO 线程调用：点一键时确保本机有可 stage 的 so。
+     *
+     * **强制远端优先**：每次先刷新 OneSo-assets catalog/SHA 并下载最新 so；
+     * 仅当网络失败时才退回本地缓存，再退回 APK assets。
+     */
     fun ensure(context: Context): Ready? {
         val device = TempRootSoCatalog.currentDevice()
         val buildId = TempRootSoCatalog.currentBuildId()
         if (device.isBlank() || buildId.isBlank()) return null
 
+        val cacheDir = File(context.filesDir, CACHE_DIR).also { it.mkdirs() }
+        fetchRemoteSo(cacheDir, device, buildId)?.let { file ->
+            Log.i(TAG, "use remote ${file.name} bytes=${file.length()}")
+            return Ready(device, buildId, SoSource.CachedFile(file, fetchedRemote = true))
+        }
+
+        // 离线兜底：已缓存且仍在远端 catalog（或本地曾成功）里
+        resolveFromCache(cacheDir, device, buildId)?.let { file ->
+            Log.i(TAG, "remote miss → use cache ${file.name}")
+            return Ready(device, buildId, SoSource.CachedFile(file, fetchedRemote = false))
+        }
+
         resolveLocalAsset(context, device, buildId)?.let { assetPath ->
-            Log.i(TAG, "use asset $assetPath")
+            Log.i(TAG, "remote/cache miss → use asset $assetPath")
             return Ready(device, buildId, SoSource.Asset(assetPath))
         }
 
-        val cacheDir = File(context.filesDir, CACHE_DIR).also { it.mkdirs() }
-        val remotePath = resolveRemoteRelativePath(context, cacheDir, device, buildId)
-            ?: run {
-                Log.w(TAG, "no catalog entry device=$device build=$buildId")
-                return null
-            }
+        Log.w(TAG, "no so for device=$device build=$buildId")
+        return null
+    }
+
+    /** 每次强制拉 catalog + so；成功返回缓存文件。 */
+    private fun fetchRemoteSo(cacheDir: File, device: String, buildId: String): File? {
+        val remotePath = resolveRemoteRelativePath(
+            context = null,
+            cacheDir = cacheDir,
+            device = device,
+            buildId = buildId,
+            forceNetwork = true,
+        ) ?: return null
         val url = absoluteSoUrl(remotePath)
         if (!isAllowedSoUrl(url)) {
             Log.w(TAG, "reject url $url")
             return null
         }
-
         val fileName = File(remotePath).name
         if (!fileName.matches(Regex("""^preload-[A-Za-z0-9_.-]+\.so$"""))) {
             Log.w(TAG, "reject file name $fileName")
             return null
         }
-        val out = File(cacheDir, fileName)
-        val expectedSha = lookupSha256(cacheDir, remotePath, fileName)
-
-        if (out.isFile && out.length() > 0L) {
-            if (expectedSha == null || sha256Hex(out) == expectedSha) {
-                Log.i(TAG, "use cache ${out.name}")
-                return Ready(device, buildId, SoSource.CachedFile(out, fetchedRemote = false))
-            }
-            Log.w(TAG, "cache sha mismatch, re-download ${out.name}")
-            out.delete()
-        }
-
+        val out = File(cacheDir, "${device}_${buildId}_$fileName")
         if (!downloadToFile(url, out)) {
             Log.w(TAG, "download failed $url")
             return null
         }
+        val expectedSha = lookupSha256(cacheDir, remotePath, fileName)
         if (expectedSha != null && sha256Hex(out) != expectedSha) {
             Log.w(TAG, "downloaded sha mismatch ${out.name}")
             out.delete()
             return null
         }
-        Log.i(TAG, "downloaded ${out.name} bytes=${out.length()}")
-        return Ready(device, buildId, SoSource.CachedFile(out, fetchedRemote = true))
+        // 无 SUMS 时仍接受（公开仓应始终带 SHA256SUMS；缺失则记警告）
+        if (expectedSha == null) {
+            Log.w(TAG, "SHA256SUMS miss for $fileName — accepted without hash")
+        }
+        return out
+    }
+
+    private fun resolveFromCache(cacheDir: File, device: String, buildId: String): File? {
+        val prefix = "${device}_${buildId}_"
+        val hits = cacheDir.listFiles()
+            ?.filter { it.isFile && it.name.startsWith(prefix) && it.name.endsWith(".so") && it.length() > 0L }
+            .orEmpty()
+        return hits.maxByOrNull { it.lastModified() }
     }
 
     fun isLikelySupported(context: Context): Boolean {
@@ -121,23 +145,33 @@ object TempRootSoProvider {
     }
 
     private fun resolveRemoteRelativePath(
-        context: Context,
+        context: Context?,
         cacheDir: File,
         device: String,
         buildId: String,
+        forceNetwork: Boolean,
     ): String? {
         val catalogFile = File(cacheDir, CACHED_CATALOG)
-        // 每次一点都尽量刷新远端 catalog（失败则用缓存）
-        val fresh = downloadText(REMOTE_CATALOG_URL)
-        if (fresh != null) {
-            catalogFile.writeText(fresh)
-            downloadText(REMOTE_SHA256SUMS_URL)?.let { File(cacheDir, CACHED_SHA).writeText(it) }
-            lookupInCatalogJson(fresh, device, buildId)?.let { return it }
-        } else if (catalogFile.isFile) {
+        if (forceNetwork) {
+            val fresh = downloadText(REMOTE_CATALOG_URL)
+            if (fresh != null) {
+                catalogFile.writeText(fresh)
+                downloadText(REMOTE_SHA256SUMS_URL)?.let {
+                    File(cacheDir, CACHED_SHA).writeText(it)
+                }
+                lookupInCatalogJson(fresh, device, buildId)?.let { return it }
+                return null
+            }
+            // 强制远端时网络失败：不读 APK hint 冒充远端成功
+            return null
+        }
+        if (catalogFile.isFile) {
             lookupInCatalogJson(catalogFile.readText(), device, buildId)?.let { return it }
         }
-        // 最后看 APK 内 catalog 是否给出可拼远端的相对路径
-        return TempRootSoCatalog.resolveRemoteHint(context, device, buildId)
+        if (context != null) {
+            return TempRootSoCatalog.resolveRemoteHint(context, device, buildId)
+        }
+        return null
     }
 
     internal fun lookupInCatalogJson(json: String, device: String, buildId: String): String? {
@@ -219,7 +253,8 @@ object TempRootSoProvider {
                 connectTimeout = CONNECT_TIMEOUT_MS
                 readTimeout = READ_TIMEOUT_MS
                 setRequestProperty("User-Agent", USER_AGENT)
-                instanceFollowRedirects = true
+                // 禁止重定向逃逸出白名单 host
+                instanceFollowRedirects = false
             }
             if (conn.responseCode != HttpURLConnection.HTTP_OK) return null
             conn.inputStream.bufferedReader().use { it.readText() }
@@ -240,7 +275,7 @@ object TempRootSoProvider {
                 connectTimeout = CONNECT_TIMEOUT_MS
                 readTimeout = READ_TIMEOUT_MS
                 setRequestProperty("User-Agent", USER_AGENT)
-                instanceFollowRedirects = true
+                instanceFollowRedirects = false
             }
             if (conn.responseCode != HttpURLConnection.HTTP_OK) return false
             conn.inputStream.use { input ->

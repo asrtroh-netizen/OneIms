@@ -713,12 +713,12 @@
     <string name="temp_root_carrier_persist_off">已关闭临时 Root 持久化改运营商</string>
     <string name="temp_root_carrier_persist_applied">已尝试写入 CarrierConfig XML：%1$s</string>
     <string name="temp_root_oneclick_title">一键临时 Root（实验）</string>
-    <string name="temp_root_oneclick_sub">经 OneKuku 无线 ADB 重跑 LD_PRELOAD；缺本地 so 时自动从 OneSo-assets 拉取；可能需数分钟</string>
+    <string name="temp_root_oneclick_sub">经 OneKuku 无线 ADB 重跑 LD_PRELOAD；每次优先从 OneSo-assets 拉最新 so；可能需数分钟</string>
     <string name="temp_root_oneclick_lite_hint">请先启动并授权外置 Shizuku，再点一键临时 Root</string>
     <string name="temp_root_oneclick_need_shizuku">请先启动并授权 Shizuku（Lite 通道）</string>
     <string name="temp_root_oneclick_unsupported_device">当前机型/构建在本地与 OneSo-assets 库均未找到匹配 so（需联网拉取目录）</string>
     <string name="temp_root_oneclick_need_pair">请先完成 OneKuku 无线调试配对/激活</string>
-    <string name="temp_root_oneclick_sub_lite">经外置 Shizuku 重跑 LD_PRELOAD；缺本地 so 时自动从 OneSo-assets 拉取；须先激活 Shizuku</string>
+    <string name="temp_root_oneclick_sub_lite">经外置 Shizuku 重跑 LD_PRELOAD；每次优先从 OneSo-assets 拉最新 so；须先激活 Shizuku</string>
     <string name="temp_root_oneclick_ok">临时 Root 已就绪：%1$s</string>
     <string name="temp_root_oneclick_fail">一键临时 Root 失败：%1$s</string>
     <string name="temp_root_tools_title">临时 Root 工具</string>

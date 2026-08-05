@@ -706,12 +706,12 @@
     <string name="temp_root_carrier_persist_off">Temp-root carrier persist off</string>
     <string name="temp_root_carrier_persist_applied">Tried CarrierConfig XML write: %1$s</string>
     <string name="temp_root_oneclick_title">One-tap temp root (experimental)</string>
-    <string name="temp_root_oneclick_sub">Re-run LD_PRELOAD via OneKuku wireless ADB; auto-fetches from OneSo-assets if missing; may take minutes</string>
+    <string name="temp_root_oneclick_sub">Re-run LD_PRELOAD via OneKuku wireless ADB; always prefers latest so from OneSo-assets; may take minutes</string>
     <string name="temp_root_oneclick_lite_hint">Start and grant external Shizuku, then tap one-tap temp root</string>
     <string name="temp_root_oneclick_need_shizuku">Start and grant Shizuku first (Lite channel)</string>
     <string name="temp_root_oneclick_unsupported_device">No matching so in local assets or OneSo-assets (needs network for catalog)</string>
     <string name="temp_root_oneclick_need_pair">Pair/activate OneKuku wireless debugging first</string>
-    <string name="temp_root_oneclick_sub_lite">Re-run LD_PRELOAD via external Shizuku; auto-fetches from OneSo-assets if missing; activate Shizuku first</string>
+    <string name="temp_root_oneclick_sub_lite">Re-run LD_PRELOAD via external Shizuku; always prefers latest so from OneSo-assets; activate Shizuku first</string>
     <string name="temp_root_oneclick_ok">Temp root ready: %1$s</string>
     <string name="temp_root_oneclick_fail">One-tap temp root failed: %1$s</string>
     <string name="temp_root_tools_title">Temp-root tools</string>
