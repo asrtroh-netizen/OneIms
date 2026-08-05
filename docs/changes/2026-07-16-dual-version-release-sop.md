@@ -3,7 +3,17 @@
 ## 用户定调
 
 > **以后 OneKuku + OneLink 必须一起更新** — README、GitHub Release APK、版本号三者同步，禁止只发单线。  
-> **2026-08-05 补刀：以后连 README** — 发版默认必须把 `README.md` 同步到 `origin/main`；禁止「只挂 APK、不推 README」。
+> **2026-08-05 补刀：以后连 README** — 发版默认必须把 `README.md` 同步到 `origin/main`；禁止「只挂 APK、不推 README」。  
+> **2026-08-05 再定调：下次发版直接跑 publish 脚本；不发源码；公开面仅仅是 APK + README。**
+
+## 公开面允许上传什么
+
+| 允许 | 禁止 |
+|---|---|
+| Release 双 APK | 把 `app/`、`bridge/`、私有分支 tip 推到 `main` |
+| `origin/main` 上的 `README.md`（only） | 发版流程里 `git push` 全量源码 / 私有分支 |
+
+日常源码仍可留在本地私有分支；**发版脚本路径不得夹带源码推送**。
 
 ## 每次发版清单（顺序固定）
 

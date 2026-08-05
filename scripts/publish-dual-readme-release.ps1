@@ -1,9 +1,12 @@
-# OneIms dual public release (OneKuku + OneLink + README must ship together)
+# OneIms dual public release — APK + README only (NO source push)
 # Usage: .\scripts\publish-dual-readme-release.ps1 -Version 3.3.0 [-SkipBuild] [-SkipApkUpload]
 # Requires: gh logged in; JAVA_HOME / Android SDK (see local.properties)
 #
-# Hard rule (2026-08-05): README sync to origin/main is MANDATORY.
-# Do not use -SkipReadmePush unless emergency; it requires -IKnowReadmeIsMandatoryAnyway.
+# Public surface (hard rules):
+#   1) GitHub Release assets = dual APKs only
+#   2) origin/main = README.md only (never app/, scripts/, docs/ source tree)
+#   3) Do NOT git push private/full source branches as part of this script
+# README sync is MANDATORY; -SkipReadmePush needs -IKnowReadmeIsMandatoryAnyway.
 
 param(
     [Parameter(Mandatory = $true)]
@@ -82,19 +85,28 @@ if (-not $SkipApkUpload) {
 }
 
 if (-not $SkipReadmePush) {
-    Write-Host "==> Push README-only to origin/main (worktree) [MANDATORY]"
+    Write-Host "==> Push README-only to origin/main (worktree) [MANDATORY · no source]"
     git fetch origin
     $Wt = ".worktree-readme-push"
     if (Test-Path $Wt) { git worktree remove --force $Wt 2>$null }
     git worktree add $Wt origin/main
     Copy-Item -Force "README.md" "$Wt\README.md"
     Push-Location $Wt
-    git add README.md
+    # Only README may be staged — refuse if anything else is dirty/staged.
+    git add -- README.md
+    $staged = git diff --cached --name-only
+    $stagedList = @($staged | Where-Object { $_ -and $_.Trim() -ne "" })
+    if ($stagedList.Count -gt 1 -or ($stagedList.Count -eq 1 -and $stagedList[0] -ne "README.md")) {
+        Pop-Location
+        git worktree remove --force $Wt 2>$null
+        throw "Refusing push: staged files are not README-only: $($stagedList -join ', ')"
+    }
     $pending = git status --porcelain -- README.md
     if (-not $pending) {
         Write-Host "==> README on main already matches; no commit needed"
     } else {
         git commit -m "docs: README dual $Version sync (README only)"
+        # Push ONLY this README commit to main — never the private full-source branch tip.
         git push origin HEAD:main
         if ($LASTEXITCODE -ne 0) { throw "README push to origin/main failed (exit $LASTEXITCODE)" }
     }
@@ -107,7 +119,7 @@ if (-not $SkipReadmePush) {
     if ($remoteText -notmatch [regex]::Escape($Version)) {
         throw "Postflight FAIL: origin/main README still missing '$Version'"
     }
-    Write-Host "==> README postflight OK on origin/main"
+    Write-Host "==> README postflight OK on origin/main (source was not pushed)"
 } else {
     Write-Host "==> WARNING: skipped README push (emergency override)"
 }
