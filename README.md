@@ -42,6 +42,20 @@
 
 ---
 
+## 🖥️ 临时 Root / 装核 · 请用 PC OneRoot Hub
+
+手机 **OneRoot APK 已退役**。Pixel 一键临时 Root、ReSukiSU late-load 请用 PC 端：
+
+| | 链接 |
+|---|---|
+| 源码 / 说明 | [asrtroh-netizen/OneRoot](https://github.com/asrtroh-netizen/OneRoot) |
+| 便携 ZIP | [OneSo-assets/oneroot/OneRoot-Hub.zip](https://github.com/asrtroh-netizen/OneSo-assets/tree/main/oneroot) |
+
+**分工：** OneRoot Hub = PC 拿 Root / 装核 / shell 重绑 Shizuku；**OneIms（本仓）** = 手机 IMS / 运营商持久化。  
+装核成功后临时 su 变「僵尸」通常正常——以 ReSukiSU Manager 为准。详见 OneRoot 仓库 docs/使用说明与TIP.md。
+
+---
+
 ## 🧭 怎么选？OneKuku vs OneLink
 
 两个 APK **业务功能一致**（VoLTE/VoWiFi/诊断/恢复/独家功能），区别只在 **特权通道** 怎么获得：
