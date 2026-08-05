@@ -993,20 +993,23 @@ def cmd_temp_root(
     PC 侧按需临时 Root（替代手机首页一键入口）。
     默认只探测/打印计划；加 --run 才 push + LD_PRELOAD + 验 su。
     """
+
+    def _progress(pct: int, stage: str) -> None:
+        pct = max(0, min(100, int(pct)))
+        print(f"[progress] {pct}% · {stage}", flush=True)
+
+    print("[oneso] OneRoot · one-tap temp root only (so ← GitHub)", flush=True)
+    _progress(3, "探测 adb / Pixel")
     device, build = adb_device_build()
+    print(f"[oneso] adb device={device or '?'} build={build or '?'}", flush=True)
+    _progress(8, "从 GitHub OneSo-assets 取 so（可能稍慢）")
     so = resolve_temp_root_so(
         cfg,
         so_override=so_override,
         device=device,
         build=build,
     )
-    def _progress(pct: int, stage: str) -> None:
-        pct = max(0, min(100, int(pct)))
-        print(f"[progress] {pct}% · {stage}")
-
-    print("[oneso] OneRoot · one-tap temp root only (so ← GitHub)")
-    _progress(5, "探测设备 / 解析 so")
-    print(f"[oneso] adb device={device or '?'} build={build or '?'}")
+    _progress(12, "已拿到 so，准备计划" if so else "未匹配到 so")
     if so is None:
         print(
             "[oneso] FAIL: no matching so from GitHub OneSo-assets "

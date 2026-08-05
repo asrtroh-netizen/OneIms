@@ -29,16 +29,25 @@ _PROGRESS_RE = re.compile(r"\[progress\]\s*(\d+)%\s*·\s*(.+)")
 
 
 class _LiveLog(io.TextIOBase):
-    """把 print 实时写入 Job 日志，供前端轮询。"""
+    """仅捕获「任务线程」的 print；其它线程（HTTP access log）走原 stderr。"""
 
-    def __init__(self, job: "JobState") -> None:
+    def __init__(
+        self,
+        job: "JobState",
+        owner: threading.Thread,
+        real: Any,
+    ) -> None:
         super().__init__()
         self._job = job
+        self._owner = owner
+        self._real = real
         self._buf = ""
 
     def write(self, s: str) -> int:  # type: ignore[override]
         if not s:
             return 0
+        if threading.current_thread() is not self._owner:
+            return int(self._real.write(s) or 0)
         self._buf += s
         while "\n" in self._buf:
             line, self._buf = self._buf.split("\n", 1)
@@ -46,6 +55,9 @@ class _LiveLog(io.TextIOBase):
         return len(s)
 
     def flush(self) -> None:
+        if threading.current_thread() is not self._owner:
+            self._real.flush()
+            return
         if self._buf:
             self._job.append_line(self._buf)
             self._buf = ""
@@ -238,10 +250,10 @@ class HubApi:
             return {"ok": False, "error": "已有任务在跑", **self.job.snapshot()}
         kind = "temp-root" if run else "preview"
         self.job.reset(kind)
-        live = _LiveLog(self.job)
 
         def _worker() -> None:
             code = 1
+            live = _LiveLog(self.job, threading.current_thread(), sys.__stderr__)
             try:
                 with redirect_stdout(live), redirect_stderr(live):
                     code = int(
