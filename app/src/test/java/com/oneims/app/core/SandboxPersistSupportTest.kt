@@ -52,6 +52,15 @@ class SandboxPersistSupportTest {
                 probeOutcome = PersistentCapabilityProbe.Outcome.LIKELY_ALLOWED,
             ),
         )
+        assertFalse(
+            SandboxPersistSupport.evaluateAttemptGates(
+                enabled = true,
+                forceTemporary = false,
+                isRootUid = false,
+                hasUsableRoot = true,
+                probeOutcome = PersistentCapabilityProbe.Outcome.LIKELY_ALLOWED,
+            ),
+        )
     }
 
     @Test

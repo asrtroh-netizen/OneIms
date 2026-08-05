@@ -48,6 +48,8 @@ object SandboxPersistSupport {
             enabled = isEnabled(context),
             forceTemporary = ConfigStore.isForceTemporaryOverride(context),
             isRootUid = PrivilegeBridges.current.getUid() == 0,
+            // 临时/永久 Root 任一可用时，公用「持久写」优先走 Root/XML，不走沙盒。
+            hasUsableRoot = RootPresenceProbe.probe().any,
             probeOutcome = PersistentCapabilityProbe.probe(context).outcome,
         )
 
@@ -57,10 +59,11 @@ object SandboxPersistSupport {
         forceTemporary: Boolean,
         isRootUid: Boolean,
         probeOutcome: PersistentCapabilityProbe.Outcome,
+        hasUsableRoot: Boolean = false,
     ): Boolean {
         if (!enabled) return false
         if (forceTemporary) return false
-        if (isRootUid) return false
+        if (isRootUid || hasUsableRoot) return false
         return probeOutcome == PersistentCapabilityProbe.Outcome.LIKELY_ALLOWED
     }
 

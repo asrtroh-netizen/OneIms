@@ -73,8 +73,8 @@ data class HomeUiState(
     val sandboxPersistBypass: Boolean = false,
     /** 状态卡右上角黑金 ROOT 徽标。 */
     val showRootBadge: Boolean = false,
-    /** 第三行「临时 Root 持久化改运营商」开关是否展示。 */
-    val showTempRootCarrierSwitch: Boolean = false,
+    /** Root 功能区（开机自启 / 临时 Root 持久化 / 工具）是否展示；有可用 Root 才为 true。 */
+    val showRootFeatures: Boolean = false,
     /** 与 [com.oneims.app.core.ConfigStore.isRootPersistEnhance] 同源。 */
     val tempRootCarrierPersist: Boolean = false,
     val oneKukuDetailOverride: String? = null,

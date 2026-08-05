@@ -101,13 +101,7 @@ private fun OneKukuStandaloneHome(
             )
         }
 
-        item {
-            RootBootHomeCard(
-                checked = state.rootBootStart,
-                onCheckedChange = actions.onRootBootStartChange,
-            )
-        }
-
+        // 公用开关：免 Root 也显示；有 Root 时写入侧优先走 Root（见 SandboxPersistSupport）。
         item {
             SandboxPersistHomeCard(
                 checked = state.sandboxPersistBypass,
@@ -115,7 +109,14 @@ private fun OneKukuStandaloneHome(
             )
         }
 
-        if (state.showTempRootCarrierSwitch) {
+        // Root 功能开关：有 Root 才整块显示。
+        if (state.showRootFeatures) {
+            item {
+                RootBootHomeCard(
+                    checked = state.rootBootStart,
+                    onCheckedChange = actions.onRootBootStartChange,
+                )
+            }
             item {
                 TempRootCarrierPersistHomeCard(
                     checked = state.tempRootCarrierPersist,
@@ -235,20 +236,19 @@ private fun OneLinkHome(
         }
 
         item {
-            RootBootHomeCard(
-                checked = state.rootBootStart,
-                onCheckedChange = actions.onRootBootStartChange,
-            )
-        }
-
-        item {
             SandboxPersistHomeCard(
                 checked = state.sandboxPersistBypass,
                 onCheckedChange = actions.onSandboxPersistBypassChange,
             )
         }
 
-        if (state.showTempRootCarrierSwitch) {
+        if (state.showRootFeatures) {
+            item {
+                RootBootHomeCard(
+                    checked = state.rootBootStart,
+                    onCheckedChange = actions.onRootBootStartChange,
+                )
+            }
             item {
                 TempRootCarrierPersistHomeCard(
                     checked = state.tempRootCarrierPersist,

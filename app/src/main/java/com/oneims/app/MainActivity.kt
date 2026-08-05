@@ -322,7 +322,7 @@ private fun AppRoot(
         mutableStateOf(ConfigStore.isRootPersistEnhance(context))
     }
     var showRootBadge by remember { mutableStateOf(false) }
-    var showTempRootCarrierSwitch by remember { mutableStateOf(false) }
+    var showRootFeatures by remember { mutableStateOf(false) }
     var rootBootStart by remember {
         mutableStateOf(ConfigStore.isRootBootStart(context))
     }
@@ -1115,7 +1115,7 @@ private fun AppRoot(
         while (isActive) {
             val snap = withContext(Dispatchers.IO) { RootPresenceProbe.probe() }
             showRootBadge = snap.showRootBadge
-            showTempRootCarrierSwitch = snap.showCarrierXmlSwitch
+            showRootFeatures = snap.showCarrierXmlSwitch
             delay(8_000)
         }
     }
@@ -1621,7 +1621,7 @@ private fun AppRoot(
                         rootBootStart = rootBootStart,
                         sandboxPersistBypass = sandboxPersistBypass,
                         showRootBadge = showRootBadge,
-                        showTempRootCarrierSwitch = showTempRootCarrierSwitch,
+                        showRootFeatures = showRootFeatures,
                         tempRootCarrierPersist = rootPersistEnhance,
                         oneKukuDetailOverride = oneKukuDetailOverride,
                     ),
