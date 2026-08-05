@@ -79,17 +79,17 @@ object BatteryStatsShizuku {
         }
     }
 
+    /** 与 OneIMS Lite 相同：API 里 newProcess 为 private，须 getDeclaredMethod。 */
     private fun newProcess(cmd: Array<String>): Process? {
         return runCatching {
-            val m = Shizuku::class.java.methods.firstOrNull { method ->
-                method.name == "newProcess" && method.parameterTypes.size >= 1
-            } ?: return null
-            val args = when (m.parameterTypes.size) {
-                1 -> arrayOf(cmd)
-                3 -> arrayOf(cmd, null, null)
-                else -> arrayOf(cmd)
-            }
-            m.invoke(null, *args) as? Process
+            val m = Shizuku::class.java.getDeclaredMethod(
+                "newProcess",
+                Array<String>::class.java,
+                Array<String>::class.java,
+                String::class.java,
+            )
+            m.isAccessible = true
+            m.invoke(null, cmd, null, null) as? Process
         }.getOrNull()
     }
 }

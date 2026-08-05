@@ -64,16 +64,18 @@ object ShizukuTempRootShell {
                             break
                         }
                     }
-                    if (!process.isAlive) break
+                    // 不可用 Process.isAlive：ShizukuRemoteProcess.exitValue 会把
+                    // IllegalThreadStateException 包成 RuntimeException("process hasn't exited")。
+                    if (!isRemoteProcessAlive(process)) break
                     Thread.sleep(80)
                 }
-                if (process.isAlive) {
-                    val finished = process.waitFor(
+                if (isRemoteProcessAlive(process)) {
+                    val finished = waitRemoteProcess(
+                        process,
                         (deadline - System.currentTimeMillis()).coerceAtLeast(1L),
-                        TimeUnit.MILLISECONDS,
                     )
                     if (!finished) {
-                        process.destroyForcibly()
+                        runCatching { process.destroy() }
                         return@withContext ShellExecResult(
                             false,
                             collected.toString(),
@@ -126,17 +128,45 @@ object ShizukuTempRootShell {
             }
         }
 
+    /**
+     * Shizuku API 13+ 的 [Shizuku.newProcess] 是 **private static**，
+     * `Class.methods`（仅 public）永远拿不到 → 旧实现会稳定落到 new_process_unavailable。
+     */
     private fun newProcess(cmd: Array<String>): Process? {
         return runCatching {
-            val m = Shizuku::class.java.methods.firstOrNull { method ->
-                method.name == "newProcess" && method.parameterTypes.isNotEmpty()
-            } ?: return null
-            val args = when (m.parameterTypes.size) {
-                1 -> arrayOf<Any?>(cmd)
-                3 -> arrayOf<Any?>(cmd, null, null)
-                else -> arrayOf<Any?>(cmd)
-            }
-            m.invoke(null, *args) as? Process
+            val m = Shizuku::class.java.getDeclaredMethod(
+                "newProcess",
+                Array<String>::class.java,
+                Array<String>::class.java,
+                String::class.java,
+            )
+            m.isAccessible = true
+            m.invoke(null, cmd, null, null) as? Process
+        }.onFailure { t ->
+            Log.w(TAG, "Shizuku.newProcess unavailable: ${t.javaClass.simpleName}: ${t.message}")
         }.getOrNull()
+    }
+
+    /** 优先 ShizukuRemoteProcess.alive()，避免 Process.isAlive → exitValue 抛 RuntimeException。 */
+    private fun isRemoteProcessAlive(process: Process): Boolean {
+        return runCatching {
+            val m = process.javaClass.getMethod("alive")
+            m.invoke(process) as Boolean
+        }.getOrElse {
+            runCatching { process.isAlive }.getOrDefault(true)
+        }
+    }
+
+    private fun waitRemoteProcess(process: Process, timeoutMs: Long): Boolean {
+        return runCatching {
+            val m = process.javaClass.getMethod(
+                "waitForTimeout",
+                Long::class.javaPrimitiveType,
+                TimeUnit::class.java,
+            )
+            m.invoke(process, timeoutMs, TimeUnit.MILLISECONDS) as Boolean
+        }.getOrElse {
+            process.waitFor(timeoutMs, TimeUnit.MILLISECONDS)
+        }
     }
 }
