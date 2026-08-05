@@ -46,7 +46,7 @@ cls
 echo.
 echo %C_TITLE%  ============================================================%C_RST%
 echo %C_TITLE%   PC-TempRoot-Lite                                          %C_RST%
-echo %C_MUTE%   portable console temp root · no PIPE deadlock · no Python · bundled adb/so   %C_RST%
+echo %C_MUTE%   portable console temp root · so ← GitHub OneSo-assets · bundled adb only   %C_RST%
 echo %C_TITLE%  ============================================================%C_RST%
 echo.
 
@@ -87,16 +87,21 @@ for /f "delims=" %%A in ("!BUILD!") do set "BUILD=%%A"
 echo %C_OK%  [ok]%C_RST% device=%C_ACC%!DEVICE!%C_RST%  build=%C_ACC%!BUILD!%C_RST%
 call :bar 32
 
-set "SOFILE=%SO_DIR%\preload-!DEVICE!-!BUILD!.so"
-if not exist "!SOFILE!" set "SOFILE=%SO_DIR%\preload-comet.so"
-if not exist "!SOFILE!" (
-  echo %C_BAD%  [FAIL]%C_RST% no matching so
+call :step 3 7 "fetch so from OneSo-assets"
+set "CACHE_DIR=%LOCALAPPDATA%\OneRoot\so-cache"
+if not exist "!CACHE_DIR!" mkdir "!CACHE_DIR!" >nul 2>&1
+set "SOFILE="
+for /f "usebackq delims=" %%P in (`powershell -NoProfile -ExecutionPolicy Bypass -File "%SH_DIR%\fetch-cloud-so.ps1" -Device "!DEVICE!" -Build "!BUILD!" -CacheDir "!CACHE_DIR!"`) do set "SOFILE=%%P"
+if not defined SOFILE (
+  echo %C_BAD%  [FAIL]%C_RST% cloud so fetch failed for !DEVICE!/!BUILD!
   goto :fail
 )
-
-call :step 3 7 "match preload so"
-echo %C_OK%  [ok]%C_RST% so=!SOFILE!
-echo %C_MUTE%       remote=!REMOTE_SO!%C_RST%
+if not exist "!SOFILE!" (
+  echo %C_BAD%  [FAIL]%C_RST% so path missing: !SOFILE!
+  goto :fail
+)
+echo %C_OK%  [ok]%C_RST% so=!SOFILE! ^(cloud^)
+echo %C_MUTE%       remote=!REMOTE_SO! · bundled so/ ignored%C_RST%
 call :bar 45
 
 if "!DRY!"=="1" (

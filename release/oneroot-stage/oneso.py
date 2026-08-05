@@ -598,8 +598,16 @@ def _assets_rel_path(device: str, build: str) -> str:
     return f"so/{build}/{_assets_so_name(device, build)}"
 
 
-def _rewrite_assets_catalog_and_sums(root: Path) -> tuple[int, int]:
+def _rewrite_assets_catalog_and_sums(
+    root: Path,
+    *,
+    allow_cloud_write: bool = False,
+) -> tuple[int, int]:
     """Scan so/ and rewrite catalog.json + SHA256SUMS. Returns (files, entries)."""
+    require_oneso_cloud_write(
+        allow=allow_cloud_write,
+        purpose=f"rewrite catalog/SHA256SUMS under {root}",
+    )
     so_root = root / "so"
     if not so_root.is_dir():
         raise SystemExit(f"assets so/ missing: {so_root}")
@@ -649,6 +657,7 @@ def cmd_complete_assets(
     *,
     assets_root: Path | None = None,
     dry_run: bool = False,
+    allow_cloud_write: bool = False,
 ) -> int:
     """
     完善 OneSo-assets：补齐同构建下可安全复制的 P9 缺口，刷新 catalog/SHA256SUMS。
@@ -661,6 +670,11 @@ def cmd_complete_assets(
     so_root = root / "so"
     if not so_root.is_dir():
         raise SystemExit(f"assets so/ missing: {so_root}")
+    if not dry_run:
+        require_oneso_cloud_write(
+            allow=allow_cloud_write,
+            purpose=f"complete-assets write under {root}",
+        )
 
     print(f"[oneso] complete-assets root={root} dry_run={dry_run}")
     created = 0
@@ -742,7 +756,8 @@ def cmd_complete_assets(
             created += 1
 
     if not dry_run:
-        _rewrite_assets_catalog_and_sums(root)
+        # 入口已 require；此处显式放行，避免双重门禁重复问环境变量
+        _rewrite_assets_catalog_and_sums(root, allow_cloud_write=True)
     else:
         print("[oneso] dry-run: catalog/SHA256SUMS not rewritten")
 
@@ -809,12 +824,17 @@ def cmd_pack_0805(
     devices: tuple[str, ...] = DEVICES_0705,
     assets_root: Path | None = None,
     also_oneims: bool = True,
+    allow_cloud_write: bool = False,
 ) -> int:
     """
     从已验证 0705 so 改 label → CP2A.260805.006 P9 四机，写入 OneSo-assets
     （可选同步 OneIMS temproot catalog）。
     """
     root = (assets_root or oneso_assets_root(cfg)).expanduser().resolve()
+    require_oneso_cloud_write(
+        allow=allow_cloud_write,
+        purpose=f"pack-0805 write under {root}",
+    )
     app = oneims_root(cfg)
     default_src = (
         app
@@ -860,7 +880,7 @@ def cmd_pack_0805(
             except Exception as exc:  # noqa: BLE001
                 print(f"[oneso] WARN oneims import {project}: {exc}", file=sys.stderr)
         ok += 1
-    _rewrite_assets_catalog_and_sums(root)
+    _rewrite_assets_catalog_and_sums(root, allow_cloud_write=True)
     print(f"[oneso] pack-0805 done ok={ok}/{len(devices)}", file=sys.stderr)
     return 0 if ok == len(devices) else 1
 
@@ -1301,10 +1321,34 @@ ONESO_ASSETS_RAW = (
     "https://raw.githubusercontent.com/asrtroh-netizen/OneSo-assets/main/"
 )
 ONESO_ASSETS_CATALOG = ONESO_ASSETS_RAW + "catalog.json"
+ONESO_ASSETS_SUMS = ONESO_ASSETS_RAW + "SHA256SUMS"
 ONESO_ASSETS_HOST = "raw.githubusercontent.com"
 ONESO_ASSETS_PATH_PREFIX = "/asrtroh-netizen/OneSo-assets/"
 _CATALOG_CACHE: dict[str, Any] = {"ts": 0.0, "data": None}
+_SUMS_CACHE: dict[str, Any] = {"ts": 0.0, "data": None}
 _CATALOG_TTL_SEC = 300.0
+
+
+def require_oneso_cloud_write(*, allow: bool = False, purpose: str = "") -> None:
+    """
+    云端 / 本机 OneSo-assets 写保护：默认拒绝任何自动化改写 so/catalog/SUMS。
+    仅当你主动授权时才放行：环境变量 ONESO_ALLOW_CLOUD_WRITE=1，或 CLI --allow-cloud-write。
+    """
+    env_ok = os.environ.get("ONESO_ALLOW_CLOUD_WRITE", "").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
+    if allow or env_ok:
+        why = purpose or "unspecified"
+        print(f"[oneso] CLOUD WRITE ENABLED · {why}", flush=True)
+        return
+    raise SystemExit(
+        "[oneso] blocked: OneSo-assets so 默认只读，禁止自动化改写。"
+        " 若你主动要改云端，请设置 ONESO_ALLOW_CLOUD_WRITE=1"
+        " 或传入 --allow-cloud-write。"
+    )
 
 
 def _http_get_bytes(url: str, *, timeout: float = 60) -> bytes:
@@ -1341,13 +1385,67 @@ def _load_github_catalog() -> dict[str, Any] | None:
     return catalog
 
 
+def _parse_sha256sums(text: str) -> dict[str, str]:
+    """Parse GNU sha256sum lines → {basename|rel: hex lower}."""
+    out: dict[str, str] = {}
+    for raw in text.splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        parts = line.split()
+        if len(parts) < 2:
+            continue
+        digest, name = parts[0].lower(), parts[-1].lstrip("*").replace("\\", "/")
+        if len(digest) != 64:
+            continue
+        out[name] = digest
+        out[Path(name).name] = digest
+    return out
+
+
+def _load_github_sums() -> dict[str, str] | None:
+    now = time.time()
+    cached = _SUMS_CACHE.get("data")
+    if cached is not None and (now - float(_SUMS_CACHE.get("ts") or 0)) < _CATALOG_TTL_SEC:
+        return cached  # type: ignore[return-value]
+    try:
+        text = _http_get_bytes(ONESO_ASSETS_SUMS, timeout=30).decode("utf-8")
+        parsed = _parse_sha256sums(text)
+    except (urllib.error.URLError, TimeoutError, ValueError, UnicodeDecodeError) as exc:
+        print(f"[oneso] GitHub SHA256SUMS FAIL: {exc}", file=sys.stderr)
+        return None
+    _SUMS_CACHE["ts"] = now
+    _SUMS_CACHE["data"] = parsed
+    return parsed
+
+
+def _lookup_expected_sha(sums: dict[str, str] | None, rel: str, name: str) -> str | None:
+    if not sums:
+        return None
+    rel_n = rel.lstrip("/").replace("\\", "/")
+    return sums.get(rel_n) or sums.get(name)
+
+
+def _so_sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest().lower()
+
+
+def _is_elf_so(path: Path) -> bool:
+    try:
+        if not path.is_file() or path.stat().st_size < 64:
+            return False
+        return path.read_bytes()[:4] == b"\x7fELF"
+    except OSError:
+        return False
+
+
 def fetch_so_from_github(
     device: str,
     build: str,
     *,
     cache_dir: Path,
 ) -> Path | None:
-    """从 GitHub OneSo-assets 拉 catalog + 匹配 so，缓存到 cache_dir。"""
+    """从 GitHub OneSo-assets 拉 catalog + SHA256SUMS + 匹配 so，写入 cache_dir。"""
     catalog = _load_github_catalog()
     if catalog is None:
         return None
@@ -1359,18 +1457,31 @@ def fetch_so_from_github(
         )
         return None
     base = str(catalog.get("base_url") or ONESO_ASSETS_RAW).rstrip("/") + "/"
-    if not rel.startswith("http"):
-        url = base + rel.lstrip("/")
+    if not str(rel).startswith("http"):
+        url = base + str(rel).lstrip("/")
     else:
-        url = rel
+        url = str(rel)
     cache_dir.mkdir(parents=True, exist_ok=True)
-    name = Path(rel).name
+    name = Path(str(rel)).name
     if not name.endswith(".so"):
         name = f"preload-{device}-{build}.so"
+    expected = _lookup_expected_sha(_load_github_sums(), str(rel), name)
     dst = cache_dir / name
-    if dst.is_file() and dst.stat().st_size >= 64 and dst.read_bytes()[:4] == b"\x7fELF":
-        print(f"[oneso] GitHub so cache hit -> {dst}")
-        return dst
+    if expected is None:
+        print(
+            "[oneso] GitHub so FAIL: SHA256SUMS miss — refuse without cloud hash",
+            file=sys.stderr,
+        )
+        return None
+    if _is_elf_so(dst):
+        got = _so_sha256(dst)
+        if got == expected:
+            print(f"[oneso] GitHub so cache hit -> {dst}")
+            return dst
+        print(
+            f"[oneso] cache sha mismatch (got={got[:16]}… want={expected[:16]}…); re-fetch",
+            file=sys.stderr,
+        )
     try:
         data = _http_get_bytes(url, timeout=120)
     except (urllib.error.URLError, TimeoutError, ValueError) as exc:
@@ -1379,64 +1490,60 @@ def fetch_so_from_github(
     if len(data) < 64 or data[:4] != b"\x7fELF":
         print("[oneso] GitHub so FAIL: not ELF", file=sys.stderr)
         return None
+    got = hashlib.sha256(data).hexdigest().lower()
+    if got != expected:
+        print(
+            f"[oneso] GitHub so FAIL: sha mismatch got={got[:16]}… want={expected[:16]}…",
+            file=sys.stderr,
+        )
+        return None
     dst.write_bytes(data)
     print(f"[oneso] GitHub so -> {dst} ({len(data)} bytes)")
     return dst
 
 
-def _so_from_oneso_assets_root(
-    cfg: dict[str, Any],
+def _so_from_cache(
+    cache: Path,
     *,
     device: str,
     build: str,
+    expected: str | None,
 ) -> Path | None:
-    """本机 clone 的 OneSo-assets（config.oneso_assets_root）——比 GitHub 快一个数量级。"""
-    raw = str(cfg.get("oneso_assets_root") or "").strip()
-    if not raw:
-        return None
-    root = Path(raw).expanduser()
-    if not root.is_dir():
-        return None
-    catalog_path = root / "catalog.json"
-    if catalog_path.is_file():
-        try:
-            catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
-            rel = (catalog.get("devices") or {}).get(device, {}).get(build)
-            if rel:
-                cand = root / str(rel).lstrip("/").replace("/", os.sep)
-                if cand.is_file():
-                    print(f"[oneso] local OneSo-assets so -> {cand}")
-                    return cand
-        except Exception:  # noqa: BLE001
-            pass
-    direct = root / "so" / build / f"preload-{device}-{build}.so"
-    if direct.is_file():
-        print(f"[oneso] local OneSo-assets so -> {direct}")
-        return direct
+    candidates: list[Path] = []
+    primary = cache / f"preload-{device}-{build}.so"
+    if primary.is_file():
+        candidates.append(primary)
+    candidates.extend(
+        hit
+        for hit in sorted(cache.glob(f"preload-{device}-{build}*.so"))
+        if hit not in candidates
+    )
+    for hit in candidates:
+        if not _is_elf_so(hit):
+            continue
+        if expected is not None and _so_sha256(hit) != expected:
+            print(
+                f"[oneso] skip stale cache {hit.name} (sha≠SUMS)",
+                file=sys.stderr,
+            )
+            continue
+        print(f"[oneso] using cached so -> {hit}")
+        return hit
     return None
 
 
 def classify_so_source(cfg: dict[str, Any], so: Path | None) -> str:
     """给 Hub 状态条用的 so 来源短标签。"""
+    del cfg  # 不再用本机 OneSo-assets / App assets 作运行时来源
     if so is None or not so.is_file():
         return "missing"
     try:
         resolved = so.resolve()
     except Exception:  # noqa: BLE001
         resolved = so
-    raw = str(cfg.get("oneso_assets_root") or "").strip()
-    if raw:
-        try:
-            root = Path(raw).expanduser().resolve()
-            if root in resolved.parents or resolved.parent == root:
-                return "local-assets"
-        except Exception:  # noqa: BLE001
-            pass
     parts = {p.lower() for p in resolved.parts}
     if ".cache" in parts:
         return "cache"
-    if "temproot" in parts:
-        return "app-assets"
     return "file"
 
 
@@ -1449,63 +1556,41 @@ def resolve_temp_root_so(
     prefer_github: bool = True,
 ) -> Path | None:
     """
-    so 解析（快路径优先）：
-    --so > 本机 OneSo-assets > .cache > GitHub > App assets。
+    so 解析（云端优先，对齐 App TempRootSoProvider）：
+    --so（你显式指定）> GitHub OneSo-assets > 本机 .cache（须过 SHA256SUMS）。
+    不再读取本机 OneSo-assets clone，也不再回退 App assets / 发包内置 so。
     """
+    del cfg  # 保留形参以兼容 hub/调用方；运行时不再依赖 oneso_assets_root/oneims_root
     if so_override is not None:
         p = so_override.expanduser().resolve()
         return p if p.is_file() else None
 
-    cache = HERE / ".cache" / "so"
-    if device and build:
-        local_assets = _so_from_oneso_assets_root(cfg, device=device, build=build)
-        if local_assets is not None:
-            return local_assets
-        cached = cache / f"preload-{device}-{build}.so"
-        if cached.is_file() and cached.stat().st_size >= 64:
-            print(f"[oneso] using cached so -> {cached}")
-            return cached
-        for hit in sorted(cache.glob(f"preload-{device}-{build}*.so")):
-            if hit.is_file() and hit.stat().st_size >= 64:
-                print(f"[oneso] using cached so -> {hit}")
-                return hit
+    if not device or not build:
+        return None
 
-    if prefer_github and device and build:
+    cache = HERE / ".cache" / "so"
+    if prefer_github:
         gh = fetch_so_from_github(device, build, cache_dir=cache)
         if gh is not None:
             return gh
 
-    # Hub / 他机便携：oneims_root 常指向作者机器路径；绝不能 SystemExit 打断 HTTP。
-    app_raw = str(cfg.get("oneims_root") or "").strip()
-    if not app_raw:
-        return None
-    app = Path(app_raw).expanduser()
-    try:
-        app = app.resolve()
-    except Exception:  # noqa: BLE001
-        return None
-    if not (app / "app").is_dir():
-        return None
-    assets = app / "app" / "src" / "main" / "assets" / "temproot"
-    catalog_path = assets / "catalog.json"
-    if device and build and catalog_path.is_file():
-        try:
-            catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
-            name = (catalog.get("devices") or {}).get(device, {}).get(build)
-            if name:
-                cand = assets / name
-                if cand.is_file():
-                    return cand
-        except Exception:  # noqa: BLE001
-            pass
-    if device and build:
-        named = assets / f"preload-{device}-{build}.so"
-        if named.is_file():
-            return named
-    legacy = assets / "preload-comet.so"
-    if legacy.is_file():
-        return legacy
-    return None
+    # 离线/状态轮询：仅接受已缓存且（若能取到）符合云端 SUMS 的 so
+    expected: str | None = None
+    catalog = _load_github_catalog() if prefer_github else _CATALOG_CACHE.get("data")
+    sums = _load_github_sums() if prefer_github else _SUMS_CACHE.get("data")
+    if isinstance(catalog, dict):
+        rel = (catalog.get("devices") or {}).get(device, {}).get(build)
+        if rel:
+            expected = _lookup_expected_sha(
+                sums if isinstance(sums, dict) else None,
+                str(rel),
+                Path(str(rel)).name,
+            )
+    elif prefer_github is False:
+        # 状态条禁网：用文件名命中 cache，不校验 SUMS（避免轮询打网）
+        return _so_from_cache(cache, device=device, build=build, expected=None)
+
+    return _so_from_cache(cache, device=device, build=build, expected=expected)
 
 
 def cmd_temp_root(
@@ -1530,7 +1615,7 @@ def cmd_temp_root(
     _progress(3, "探测 adb / Pixel")
     device, build = adb_device_build()
     print(f"[oneso] adb device={device or '?'} build={build or '?'}", flush=True)
-    _progress(8, "解析 preload.so（本地/缓存优先，必要时才拉 GitHub）")
+    _progress(8, "解析 preload.so（GitHub OneSo-assets 优先，缓存须过 SUMS）")
     so = resolve_temp_root_so(
         cfg,
         so_override=so_override,
@@ -1540,8 +1625,8 @@ def cmd_temp_root(
     _progress(12, "已拿到 so，准备计划" if so else "未匹配到 so")
     if so is None:
         print(
-            "[oneso] FAIL: no matching so from local OneSo-assets / cache / "
-            "GitHub / --so",
+            "[oneso] FAIL: no matching so from GitHub / verified cache / --so "
+            "(no local-assets / App assets fallback)",
             file=sys.stderr,
         )
         _progress(100, "失败：无匹配 so")
@@ -1773,6 +1858,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="only write OneSo-assets, skip OneIMS temproot import",
     )
+    pack08.add_argument(
+        "--allow-cloud-write",
+        action="store_true",
+        help="explicitly allow writing OneSo-assets (default: blocked)",
+    )
 
     pack10 = sub.add_parser(
         "pack-p10",
@@ -1804,6 +1894,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--dry-run",
         action="store_true",
         help="report fills only, do not write files",
+    )
+    complete.add_argument(
+        "--allow-cloud-write",
+        action="store_true",
+        help="explicitly allow writing OneSo-assets (default: blocked)",
     )
 
     auto = sub.add_parser(
@@ -1917,6 +2012,7 @@ def main(argv: list[str] | None = None) -> int:
             args.source,
             assets_root=args.assets_root,
             also_oneims=not bool(args.no_oneims),
+            allow_cloud_write=bool(args.allow_cloud_write),
         )
     if args.cmd == "pack-p10":
         return cmd_pack_p10(
@@ -1929,6 +2025,7 @@ def main(argv: list[str] | None = None) -> int:
             cfg,
             assets_root=args.assets_root,
             dry_run=bool(args.dry_run),
+            allow_cloud_write=bool(args.allow_cloud_write),
         )
     if args.cmd == "auto":
         return cmd_auto(cfg, force_pack=bool(args.force_pack))

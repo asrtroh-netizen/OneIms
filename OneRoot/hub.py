@@ -242,7 +242,7 @@ class HubApi:
     def status(self) -> dict[str, Any]:
         device, build = oneso.adb_device_build()
         adb_ok = bool(device and build)
-        # 状态轮询禁止打网：只认本机 assets / cache；真正一键时再允许 GitHub
+        # 状态轮询禁止打网：只认已验证缓存；真正一键时再拉 GitHub
         so = oneso.resolve_temp_root_so(
             self.cfg,
             so_override=None,
@@ -253,11 +253,9 @@ class HubApi:
         so_ok = so is not None and so.is_file()
         so_src = oneso.classify_so_source(self.cfg, so)
         so_src_label = {
-            "local-assets": "so ← 本机 OneSo-assets",
-            "cache": "so ← 本地缓存",
-            "app-assets": "so ← App assets",
-            "file": "so ← 本地文件",
-            "missing": "so ← 未命中（一键时再拉 GitHub）",
+            "cache": "so ← 云端缓存",
+            "file": "so ← 本地文件(--so)",
+            "missing": "so ← 云端（一键时拉取）",
         }.get(so_src, f"so ← {so_src}")
         root_ok, root_label = (
             self._probe_temp_root() if adb_ok else (False, "临时 Root · 无设备")
@@ -275,7 +273,11 @@ class HubApi:
             {
                 "name": so_src_label,
                 "ok": so_ok,
-                "detail": so.name if so_ok else "本地无匹配；一键时会尝试 GitHub",
+                "detail": (
+                    so.name
+                    if so_ok
+                    else "无本地缓存；一键时从 OneSo-assets 云端拉取"
+                ),
             },
             {
                 "name": "临时 Root",

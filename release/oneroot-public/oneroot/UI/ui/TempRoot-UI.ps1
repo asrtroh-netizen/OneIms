@@ -397,15 +397,30 @@ function Start-TempRootJob([bool]$dry) {
         $build = ((Invoke-Adb @('-s', $serial, 'shell', 'getprop', 'ro.build.id') 15).Text -replace '\s', '')
         Ui-Monitor $serial $device $build $null '-'
         Ui-Log "device=$device build=$build"
-        $so = Join-Path $SoDir ("preload-$device-$build.so")
-        if (-not (Test-Path -LiteralPath $so)) { $so = Join-Path $SoDir 'preload-comet.so' }
-        if (-not (Test-Path -LiteralPath $so)) {
+        Ui-Progress 22 'fetch so (OneSo-assets)'
+        $cacheDir = Join-Path $env:LOCALAPPDATA 'OneRoot\so-cache'
+        $fetchPs1 = Join-Path $ShDir 'fetch-cloud-so.ps1'
+        if (-not (Test-Path -LiteralPath $fetchPs1)) {
+            Ui-Progress 100 'FAIL: missing fetch-cloud-so.ps1'
+            Set-Content -LiteralPath $StatusFile -Value 'FAIL missing fetch script' -Encoding UTF8
+            return
+        }
+        try {
+            $so = (& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $fetchPs1 -Device $device -Build $build -CacheDir $cacheDir |
+                Select-Object -Last 1).ToString().Trim()
+        } catch {
+            Ui-Progress 100 'FAIL: cloud so fetch'
+            Ui-Log ("cloud fetch error: {0}" -f $_)
+            Set-Content -LiteralPath $StatusFile -Value 'FAIL cloud so fetch' -Encoding UTF8
+            return
+        }
+        if (-not $so -or -not (Test-Path -LiteralPath $so)) {
             Ui-Progress 100 'FAIL: no so'
             Set-Content -LiteralPath $StatusFile -Value 'FAIL no so' -Encoding UTF8
             return
         }
-        Ui-Progress 25 'so matched'
-        Ui-Log "so=$so"
+        Ui-Progress 25 'so from cloud'
+        Ui-Log "so=$so (cloud; bundled so/ ignored)"
         if ($dry) {
             Ui-Progress 100 'dry-run done'
             Ui-Log 'dry-run only'

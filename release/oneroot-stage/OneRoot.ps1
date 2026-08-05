@@ -1,6 +1,6 @@
 ﻿# OneRoot — local full pack (Python hub)
 # Usage: double-click 一键启动.cmd  or  .\OneRoot.ps1
-# so: GitHub OneSo-assets by default
+# so: GitHub OneSo-assets only (no local/assets embed; cache must match SHA256SUMS)
 
 $ErrorActionPreference = "Stop"
 $Here = Split-Path -Parent $MyInvocation.MyCommand.Path
