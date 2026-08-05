@@ -88,3 +88,22 @@ Hub HTTP 日志可见；不影响功能。
 1. 对照成功过的 `comet@0705` so / `target.h` 偏移，核对 `phys_offset`/`slide`/`delta=0` 是否异常  
 2. 评估加长 LD_PRELOAD timeout（当前 90s）或调整 pipe stage 策略后单机复验  
 3. 可选：补 favicon；README 标题改 OneRoot（仍为 P3）
+
+---
+
+## 残留排查（用户怀疑 App 残留 · 同夜）
+
+截图：`Android System Intelligence` 屡次停止（`com.google.android.as`）。
+
+| 嫌疑 | 结论 | 证据 |
+|---|---|---|
+| OneRoot App `com.oneroot.app` | **不成立**（未安装） | `pm list packages` 空；此前 20:22 已卸 |
+| RootMyPixel `com.alex193a.rootmypixel` | **不成立** | 包不存在 |
+| 系统智能 ASI 弹窗 | **真有崩溃弹窗**，与 temp-root FAIL **弱相关** | 已 `am force-stop`；属 Google 组件 |
+| `com.google.android.carrier` | **强相关系统异常** | 曾 `installed=false` → `vendorprovider` 找不到 → `com.google.android.apps.scone` ModemService 崩 |
+| `/data/local/tmp` 临时 Root 文件 | 部分清理 | shell 已删 `preload-comet.so`/`exploit.log`/`su_daemon.log` |
+| OneIMS carrier 暂存（root 属主） | **仍在、shell 删不掉** | `oneims-carrierconfig-staged/*.xml`、`telephony.db`、`t.db` |
+
+处置：`cmd package install-existing com.google.android.carrier` → `installed=true`，`pm path` 恢复为 `CarrierSettings.apk`；provider 查询从抛异常变为可解析（空结果）。
+
+对「一键 Root 仍无 uid=0」：App 残留假说 **否证**；carrier 包缺失会制造系统噪声，但 LD_PRELOAD `pipe stage` 超时仍应优先按 exploit/偏移查。有 uid=0 后再清 root 属主 carrier 暂存。
