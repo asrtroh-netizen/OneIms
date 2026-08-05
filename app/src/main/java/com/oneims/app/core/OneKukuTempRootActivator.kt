@@ -22,6 +22,8 @@ import java.util.concurrent.TimeUnit
 object OneKukuTempRootActivator {
     private const val TAG = "OneIMS-TempRootAct"
     private const val LD_TIMEOUT_MS = 600_000L
+    /** 真机 README：第一轮常卡 CFI/slide，杀掉再跑第二轮约 2 分钟。 */
+    private const val EXPLOIT_ATTEMPTS = 2
 
     sealed class Outcome {
         data class Success(val detail: String) : Outcome()
@@ -91,26 +93,42 @@ object OneKukuTempRootActivator {
                 }
             }
 
-            val exploit = exec(app, TempRootShellCommands.LD_PRELOAD, LD_TIMEOUT_MS)
-            if (!exploit.ok) {
-                return@withContext Outcome.Failed(
-                    exploit.reason.ifBlank { "ld_preload_failed" },
-                    exploit.output,
+            var lastExploit = ShellExec(false, "", "not_started")
+            var verified = false
+            for (attempt in 1..EXPLOIT_ATTEMPTS) {
+                // 清掉上一轮卡死的 preload，避免并发堆一堆挂起的 id。
+                exec(app, TempRootShellCommands.KILL_STUCK_PRELOAD, 15_000L)
+                Log.i(TAG, "exploit attempt=$attempt/$EXPLOIT_ATTEMPTS via=$via")
+                lastExploit = exec(app, TempRootShellCommands.LD_PRELOAD, LD_TIMEOUT_MS)
+                verified =
+                    TempRootShellCommands.looksLikeRootSuccess(lastExploit.output) ||
+                        verifyRootHonest(app)
+                if (verified) break
+                Log.w(
+                    TAG,
+                    "exploit attempt=$attempt failed ok=${lastExploit.ok} " +
+                        "reason=${lastExploit.reason} out=${lastExploit.output.take(160)}",
                 )
             }
 
-            val verified =
-                TempRootShellCommands.looksLikeRootSuccess(exploit.output) ||
-                    verifyRootHonest(app)
             if (verified) {
                 Outcome.Success(
-                    "root_ok via=$via device=$device build=$buildId so=$sourceLabel out=${exploit.output.take(120)}",
+                    "root_ok via=$via device=$device build=$buildId so=$sourceLabel " +
+                        "out=${lastExploit.output.take(120)}",
                 )
             } else {
                 val suProbe = exec(app, TempRootShellCommands.VERIFY_SU_TMP, 12_000L)
+                val reason =
+                    if (!lastExploit.ok &&
+                        lastExploit.reason in setOf("timeout", "no_uid0_in_output", "ld_preload_failed")
+                    ) {
+                        lastExploit.reason.ifBlank { "ld_preload_failed" }
+                    } else {
+                        classifySuMissingReason(lastExploit.output, suProbe.output)
+                    }
                 Outcome.Failed(
-                    classifySuMissingReason(exploit.output, suProbe.output),
-                    listOf(exploit.output, suProbe.output)
+                    reason,
+                    listOf(lastExploit.output, suProbe.output)
                         .filter { it.isNotBlank() }
                         .joinToString(" | ")
                         .take(280),
@@ -164,7 +182,8 @@ object OneKukuTempRootActivator {
      * OneKuku：再经内嵌 adbd 白名单复核。
      */
     private suspend fun verifyRootHonest(context: Context): Boolean {
-        if (localSuIdOk()) return true
+        // Lite：app 域连 temp_su.sock 会被 SELinux 拒绝，本地 ProcessBuilder 只制造 AVC 噪声。
+        if (ChannelLine.usesEmbeddedBridge && localSuIdOk()) return true
         if (RootPresenceProbe.probe().any) return true
         if (!ChannelLine.usesEmbeddedBridge) {
             val viaShizukuTmp = ShizukuTempRootShell.execWhitelistedShell(

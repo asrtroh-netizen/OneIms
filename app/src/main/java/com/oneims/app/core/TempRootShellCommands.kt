@@ -17,6 +17,15 @@ object TempRootShellCommands {
     const val VERIFY_SU_TMP: String = "/data/local/tmp/su -c /system/bin/id"
     const val VERIFY_SU_APEX: String = "/apex/com.android.virt/bin/su -c /system/bin/id"
 
+    /**
+     * 清掉卡在 CFI/slide 的残留 preload（README：第一轮可能卡住，杀掉重试）。
+     * 只杀带 preload-comet 的进程，不碰其它 id。
+     */
+    const val KILL_STUCK_PRELOAD: String =
+        "pkill -9 -f preload-comet.so 2>/dev/null; " +
+            "pkill -9 -f 'LD_PRELOAD=/data/local/tmp/preload' 2>/dev/null; " +
+            "echo KILL_OK"
+
     /** 绝对路径 id，避免 Drop-In 对裸 `id` 的假 Root mock。 */
     const val LD_PRELOAD: String =
         "LD_PRELOAD=$REMOTE_SO /system/bin/id"
@@ -28,6 +37,7 @@ object TempRootShellCommands {
         val c = command.trim()
         if (c.isEmpty()) return false
         if (c == PROBE_SO) return true
+        if (c == KILL_STUCK_PRELOAD) return true
         if (c == VERIFY_SU_TMP || c == VERIFY_SU_APEX) return true
         if (c == LD_PRELOAD) return true
         if (c.startsWith("LD_PRELOAD=") &&
