@@ -25,10 +25,18 @@ object TempRootPostSuccessActions {
         fun summary(context: Context): String {
             val parts = mutableListOf<String>()
             if (xmlAttempted) {
-                parts += context.getString(
-                    if (xmlOk) R.string.temp_root_post_xml_ok else R.string.temp_root_post_xml_fail,
-                    xmlMessage,
-                )
+                parts += when {
+                    xmlOk && xmlMessage.startsWith("xml_already_ok") ->
+                        context.getString(R.string.temp_root_post_xml_already)
+                    xmlOk ->
+                        context.getString(R.string.temp_root_post_xml_ok)
+                    xmlMessage == "no_carrierconfig_xml" ->
+                        context.getString(R.string.temp_root_post_xml_fail_no_file)
+                    xmlMessage == "su_unavailable" || xmlMessage == "no_root" ->
+                        context.getString(R.string.temp_root_post_xml_fail_no_root)
+                    else ->
+                        context.getString(R.string.temp_root_post_xml_fail)
+                }
             } else {
                 parts += context.getString(R.string.temp_root_post_xml_skipped)
             }
@@ -36,15 +44,12 @@ object TempRootPostSuccessActions {
                 parts += if (reapplyOk) {
                     context.getString(R.string.temp_root_post_reapply_ok)
                 } else {
-                    context.getString(
-                        R.string.temp_root_post_reapply_fail,
-                        reapplyMessage.take(160),
-                    )
+                    context.getString(R.string.temp_root_post_reapply_fail)
                 }
             } else {
                 parts += context.getString(R.string.temp_root_post_reapply_none)
             }
-            return parts.joinToString(" · ")
+            return parts.joinToString("，")
         }
     }
 
