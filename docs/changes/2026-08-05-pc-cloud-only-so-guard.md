@@ -42,3 +42,12 @@
 | comet/0705 | `e74cbc7d…`（成功基线） |
 
 证据：`release/_tmp/cloud_p9p10_hash_audit.json`
+
+## 追加 · 重打 PC 发布包（同日 · 无内置 so）
+
+| 包 | 路径 | 大小 | SHA256 |
+|---|---|---|---|
+| Lite | `release/OneRoot-Lite.zip` | 3,061,608 | `829f55278621f5bbe10af7209bdd2980c4654692980f333f19143c2bee8b4213` |
+| UI | `release/OneRoot-UI.zip` | 3,121,002 | `b15709c752026addfcf735709caf26b9dd33d0c4245c597740abf3f5369509d5` |
+
+校验：zip 内 **0** 个 `.so`；含 `fetch-cloud-so.ps1`；未同步到 OneSo-assets（写保护）。

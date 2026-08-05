@@ -17,12 +17,21 @@ def sync_dir(src: Path, dst: Path) -> None:
     if dst.exists():
         shutil.rmtree(dst)
     shutil.copytree(src, dst)
+    # 云端-only：发包不带 preload-*.so（避免内置漂移）
+    so_dir = dst / "so"
+    if so_dir.is_dir():
+        for p in so_dir.glob("*.so"):
+            p.unlink(missing_ok=True)
 
 
 def build_zip(src_dir: Path, zip_path: Path, root_name: str) -> str:
     if zip_path.exists():
         zip_path.unlink()
-    files = [p for p in src_dir.rglob("*") if p.is_file()]
+    files = [
+        p
+        for p in src_dir.rglob("*")
+        if p.is_file() and p.suffix.lower() != ".so"
+    ]
     if not files:
         raise SystemExit(f"empty source: {src_dir}")
     with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
