@@ -1627,7 +1627,9 @@ private fun AppRoot(
                         showRootBadge = showRootBadge,
                         rootBadgePermanent = rootBadgePermanent,
                         showRootFeatures = showRootFeatures,
-                        showTempRootExperiment = true,
+                        // 手机端一键临时 Root 已放弃（卡死/不稳定）；PC 按需：
+                        // scripts/temp-root-pc.ps1 或 python tools/oneso/oneso.py temp-root --run
+                        showTempRootExperiment = false,
                         oneKukuDetailOverride = oneKukuDetailOverride,
                     ),
                     actions = HomeActions(

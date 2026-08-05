@@ -12,6 +12,7 @@ import re
 import shutil
 import subprocess
 import sys
+import time
 from pathlib import Path
 from typing import Any
 
@@ -537,6 +538,182 @@ def cmd_info(cfg: dict[str, Any], project: str) -> int:
     return 0 if target.is_file() else 1
 
 
+# 与 App TempRootShellCommands 对齐（PC adb 真源；手机端一键入口已撤）。
+REMOTE_SO = "/data/local/tmp/preload-comet.so"
+KILL_STUCK_PRELOAD = (
+    "pkill -9 -f preload-comet.so 2>/dev/null; "
+    "pkill -9 -f 'LD_PRELOAD=/data/local/tmp/preload' 2>/dev/null; "
+    "for p in $(pidof id 2>/dev/null); do "
+    "grep -q preload-comet /proc/$p/maps 2>/dev/null && kill -9 $p; "
+    "done; "
+    "echo KILL_OK"
+)
+LD_PRELOAD_CMD = f"LD_PRELOAD={REMOTE_SO} /system/bin/id"
+VERIFY_SU_TMP = "/data/local/tmp/su -c /system/bin/id"
+VERIFY_SU_APEX = "/apex/com.android.virt/bin/su -c /system/bin/id"
+
+
+def looks_like_root_success(output: str) -> bool:
+    t = output or ""
+    return (
+        "uid=0(root)" in t
+        or "root=1" in t
+        or ("uid=0" in t and "gid=0" in t)
+    )
+
+
+def adb_shell(command: str, *, timeout: float) -> tuple[int, str]:
+    try:
+        proc = subprocess.run(
+            ["adb", "shell", command],
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            encoding="utf-8",
+            errors="replace",
+        )
+        out = ((proc.stdout or "") + (proc.stderr or "")).strip()
+        return proc.returncode, out
+    except subprocess.TimeoutExpired as exc:
+        out = ((exc.stdout or b"") + (exc.stderr or b""))
+        if isinstance(out, bytes):
+            out = out.decode("utf-8", errors="replace")
+        return 124, (out or "").strip() + "\n[timeout]"
+
+
+def resolve_temp_root_so(
+    cfg: dict[str, Any],
+    *,
+    so_override: Path | None,
+    device: str | None,
+    build: str | None,
+) -> Path | None:
+    if so_override is not None:
+        p = so_override.expanduser().resolve()
+        return p if p.is_file() else None
+    app = oneims_root(cfg)
+    assets = app / "app" / "src" / "main" / "assets" / "temproot"
+    catalog_path = assets / "catalog.json"
+    if device and build and catalog_path.is_file():
+        try:
+            catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
+            name = (catalog.get("devices") or {}).get(device, {}).get(build)
+            if name:
+                cand = assets / name
+                if cand.is_file():
+                    return cand
+        except Exception:  # noqa: BLE001
+            pass
+    if device and build:
+        named = assets / f"preload-{device}-{build}.so"
+        if named.is_file():
+            return named
+    legacy = assets / "preload-comet.so"
+    if legacy.is_file():
+        return legacy
+    return None
+
+
+def cmd_temp_root(
+    cfg: dict[str, Any],
+    *,
+    run: bool,
+    so_override: Path | None,
+    attempts: int,
+    timeout_sec: int,
+    retry_gap_sec: float,
+) -> int:
+    """
+    PC 侧按需临时 Root（替代手机首页一键入口）。
+    默认只探测/打印计划；加 --run 才 push + LD_PRELOAD + 验 su。
+    """
+    device, build = adb_device_build()
+    so = resolve_temp_root_so(
+        cfg,
+        so_override=so_override,
+        device=device,
+        build=build,
+    )
+    print("[oneso] temp-root (PC; phone one-tap UI retired)")
+    print(f"[oneso] adb device={device or '?'} build={build or '?'}")
+    if so is None:
+        print(
+            "[oneso] FAIL: no matching so "
+            "(pass --so PATH, or ensure assets/temproot + catalog)",
+            file=sys.stderr,
+        )
+        return 2
+    sha = hashlib.sha256(so.read_bytes()).hexdigest()
+    print(f"[oneso] so={so} sha256={sha[:16]}…")
+    print(f"[oneso] remote={REMOTE_SO}")
+    print(
+        f"[oneso] plan: push → kill stuck → "
+        f"LD_PRELOAD×{attempts} (timeout={timeout_sec}s) → su verify",
+    )
+    if not run:
+        print("[oneso] dry-run only. Re-run with --run to execute on device.")
+        print("[oneso] tip: .\\scripts\\temp-root-pc.ps1 -Run")
+        return 0
+
+    print(f"[oneso] adb push {so} {REMOTE_SO}")
+    push = subprocess.run(
+        ["adb", "push", str(so), REMOTE_SO],
+        capture_output=True,
+        text=True,
+        timeout=120,
+        encoding="utf-8",
+        errors="replace",
+    )
+    if push.returncode != 0:
+        print(
+            f"[oneso] FAIL push: {(push.stdout or '') + (push.stderr or '')}",
+            file=sys.stderr,
+        )
+        return 3
+    chmod_code, chmod_out = adb_shell(f"chmod 644 {REMOTE_SO}", timeout=15)
+    print(f"[oneso] chmod rc={chmod_code} {chmod_out[:120]}")
+
+    last_out = ""
+    verified = False
+    for attempt in range(1, max(1, attempts) + 1):
+        kcode, kout = adb_shell(KILL_STUCK_PRELOAD, timeout=20)
+        print(f"[oneso] kill rc={kcode} {kout[:80]}")
+        print(
+            f"[oneso] exploit attempt={attempt}/{attempts} "
+            f"timeout={timeout_sec}s …",
+        )
+        code, out = adb_shell(LD_PRELOAD_CMD, timeout=float(timeout_sec))
+        last_out = out
+        print(f"[oneso] ld_preload rc={code} out={out[:240]}")
+        if looks_like_root_success(out):
+            verified = True
+            break
+        # 立即补验绝对路径 su（与 App verifyRootHonest 对齐意图）
+        for su_cmd in (VERIFY_SU_TMP, VERIFY_SU_APEX):
+            scode, sout = adb_shell(su_cmd, timeout=12)
+            print(f"[oneso] verify {su_cmd.split()[0]} rc={scode} {sout[:120]}")
+            if looks_like_root_success(sout):
+                verified = True
+                last_out = sout
+                break
+        if verified:
+            break
+        if attempt < attempts:
+            time.sleep(max(0.0, retry_gap_sec))
+
+    gcode, gout = adb_shell("getenforce", timeout=8)
+    print(f"[oneso] getenforce rc={gcode} {gout}")
+    if verified:
+        print(f"[oneso] SUCCESS root ok: {last_out[:160]}")
+        return 0
+    print(
+        f"[oneso] FAIL: no uid=0 after {attempts} attempt(s). "
+        f"last={last_out[:200]}",
+        file=sys.stderr,
+    )
+    return 1
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="oneso",
@@ -617,6 +794,40 @@ def build_parser() -> argparse.ArgumentParser:
         help="always re-run pack-0705 even if catalog complete",
     )
 
+    tr = sub.add_parser(
+        "temp-root",
+        help="PC on-demand temp root via adb (replaces phone one-tap UI)",
+    )
+    tr.add_argument(
+        "--run",
+        action="store_true",
+        help="actually push/exploit/verify (default: dry-run plan only)",
+    )
+    tr.add_argument(
+        "--so",
+        type=Path,
+        default=None,
+        help="override local preload.so path",
+    )
+    tr.add_argument(
+        "--attempts",
+        type=int,
+        default=4,
+        help="LD_PRELOAD retries after kill stuck (default 4)",
+    )
+    tr.add_argument(
+        "--timeout-sec",
+        type=int,
+        default=180,
+        help="per-attempt LD_PRELOAD timeout seconds (default 180)",
+    )
+    tr.add_argument(
+        "--retry-gap-sec",
+        type=float,
+        default=3.0,
+        help="sleep between failed attempts (default 3)",
+    )
+
     sub.add_parser("gui", help="open OneAE-styled Tk GUI")
 
     return p
@@ -654,6 +865,15 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_pack_0705(cfg, args.source)
     if args.cmd == "auto":
         return cmd_auto(cfg, force_pack=bool(args.force_pack))
+    if args.cmd == "temp-root":
+        return cmd_temp_root(
+            cfg,
+            run=bool(args.run),
+            so_override=args.so,
+            attempts=int(args.attempts),
+            timeout_sec=int(args.timeout_sec),
+            retry_gap_sec=float(args.retry_gap_sec),
+        )
     raise SystemExit(f"unknown cmd {args.cmd}")
 
 

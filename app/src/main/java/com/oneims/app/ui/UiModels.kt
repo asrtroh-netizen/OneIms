@@ -77,7 +77,7 @@ data class HomeUiState(
     val rootBadgePermanent: Boolean = false,
     /** Root 功能区（开机自启 / 临时 Root 持久化 / 工具）是否展示；有可用 Root 才为 true。 */
     val showRootFeatures: Boolean = false,
-    /** 显示「一键临时 Root」实验入口（OneKuku / Lite 均可）。 */
+    /** 历史「一键临时 Root」入口；产品默认关，改走 PC scripts/temp-root-pc.ps1。 */
     val showTempRootExperiment: Boolean = false,
     val oneKukuDetailOverride: String? = null,
 )

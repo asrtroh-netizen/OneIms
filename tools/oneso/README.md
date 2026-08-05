@@ -35,6 +35,10 @@ python gui.py
 python oneso.py pack-0705
 # 尽量自动化：catalog 不齐则 pack + adb 认机 + TEMP dry-run
 python oneso.py auto
+# PC 按需临时 Root（手机首页一键入口已撤；默认 dry-run，加 --run 才执行）
+python oneso.py temp-root
+python oneso.py temp-root --run
+# 或仓库根：.\scripts\temp-root-pc.ps1 [-Run]
 ```
 
 GUI 启动默认跑一遍 `auto`（`config.auto_pack_0705_on_gui_start`，可关）。主按钮「一键自动化」无确认。

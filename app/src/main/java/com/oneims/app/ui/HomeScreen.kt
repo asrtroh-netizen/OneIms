@@ -110,7 +110,7 @@ private fun OneKukuStandaloneHome(
             )
         }
 
-        // 一键临时 Root：重启后无 Root 也要能点；OneKuku=内嵌 ADB。
+        // 一键临时 Root 已撤出产品 UI（改 PC scripts/temp-root-pc.ps1）；开关默认 false。
         if (state.showTempRootExperiment) {
             item {
                 TempRootOneClickHomeCard(
@@ -255,6 +255,7 @@ private fun OneLinkHome(
             )
         }
 
+        // 一键临时 Root 已撤出产品 UI（改 PC scripts/temp-root-pc.ps1）；开关默认 false。
         if (state.showTempRootExperiment) {
             item {
                 TempRootOneClickHomeCard(
