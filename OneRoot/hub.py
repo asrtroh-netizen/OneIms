@@ -220,14 +220,23 @@ class HubApi:
     def status(self) -> dict[str, Any]:
         device, build = oneso.adb_device_build()
         adb_ok = bool(device and build)
+        # 状态轮询禁止打网：只认本机 assets / cache；真正一键时再允许 GitHub
         so = oneso.resolve_temp_root_so(
             self.cfg,
             so_override=None,
             device=device,
             build=build,
-            prefer_github=True,
+            prefer_github=False,
         )
         so_ok = so is not None and so.is_file()
+        so_src = oneso.classify_so_source(self.cfg, so)
+        so_src_label = {
+            "local-assets": "so ← 本机 OneSo-assets",
+            "cache": "so ← 本地缓存",
+            "app-assets": "so ← App assets",
+            "file": "so ← 本地文件",
+            "missing": "so ← 未命中（一键时再拉 GitHub）",
+        }.get(so_src, f"so ← {so_src}")
         root_ok, root_label = (
             self._probe_temp_root() if adb_ok else (False, "临时 Root · 无设备")
         )
@@ -238,9 +247,9 @@ class HubApi:
                 "detail": f"{device}/{build}" if adb_ok else "offline",
             },
             {
-                "name": "so ← GitHub",
+                "name": so_src_label,
                 "ok": so_ok,
-                "detail": so.name if so_ok else "OneSo-assets 无匹配条目",
+                "detail": so.name if so_ok else "本地无匹配；一键时会尝试 GitHub",
             },
             {
                 "name": "临时 Root",
@@ -268,7 +277,7 @@ class HubApi:
             "adb_ok": adb_ok,
             "adb_label": f"adb · {device}" if adb_ok else "adb · offline",
             "so_ok": so_ok,
-            "so_label": f"so · {so.name}" if so_ok else "so · github?",
+            "so_label": f"so · {so.name}" if so_ok else "so · 待拉取",
             "root_ok": root_ok,
             "root_label": root_label,
             "overall": overall,
@@ -276,7 +285,7 @@ class HubApi:
             "footer": f"{device or '?'} · {build or '?'} · OneRoot",
             "log": (
                 f"[status] device={device} build={build} so={so} "
-                f"root_ok={root_ok} src=GitHub/OneSo-assets"
+                f"root_ok={root_ok} src={so_src}"
             ),
         }
 

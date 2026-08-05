@@ -83,7 +83,7 @@
       overall === "ok"
         ? "体检通过。可以预览或一键临时 Root（本窗不做运营商持久化）。"
         : overall === "warn"
-          ? "未完全就绪：请连上 Pixel，并确认 GitHub OneSo-assets 有匹配 so。"
+          ? "未完全就绪：请连上 Pixel，并确认本机/缓存或 OneSo-assets 有匹配 so。"
           : "扫描中…";
   }
 
@@ -241,7 +241,7 @@
     $("btnTempDry").addEventListener("click", () => runAction("preview", false));
     $("btnTempRun").addEventListener("click", async () => {
       const ok = window.confirm(
-        "确认一键临时 Root？\n会从 GitHub 取 so 并跑 LD_PRELOAD（可能数分钟）。\n过程中会显示进度条与心跳日志。\n本窗不做运营商持久化。",
+        "确认一键临时 Root？\n优先用本机/缓存 so，必要时才拉 GitHub；LD_PRELOAD 期间会并行验 su 以便早停。\n本窗不做运营商持久化。",
       );
       if (!ok) return;
       await runAction("temp-root", true);

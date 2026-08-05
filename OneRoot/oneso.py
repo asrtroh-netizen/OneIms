@@ -980,14 +980,25 @@ def adb_shell(command: str, *, timeout: float) -> tuple[int, str]:
         return 124, (out or "").strip() + "\n[timeout]"
 
 
+def probe_su_uid0(*, timeout: float = 4.0) -> tuple[bool, str]:
+    """快速验临时 Root（不经 LD_PRELOAD 输出）。"""
+    for su_cmd in (VERIFY_SU_TMP, VERIFY_SU_APEX):
+        _code, out = adb_shell(su_cmd, timeout=timeout)
+        if looks_like_root_success(out):
+            return True, out
+    return False, ""
+
+
 def adb_shell_heartbeat(
     command: str,
     *,
     timeout: float,
     label: str = "adb",
     beat_sec: float = 5.0,
+    probe_su: bool = False,
+    probe_su_every_sec: float = 2.0,
 ) -> tuple[int, str]:
-    """长 adb shell：等待期间周期性打心跳，避免 UI/终端干等无输出。"""
+    """长 adb shell：等待期间周期性打心跳；可选并行验 su 以便早停。"""
     proc = subprocess.Popen(
         ["adb", "shell", command],
         stdout=subprocess.PIPE,
@@ -998,6 +1009,7 @@ def adb_shell_heartbeat(
     )
     started = time.time()
     last_beat = started
+    last_su = started
     try:
         while proc.poll() is None:
             now = time.time()
@@ -1011,13 +1023,31 @@ def adb_shell_heartbeat(
                     file=sys.stderr,
                 )
                 return 124, (text + "\n[timeout]").strip()
+            if probe_su and (now - last_su) >= probe_su_every_sec:
+                last_su = now
+                ok, sout = probe_su_uid0(timeout=3.5)
+                if ok:
+                    print(
+                        f"[oneso] {label} early-stop: su uid=0 at {int(elapsed)}s "
+                        f"(kill hung LD_PRELOAD)",
+                        flush=True,
+                    )
+                    try:
+                        proc.kill()
+                    except Exception:  # noqa: BLE001
+                        pass
+                    try:
+                        proc.communicate(timeout=3)
+                    except Exception:  # noqa: BLE001
+                        pass
+                    return 0, sout
             if now - last_beat >= beat_sec:
                 print(
                     f"[oneso] …仍在执行 {label} "
                     f"已等待 {int(elapsed)}s / {int(timeout)}s",
                 )
                 last_beat = now
-            time.sleep(0.4)
+            time.sleep(0.25)
         out, err = proc.communicate()
         text = ((out or "") + (err or "")).strip()
         return int(proc.returncode or 0), text
@@ -1035,6 +1065,8 @@ ONESO_ASSETS_RAW = (
 ONESO_ASSETS_CATALOG = ONESO_ASSETS_RAW + "catalog.json"
 ONESO_ASSETS_HOST = "raw.githubusercontent.com"
 ONESO_ASSETS_PATH_PREFIX = "/asrtroh-netizen/OneSo-assets/"
+_CATALOG_CACHE: dict[str, Any] = {"ts": 0.0, "data": None}
+_CATALOG_TTL_SEC = 300.0
 
 
 def _http_get_bytes(url: str, *, timeout: float = 60) -> bytes:
@@ -1054,6 +1086,23 @@ def _http_get_bytes(url: str, *, timeout: float = 60) -> bytes:
         return resp.read()
 
 
+def _load_github_catalog() -> dict[str, Any] | None:
+    now = time.time()
+    cached = _CATALOG_CACHE.get("data")
+    if cached is not None and (now - float(_CATALOG_CACHE.get("ts") or 0)) < _CATALOG_TTL_SEC:
+        return cached  # type: ignore[return-value]
+    try:
+        catalog = json.loads(
+            _http_get_bytes(ONESO_ASSETS_CATALOG, timeout=30).decode("utf-8"),
+        )
+    except (urllib.error.URLError, TimeoutError, ValueError, json.JSONDecodeError) as exc:
+        print(f"[oneso] GitHub catalog FAIL: {exc}", file=sys.stderr)
+        return None
+    _CATALOG_CACHE["ts"] = now
+    _CATALOG_CACHE["data"] = catalog
+    return catalog
+
+
 def fetch_so_from_github(
     device: str,
     build: str,
@@ -1061,12 +1110,8 @@ def fetch_so_from_github(
     cache_dir: Path,
 ) -> Path | None:
     """从 GitHub OneSo-assets 拉 catalog + 匹配 so，缓存到 cache_dir。"""
-    try:
-        catalog = json.loads(
-            _http_get_bytes(ONESO_ASSETS_CATALOG, timeout=30).decode("utf-8"),
-        )
-    except (urllib.error.URLError, TimeoutError, ValueError, json.JSONDecodeError) as exc:
-        print(f"[oneso] GitHub catalog FAIL: {exc}", file=sys.stderr)
+    catalog = _load_github_catalog()
+    if catalog is None:
         return None
     rel = (catalog.get("devices") or {}).get(device, {}).get(build)
     if not rel:
@@ -1131,6 +1176,30 @@ def _so_from_oneso_assets_root(
         print(f"[oneso] local OneSo-assets so -> {direct}")
         return direct
     return None
+
+
+def classify_so_source(cfg: dict[str, Any], so: Path | None) -> str:
+    """给 Hub 状态条用的 so 来源短标签。"""
+    if so is None or not so.is_file():
+        return "missing"
+    try:
+        resolved = so.resolve()
+    except Exception:  # noqa: BLE001
+        resolved = so
+    raw = str(cfg.get("oneso_assets_root") or "").strip()
+    if raw:
+        try:
+            root = Path(raw).expanduser().resolve()
+            if root in resolved.parents or resolved.parent == root:
+                return "local-assets"
+        except Exception:  # noqa: BLE001
+            pass
+    parts = {p.lower() for p in resolved.parts}
+    if ".cache" in parts:
+        return "cache"
+    if "temproot" in parts:
+        return "app-assets"
+    return "file"
 
 
 def resolve_temp_root_so(
@@ -1283,6 +1352,8 @@ def cmd_temp_root(
             timeout=float(timeout_sec) + 5.0,
             label=f"LD_PRELOAD#{attempt}",
             beat_sec=3.0,
+            probe_su=True,
+            probe_su_every_sec=2.0,
         )
         last_out = out
         print(f"[oneso] ld_preload rc={code} out={out[:240]}")
@@ -1290,16 +1361,13 @@ def cmd_temp_root(
             verified = True
             break
         _progress(base + 12, f"校验 su · 第 {attempt}/{total} 轮")
-        # 立即补验绝对路径 su（与 App verifyRootHonest 对齐意图）
-        for su_cmd in (VERIFY_SU_TMP, VERIFY_SU_APEX):
-            scode, sout = adb_shell(su_cmd, timeout=12)
-            print(f"[oneso] verify {su_cmd.split()[0]} rc={scode} {sout[:120]}")
-            if looks_like_root_success(sout):
-                verified = True
-                last_out = sout
-                break
-        if verified:
+        ok, sout = probe_su_uid0(timeout=8.0)
+        if ok:
+            print(f"[oneso] verify su ok: {sout[:120]}")
+            verified = True
+            last_out = sout
             break
+        print("[oneso] verify su: not uid=0 yet")
         if attempt < attempts:
             print(f"[oneso] 本轮未拿到 uid=0，{retry_gap_sec}s 后重试…")
             time.sleep(max(0.0, retry_gap_sec))
