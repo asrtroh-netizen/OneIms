@@ -107,3 +107,17 @@ Hub HTTP 日志可见；不影响功能。
 处置：`cmd package install-existing com.google.android.carrier` → `installed=true`，`pm path` 恢复为 `CarrierSettings.apk`；provider 查询从抛异常变为可解析（空结果）。
 
 对「一键 Root 仍无 uid=0」：App 残留假说 **否证**；carrier 包缺失会制造系统噪声，但 LD_PRELOAD `pipe stage` 超时仍应优先按 exploit/偏移查。有 uid=0 后再清 root 属主 carrier 暂存。
+
+### 对照实跑（carrier 恢复后）
+
+前提：`com.google.android.carrier` `installed=true` · Hub `:51628` · 同机 `comet@0705`。
+
+| 项 | 重启后（carrier 缺失前状态已清僵尸） | carrier 恢复后 |
+|---|---|---|
+| dry-run | code=0 | code=0 |
+| 实跑 job | **code=1** · 2 轮无 uid=0 | **仍 code=1** · 同失败文案 |
+| ld_preload | rc=124 / 约 90s | rc=124 / 约 90s |
+| su | 无 | 无 |
+
+结论：**carrier 恢复不能让一键 Root 变好** → 提权失败与 carrier 包无关；下一刀继续 exploit（`delta=0` / pipe stage / timeout）。  
+证据：`release/_tmp/hub_retest_after_carrier_{pre,final}.json` · `hub_retest_after_carrier_job.log`
