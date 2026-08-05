@@ -24,9 +24,17 @@ python oneso.py build tokay-CP2A.260605.012
 python oneso.py install tokay-CP2A.260605.012 --build
 # 已有成品 so（例如改标签产物）直接入库：
 python oneso.py import-so comet-CP2A.260705.006 E:/Down/TEMP/preload-comet-cp2a-260705-006.so
+# 批量入库（先 dry-run 看映射）
+python oneso.py import-batch E:/Down/TEMP --dry-run
+python oneso.py import-batch E:/Down/TEMP
+# 简易 GUI
+python oneso.py gui
+# 或
+python gui.py
 ```
 
-说明：`comet-CP2A.260705.006` 的 `target.h` 若仍是 `#error` 脚手架，`build` 会失败——此时用 `import-so` 入库已验证成品。
+说明：`comet-CP2A.260705.006` 的 `target.h` 若仍是 `#error` 脚手架，`build` 会失败——此时用 `import-so` / `import-batch` 入库已验证成品。  
+`preload.so` 这种无型号文件名会被 SKIP，可用 `--map mapping.json` 指定。
 
 `install` 会：
 
