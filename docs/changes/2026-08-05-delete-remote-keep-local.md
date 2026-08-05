@@ -1,5 +1,8 @@
 ﻿# 删除远程 GitHub 仓库（本地保留）
 
+> ⚠️ **本路线已废止（2026-08-05）**  
+> 删仓导致 Star 清零且不可恢复。现行硬规矩：**禁止删仓**，见 [`docs/guides/github-public-repo-conventions.md`](../guides/github-public-repo-conventions.md)。下文仅作事故档案。
+
 ## 背景
 
 用户明确：撤回「公开 README-only」做法；目标是 **删除远程仓库**，本地完整工程保留。

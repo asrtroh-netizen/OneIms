@@ -37,7 +37,9 @@
 ## 公开仓边界
 
 - `origin/main`：**README-only**（闭源发布仓）
-- 源码：本地 `main` 全历史，禁止 `git push origin main` 裸推
+- 源码：本地全量分支（现 `oneims-private-full`），禁止 `git push origin main` 裸推源码
+- **禁止删除远程仓库**（会丢 Star / Release）；完整约定见 [`docs/guides/github-public-repo-conventions.md`](../guides/github-public-repo-conventions.md)
+
 
 ## 参考实例
 

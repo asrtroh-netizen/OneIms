@@ -28,5 +28,12 @@ Release / 历史 tag 仍可能指向旧提交（浏览 tag 树仍可能看到源
 
 ## 开发约定
 
-日常开发只在 `oneims-private-full`（或后续**私有**远程）。**禁止**把私有分支 force-push / merge 回公开 `main`。  
-公开 `main` 只允许更新 README / 截图 / Release 资产说明。
+完整硬规矩见：**[`docs/guides/github-public-repo-conventions.md`](../guides/github-public-repo-conventions.md)**。
+
+摘要：
+
+- **禁止删除远程仓库**（会清零 Star / 打散 Release）
+- 日常开发只在 `oneims-private-full`（或后续**私有**远程）
+- **禁止**把私有分支 force-push / merge 回公开 `main`
+- 公开 `main` 只允许更新 README / 截图 / Release 资产说明；「清场」只改 tip 或可见性，**绝不删仓**
+
