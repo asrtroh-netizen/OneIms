@@ -21,6 +21,11 @@ GitHub 页面因此从「README + APK」变成又出现 `app/`、`tools/` 等目
 
 Release / 历史 tag 仍可能指向旧提交（浏览 tag 树仍可能看到源码）。若需彻底抹历史，需另做 tag/Release 迁移或重建仓库。
 
+## Star 清零说明
+
+同日早些时候远程仓曾执行 `gh repo delete` 后重建（见 `2026-08-05-delete-remote-keep-local.md`）。  
+新仓 `created_at=2026-08-05T06:37:20Z`，**旧仓 Star 无法随删除迁移**。GitHub 不提供管理员回填他人 Star；只能请老用户重新点亮。
+
 ## 开发约定
 
 日常开发只在 `oneims-private-full`（或后续**私有**远程）。**禁止**把私有分支 force-push / merge 回公开 `main`。  
