@@ -21,6 +21,12 @@
 .tmp_pixelmeter/
 .tmp_batteryinfo/
 .tmp_batteryguru_re/
+# Agent / ops probe artifacts (never commit)
+.tmp-*
+.tmp_*/
+tmp-*
+tmp_*/
+.wt-*/
 __pycache__/
 *.pyc
 onetools/scripts/one-index-dev-private.pem
