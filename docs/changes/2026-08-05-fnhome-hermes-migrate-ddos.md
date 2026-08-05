@@ -76,3 +76,13 @@ trim-cli --host 127.0.0.1 --port 9999 login   # 管理员
 | `api_server :18642` | 未监听（本轮未强制拉起；对话链路不依赖它） |
 
 说明：飞牛应用入口再点「打开」若仍报端口占用，是因为 dashboard 已在跑——应直接用已运行实例，或先停再开；`status` 里官方 API Key 槽位多为空属正常，WK 走 custom provider。
+
+### 启动报错续查（同日）
+
+| 项 | 结论 |
+|---|---|
+| 正确入口 | fnOS iframe：`/app/trim-hermes/`（`ui/config` → `gatewaySocket=run/trim-hermes.sock`） |
+| 官方 start | 必须带 `TRIM_APPDEST=/vol1/@appcenter/trim.hermes` 等；裸跑 `cmd/main start` 会变成 `missing wrapper binary: /wrapper/...` |
+| wrapper | 经 socket 访问时**会自动 spawn** dashboard（已实测：杀 dashboard 后 sock 一打即起） |
+| 截图 Retry | dashboard 已 `200` 时再 `hermes dashboard` → 精确复现 `address already in use`（exit 1）；**点 Retry 会自己制造报错** |
+| 用法 | 管理员登录飞牛 → 打开 Hermes；见该错时**关掉窗口勿 Retry**，刷新/重开入口即可 |
