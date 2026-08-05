@@ -9,8 +9,9 @@ import java.net.URL
 import java.security.MessageDigest
 
 /**
- * 临时 Root so 获取：本地 assets 优先，缺则从公开 [OneSo-assets] 拉 catalog + so。
+ * 临时 Root so 获取：**全部从公开 [OneSo-assets] 云端拉取**（APK 不再内置 preload-*.so）。
  *
+ * 顺序：强制远端下载 → 失败则用本机 `temproot-cache` → 再无则失败（不再回退 APK assets）。
  * 网络风格对齐 [UpdateChecker]（HttpURLConnection，无 OkHttp）。
  * URL 白名单仅允许 `raw.githubusercontent.com/asrtroh-netizen/OneSo-assets/`。
  */
@@ -47,8 +48,8 @@ object TempRootSoProvider {
     /**
      * IO 线程调用：点一键时确保本机有可 stage 的 so。
      *
-     * **强制远端优先**：每次先刷新 OneSo-assets catalog/SHA 并下载最新 so；
-     * 仅当网络失败时才退回本地缓存，再退回 APK assets。
+     * **仅云端**：每次先刷新 OneSo-assets catalog/SHA 并下载最新 so；
+     * 网络失败时仅退回本机 `temproot-cache`（不使用 APK 内置 so）。
      */
     fun ensure(context: Context): Ready? {
         val device = TempRootSoCatalog.currentDevice()
@@ -61,18 +62,13 @@ object TempRootSoProvider {
             return Ready(device, buildId, SoSource.CachedFile(file, fetchedRemote = true))
         }
 
-        // 离线兜底：已缓存且仍在远端 catalog（或本地曾成功）里
+        // 离线兜底：仅已下载缓存
         resolveFromCache(cacheDir, device, buildId)?.let { file ->
             Log.i(TAG, "remote miss → use cache ${file.name}")
             return Ready(device, buildId, SoSource.CachedFile(file, fetchedRemote = false))
         }
 
-        resolveLocalAsset(context, device, buildId)?.let { assetPath ->
-            Log.i(TAG, "remote/cache miss → use asset $assetPath")
-            return Ready(device, buildId, SoSource.Asset(assetPath))
-        }
-
-        Log.w(TAG, "no so for device=$device build=$buildId")
+        Log.w(TAG, "no so for device=$device build=$buildId (cloud/cache only; no APK assets)")
         return null
     }
 
@@ -125,23 +121,13 @@ object TempRootSoProvider {
         val device = TempRootSoCatalog.currentDevice()
         val buildId = TempRootSoCatalog.currentBuildId()
         if (device.isBlank() || buildId.isBlank()) return false
-        if (resolveLocalAsset(context, device, buildId) != null) return true
         val cacheDir = File(context.filesDir, CACHE_DIR)
         val cached = File(cacheDir, CACHED_CATALOG)
         if (cached.isFile) {
             lookupInCatalogJson(cached.readText(), device, buildId)?.let { return true }
         }
-        // 无缓存时仍允许点按钮去拉远端（点时再判定 UnsupportedDevice）
+        // 无本地缓存时仍允许点按钮去拉远端（点时再判定 UnsupportedDevice）
         return true
-    }
-
-    private fun resolveLocalAsset(context: Context, device: String, buildId: String): String? {
-        val match = TempRootSoCatalog.resolve(context) ?: return null
-        if (match.device != device || match.buildId != buildId) return null
-        val exists = runCatching {
-            context.assets.open(match.assetPath).use { it.available() >= 0 }
-        }.getOrDefault(false)
-        return match.assetPath.takeIf { exists }
     }
 
     private fun resolveRemoteRelativePath(
