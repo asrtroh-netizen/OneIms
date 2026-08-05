@@ -44,3 +44,12 @@ am start com.oneroot.app/.feature.main.MainActivity → 已拉起
 
 - 未 `git push` / 未改 GitHub Release。
 - 未完成完整 Root 流程冒烟（依赖 Shizuku 授权与 so 匹配复验）。
+
+## 追加 · 正式重装 Platform 37（同日）
+
+用户要求「重新下载下 37」后：
+
+1. 删除伪目录 `platforms/android-37`（原为 android-36 拷贝，`Pkg.Desc=Platform 16`）。
+2. PowerShell 重新拉取官方 `platform-37.0_r02.zip`，SHA1=`ed8ebf7f8822a4de5686d427f237d2fa30ff7410`（67,281,901 bytes）。
+3. 解压安装到 `platforms/android-37.0`（`Pkg.Desc=Android SDK Platform 17`，`ApiLevel=37.0`，`Pkg.Revision=2`）。
+4. 建立 junction：`platforms/android-37` → `platforms/android-37.0`，满足 `compileSdk=37` 查找路径。
