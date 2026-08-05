@@ -3,6 +3,8 @@ PC-TempRoot-Lite · 简易版（纯 CMD · 无 PowerShell）
 
 纯 CMD 一键临时 Root：彩色横幅 + 文字进度条。
 不调用 powershell.exe。
+成功后会用 adb shell（shell uid）重绑 Shizuku；
+严禁 su -c libshizuku（会出 root 态 server、App 掉线）。
 
 用法
 ----

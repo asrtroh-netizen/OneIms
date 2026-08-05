@@ -5,6 +5,8 @@ PC-TempRoot-UI · UI 版（PowerShell 窗体）
 OneIMS 推荐（GitHub / Releases）、微信赞赏码。
 
 依赖：系统自带 Windows PowerShell（不需要单独装 Python）。
+成功后重绑 Shizuku：仅 adb shell（shell uid）；
+严禁 su -c libshizuku（会出 root 态 server、App 掉线）。
 
 用法
 ----

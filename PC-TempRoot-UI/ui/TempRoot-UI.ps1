@@ -64,6 +64,44 @@ function Test-RootOk([string]$text) {
     return ($text.Contains('uid=0(root)') -or $text.Contains('root=1'))
 }
 
+function Invoke-RebindShellShizuku {
+    param([string]$Serial)
+    # After temp root: kill root zombie, start Shizuku as SHELL via adb.
+    # FORBIDDEN: su -c libshizuku.so (root/kernel server → App binder dies)
+    Ui-Log 'rebind Shizuku as shell (FORBIDDEN: su -c libshizuku)'
+    Ui-Progress 96 'rebind Shizuku (shell, no su-start)'
+    [void](Invoke-Adb @(
+            '-s', $Serial, 'shell',
+            "/data/local/tmp/su -c '/system/bin/killall -9 shizuku_server' 2>/dev/null; /system/bin/killall -9 shizuku_server 2>/dev/null; true"
+        ) 12)
+    Start-Sleep -Milliseconds 400
+    $pathOut = (Invoke-Adb @('-s', $Serial, 'shell', 'pm path moe.shizuku.privileged.api') 10).Text
+    $apk = $null
+    foreach ($line in ($pathOut -split "`r?`n")) {
+        $t = $line.Trim()
+        if ($t.StartsWith('package:')) { $apk = $t.Substring('package:'.Length).Trim(); break }
+    }
+    if (-not $apk) {
+        Ui-Log 'WARN: Shizuku not installed; skip rebind'
+        return $false
+    }
+    $lib = if ($apk.EndsWith('base.apk')) {
+        $apk.Substring(0, $apk.Length - 'base.apk'.Length) + 'lib/arm64/libshizuku.so'
+    } else {
+        $apk.TrimEnd('/') + '/lib/arm64/libshizuku.so'
+    }
+    # adb shell → uid shell; NEVER wrap with su
+    $start = Invoke-Adb @('-s', $Serial, 'shell', "$lib --apk=$apk") 25
+    Ui-Log ("shell-start shizuku rc={0} {1}" -f $start.Code, $start.Text)
+    $ps = (Invoke-Adb @('-s', $Serial, 'shell', 'ps -A | grep shizuku_server || true') 8).Text
+    Ui-Log ("ps shizuku_server: {0}" -f $ps)
+    if ($ps -match 'shizuku_server' -and ($ps -split '\s+')[0] -eq 'root') {
+        Ui-Log 'WARN: still root — do NOT su-start again'
+        return $false
+    }
+    return $true
+}
+
 $form = New-Object System.Windows.Forms.Form
 $form.Text = 'PC-TempRoot-UI'
 $form.Size = New-Object System.Drawing.Size(960, 620)
@@ -366,9 +404,11 @@ function Start-TempRootJob([bool]$dry) {
         Ui-Monitor $serial $device $build $en 'done'
         Ui-Log ("getenforce: {0}" -f $en)
         if ($ok) {
-            Ui-Progress 100 'SUCCESS: temp root ok'
             Ui-Log ("SUCCESS: {0}" -f $last)
-            Set-Content -LiteralPath $StatusFile -Value "SUCCESS $last" -Encoding UTF8
+            $rebindOk = Invoke-RebindShellShizuku -Serial $serial
+            Ui-Log ("shizuku shell rebind ok={0}" -f $rebindOk)
+            Ui-Progress 100 'SUCCESS: temp root ok'
+            Set-Content -LiteralPath $StatusFile -Value "SUCCESS $last rebind=$rebindOk" -Encoding UTF8
         } else {
             Ui-Progress 100 'FAIL: no uid=0'
             Set-Content -LiteralPath $StatusFile -Value 'FAIL no uid=0' -Encoding UTF8

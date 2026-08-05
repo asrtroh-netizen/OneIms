@@ -131,11 +131,13 @@ for /L %%I in (1,1,!ATTEMPTS!) do (
 call :step 6 6 "getenforce + summary"
 "%ADB%" -s !SERIAL! shell getenforce
 if "!OK!"=="1" (
-  call :bar 100
+  call :bar 96
   echo.
   echo %C_OK%  ************************************************************%C_RST%
   echo %C_OK%   SUCCESS  temporary root looks good                         %C_RST%
   echo %C_OK%  ************************************************************%C_RST%
+  call :rebind_shizuku
+  call :bar 100
   goto :ok
 )
 echo.
@@ -155,6 +157,30 @@ echo %C_BAD%  ended with errors%C_RST%
 echo.
 if "!NOPAUSE!"=="0" pause
 exit /b 1
+
+:rebind_shizuku
+rem After temp root: kill possible root zombie, then start Shizuku as SHELL.
+rem FORBIDDEN: su -c libshizuku.so  (root/kernel server → App binder dies)
+echo.
+echo %C_TITLE%  [rebind]%C_RST% Shizuku as shell uid %C_MUTE%^(FORBIDDEN: su -c libshizuku^)%C_RST%
+"%ADB%" -s !SERIAL! shell "/data/local/tmp/su -c '/system/bin/killall -9 shizuku_server' 2>/dev/null; /system/bin/killall -9 shizuku_server 2>/dev/null; true" >nul 2>&1
+timeout /t 1 /nobreak >nul
+set "APK="
+for /f "usebackq delims=" %%A in (`"%ADB%" -s !SERIAL! shell pm path moe.shizuku.privileged.api`) do (
+  set "LINE=%%A"
+  set "LINE=!LINE: =!"
+  if /i "!LINE:~0,8!"=="package:" set "APK=!LINE:package:=!"
+)
+if not defined APK (
+  echo %C_MUTE%  [skip] Shizuku not installed%C_RST%
+  exit /b 0
+)
+set "LIB=!APK:base.apk=lib/arm64/libshizuku.so!"
+echo %C_MUTE%  start !LIB! --apk=!APK!%C_RST%
+"%ADB%" -s !SERIAL! shell "!LIB! --apk=!APK!"
+"%ADB%" -s !SERIAL! shell "ps -A | grep shizuku_server || true"
+echo %C_OK%  [ok]%C_RST% rebind attempted via adb shell ^(not su^)
+exit /b 0
 
 :step
 echo.
