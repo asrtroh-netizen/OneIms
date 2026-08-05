@@ -135,3 +135,18 @@ Hub HTTP 日志可见；不影响功能。
 
 解读：与「软件坏了」不符（链路能跑完一轮）；更像 **so/偏移在当前内核态下不稳或走偏导致重启**，与用户「软件+so 成功过」可同时成立（环境/镜像漂移或偶发）。  
 证据：`release/_tmp/hub_retest_reboot2_{pre,final}.json` · `hub_retest_reboot2_job.log`
+
+### so 哈希/体积差分（曾成功 vs 当前 Hub）
+
+体积两边均为 **220728** 字节（同长）。哈希 **不一致**：
+
+| 角色 | 路径 | SHA256 | 备注 |
+|---|---|---|---|
+| 清单真源 / 曾验证 | `OneSo-assets/SHA256SUMS` + `E:\Down\TEMP\preload-comet-cp2a-260705-006.so` + Hub `.cache` + Lite/UI 发包 | `e74cbc7d2e5a941691568500a24a77d92a6decd175e6b56090e99d047f847245` | 文档称原版/已验证 |
+| **当前 Hub 实际用** | `OneSo-assets/so/CP2A.260705.006/…` + `app/src/main/assets/temproot/…`（mtime 21:52） | `64ed9d74b335704f6c8d94f94490d183bedebf1bc150e2f51cbd03838b8e4055` | 与 App 1.1.6 热补丁同哈希 |
+
+字节差：同长度下 **仅 10 个字节不同**（首差偏移 `150620`…）。  
+`SHA256SUMS` 仍登记 `e74cbc7d…`，但磁盘上 OneSo-assets 主文件已被换成 `64ed9d74…` → **清单漂移**。  
+证据：`release/_tmp/so_hash_diff.json`；参见 `docs/changes/2026-08-05-oneroot-pc-lite-try-slide-drop.md`。
+
+建议下一刀：用 `e74cbc7d…` 覆盖回 `OneSo-assets`（及 assets）后再跑一键 Root 对照。
