@@ -1026,7 +1026,15 @@ def adb_shell_heartbeat(
     probe_su: bool = False,
     probe_su_every_sec: float = 2.0,
 ) -> tuple[int, str]:
-    """长 adb shell：等待期间周期性打心跳；可选并行验 su 以便早停。"""
+    """长 adb shell：等待期间排空管道+心跳；可选并行验 su 以便早停。
+
+    必须边跑边读 stdout/stderr：exploit 日志一多，PIPE 塞满会把子进程
+    卡在 write 上，表现为「只打出 preload starting 然后干等到超时」。
+    Windows 上用线程排空（select 不能用于 pipe）。
+    """
+    import threading
+    from queue import Empty, Queue
+
     proc = subprocess.Popen(
         ["adb", "shell", command],
         stdout=subprocess.PIPE,
@@ -1034,18 +1042,57 @@ def adb_shell_heartbeat(
         text=True,
         encoding="utf-8",
         errors="replace",
+        bufsize=1,
     )
     started = time.time()
     last_beat = started
     last_su = started
+    chunks: list[str] = []
+    q: Queue[str | None] = Queue()
+
+    def _reader(stream) -> None:  # type: ignore[no-untyped-def]
+        try:
+            for line in iter(stream.readline, ""):
+                q.put(line)
+        finally:
+            try:
+                stream.close()
+            except Exception:  # noqa: BLE001
+                pass
+            q.put(None)
+
+    assert proc.stdout is not None and proc.stderr is not None
+    threading.Thread(target=_reader, args=(proc.stdout,), daemon=True).start()
+    threading.Thread(target=_reader, args=(proc.stderr,), daemon=True).start()
+    closed = 0
+
+    def _drain(wait: float = 0.2) -> None:
+        nonlocal closed
+        end = time.time() + wait
+        while time.time() < end:
+            try:
+                item = q.get(timeout=max(0.01, end - time.time()))
+            except Empty:
+                break
+            if item is None:
+                closed += 1
+                continue
+            chunks.append(item)
+            print(item.rstrip("\n"), flush=True)
+
     try:
         while proc.poll() is None:
+            _drain(0.25)
             now = time.time()
             elapsed = now - started
             if elapsed >= timeout:
                 proc.kill()
-                out, err = proc.communicate()
-                text = ((out or "") + (err or "")).strip()
+                _drain(1.0)
+                try:
+                    proc.wait(timeout=3)
+                except Exception:  # noqa: BLE001
+                    pass
+                text = "".join(chunks).strip()
                 print(
                     f"[oneso] {label} TIMEOUT after {int(elapsed)}s",
                     file=sys.stderr,
@@ -1064,8 +1111,9 @@ def adb_shell_heartbeat(
                         proc.kill()
                     except Exception:  # noqa: BLE001
                         pass
+                    _drain(1.0)
                     try:
-                        proc.communicate(timeout=3)
+                        proc.wait(timeout=3)
                     except Exception:  # noqa: BLE001
                         pass
                     return 0, sout
@@ -1073,11 +1121,15 @@ def adb_shell_heartbeat(
                 print(
                     f"[oneso] …仍在执行 {label} "
                     f"已等待 {int(elapsed)}s / {int(timeout)}s",
+                    flush=True,
                 )
                 last_beat = now
-            time.sleep(0.25)
-        out, err = proc.communicate()
-        text = ((out or "") + (err or "")).strip()
+        _drain(1.0)
+        try:
+            proc.wait(timeout=3)
+        except Exception:  # noqa: BLE001
+            pass
+        text = "".join(chunks).strip()
         return int(proc.returncode or 0), text
     finally:
         if proc.poll() is None:
@@ -1344,9 +1396,14 @@ def cmd_temp_root(
 
     stale = detect_stale_temp_root()
     if stale:
-        print(f"[oneso] FAIL: {stale}", file=sys.stderr)
-        _progress(100, "失败：残留 temp_su，请重启手机")
-        return 4
+        # 残留 su/sock 在 /data/local/tmp 会跨重启留下；shell 删不掉，
+        # 但新一轮 LD_PRELOAD 仍可能重建 daemon——只警告，不拦截。
+        print(f"[oneso] WARN: {stale}", file=sys.stderr)
+        print(
+            "[oneso] 继续执行 exploit（验证阶段在新 daemon 起来前可能短暂 Permission denied）",
+            flush=True,
+        )
+        _progress(14, "残留 temp_su 警告：仍继续 exploit")
 
     _progress(15, "推送 preload.so 到设备")
     print(f"[oneso] adb push {so} {REMOTE_SO}")
