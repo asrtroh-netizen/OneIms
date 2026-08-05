@@ -120,3 +120,7 @@ trim-cli --host 127.0.0.1 --port 9999 login   # 管理员
 | 已知坑 | `dashboard.js` 曾有 `` `,</style>` `` 语法损坏（已补丁）；monitor 首次启动会 “Config reset”，需再写回 WK 配置 |
 | 权限坑 | 备份里 `config.yaml`/`providers-state.yaml` 曾是 mode `000`；`cp -a` 后 Hermes 报 Permission denied 并回落默认配置、忽略 `custom-wkapi`。迁移后必须 `chmod 640` + `chown hermes-agent` |
 | AI 模型（昨天契约） | `provider=custom-wkapi` / `default=kimi-k3` / `base_url=https://wkapi.vip/v1` / `.env`→`CUSTOM_WKAPI_API_KEY`；`hermes status` 已确认 Model/Provider。WK 实聊依赖外网 TLS，当前可能 Connection error |
+| 面板启动门禁 | `/api/start` 读 `@appdata/hermes-agent/providers-state.yaml`（不是 hermes 子目录）；缺则报「请先添加模型服务商」。需同时有 `.env.providers` |
+| 启动 500 | `gateway.log` 若属 root → monitor(EACCES)。日志目录须 `chown hermes-agent` |
+| 端口契约 | 正式包 Gateway **8642** / Dashboard **9119**；旧 trim `.env` 的 `API_SERVER_PORT=18642` 会让 Gateway 绑错口，健康检查变红。已改回 8642 |
+| 官方启动结果 | `POST /api/start` → gateway+dashboard+bridge ok；`api/status` 双绿；`proxy/dashboard` **200** |
