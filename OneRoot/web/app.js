@@ -90,8 +90,32 @@
   function enableActions(ready) {
     const dry = $("btnTempDry");
     const run = $("btnTempRun");
+    const clean = $("btnCleanup");
     if (dry) dry.disabled = !ready;
     if (run) run.disabled = !ready;
+    if (clean) clean.disabled = !ready;
+  }
+
+  async function runCleanup() {
+    const log = $("logPanel");
+    const clean = $("btnCleanup");
+    if (clean) clean.disabled = true;
+    try {
+      if (log) log.textContent = "正在清理残留（挂起进程 / temp_su.sock）…";
+      const r = await apiPost("/api/cleanup", {});
+      const lines = [
+        r.ok ? "清理完成" : "清理未完全成功",
+        "mode=" + (r.mode || "?"),
+        r.detail || "",
+        ...(r.steps || []),
+      ].filter(Boolean);
+      if (log) log.textContent = lines.join("\n");
+      await boot();
+    } catch (e) {
+      if (log) log.textContent = "清理失败：" + (e && e.message ? e.message : e);
+    } finally {
+      if (clean) clean.disabled = false;
+    }
   }
 
   async function apiGet(path) {
@@ -238,10 +262,11 @@
   const btnBoot = $("btnBoot");
   if (btnBoot) {
     btnBoot.addEventListener("click", () => boot());
+    $("btnCleanup").addEventListener("click", () => runCleanup());
     $("btnTempDry").addEventListener("click", () => runAction("preview", false));
     $("btnTempRun").addEventListener("click", async () => {
       const ok = window.confirm(
-        "确认一键临时 Root？\n优先用本机/缓存 so，必要时才拉 GitHub；LD_PRELOAD 期间会并行验 su 以便早停。\n本窗不做运营商持久化。",
+        "确认一键临时 Root？\n开始前会自动清理残留；优先本机/缓存 so；LD_PRELOAD 期间并行验 su 早停。\n本窗不做运营商持久化。",
       );
       if (!ok) return;
       await runAction("temp-root", true);

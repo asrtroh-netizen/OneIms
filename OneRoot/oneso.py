@@ -928,18 +928,94 @@ def detect_stale_temp_root() -> str | None:
     if looks_like_stale_su_daemon(out):
         return (
             "检测到残留 temp_su（su: connect daemon: Permission denied）。"
-            "shell 无法删除 /data/local/tmp/su 与 temp_su.sock，"
-            "新一轮 LD_PRELOAD 会长时间挂起。请先【重启手机】再一键。"
+            "shell 无法删除 /data/local/tmp/su 与 temp_su.sock。"
+            "请先点「清理残留」（需已有 uid=0）或重启手机后再一键。"
         )
     _c, lsout = adb_shell("ls -l /data/local/tmp/temp_su.sock 2>&1", timeout=5.0)
     low = (lsout or "").lower()
     if "permission denied" in low:
         return (
             "检测到残留 temp_su.sock（shell Permission denied）。"
-            "请先【重启手机】清掉半死 daemon，再一键。"
+            "请先点「清理残留」（需已有 uid=0）或重启手机后再一键。"
         )
     _ = _c
     return None
+
+
+CLEAN_VIA_SU = (
+    "/data/local/tmp/su -c '"
+    "pkill -9 -f \"timeout .*LD_PRELOAD\" 2>/dev/null; "
+    "pkill -9 -f preload-comet.so 2>/dev/null; "
+    "killall -9 id 2>/dev/null; "
+    # 半死 socket / 旧 daemon；保留可工作的 su 二进制，只拆 sock
+    "rm -f /data/local/tmp/temp_su.sock 2>/dev/null; "
+    "rm -f /dev/socket/temp_su.sock 2>/dev/null; "
+    "echo CLEAN_SU_OK"
+    "'"
+)
+
+
+def cleanup_temp_root_residuals(*, aggressive: bool = False) -> dict[str, Any]:
+    """开始前清理残留：杀挂起进程；有 uid=0 时用 su 拆 temp_su.sock。
+
+    aggressive=True 时，在已有 root 下连旧 ``/data/local/tmp/su`` 一并删掉
+    （下次 exploit 会再装）。默认保守：只清 sock + 挂起进程。
+    """
+    steps: list[str] = []
+    kcode, kout = adb_shell(KILL_STUCK_PRELOAD, timeout=20.0)
+    steps.append(f"kill_stuck rc={kcode} {(kout or '')[:80]}")
+
+    # shell 尽力（通常对 root 属主文件失败，无害）
+    scode, sout = adb_shell(
+        "rm -f /data/local/tmp/temp_su.sock 2>/dev/null; echo SHELL_RM_DONE",
+        timeout=8.0,
+    )
+    steps.append(f"shell_rm rc={scode} {(sout or '')[:60]}")
+
+    root_ok, root_out = probe_su_uid0(timeout=5.0)
+    if root_ok:
+        ccode, cout = adb_shell(CLEAN_VIA_SU, timeout=15.0)
+        steps.append(f"su_clean rc={ccode} {(cout or '')[:100]}")
+        if aggressive:
+            acode, aout = adb_shell(
+                "/data/local/tmp/su -c 'rm -f /data/local/tmp/su; echo SU_BIN_REMOVED'",
+                timeout=10.0,
+            )
+            steps.append(f"su_rm_bin rc={acode} {(aout or '')[:80]}")
+        stale_after = detect_stale_temp_root()
+        return {
+            "ok": stale_after is None,
+            "mode": "su",
+            "root_before": True,
+            "stale_after": stale_after,
+            "steps": steps,
+            "detail": "已用 uid=0 清理挂起进程与 temp_su.sock"
+            + ("（并移除旧 su 二进制）" if aggressive else ""),
+        }
+
+    stale = detect_stale_temp_root()
+    if looks_like_stale_su_daemon(root_out) or stale:
+        return {
+            "ok": False,
+            "mode": "blocked",
+            "root_before": False,
+            "stale_after": stale or "stale_su_daemon",
+            "steps": steps,
+            "detail": (
+                "当前无可用 uid=0，shell 删不掉 root 属主残留。"
+                "可：① 若刚才 Root 成功过请先别重启、再点清理；"
+                "② 否则重启手机后再一键（成功后会自动清）。"
+            ),
+        }
+
+    return {
+        "ok": True,
+        "mode": "shell",
+        "root_before": False,
+        "stale_after": None,
+        "steps": steps,
+        "detail": "无半死 daemon；已清理挂起的 LD_PRELOAD/id 进程",
+    }
 
 
 def rebind_shell_shizuku() -> bool:
@@ -1394,16 +1470,21 @@ def cmd_temp_root(
         print("[oneso] tip: .\\OneRoot\\OneRoot.ps1  (or OneRoot\\一键启动.cmd)")
         return 0
 
-    stale = detect_stale_temp_root()
-    if stale:
-        # 残留 su/sock 在 /data/local/tmp 会跨重启留下；shell 删不掉，
-        # 但新一轮 LD_PRELOAD 仍可能重建 daemon——只警告，不拦截。
-        print(f"[oneso] WARN: {stale}", file=sys.stderr)
+    _progress(13, "开始前清理残留")
+    cleaned = cleanup_temp_root_residuals(aggressive=False)
+    print(
+        f"[oneso] pre-clean mode={cleaned.get('mode')} ok={cleaned.get('ok')} "
+        f"detail={cleaned.get('detail')}",
+        flush=True,
+    )
+    for line in cleaned.get("steps") or []:
+        print(f"[oneso]   · {line}", flush=True)
+    if not cleaned.get("ok"):
+        print(f"[oneso] WARN: {cleaned.get('detail')}", file=sys.stderr)
         print(
-            "[oneso] 继续执行 exploit（验证阶段在新 daemon 起来前可能短暂 Permission denied）",
+            "[oneso] 仍继续 exploit（成功后会再做一次清理）",
             flush=True,
         )
-        _progress(14, "残留 temp_su 警告：仍继续 exploit")
 
     _progress(15, "推送 preload.so 到设备")
     print(f"[oneso] adb push {so} {REMOTE_SO}")
@@ -1470,6 +1551,13 @@ def cmd_temp_root(
     gcode, gout = adb_shell("getenforce", timeout=8)
     print(f"[oneso] getenforce rc={gcode} {gout}")
     if verified:
+        _progress(94, "成功后整理残留（挂起进程 / 旧 sock）")
+        post = cleanup_temp_root_residuals(aggressive=False)
+        print(
+            f"[oneso] post-clean ok={post.get('ok')} mode={post.get('mode')} "
+            f"{post.get('detail')}",
+            flush=True,
+        )
         _progress(96, "重绑 Shizuku（shell，禁用 su 拉起）")
         rebind_ok = rebind_shell_shizuku()
         print(f"[oneso] shizuku shell rebind ok={rebind_ok}")
@@ -1659,6 +1747,16 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
 
+    cl = sub.add_parser(
+        "cleanup",
+        help="清理临时 Root 残留（挂起进程 / temp_su.sock；有 uid=0 时用 su）",
+    )
+    cl.add_argument(
+        "--aggressive",
+        action="store_true",
+        help="有 root 时连旧 /data/local/tmp/su 二进制一并删除",
+    )
+
     sub.add_parser("gui", help="open OneAE-styled Tk GUI (legacy)")
     sub.add_parser(
         "hub",
@@ -1725,6 +1823,10 @@ def main(argv: list[str] | None = None) -> int:
         )
     if args.cmd == "auto":
         return cmd_auto(cfg, force_pack=bool(args.force_pack))
+    if args.cmd == "cleanup":
+        result = cleanup_temp_root_residuals(aggressive=bool(args.aggressive))
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 0 if result.get("ok") else 1
     if args.cmd == "temp-root":
         return cmd_temp_root(
             cfg,

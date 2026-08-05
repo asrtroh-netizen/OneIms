@@ -294,6 +294,11 @@ class HubApi:
             ),
         }
 
+    def cleanup_residuals(self, aggressive: bool = False) -> dict[str, Any]:
+        """开始前 / 手动：清理临时 Root 残留。"""
+        result = oneso.cleanup_temp_root_residuals(aggressive=bool(aggressive))
+        return {"ok": bool(result.get("ok")), **result}
+
     def temp_root(self, run: bool = False) -> dict[str, Any]:
         """兼容旧同步调用（完整捕获后返回）。"""
         code, log = self._capture(
@@ -425,6 +430,19 @@ class OneRootHandler(SimpleHTTPRequestHandler):
                     self._json(200, API.temp_root(run=run))
                 else:
                     self._json(200, API.start_temp_root(run=run))
+            except Exception as exc:  # noqa: BLE001
+                self._json(
+                    500,
+                    {"ok": False, "error": str(exc), "trace": traceback.format_exc()},
+                )
+            return
+        if path == "/api/cleanup":
+            assert API is not None
+            try:
+                self._json(
+                    200,
+                    API.cleanup_residuals(aggressive=bool(data.get("aggressive"))),
+                )
             except Exception as exc:  # noqa: BLE001
                 self._json(
                     500,
