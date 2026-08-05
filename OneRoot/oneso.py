@@ -890,9 +890,19 @@ KILL_STUCK_PRELOAD = (
     "done; "
     "echo KILL_OK"
 )
-LD_PRELOAD_CMD = f"LD_PRELOAD={REMOTE_SO} /system/bin/id"
+# Host-side defaults tuned vs old 4×180s (felt much slower than on-device Root My Pixel).
+DEFAULT_TEMP_ROOT_ATTEMPTS = 2
+DEFAULT_TEMP_ROOT_TIMEOUT_SEC = 90
+DEFAULT_TEMP_ROOT_RETRY_GAP_SEC = 1.0
 VERIFY_SU_TMP = "/data/local/tmp/su -c /system/bin/id"
 VERIFY_SU_APEX = "/apex/com.android.virt/bin/su -c /system/bin/id"
+
+
+def ld_preload_cmd(timeout_sec: int) -> str:
+    """Device-side timeout so a hung exploit dies even if adb is sticky."""
+    sec = max(15, int(timeout_sec))
+    # toybox `timeout` on Pixel; host adb_shell_heartbeat still hard-kills as backup
+    return f"timeout {sec}s sh -c 'LD_PRELOAD={REMOTE_SO} /system/bin/id'"
 
 
 def looks_like_root_success(output: str) -> bool:
@@ -916,8 +926,8 @@ def rebind_shell_shizuku() -> bool:
         "/system/bin/killall -9 shizuku_server 2>/dev/null; true",
         timeout=12.0,
     )
-    time.sleep(0.4)
-    _code, path_out = adb_shell("pm path moe.shizuku.privileged.api", timeout=10.0)
+    time.sleep(0.2)
+    _code, path_out = adb_shell("pm path moe.shizuku.privileged.api", timeout=8.0)
     apk = ""
     for line in (path_out or "").splitlines():
         line = line.strip()
@@ -1075,6 +1085,9 @@ def fetch_so_from_github(
     if not name.endswith(".so"):
         name = f"preload-{device}-{build}.so"
     dst = cache_dir / name
+    if dst.is_file() and dst.stat().st_size >= 64 and dst.read_bytes()[:4] == b"\x7fELF":
+        print(f"[oneso] GitHub so cache hit -> {dst}")
+        return dst
     try:
         data = _http_get_bytes(url, timeout=120)
     except (urllib.error.URLError, TimeoutError, ValueError) as exc:
@@ -1088,6 +1101,38 @@ def fetch_so_from_github(
     return dst
 
 
+def _so_from_oneso_assets_root(
+    cfg: dict[str, Any],
+    *,
+    device: str,
+    build: str,
+) -> Path | None:
+    """本机 clone 的 OneSo-assets（config.oneso_assets_root）——比 GitHub 快一个数量级。"""
+    raw = str(cfg.get("oneso_assets_root") or "").strip()
+    if not raw:
+        return None
+    root = Path(raw).expanduser()
+    if not root.is_dir():
+        return None
+    catalog_path = root / "catalog.json"
+    if catalog_path.is_file():
+        try:
+            catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
+            rel = (catalog.get("devices") or {}).get(device, {}).get(build)
+            if rel:
+                cand = root / str(rel).lstrip("/").replace("/", os.sep)
+                if cand.is_file():
+                    print(f"[oneso] local OneSo-assets so -> {cand}")
+                    return cand
+        except Exception:  # noqa: BLE001
+            pass
+    direct = root / "so" / build / f"preload-{device}-{build}.so"
+    if direct.is_file():
+        print(f"[oneso] local OneSo-assets so -> {direct}")
+        return direct
+    return None
+
+
 def resolve_temp_root_so(
     cfg: dict[str, Any],
     *,
@@ -1097,23 +1142,31 @@ def resolve_temp_root_so(
     prefer_github: bool = True,
 ) -> Path | None:
     """
-    so 解析：显式 --so > GitHub OneSo-assets（默认）> 本地 cache/assets 兜底。
+    so 解析（快路径优先）：
+    --so > 本机 OneSo-assets > .cache > GitHub > App assets。
     """
     if so_override is not None:
         p = so_override.expanduser().resolve()
         return p if p.is_file() else None
 
     cache = HERE / ".cache" / "so"
+    if device and build:
+        local_assets = _so_from_oneso_assets_root(cfg, device=device, build=build)
+        if local_assets is not None:
+            return local_assets
+        cached = cache / f"preload-{device}-{build}.so"
+        if cached.is_file() and cached.stat().st_size >= 64:
+            print(f"[oneso] using cached so -> {cached}")
+            return cached
+        for hit in sorted(cache.glob(f"preload-{device}-{build}*.so")):
+            if hit.is_file() and hit.stat().st_size >= 64:
+                print(f"[oneso] using cached so -> {hit}")
+                return hit
+
     if prefer_github and device and build:
         gh = fetch_so_from_github(device, build, cache_dir=cache)
         if gh is not None:
             return gh
-
-    # 本地缓存（上次 GitHub 拉过）
-    if device and build:
-        cached = cache / f"preload-{device}-{build}.so"
-        if cached.is_file():
-            return cached
 
     app = oneims_root(cfg)
     assets = app / "app" / "src" / "main" / "assets" / "temproot"
@@ -1160,7 +1213,7 @@ def cmd_temp_root(
     _progress(3, "探测 adb / Pixel")
     device, build = adb_device_build()
     print(f"[oneso] adb device={device or '?'} build={build or '?'}", flush=True)
-    _progress(8, "从 GitHub OneSo-assets 取 so（可能稍慢）")
+    _progress(8, "解析 preload.so（本地/缓存优先，必要时才拉 GitHub）")
     so = resolve_temp_root_so(
         cfg,
         so_override=so_override,
@@ -1170,8 +1223,8 @@ def cmd_temp_root(
     _progress(12, "已拿到 so，准备计划" if so else "未匹配到 so")
     if so is None:
         print(
-            "[oneso] FAIL: no matching so from GitHub OneSo-assets "
-            "(or local cache / --so)",
+            "[oneso] FAIL: no matching so from local OneSo-assets / cache / "
+            "GitHub / --so",
             file=sys.stderr,
         )
         _progress(100, "失败：无匹配 so")
@@ -1181,7 +1234,7 @@ def cmd_temp_root(
     print(f"[oneso] remote={REMOTE_SO}")
     print(
         f"[oneso] plan: push → kill stuck → "
-        f"LD_PRELOAD×{attempts} (timeout={timeout_sec}s) → su verify",
+        f"LD_PRELOAD×{attempts} (timeout={timeout_sec}s, fast defaults) → su verify",
     )
     if not run:
         _progress(100, "预览完成（未执行）")
@@ -1226,10 +1279,10 @@ def cmd_temp_root(
             f"timeout={timeout_sec}s …",
         )
         code, out = adb_shell_heartbeat(
-            LD_PRELOAD_CMD,
-            timeout=float(timeout_sec),
+            ld_preload_cmd(timeout_sec),
+            timeout=float(timeout_sec) + 5.0,
             label=f"LD_PRELOAD#{attempt}",
-            beat_sec=5.0,
+            beat_sec=3.0,
         )
         last_out = out
         print(f"[oneso] ld_preload rc={code} out={out[:240]}")
@@ -1422,20 +1475,26 @@ def build_parser() -> argparse.ArgumentParser:
     tr.add_argument(
         "--attempts",
         type=int,
-        default=4,
-        help="LD_PRELOAD retries after kill stuck (default 4)",
+        default=DEFAULT_TEMP_ROOT_ATTEMPTS,
+        help=f"LD_PRELOAD retries after kill stuck (default {DEFAULT_TEMP_ROOT_ATTEMPTS})",
     )
     tr.add_argument(
         "--timeout-sec",
         type=int,
-        default=180,
-        help="per-attempt LD_PRELOAD timeout seconds (default 180)",
+        default=DEFAULT_TEMP_ROOT_TIMEOUT_SEC,
+        help=(
+            "per-attempt LD_PRELOAD timeout seconds "
+            f"(default {DEFAULT_TEMP_ROOT_TIMEOUT_SEC})"
+        ),
     )
     tr.add_argument(
         "--retry-gap-sec",
         type=float,
-        default=3.0,
-        help="sleep between failed attempts (default 3)",
+        default=DEFAULT_TEMP_ROOT_RETRY_GAP_SEC,
+        help=(
+            "sleep between failed attempts "
+            f"(default {DEFAULT_TEMP_ROOT_RETRY_GAP_SEC})"
+        ),
     )
 
     sub.add_parser("gui", help="open OneAE-styled Tk GUI (legacy)")

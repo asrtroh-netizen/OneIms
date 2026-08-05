@@ -14,9 +14,9 @@ param(
     [switch]$Hub,
     [switch]$Run,
     [string]$So = "",
-    [int]$Attempts = 4,
-    [int]$TimeoutSec = 180,
-    [double]$RetryGapSec = 3.0
+    [int]$Attempts = 2,
+    [int]$TimeoutSec = 90,
+    [double]$RetryGapSec = 1.0
 )
 
 $ErrorActionPreference = "Stop"

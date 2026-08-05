@@ -287,9 +287,9 @@ class HubApi:
                 self.cfg,
                 run=bool(run),
                 so_override=None,
-                attempts=4,
-                timeout_sec=180,
-                retry_gap_sec=3.0,
+                attempts=oneso.DEFAULT_TEMP_ROOT_ATTEMPTS,
+                timeout_sec=oneso.DEFAULT_TEMP_ROOT_TIMEOUT_SEC,
+                retry_gap_sec=oneso.DEFAULT_TEMP_ROOT_RETRY_GAP_SEC,
             ),
         )
         return {"code": code, "log": log}
@@ -311,9 +311,9 @@ class HubApi:
                             self.cfg,
                             run=bool(run),
                             so_override=None,
-                            attempts=4,
-                            timeout_sec=180,
-                            retry_gap_sec=3.0,
+                            attempts=oneso.DEFAULT_TEMP_ROOT_ATTEMPTS,
+                            timeout_sec=oneso.DEFAULT_TEMP_ROOT_TIMEOUT_SEC,
+                            retry_gap_sec=oneso.DEFAULT_TEMP_ROOT_RETRY_GAP_SEC,
                         ),
                     )
             except SystemExit as exc:
