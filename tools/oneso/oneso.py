@@ -13,6 +13,8 @@ import shutil
 import subprocess
 import sys
 import time
+import urllib.error
+import urllib.request
 from pathlib import Path
 from typing import Any
 
@@ -646,16 +648,102 @@ def adb_shell(command: str, *, timeout: float) -> tuple[int, str]:
         return 124, (out or "").strip() + "\n[timeout]"
 
 
+ONESO_ASSETS_RAW = (
+    "https://raw.githubusercontent.com/asrtroh-netizen/OneSo-assets/main/"
+)
+ONESO_ASSETS_CATALOG = ONESO_ASSETS_RAW + "catalog.json"
+ONESO_ASSETS_HOST = "raw.githubusercontent.com"
+ONESO_ASSETS_PATH_PREFIX = "/asrtroh-netizen/OneSo-assets/"
+
+
+def _http_get_bytes(url: str, *, timeout: float = 60) -> bytes:
+    """仅允许 OneSo-assets raw.githubusercontent.com。"""
+    from urllib.parse import urlparse
+
+    parsed = urlparse(url)
+    if parsed.scheme != "https" or parsed.netloc != ONESO_ASSETS_HOST:
+        raise ValueError(f"blocked host: {parsed.netloc}")
+    if not parsed.path.startswith(ONESO_ASSETS_PATH_PREFIX):
+        raise ValueError(f"blocked path: {parsed.path}")
+    req = urllib.request.Request(
+        url,
+        headers={"User-Agent": "OneRoot/1.0 (OneIMS temp-root)"},
+    )
+    with urllib.request.urlopen(req, timeout=timeout) as resp:  # noqa: S310
+        return resp.read()
+
+
+def fetch_so_from_github(
+    device: str,
+    build: str,
+    *,
+    cache_dir: Path,
+) -> Path | None:
+    """从 GitHub OneSo-assets 拉 catalog + 匹配 so，缓存到 cache_dir。"""
+    try:
+        catalog = json.loads(
+            _http_get_bytes(ONESO_ASSETS_CATALOG, timeout=30).decode("utf-8"),
+        )
+    except (urllib.error.URLError, TimeoutError, ValueError, json.JSONDecodeError) as exc:
+        print(f"[oneso] GitHub catalog FAIL: {exc}", file=sys.stderr)
+        return None
+    rel = (catalog.get("devices") or {}).get(device, {}).get(build)
+    if not rel:
+        print(
+            f"[oneso] GitHub catalog: no entry for {device}/{build}",
+            file=sys.stderr,
+        )
+        return None
+    base = str(catalog.get("base_url") or ONESO_ASSETS_RAW).rstrip("/") + "/"
+    if not rel.startswith("http"):
+        url = base + rel.lstrip("/")
+    else:
+        url = rel
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    name = Path(rel).name
+    if not name.endswith(".so"):
+        name = f"preload-{device}-{build}.so"
+    dst = cache_dir / name
+    try:
+        data = _http_get_bytes(url, timeout=120)
+    except (urllib.error.URLError, TimeoutError, ValueError) as exc:
+        print(f"[oneso] GitHub so FAIL: {exc}", file=sys.stderr)
+        return None
+    if len(data) < 64 or data[:4] != b"\x7fELF":
+        print("[oneso] GitHub so FAIL: not ELF", file=sys.stderr)
+        return None
+    dst.write_bytes(data)
+    print(f"[oneso] GitHub so -> {dst} ({len(data)} bytes)")
+    return dst
+
+
 def resolve_temp_root_so(
     cfg: dict[str, Any],
     *,
     so_override: Path | None,
     device: str | None,
     build: str | None,
+    prefer_github: bool = True,
 ) -> Path | None:
+    """
+    so 解析：显式 --so > GitHub OneSo-assets（默认）> 本地 cache/assets 兜底。
+    """
     if so_override is not None:
         p = so_override.expanduser().resolve()
         return p if p.is_file() else None
+
+    cache = HERE / ".cache" / "so"
+    if prefer_github and device and build:
+        gh = fetch_so_from_github(device, build, cache_dir=cache)
+        if gh is not None:
+            return gh
+
+    # 本地缓存（上次 GitHub 拉过）
+    if device and build:
+        cached = cache / f"preload-{device}-{build}.so"
+        if cached.is_file():
+            return cached
+
     app = oneims_root(cfg)
     assets = app / "app" / "src" / "main" / "assets" / "temproot"
     catalog_path = assets / "catalog.json"
@@ -699,12 +787,12 @@ def cmd_temp_root(
         device=device,
         build=build,
     )
-    print("[oneso] temp-root (PC; phone one-tap UI retired)")
+    print("[oneso] OneRoot · carrier persist via temp root (so ← GitHub)")
     print(f"[oneso] adb device={device or '?'} build={build or '?'}")
     if so is None:
         print(
-            "[oneso] FAIL: no matching so "
-            "(pass --so PATH, or ensure assets/temproot + catalog)",
+            "[oneso] FAIL: no matching so from GitHub OneSo-assets "
+            "(or local cache / --so)",
             file=sys.stderr,
         )
         return 2
@@ -713,11 +801,12 @@ def cmd_temp_root(
     print(f"[oneso] remote={REMOTE_SO}")
     print(
         f"[oneso] plan: push → kill stuck → "
-        f"LD_PRELOAD×{attempts} (timeout={timeout_sec}s) → su verify",
+        f"LD_PRELOAD×{attempts} (timeout={timeout_sec}s) → su verify "
+        f"→ then apply carrier persist on device",
     )
     if not run:
-        print("[oneso] dry-run only. Re-run with --run to execute on device.")
-        print("[oneso] tip: .\\scripts\\temp-root-pc.ps1 -Run")
+        print("[oneso] dry-run only. Re-run with --run / OneRoot 一键执行。")
+        print("[oneso] tip: .\\scripts\\OneRoot.ps1")
         return 0
 
     print(f"[oneso] adb push {so} {REMOTE_SO}")

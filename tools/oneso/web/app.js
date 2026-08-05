@@ -1,4 +1,4 @@
-/* OneSo Hub — TempRoot only (so factory lives on GitHub) */
+/* OneRoot — single window; so from GitHub OneSo-assets */
 (function () {
   const $ = (id) => document.getElementById(id);
   const logEl = $("logPanel");
@@ -35,9 +35,9 @@
       (overall === "ok" ? "is-ok" : overall === "warn" ? "is-warn" : "is-scan");
     summary.textContent =
       overall === "ok"
-        ? "体检通过。可以预览或一键临时 Root。"
+        ? "体检通过。可以预览或一键持久化（未解锁 Pixel 也能写运营商配置）。"
         : overall === "warn"
-          ? "未完全就绪：可先预览；执行前请连上设备并确保有匹配 so。"
+          ? "未完全就绪：请连上 Pixel，并确认 GitHub OneSo-assets 有匹配 so。"
           : "扫描中…";
   }
 
@@ -95,10 +95,10 @@
   );
   $("btnTempRun").addEventListener("click", async () => {
     const ok = window.confirm(
-      "确认在已连接设备上执行一键临时 Root？\n会 push so 并跑多轮 LD_PRELOAD（可能数分钟）。",
+      "确认一键持久化？\n会从 GitHub 取 so → 临时提权 → 便于写入运营商配置（可能数分钟）。\n无需解锁 Bootloader。",
     );
     if (!ok) return;
-    await runAction("temp-root run", () => api("temp_root", true));
+    await runAction("oneroot run", () => api("temp_root", true));
   });
 
   window.addEventListener("pywebviewready", () => boot());

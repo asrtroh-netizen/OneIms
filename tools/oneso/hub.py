@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""OneSo Hub — 单窗 · 仅 PC 一键临时 Root（so 工厂在 GitHub）。"""
+"""OneRoot — 单窗：未解锁 Pixel 运营商配置持久化（so ← GitHub OneSo-assets）。"""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ import oneso
 
 HERE = Path(__file__).resolve().parent
 WEB = HERE / "web"
-LOCK_NAME = "oneso-hub-single.lock"
+LOCK_NAME = "oneroot-single.lock"
 
 
 def _lock_path() -> Path:
@@ -24,7 +24,6 @@ def _lock_path() -> Path:
 
 
 def acquire_single_instance() -> bool:
-    """Windows 简易单实例：锁文件写 pid；已有存活进程则拒绝。"""
     import os
 
     path = _lock_path()
@@ -38,12 +37,11 @@ def acquire_single_instance() -> bool:
                 import ctypes
 
                 kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
-                SYNCHRONIZE = 0x00100000
-                handle = kernel32.OpenProcess(SYNCHRONIZE, False, old)
+                handle = kernel32.OpenProcess(0x00100000, False, old)
                 if handle:
                     kernel32.CloseHandle(handle)
                     print(
-                        f"[hub] already running pid={old} — keep one window only",
+                        f"[OneRoot] already running pid={old} — single window only",
                         file=sys.stderr,
                     )
                     return False
@@ -91,31 +89,29 @@ class Api:
             so_override=None,
             device=device,
             build=build,
+            prefer_github=True,
         )
         so_ok = so is not None and so.is_file()
-        remote = (
-            "https://github.com/asrtroh-netizen/OneSo-assets"
-        )
         checks = [
             {
-                "name": "adb",
+                "name": "adb / Pixel",
                 "ok": adb_ok,
                 "detail": f"{device}/{build}" if adb_ok else "offline",
             },
             {
-                "name": "匹配 so",
+                "name": "so ← GitHub",
                 "ok": so_ok,
-                "detail": so.name if so_ok else "missing (拉 GitHub assets 或本地 catalog)",
+                "detail": so.name if so_ok else "OneSo-assets 无匹配条目",
             },
             {
-                "name": "so 工厂",
+                "name": "解锁要求",
                 "ok": True,
-                "detail": "GitHub OneSo-assets（本窗不打包）",
+                "detail": "无需 Bootloader 解锁",
             },
             {
-                "name": "本窗职责",
+                "name": "目标",
                 "ok": True,
-                "detail": "仅一键临时 Root",
+                "detail": "运营商配置持久化",
             },
         ]
         overall = "ok" if adb_ok and so_ok else "warn"
@@ -123,12 +119,13 @@ class Api:
             "adb_ok": adb_ok,
             "adb_label": f"adb · {device}" if adb_ok else "adb · offline",
             "so_ok": so_ok,
-            "so_label": f"so · {so.name}" if so_ok else "so · none",
+            "so_label": f"so · {so.name}" if so_ok else "so · github?",
             "overall": overall,
             "checks": checks,
-            "footer": f"{device or '?'} · {build or '?'} · factory→GitHub",
+            "footer": f"{device or '?'} · {build or '?'} · OneRoot",
             "log": (
-                f"[status] device={device} build={build} so={so} remote={remote}"
+                f"[status] device={device} build={build} so={so} "
+                f"src=GitHub/OneSo-assets"
             ),
         }
 
@@ -160,7 +157,7 @@ def run_hub(config_path: Path | None = None) -> int:
         return 2
     api = Api(config_path)
     webview.create_window(
-        "OneSo · Temp Root",
+        "OneRoot",
         url=index.as_uri(),
         js_api=api,
         width=1040,
@@ -175,7 +172,7 @@ def run_hub(config_path: Path | None = None) -> int:
 def main(argv: list[str] | None = None) -> int:
     import argparse
 
-    p = argparse.ArgumentParser(prog="oneso-hub")
+    p = argparse.ArgumentParser(prog="OneRoot")
     p.add_argument("--config", type=Path, default=None)
     args = p.parse_args(argv)
     return run_hub(args.config)

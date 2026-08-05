@@ -27,8 +27,7 @@ $AdbDir = "E:\GQ\One\_toolchain\android-sdk\platform-tools"
 if (Test-Path $AdbDir) { $env:PATH = "$AdbDir;$env:PATH" }
 
 if ($Hub) {
-    Write-Host "==> OneSo Hub (OneAE splash)"
-    & python (Join-Path $RepoRoot "tools\oneso\oneso.py") hub
+    & "$PSScriptRoot\OneRoot.ps1"
     exit $LASTEXITCODE
 }
 
