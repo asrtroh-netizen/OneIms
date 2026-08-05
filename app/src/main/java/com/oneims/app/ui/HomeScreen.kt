@@ -15,7 +15,6 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -702,7 +701,7 @@ private fun OneKukuHomeDialogs(
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         if (result == null) {
-                            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                            OneImsExpressiveBusyBar()
                             Text(
                                 text = stringResource(R.string.temp_root_carrier_apply_working),
                                 style = MaterialTheme.typography.bodyMedium,

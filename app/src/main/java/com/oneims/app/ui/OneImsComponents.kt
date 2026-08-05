@@ -37,11 +37,26 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.foundation.Canvas
+import kotlin.math.PI
+import kotlin.math.sin
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -84,6 +99,55 @@ private val PageMaxWidth = 960.dp
 private val RailBreakpoint = 720.dp
 private val OneImsBrandRed = Color(0xFFD6242F)
 private val DockIslandShape = RoundedCornerShape(28.dp)
+
+/**
+ * 对齐 Android 16/17 Material Expressive「波浪不定进度」观感。
+ * 当前 Compose BOM 拉不到官方 LinearWavyProgressIndicator，用同系几何自绘，避免升依赖翻车。
+ */
+@Composable
+fun OneImsExpressiveBusyBar(
+    modifier: Modifier = Modifier,
+) {
+    val track = MaterialTheme.colorScheme.surfaceVariant
+    val indicator = MaterialTheme.colorScheme.primary
+    val phase by rememberInfiniteTransition(label = "expressive-busy").animateFloat(
+        initialValue = 0f,
+        targetValue = (2f * PI).toFloat(),
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1400, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart,
+        ),
+        label = "wave-phase",
+    )
+    Canvas(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(16.dp),
+    ) {
+        val stroke = size.height * 0.42f
+        val cy = size.height / 2f
+        val amp = size.height * 0.28f
+        val wavelength = size.width / 2.4f
+        drawRoundRect(
+            color = track,
+            topLeft = Offset(0f, cy - stroke / 2f),
+            size = Size(size.width, stroke),
+            cornerRadius = CornerRadius(stroke / 2f, stroke / 2f),
+        )
+        val path = Path()
+        val steps = 64
+        for (i in 0..steps) {
+            val x = size.width * i / steps
+            val y = cy + amp * sin(x / wavelength * 2f * PI.toFloat() + phase).toFloat()
+            if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+        }
+        drawPath(
+            path = path,
+            color = indicator,
+            style = Stroke(width = stroke, cap = StrokeCap.Round),
+        )
+    }
+}
 
 /**
  * 小屏 / 大字号（国内高通机常见）压缩首页垂直占用，避免 StatusHero 把整屏顶爆。
