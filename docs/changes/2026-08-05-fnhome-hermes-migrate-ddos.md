@@ -124,3 +124,12 @@ trim-cli --host 127.0.0.1 --port 9999 login   # 管理员
 | 启动 500 | `gateway.log` 若属 root → monitor(EACCES)。日志目录须 `chown hermes-agent` |
 | 端口契约 | 正式包 Gateway **8642** / Dashboard **9119**；旧 trim `.env` 的 `API_SERVER_PORT=18642` 会让 Gateway 绑错口，健康检查变红。已改回 8642 |
 | 官方启动结果 | `POST /api/start` → gateway+dashboard+bridge ok；`api/status` 双绿；`proxy/dashboard` **200** |
+
+### QQ 从 FNHOME 迁到 DDOS（同日）
+
+| 项 | 结果 |
+|---|---|
+| 源 | FNHOME `hermes-agent`：停 `gateway`；`.env` 中 `QQ_*` 注释并脱敏；`platforms.qqbot.enabled=false` |
+| 目标 | DDOS：合并同源 `QQ_*`（sha 对齐）、`qqbot.enabled=true` + platforms 目录；`POST /api/start` 后 Gateway/Dashboard **healthy** |
+| 备份 | FNHOME：`/vol1/1000/hermes-migrate/qq-disable-*`；DDOS：`qq-import-*` |
+| 验收 | FNHOME `NO_GATEWAY`；DDOS gateway PID 在跑、端口 8642/9119；QQ 实聊需在 QQ 侧人工确认（本轮 NOT RUN） |
