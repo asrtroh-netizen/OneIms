@@ -135,3 +135,18 @@ trim-cli --host 127.0.0.1 --port 9999 login   # 管理员
 | 验收 | FNHOME `NO_GATEWAY`；DDOS gateway PID 在跑、端口 8642/9119；QQ 实聊需在 QQ 侧人工确认（本轮 NOT RUN） |
 | Home channel | 迁移后缺 `QQBOT_HOME_CHANNEL` 会提示 `/sethome`。已用近期 QQ DM `chat_id` 写入 `.env` + `platforms.qqbot.home_channel`；`hermes status` 显示 `QQBot ✓ configured (home: …)` |
 | QQ 无响应根因 | ① 双 monitor 互相 stop → Gateway 挂死；② `/etc/hosts` 把 `wkapi.vip` 钉到坏 IP `107.149.90.94` → TLS EOF，模型调不通。已单实例重启 + **删 hosts 钉扎**；`hermes -z` → **WK_OK**；qqbot Ready |
+
+### QQ 体感慢（同日 · 加速）
+
+**结论**：慢的主因不是 Threadripper/飞牛 CPU，而是 **WKAPI TLS 抖** + **Hermes 整包 agent 提示词/工具开销**。网关日志 QQ 回合多为 `api_calls=1` 仍 **18–30s**。
+
+| 项 | 证据 / 动作 |
+|---|---|
+| 基线 QQ | `response ready … time=18.9s~29.7s`（gateway.log） |
+| 裸 chat（短 prompt） | 直连偶发 TLS EOF；经本机 mihomo `127.0.0.1:7890` 稳定样本约 **3.4–3.6s**（也曾出现全程 EOF，属上游抖动） |
+| mihomo | `*:7890` 在听；`gstatic` 经代理 **204** |
+| 已落地 | `.env` 注入 `HTTPS_PROXY/HTTP_PROXY`；`monitor.js` 增加 `XJ_PROXY_INJECT` 并并入 spawn env（bak：`monitor.js.bak-proxy-*`）；`force_ipv4=true`；`environment_probe=false`；`streaming.enabled=true`；`agent.max_turns` 90→**40** |
+| Gateway 进程 | `/proc/<pid>/environ` 可见 `HTTPS_PROXY=http://127.0.0.1:7890`；qqbot Ready；monitor 收敛为 1 |
+| 事故 | 错误正则 `\140` 曾把 `max_turns: 90` 写成裸 `` ` `` → YAML 挂；已从 `config.yaml.bak-speed` 恢复并重打补丁 |
+| QQ 加速后 E2E | **NOT RUN**（需用户再发一条 QQ，再看 `response ready time=`） |
+| 进一步可砍 | 缩短 `SOUL.md`/`AGENTS.md`；QQ 路径减工具集；换更快模型；App Center 勿再拉起第二 monitor |
