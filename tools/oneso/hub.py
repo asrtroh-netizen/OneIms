@@ -156,7 +156,7 @@ def run_hub(config_path: Path | None = None) -> int:
         print(f"missing {index}", file=sys.stderr)
         return 2
     api = Api(config_path)
-    webview.create_window(
+    window = webview.create_window(
         "OneRoot",
         url=index.as_uri(),
         js_api=api,
@@ -165,6 +165,19 @@ def run_hub(config_path: Path | None = None) -> int:
         min_size=(880, 600),
         background_color="#0a0b12",
     )
+
+    def _kick_boot() -> None:
+        try:
+            window.evaluate_js(
+                "window.__onerootBoot && window.__onerootBoot()",
+            )
+        except Exception as exc:  # noqa: BLE001
+            print(f"[OneRoot] evaluate_js boot skip: {exc}", file=sys.stderr)
+
+    try:
+        window.events.loaded += lambda: _kick_boot()
+    except Exception:  # noqa: BLE001
+        pass
     webview.start(debug=False)
     return 0
 

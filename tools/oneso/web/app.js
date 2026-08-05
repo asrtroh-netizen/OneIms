@@ -4,6 +4,7 @@
   const logEl = $("logPanel");
   const summary = $("checkSummary");
   const list = $("checkList");
+  let booting = false;
 
   function appendLog(text) {
     const line = String(text || "").trimEnd();
@@ -46,29 +47,54 @@
     $("btnTempRun").disabled = !ready;
   }
 
+  function sleep(ms) {
+    return new Promise((r) => setTimeout(r, ms));
+  }
+
+  async function waitBridge(maxMs) {
+    const deadline = Date.now() + (maxMs || 10000);
+    while (Date.now() < deadline) {
+      if (window.pywebview && window.pywebview.api) return true;
+      await sleep(150);
+    }
+    return false;
+  }
+
   async function api(method, ...args) {
-    if (!window.pywebview || !window.pywebview.api) {
+    if (!(await waitBridge(2000))) {
       throw new Error("pywebview bridge 未就绪");
     }
     return window.pywebview.api[method](...args);
   }
 
   async function boot() {
+    if (booting) return;
+    booting = true;
     summary.className = "check-summary is-scan";
     summary.textContent = "扫描中…";
+    setChip($("adbChip"), "adb · 扫描中", "muted");
+    setChip($("soChip"), "so · 扫描中", "muted");
     appendLog("[boot] start");
     try {
+      if (!(await waitBridge(10000))) {
+        throw new Error("等待 bridge 超时（点「开始体检」重试）");
+      }
       const st = await api("status");
       setChip($("adbChip"), st.adb_label, st.adb_ok ? "ok" : "warn");
       setChip($("soChip"), st.so_label, st.so_ok ? "ok" : "warn");
-      $("footerMeta").textContent = st.footer || "temp-root only";
+      setChip($("versionChip"), "OneRoot", "muted");
+      $("footerMeta").textContent = st.footer || "OneRoot";
       renderChecks(st.checks, st.overall);
       enableActions(true);
       appendLog(st.log || "[boot] ok");
     } catch (e) {
       enableActions(false);
+      setChip($("adbChip"), "adb · 桥接失败", "warn");
+      setChip($("soChip"), "so · —", "warn");
       renderChecks([{ name: "bridge", ok: false, detail: String(e) }], "warn");
       appendLog("[boot] FAIL " + e);
+    } finally {
+      booting = false;
     }
   }
 
@@ -101,8 +127,8 @@
     await runAction("oneroot run", () => api("temp_root", true));
   });
 
+  window.__onerootBoot = boot;
   window.addEventListener("pywebviewready", () => boot());
-  setTimeout(() => {
-    if (window.pywebview && window.pywebview.api) boot();
-  }, 400);
+  // 多拍重试：事件早到 / 晚到都能刷芯片，避免一直卡在 …
+  [300, 800, 1600, 3000].forEach((ms) => setTimeout(() => boot(), ms));
 })();
