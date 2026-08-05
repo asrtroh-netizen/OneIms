@@ -41,6 +41,8 @@
     <string name="onekuku_msg_activated">OneLink channel activated</string>
     <string name="onekuku_msg_need_active">Activate OneLink first (start Shizuku and grant access)</string>
     <string name="onekuku_msg_need_prepare">Start the service in Shizuku, then return here to authorize OneLink</string>
+    <string name="onekuku_msg_onelink_waiting_shizuku">Starting Shizuku on the phone (no PC script)…</string>
+    <string name="onekuku_msg_onelink_shizuku_timeout">Shizuku not ready: open Shizuku → Pair, then Start. If Start spins, force-stop Shizuku and retry.</string>
     <string name="onekuku_msg_waiting_pair_detail">Start the service in official Shizuku, then return here to finish authorization</string>
     <string name="onekuku_msg_pairing_notification_shown">Open official Shizuku, start the service, then return here to authorize</string>
     <string name="onekuku_msg_phase_pairing">Waiting for Shizuku permission…</string>

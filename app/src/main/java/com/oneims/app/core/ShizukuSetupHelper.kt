@@ -90,6 +90,29 @@ object ShizukuSetupHelper {
     /** @return 是否成功拉起已安装的 Shizuku 界面（不含跳商店）。 */
     fun openShizukuManager(context: Context): Boolean = openShizukuApp(context) == 0
 
+    /**
+     * 手机侧触发 Shizuku 无线自启（对齐 V15 `BootStartActionReceiver` / `SelfStarterService`）。
+     * 用于 OneLink「立即激活」：不只打开 UI，还让已配对设备走无码直连，避免只点「启动」一直转。
+     */
+    fun requestWirelessAutoStart(context: Context): Boolean {
+        val pkg = resolveInstalledShizukuPackage(context) ?: return false
+        val retry = Intent("moe.shizuku.manager.action.BOOT_START_RETRY")
+            .setClassName(pkg, "moe.shizuku.manager.receiver.BootStartActionReceiver")
+        val request = Intent("moe.shizuku.manager.intent.action.REQUEST_START")
+            .setClassName(pkg, "moe.shizuku.manager.receiver.ShizukuReceiver")
+        var ok = false
+        runCatching {
+            context.sendBroadcast(retry)
+            ok = true
+        }.onFailure { Log.w(TAG, "BOOT_START_RETRY broadcast failed", it) }
+        runCatching {
+            context.sendBroadcast(request)
+            ok = true
+        }.onFailure { Log.w(TAG, "REQUEST_START broadcast failed", it) }
+        Log.i(TAG, "requestWirelessAutoStart pkg=$pkg ok=$ok")
+        return ok
+    }
+
     /** 尝试直达「无线调试」设置页；失败则退回「开发者选项」。返回是否成功跳转。 */
     fun openWirelessDebugging(context: Context): Boolean {
         // Android 11+ 部分机型支持直达无线调试页

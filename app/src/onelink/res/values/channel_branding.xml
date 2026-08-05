@@ -41,6 +41,8 @@
     <string name="onekuku_msg_activated">OneLink 通道已激活</string>
     <string name="onekuku_msg_need_active">请先激活 OneLink（启动 Shizuku 并授权）</string>
     <string name="onekuku_msg_need_prepare">请先在 Shizuku 内完成启动，再回到本应用授权 OneLink</string>
+    <string name="onekuku_msg_onelink_waiting_shizuku">正在手机内拉起 Shizuku（无需电脑脚本）…</string>
+    <string name="onekuku_msg_onelink_shizuku_timeout">Shizuku 未就绪：打开 Shizuku → 先点「配对」再「启动」。若启动一直转，请强制停止 Shizuku 后重开再试。</string>
     <string name="onekuku_msg_waiting_pair_detail">请在官方 Shizuku 内启动服务，再回到本应用完成授权</string>
     <string name="onekuku_msg_pairing_notification_shown">请打开官方 Shizuku 启动服务，再回到本应用授权</string>
     <string name="onekuku_msg_phase_pairing">正在等待 Shizuku 授权…</string>

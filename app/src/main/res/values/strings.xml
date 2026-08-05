@@ -545,6 +545,8 @@
 
     <string name="onekuku_msg_need_prepare">请先完成 OneKuku 核心服务准备</string>
     <string name="onekuku_msg_already_active">OneKuku 核心服务已激活</string>
+    <string name="onekuku_msg_onelink_waiting_shizuku">正在手机内拉起 Shizuku，请稍候…</string>
+    <string name="onekuku_msg_onelink_shizuku_timeout">Shizuku 未就绪：请打开 Shizuku → 先「配对」再「启动」。若按钮一直转，请强制停止 Shizuku 后重开再试。</string>
     <string name="onekuku_msg_permission_requested">已发起 OneKuku 激活请求</string>
     <string name="onekuku_msg_activated">OneKuku 核心服务已激活</string>
     <string name="onekuku_msg_activation_denied">OneKuku 激活未通过</string>

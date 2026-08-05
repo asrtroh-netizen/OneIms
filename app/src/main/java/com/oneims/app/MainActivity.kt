@@ -706,27 +706,34 @@ private fun AppRoot(
         awaitingCoreInstall = false
         coreMissingDialogVisible = false
         adbPairDialogVisible = false
-        // 2.0.9 无 CONNECTING 相位；避免打开 Shizuku 后首页一直钉在「激活中」。
-        OneKukuActivationUi.setPhase(OneKukuActivationPhase.IDLE)
-        activationEpoch++
         shizukuRunning = OneKukuManager.isRunning()
         shizukuGranted = OneKukuManager.isGranted()
         when {
             OneKukuManager.isGranted() -> {
+                // 已授权：清掉误钉的 NEEDS_ACTIVATION，避免桥已通仍显示「还差一步」。
+                OneKukuActivationUi.setPhase(OneKukuActivationPhase.IDLE)
+                activationEpoch++
+                settleOneKukuChannelAfterReady()
                 OneKukuHiddenRunner.installBridge(OneKukuPrivilegeBridgeImpl)
                 OneKukuHiddenRunner.wake()
                 OneKukuSleepController.sleepIfEnabled(context)
                 publish(context.getString(R.string.onekuku_msg_already_active))
             }
             OneKukuManager.isRunning() -> {
+                OneKukuActivationUi.setPhase(OneKukuActivationPhase.IDLE)
+                activationEpoch++
                 OneKukuManager.requestActivation()
                 publish(context.getString(R.string.onekuku_msg_permission_requested))
             }
             else -> {
+                // 手机侧：先开无线调试 + 广播让 Shizuku SelfStarter 无码直连，再打开管理器。
+                // 短时 CONNECTING + 轮询 binder；超时走 FAILED，避免「立即激活」后一直转。
+                ShizukuSetupHelper.ensureAdbWifiEnabled(context)
+                ShizukuSetupHelper.requestWirelessAutoStart(context)
+                OneKukuActivationUi.setPhase(OneKukuActivationPhase.CONNECTING)
+                activationEpoch++
                 val now = System.currentTimeMillis()
-                if (now - lastShizukuOpenAt < 15_000L) {
-                    publish(context.getString(R.string.onekuku_msg_need_prepare))
-                } else {
+                if (now - lastShizukuOpenAt >= 15_000L) {
                     lastShizukuOpenAt = now
                     val result = ShizukuSetupHelper.openShizukuApp(context)
                     publish(
@@ -738,6 +745,37 @@ private fun AppRoot(
                             },
                         ),
                     )
+                } else {
+                    publish(context.getString(R.string.onekuku_msg_onelink_waiting_shizuku))
+                }
+                scope.launch {
+                    val deadline = System.currentTimeMillis() + 45_000L
+                    while (System.currentTimeMillis() < deadline) {
+                        if (OneKukuManager.isRunning()) {
+                            if (!OneKukuManager.isGranted()) {
+                                OneKukuManager.requestActivation()
+                            }
+                            if (OneKukuManager.isReady()) {
+                                settleOneKukuChannelAfterReady()
+                                publish(context.getString(R.string.onekuku_msg_already_active))
+                                return@launch
+                            }
+                        }
+                        delay(500L)
+                    }
+                    if (!OneKukuManager.isReady() &&
+                        (
+                            OneKukuActivationUi.phase == OneKukuActivationPhase.CONNECTING ||
+                                OneKukuActivationUi.phase == OneKukuActivationPhase.STARTING
+                            )
+                    ) {
+                        OneKukuActivationUi.setPhase(
+                            OneKukuActivationPhase.FAILED,
+                            failure = "shizuku_start_timeout",
+                        )
+                        activationEpoch++
+                        publish(context.getString(R.string.onekuku_msg_onelink_shizuku_timeout))
+                    }
                 }
             }
         }
@@ -1665,11 +1703,15 @@ private fun AppRoot(
                             when {
                                 !OneKukuManager.isRunning() -> {
                                     prepareOneKukuCore()
-                                    OneKukuBootRestoreStore.writeHint(
-                                        context,
-                                        OneKukuBootUiHint.NEEDS_ACTIVATION,
-                                    )
-                                    bootUiHint = OneKukuBootUiHint.NEEDS_ACTIVATION
+                                    // OneLink：勿钉 NEEDS_ACTIVATION，否则桥通了仍「还差一步」；
+                                    // OneKuku 内嵌线仍需要该提示引导配对。
+                                    if (!ChannelLine.usesShizuku) {
+                                        OneKukuBootRestoreStore.writeHint(
+                                            context,
+                                            OneKukuBootUiHint.NEEDS_ACTIVATION,
+                                        )
+                                        bootUiHint = OneKukuBootUiHint.NEEDS_ACTIVATION
+                                    }
                                 }
                                 OneKukuManager.isGranted() -> {
                                     OneKukuHiddenRunner.installBridge(OneKukuPrivilegeBridgeImpl)
@@ -1694,11 +1736,13 @@ private fun AppRoot(
                         },
                         onForceReactivateOneKuku = {
                             prepareOneKukuCore(forceRestart = true)
-                            OneKukuBootRestoreStore.writeHint(
-                                context,
-                                OneKukuBootUiHint.NEEDS_ACTIVATION,
-                            )
-                            bootUiHint = OneKukuBootUiHint.NEEDS_ACTIVATION
+                            if (!ChannelLine.usesShizuku) {
+                                OneKukuBootRestoreStore.writeHint(
+                                    context,
+                                    OneKukuBootUiHint.NEEDS_ACTIVATION,
+                                )
+                                bootUiHint = OneKukuBootUiHint.NEEDS_ACTIVATION
+                            }
                             shizukuRunning = OneKukuManager.isRunning()
                             shizukuGranted = OneKukuManager.isGranted()
                         },

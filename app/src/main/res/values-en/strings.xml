@@ -539,6 +539,8 @@
 
     <string name="onekuku_msg_need_prepare">Finish preparing the OneKuku core service first</string>
     <string name="onekuku_msg_already_active">OneKuku core service is already active</string>
+    <string name="onekuku_msg_onelink_waiting_shizuku">Starting Shizuku on device…</string>
+    <string name="onekuku_msg_onelink_shizuku_timeout">Shizuku not ready: open Shizuku → Pair, then Start. If Start spins forever, force-stop Shizuku and retry.</string>
     <string name="onekuku_msg_permission_requested">OneKuku activation requested</string>
     <string name="onekuku_msg_activated">OneKuku core service activated</string>
     <string name="onekuku_msg_activation_denied">OneKuku activation was not granted</string>
