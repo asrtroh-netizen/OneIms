@@ -12,9 +12,8 @@ if (-not $apk) { throw "Shizuku 未安装 (moe.shizuku.privileged.api)" }
 & $Adb shell "/data/local/tmp/su -c '/system/bin/killall -9 shizuku_server' 2>/dev/null; /system/bin/killall -9 shizuku_server 2>/dev/null; true" | Out-Null
 
 $lib = ($apk -replace "base.apk$", "") + "lib/arm64/libshizuku.so"
-$exists = & $Adb shell "test -f '$lib' && echo YES || echo NO"
-if ($exists.Trim() -ne "YES") {
-  # 回退：从 APK 抽到 /data/local/tmp（需本机已有 lib）
+$exists = (& $Adb shell "test -f $lib && echo YES || echo NO").Trim()
+if ($exists -ne "YES") {
   $lib = "/data/local/tmp/libshizuku.so"
   & $Adb shell "chmod 755 $lib"
 }
@@ -24,4 +23,5 @@ Write-Host "==> start $lib --apk=$apk"
 Start-Sleep -Seconds 2
 & $Adb shell "ps -A | grep shizuku || true"
 & $Adb shell "am start -n moe.shizuku.privileged.api/moe.shizuku.manager.MainActivity"
-Write-Host "==> done. 打开 Shizuku 看是否已运行；若仍未激活，点「无线调试启动」。"
+Write-Host "==> done. 首页服务区应为 Active。无线调试「未激活」可忽略（USB 直拉不依赖配对）。"
+Write-Host "若一定要手机内无线配对：系统设置 → 开发者选项 → 无线调试 → 使用配对码配对设备。"
