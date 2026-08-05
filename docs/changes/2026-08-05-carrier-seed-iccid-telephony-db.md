@@ -26,4 +26,17 @@ Android 对普通 App 常清空 / 脱敏 `SubscriptionInfo.iccId`；
 2. 为空时 `su` 拷贝 `telephony.db` 到 App cache，用 `SQLiteDatabase` 读 `siminfo`
 3. 按 active `subId` 对齐后 seed 最小 `<bundle/>` 再 patch
 
-版本：`3.2.10` / `versionCode 92`。
+版本：`3.2.10` / `versionCode 92`（ICCID 回退）；`3.2.11` / `93`（幂等已 ok 不算失败）。
+
+## 续：参考失败 + 我的成功
+
+真机 log（3.2.10，XML 已含最小键）：
+
+```
+already/skip unchanged …xml
+xml_patch_none
+reapply attempted=true ok=true
+```
+
+根因：`ok = patched > 0` 把「无需再写」当成失败。  
+修复：全部 already ok 且无写失败 → `xml_already_ok=N` 且 `success=true`。

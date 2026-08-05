@@ -72,21 +72,31 @@ object TempRootCarrierXmlPersist {
         }
         try {
             var patched = 0
+            var alreadyOk = 0
+            var writeFailed = 0
             for (remote in remoteFiles) {
                 val name = remote.substringAfterLast('/')
-                val raw = execSuCapture(su, "cat '$remote'") ?: continue
+                val raw = execSuCapture(su, "cat '$remote'")
+                if (raw == null) {
+                    writeFailed++
+                    Log.w(TAG, "cat failed $name")
+                    continue
+                }
                 val next = CarrierConfigXmlMinimalPatcher.patch(
                     original = raw,
                     displayCarrierName = displayCarrierName,
                 )
                 if (next == raw) {
-                    Log.i(TAG, "skip unchanged $name")
+                    // 幂等：键已是目标态，不算失败（否则会「参考失败 + 我的成功」误报）
+                    alreadyOk++
+                    Log.i(TAG, "already ok $name")
                     continue
                 }
                 val local = File(stagedLocal, name)
                 local.writeText(next)
                 val pushOk = pushViaSu(su, local, "$STAGE_DIR/$name")
                 if (!pushOk) {
+                    writeFailed++
                     Log.w(TAG, "stage push failed $name")
                     continue
                 }
@@ -95,16 +105,20 @@ object TempRootCarrierXmlPersist {
                 if (installed) {
                     patched++
                 } else {
+                    writeFailed++
                     Log.w(TAG, "install failed $name")
                 }
             }
             if (patched > 0 && restartPhone) {
                 execSuCapture(su, "killall com.android.phone 2>/dev/null || true")
             }
-            val ok = patched > 0
+            // 有写入成功，或全部已是目标态且无写失败 → 成功
+            val ok = patched > 0 || (alreadyOk > 0 && writeFailed == 0)
             val msg = when {
-                ok && seeded > 0 -> "xml_patched=$patched,seeded=$seeded"
-                ok -> "xml_patched=$patched"
+                patched > 0 && seeded > 0 -> "xml_patched=$patched,seeded=$seeded"
+                patched > 0 && alreadyOk > 0 -> "xml_patched=$patched,already=$alreadyOk"
+                patched > 0 -> "xml_patched=$patched"
+                ok && alreadyOk > 0 -> "xml_already_ok=$alreadyOk"
                 else -> "xml_patch_none"
             }
             Log.i(TAG, msg)
