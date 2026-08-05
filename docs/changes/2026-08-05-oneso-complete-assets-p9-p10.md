@@ -21,6 +21,14 @@
 
 ## 验证
 
-- `complete-assets` → created=2；catalog entries=36
+- `complete-assets` → created=2；catalog entries=36；二次 dry-run created=0
 - `pack-0705` → ok=4/4
 - `pack-p10` → ok=4/4
+
+## 0705 / 0805
+
+| Build | 状态 |
+|---|---|
+| `CP2A.260705.006` P9 | **齐套** 4/4（assets + OneIMS offline） |
+| `CP2A.260705.006` P10 | **无成品**（禁止用 P9 so 交叉） |
+| `CP2A.260805.*`（字面 0805） | **不存在**：assets/factory/TEMP/真机均无；真机仍 `CP2A.260705.006` |
