@@ -40,6 +40,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import com.oneims.app.R
 import com.oneims.app.core.ChannelLine
 import com.oneims.app.core.DeviceInfo
+import com.oneims.app.core.TempRootNetworkProbe
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -50,6 +51,7 @@ private enum class HomeToolDialog {
     RootTip,
     AdbTip,
     DeviceDetails,
+    RootNetworkCheck,
 }
 
 @Composable
@@ -118,6 +120,12 @@ private fun OneKukuStandaloneHome(
                 TempRootCarrierPersistHomeCard(
                     checked = state.tempRootCarrierPersist,
                     onCheckedChange = actions.onTempRootCarrierPersistChange,
+                )
+            }
+            item {
+                TempRootToolsHomeCard(
+                    onNetworkCheck = { openDialog = HomeToolDialog.RootNetworkCheck },
+                    onBackup = actions.onTempRootBackupCarrierConfig,
                 )
             }
         }
@@ -245,6 +253,12 @@ private fun OneLinkHome(
                 TempRootCarrierPersistHomeCard(
                     checked = state.tempRootCarrierPersist,
                     onCheckedChange = actions.onTempRootCarrierPersistChange,
+                )
+            }
+            item {
+                TempRootToolsHomeCard(
+                    onNetworkCheck = { openDialog = HomeToolDialog.RootNetworkCheck },
+                    onBackup = actions.onTempRootBackupCarrierConfig,
                 )
             }
         }
@@ -385,6 +399,47 @@ private fun TempRootCarrierPersistHomeCard(
             onCheckedChange = onCheckedChange,
             icon = Icons.Filled.Star,
         )
+    }
+}
+
+/** 有 Root 时：网络体检 / 备份 / SELinux 提示（不做假 setenforce）。 */
+@Composable
+private fun TempRootToolsHomeCard(
+    onNetworkCheck: () -> Unit,
+    onBackup: () -> Unit,
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        tonalElevation = 1.dp,
+    ) {
+        Column(modifier = Modifier.padding(vertical = 4.dp)) {
+            Text(
+                text = stringResource(R.string.temp_root_tools_title),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
+            )
+            Text(
+                text = stringResource(R.string.temp_root_selinux_tip),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
+            )
+            SettingsActionRow(
+                icon = Icons.Filled.Info,
+                title = stringResource(R.string.temp_root_network_check_title),
+                subtitle = stringResource(R.string.temp_root_network_check_sub),
+                onClick = onNetworkCheck,
+            )
+            SettingsActionRow(
+                icon = Icons.Filled.Refresh,
+                title = stringResource(R.string.temp_root_backup_title),
+                subtitle = stringResource(R.string.temp_root_backup_sub),
+                onClick = onBackup,
+            )
+        }
     }
 }
 
@@ -534,6 +589,35 @@ private fun OneKukuHomeDialogs(
                 dismissButton = {
                     TextButton(onClick = onDismiss) {
                         Text(stringResource(R.string.action_cancel))
+                    }
+                },
+            )
+        }
+
+        HomeToolDialog.RootNetworkCheck -> {
+            var body by remember { mutableStateOf<String?>(null) }
+            LaunchedEffect(Unit) {
+                body = withContext(Dispatchers.IO) {
+                    TempRootNetworkProbe.formatForUi()
+                }
+            }
+            AlertDialog(
+                onDismissRequest = onDismiss,
+                title = { Text(stringResource(R.string.temp_root_network_check_dialog_title)) },
+                text = {
+                    if (body == null) {
+                        Text(stringResource(R.string.onekuku_busy_status_check))
+                    } else {
+                        Text(
+                            text = body.orEmpty(),
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.verticalScroll(rememberScrollState()),
+                        )
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = onDismiss) {
+                        Text(stringResource(R.string.action_close))
                     }
                 },
             )

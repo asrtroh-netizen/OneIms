@@ -25,6 +25,7 @@ object TempRootCarrierXmlPersist {
     fun applyMinimalNetworkIfEnabled(
         context: Context,
         restartPhone: Boolean,
+        displayCarrierName: String? = null,
     ): ApplyResult {
         if (!ConfigStore.isRootPersistEnhance(context)) {
             return ApplyResult(false, false, 0, "switch_off")
@@ -32,10 +33,14 @@ object TempRootCarrierXmlPersist {
         if (!RootPresenceProbe.probe().any) {
             return ApplyResult(false, false, 0, "no_root")
         }
-        return applyMinimalNetwork(context, restartPhone)
+        return applyMinimalNetwork(context, restartPhone, displayCarrierName)
     }
 
-    fun applyMinimalNetwork(context: Context, restartPhone: Boolean): ApplyResult {
+    fun applyMinimalNetwork(
+        context: Context,
+        restartPhone: Boolean,
+        displayCarrierName: String? = null,
+    ): ApplyResult {
         val su = resolveWorkingSu()
             ?: return ApplyResult(true, false, 0, "su_unavailable")
 
@@ -57,7 +62,10 @@ object TempRootCarrierXmlPersist {
             for (remote in remoteFiles) {
                 val name = remote.substringAfterLast('/')
                 val raw = execSuCapture(su, "cat '$remote'") ?: continue
-                val next = CarrierConfigXmlMinimalPatcher.patch(raw)
+                val next = CarrierConfigXmlMinimalPatcher.patch(
+                    original = raw,
+                    displayCarrierName = displayCarrierName,
+                )
                 if (next == raw) {
                     Log.i(TAG, "skip unchanged $name")
                     continue

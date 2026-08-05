@@ -107,6 +107,8 @@ data class HomeActions(
     val onRootBootStartChange: (Boolean) -> Unit = {},
     val onSandboxPersistBypassChange: (Boolean) -> Unit = {},
     val onTempRootCarrierPersistChange: (Boolean) -> Unit = {},
+    val onTempRootNetworkCheck: () -> Unit = {},
+    val onTempRootBackupCarrierConfig: () -> Unit = {},
     val onOpenWirelessDebugging: () -> Unit = {},
     val onOpenHotspot: () -> Unit = {},
     val onCopyAdbGuide: () -> Unit = {},

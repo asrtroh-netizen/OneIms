@@ -701,10 +701,19 @@
     <string name="home_device_details">Device details</string>
     <string name="home_root_badge">ROOT</string>
     <string name="temp_root_carrier_persist_title">Temp-root carrier persist</string>
-    <string name="temp_root_carrier_persist_sub">With root, write minimal VoLTE/VoNR/NR keys into phone CarrierConfig XML so settings survive reboot better</string>
+    <string name="temp_root_carrier_persist_sub">With root, write VoLTE/VoNR/NR and carrier display-name keys into phone CarrierConfig XML so settings survive reboot better</string>
     <string name="temp_root_carrier_persist_on">Temp-root carrier persist on</string>
     <string name="temp_root_carrier_persist_off">Temp-root carrier persist off</string>
     <string name="temp_root_carrier_persist_applied">Tried CarrierConfig XML write: %1$s</string>
+    <string name="temp_root_tools_title">Temp-root tools</string>
+    <string name="temp_root_selinux_tip">If SELinux is Permissive, it usually cannot be restored this boot; reboot clears it (and drops temp root)</string>
+    <string name="temp_root_network_check_title">Network check</string>
+    <string name="temp_root_network_check_sub">Read-only radio/VoNR/SELinux snapshot; no ICCID</string>
+    <string name="temp_root_network_check_dialog_title">Network check</string>
+    <string name="temp_root_backup_title">Backup CarrierConfig</string>
+    <string name="temp_root_backup_sub">Copy phone CarrierConfig XML into Download</string>
+    <string name="temp_root_backup_ok">Backed up %1$d files: %2$s</string>
+    <string name="temp_root_backup_fail">Backup failed: %1$s</string>
     <string name="root_persist_xml_suffix_ok"> · xml-patch=%1$d</string>
     <string name="root_persist_xml_suffix_fail"> · xml-patch failed (%1$s)</string>
     <string name="home_device_details_sub">Model, OS, and bypass strategy for troubleshooting</string>

@@ -42,4 +42,19 @@ class CarrierConfigXmlMinimalPatcherTest {
         val original = "<bundle></bundle></bundle>"
         assertEquals(original, CarrierConfigXmlMinimalPatcher.patch(original))
     }
+
+    @Test
+    fun patch_addsDisplayNameKeysWhenCarrierProvided() {
+        val original = """
+            <bundle>
+            <boolean name="carrier_volte_provisioned_bool" value="false" />
+            </bundle>
+        """.trimIndent()
+
+        val patched = CarrierConfigXmlMinimalPatcher.patch(original, displayCarrierName = "中国电信")
+
+        assertTrue(patched.contains("""name="carrier_name_override_bool" value="true""""))
+        assertTrue(patched.contains("<string name=\"carrier_name_string\">中国电信</string>"))
+        assertTrue(patched.contains("""name="spn_display_condition_override_int" value="2""""))
+    }
 }

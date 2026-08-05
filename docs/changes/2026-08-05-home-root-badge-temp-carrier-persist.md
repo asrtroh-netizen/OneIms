@@ -25,6 +25,17 @@
 
 首页第三行开关与实验页「Root 持久化增强」共用 `ConfigStore.isRootPersistEnhance`。
 
+## 后续融合（同日）
+
+有 Root 时首页追加「临时 Root 工具」块：
+
+- 网络体检（对齐 `check-network.ps1` 只读字段 + SELinux）
+- 备份 CarrierConfig XML 到 Download
+- SELinux Permissive「随重启清除」提示（不做假 `setenforce`）
+- XML 补丁在开关开启时附带运营商显示名键（当前选中 SIM 名称）
+
+明确不做：演练 `-Apply`、壁纸成功信号、自动恢复 Enforcing。
+
 ## 验证
 
 - `:app:compileOnekukuDebugKotlin`

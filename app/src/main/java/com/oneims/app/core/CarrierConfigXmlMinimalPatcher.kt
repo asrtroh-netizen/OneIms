@@ -19,7 +19,10 @@ object CarrierConfigXmlMinimalPatcher {
         </int-array>
     """.trimIndent()
 
-    fun patch(original: String): String {
+    /**
+     * @param displayCarrierName 非空时追加教程「显示名」片段；空则只打网络最小集。
+     */
+    fun patch(original: String, displayCarrierName: String? = null): String {
         if (original.isBlank()) return original
         val nl = if (original.contains("\r\n")) "\r\n" else "\n"
         var text = original
@@ -28,22 +31,81 @@ object CarrierConfigXmlMinimalPatcher {
             return original
         }
         for (key in booleanKeys) {
-            text = replaceOrInsertBoolean(text, key, nl)
+            text = replaceOrInsertBoolean(text, key, value = true, nl = nl)
         }
         text = replaceOrInsertNrArray(text, nl)
+        val name = displayCarrierName?.trim().orEmpty()
+        if (name.isNotEmpty()) {
+            text = replaceOrInsertBoolean(text, "carrier_name_override_bool", value = true, nl = nl)
+            text = replaceOrInsertString(text, "carrier_name_string", name, nl)
+            text = replaceOrInsertBoolean(
+                text,
+                "enable_carrier_display_name_resolver_bool",
+                value = true,
+                nl = nl,
+            )
+            text = replaceOrInsertInteger(text, "spn_display_condition_override_int", value = 2, nl = nl)
+        }
         return text
     }
 
-    private fun replaceOrInsertBoolean(text: String, name: String, nl: String): String {
+    private fun replaceOrInsertBoolean(
+        text: String,
+        name: String,
+        value: Boolean,
+        nl: String,
+    ): String {
         val pattern = Regex("""<boolean\s+name="${Regex.escape(name)}"\s+value="[^"]*"\s*/>""")
         val matches = pattern.findAll(text).toList()
         if (matches.size > 1) return text
-        val replacement = """<boolean name="$name" value="true" />"""
+        val replacement = """<boolean name="$name" value="$value" />"""
         if (matches.size == 1) {
             return pattern.replaceFirst(text, replacement)
         }
         return insertBeforeBundle(text, replacement, nl)
     }
+
+    private fun replaceOrInsertString(
+        text: String,
+        name: String,
+        value: String,
+        nl: String,
+    ): String {
+        val pattern = Regex(
+            """<string\s+name="${Regex.escape(name)}">[\s\S]*?</string>""",
+        )
+        val matches = pattern.findAll(text).toList()
+        if (matches.size > 1) return text
+        val escaped = escapeXml(value)
+        val replacement = """<string name="$name">$escaped</string>"""
+        if (matches.size == 1) {
+            return pattern.replaceFirst(text, replacement)
+        }
+        return insertBeforeBundle(text, replacement, nl)
+    }
+
+    private fun replaceOrInsertInteger(
+        text: String,
+        name: String,
+        value: Int,
+        nl: String,
+    ): String {
+        val pattern = Regex("""<int\s+name="${Regex.escape(name)}"\s+value="[^"]*"\s*/>""")
+        val matches = pattern.findAll(text).toList()
+        if (matches.size > 1) return text
+        val replacement = """<int name="$name" value="$value" />"""
+        if (matches.size == 1) {
+            return pattern.replaceFirst(text, replacement)
+        }
+        return insertBeforeBundle(text, replacement, nl)
+    }
+
+    private fun escapeXml(raw: String): String =
+        raw.replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+            .replace("\"", "&quot;")
+            .replace("'", "&apos;")
 
     private fun replaceOrInsertNrArray(text: String, nl: String): String {
         val pattern = Regex(

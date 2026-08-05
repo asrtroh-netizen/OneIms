@@ -708,10 +708,19 @@
     <string name="home_device_details">设备详情</string>
     <string name="home_root_badge">ROOT</string>
     <string name="temp_root_carrier_persist_title">临时 Root 持久化改运营商</string>
-    <string name="temp_root_carrier_persist_sub">有 Root 时把 VoLTE/VoNR/NR 最小键写入 phone 目录 XML，重启后配置更易留下</string>
+    <string name="temp_root_carrier_persist_sub">有 Root 时把 VoLTE/VoNR/NR 与运营商显示名写入 phone 目录 XML，重启后配置更易留下</string>
     <string name="temp_root_carrier_persist_on">已开启临时 Root 持久化改运营商</string>
     <string name="temp_root_carrier_persist_off">已关闭临时 Root 持久化改运营商</string>
     <string name="temp_root_carrier_persist_applied">已尝试写入 CarrierConfig XML：%1$s</string>
+    <string name="temp_root_tools_title">临时 Root 工具</string>
+    <string name="temp_root_selinux_tip">若 SELinux 为 Permissive：本次开机通常改不回去，重启后会恢复（临时 Root 也会掉）</string>
+    <string name="temp_root_network_check_title">网络体检</string>
+    <string name="temp_root_network_check_sub">只读查看制式 / VoNR / SELinux，不收集 ICCID</string>
+    <string name="temp_root_network_check_dialog_title">网络体检结果</string>
+    <string name="temp_root_backup_title">备份 CarrierConfig</string>
+    <string name="temp_root_backup_sub">把 phone 目录 XML 备份到 Download</string>
+    <string name="temp_root_backup_ok">已备份 %1$d 个文件：%2$s</string>
+    <string name="temp_root_backup_fail">备份失败：%1$s</string>
     <string name="root_persist_xml_suffix_ok"> · XML补写=%1$d</string>
     <string name="root_persist_xml_suffix_fail"> · XML补写失败(%1$s)</string>
     <string name="home_device_details_sub">型号、系统与兼容策略，方便对照排障</string>

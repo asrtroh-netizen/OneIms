@@ -70,6 +70,7 @@ import com.oneims.app.core.ReapplyTrigger
 import com.oneims.app.core.RootPersistenceSupport
 import com.oneims.app.core.RootPresenceProbe
 import com.oneims.app.core.SandboxPersistSupport
+import com.oneims.app.core.TempRootCarrierBackup
 import com.oneims.app.core.TempRootCarrierXmlPersist
 import com.oneims.app.core.SafetyGuard
 import com.oneims.app.core.SystemUpdateShield
@@ -1955,6 +1956,7 @@ private fun AppRoot(
                                     val xml = TempRootCarrierXmlPersist.applyMinimalNetwork(
                                         context = context,
                                         restartPhone = true,
+                                        displayCarrierName = selectedSim?.carrierName,
                                     )
                                     context.getString(
                                         R.string.temp_root_carrier_persist_applied,
@@ -1963,6 +1965,28 @@ private fun AppRoot(
                                 }
                             } else {
                                 publish(context.getString(R.string.temp_root_carrier_persist_off))
+                            }
+                        },
+                        onTempRootNetworkCheck = {
+                            // 弹窗由 HomeScreen 打开；此处保留回调兼容。
+                        },
+                        onTempRootBackupCarrierConfig = {
+                            runOperation(
+                                label = context.getString(R.string.temp_root_backup_title),
+                            ) {
+                                val result = TempRootCarrierBackup.backup(context)
+                                if (result.success) {
+                                    context.getString(
+                                        R.string.temp_root_backup_ok,
+                                        result.fileCount,
+                                        result.path.orEmpty(),
+                                    )
+                                } else {
+                                    context.getString(
+                                        R.string.temp_root_backup_fail,
+                                        result.message,
+                                    )
+                                }
                             }
                         },
                         onOpenWirelessDebugging = {
