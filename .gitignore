@@ -1,0 +1,7 @@
+﻿# Public face of OneIms: README + screenshot only. Source stays private.
+*
+!README.md
+!docs/
+!docs/screenshots/
+!docs/screenshots/shizuku-asrtroh-home-active.png
+!.gitignore
