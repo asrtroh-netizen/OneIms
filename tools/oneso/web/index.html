@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OneSo Hub</title>
+  <link rel="stylesheet" href="app.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="hero">
+      <div class="hero-glow" aria-hidden="true"></div>
+      <div class="hero-main">
+        <p class="eyebrow">OneIMS · Preload Factory Desk</p>
+        <h1 class="brand">OneSo</h1>
+      </div>
+      <div class="hero-meta">
+        <div class="hero-controls">
+          <div class="chip chip-muted" id="adbChip">adb · …</div>
+          <div class="chip chip-muted" id="catalogChip">catalog · …</div>
+          <div class="chip chip-muted" id="versionChip">hub · 0805</div>
+        </div>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <section class="home-hero" aria-label="启动页">
+        <div class="home-hero-art" aria-hidden="true">
+          <div class="orbit orbit-a"></div>
+          <div class="orbit orbit-b"></div>
+          <div class="orb"></div>
+          <div class="beam"></div>
+          <div class="art-label">READY ORBIT</div>
+        </div>
+        <div class="home-hero-copy">
+          <p class="home-kicker">ONESO · 临时 Root 工作台</p>
+          <h2 class="home-title">别再让手机一键<br/>把整机卡死</h2>
+          <p class="home-desc">
+            启动页先体检环境 → 再按需打包 so / 跑 PC 临时 Root。
+            手机端一键入口已撤；长任务只在你点确认后执行。
+          </p>
+          <div class="home-actions">
+            <button type="button" class="btn primary" id="btnBoot">开始体检</button>
+            <button type="button" class="btn ghost" id="btnPack" disabled>生成 0705 全家桶</button>
+            <button type="button" class="btn ghost" id="btnTempDry" disabled>TempRoot 预览</button>
+            <button type="button" class="btn danger" id="btnTempRun" disabled>TempRoot 执行</button>
+          </div>
+          <div class="home-cards" aria-label="次要入口">
+            <button type="button" class="home-card" id="btnOpenTk">
+              <span class="home-card-kicker">经典工厂</span>
+              <strong>打开 Tk 工厂窗</strong>
+              <span class="muted">旧 OneSo GUI（仍可用）</span>
+            </button>
+            <button type="button" class="home-card" id="btnRefresh">
+              <span class="home-card-kicker">状态</span>
+              <strong>刷新芯片</strong>
+              <span class="muted">adb / catalog / so 列表</span>
+            </button>
+          </div>
+          <div class="check-panel">
+            <p class="check-summary is-scan" id="checkSummary">尚未扫描。点「开始体检」。</p>
+            <ul class="check-list" id="checkList"></ul>
+          </div>
+          <div class="log-panel" id="logPanel">OneSo Hub ready · OneAE-style splash</div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>视觉对齐 OneAE / Qpanel 启动页</span>
+      <span id="footerMeta">0805 desk</span>
+    </footer>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

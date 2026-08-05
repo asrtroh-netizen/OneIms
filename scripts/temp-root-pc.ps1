@@ -1,16 +1,17 @@
 # OneIMS · PC 按需临时 Root（替代手机首页「一键临时 Root」）
 # 默认只探测机型 / 匹配 so / 打印计划；加 -Run 才真正 push + LD_PRELOAD + 验 su。
+# 加 -Hub 打开 OneAE 风格启动页（推荐日常使用）。
 #
 # 用法：
+#   .\scripts\temp-root-pc.ps1 -Hub
 #   .\scripts\temp-root-pc.ps1
 #   .\scripts\temp-root-pc.ps1 -Run
 #   .\scripts\temp-root-pc.ps1 -Run -So E:\Down\TEMP\preload-comet.so
-#   .\scripts\temp-root-pc.ps1 -Run -Attempts 4 -TimeoutSec 180
 #
-# 前提：adb 在 PATH；设备已 USB/无线调试授权；对应 so 已在
-# app/src/main/assets/temproot（或 -So 指定）。
+# 前提：adb 在 PATH（脚本会优先挂本地 SDK platform-tools）；设备已授权。
 
 param(
+    [switch]$Hub,
     [switch]$Run,
     [string]$So = "",
     [int]$Attempts = 4,
@@ -22,9 +23,13 @@ $ErrorActionPreference = "Stop"
 $RepoRoot = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 Set-Location $RepoRoot
 
-$Py = Get-Command python -ErrorAction SilentlyContinue
-if (-not $Py) {
-    Write-Error "python not found in PATH"
+$AdbDir = "E:\GQ\One\_toolchain\android-sdk\platform-tools"
+if (Test-Path $AdbDir) { $env:PATH = "$AdbDir;$env:PATH" }
+
+if ($Hub) {
+    Write-Host "==> OneSo Hub (OneAE splash)"
+    & python (Join-Path $RepoRoot "tools\oneso\oneso.py") hub
+    exit $LASTEXITCODE
 }
 
 $Onesopy = Join-Path $RepoRoot "tools\oneso\oneso.py"

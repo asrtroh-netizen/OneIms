@@ -828,7 +828,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="sleep between failed attempts (default 3)",
     )
 
-    sub.add_parser("gui", help="open OneAE-styled Tk GUI")
+    sub.add_parser("gui", help="open OneAE-styled Tk GUI (legacy)")
+    sub.add_parser(
+        "hub",
+        help="open OneAE-replica HTML splash Hub (pywebview)",
+    )
 
     return p
 
@@ -842,6 +846,12 @@ def main(argv: list[str] | None = None) -> int:
 
         run_gui(args.config)
         return 0
+    if args.cmd == "hub":
+        if str(HERE) not in sys.path:
+            sys.path.insert(0, str(HERE))
+        from hub import run_hub
+
+        return run_hub(args.config)
     cfg = load_config(args.config)
     if args.cmd == "list":
         return cmd_list(cfg)
