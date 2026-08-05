@@ -41,7 +41,7 @@ object OneKukuTempRootActivator {
     suspend fun runExperimental(context: Context): Outcome =
         withContext(Dispatchers.IO) {
             val app = context.applicationContext
-            // 本地 assets 优先；没有则从 OneSo-assets 拉 catalog/so（点一下自动取）。
+            // so：远端优先（见 TempRootSoProvider）；失败再 cache / APK assets。
             val ready = TempRootSoProvider.ensure(app)
                 ?: return@withContext Outcome.UnsupportedDevice
             val device = ready.device
@@ -136,14 +136,25 @@ object OneKukuTempRootActivator {
     }
 
     /**
-     * 诚实验活：本机 ProcessBuilder 调绝对路径 su + /system/bin/id，
-     * 不走 Shizuku.newProcess，避免 Drop-In 剥 su / mock id。
-     * OneKuku 额外经真 adbd 白名单复核。
+     * 诚实验活：优先本机 ProcessBuilder 绝对路径 su + /system/bin/id。
+     * Lite：再经 Shizuku 白名单跑同一条 VERIFY（不依赖 app 沙箱能否看到 /data/local/tmp/su）。
+     * OneKuku：再经内嵌 adbd 白名单复核。
      */
     private suspend fun verifyRootHonest(context: Context): Boolean {
         if (localSuIdOk()) return true
         if (RootPresenceProbe.probe().any) return true
-        if (!ChannelLine.usesEmbeddedBridge) return false
+        if (!ChannelLine.usesEmbeddedBridge) {
+            val viaShizukuTmp = ShizukuTempRootShell.execWhitelistedShell(
+                TempRootShellCommands.VERIFY_SU_TMP,
+                15_000L,
+            )
+            if (TempRootShellCommands.looksLikeRootSuccess(viaShizukuTmp.output)) return true
+            val viaShizukuApex = ShizukuTempRootShell.execWhitelistedShell(
+                TempRootShellCommands.VERIFY_SU_APEX,
+                15_000L,
+            )
+            return TempRootShellCommands.looksLikeRootSuccess(viaShizukuApex.output)
+        }
         val a = OneKukuEmbeddedAdbActivator.execWhitelistedShell(
             context,
             TempRootShellCommands.VERIFY_SU_TMP,

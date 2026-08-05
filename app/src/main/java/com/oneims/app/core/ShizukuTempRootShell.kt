@@ -85,8 +85,21 @@ object ShizukuTempRootShell {
                     collected.append(line).append('\n')
                 }
                 val text = collected.toString()
-                Log.i(TAG, "shizuku shell out=${text.take(400)}")
-                ShellExecResult(ok = true, output = text, reason = "ok")
+                val exit = runCatching { process.exitValue() }.getOrDefault(-1)
+                val markerOk =
+                    text.contains("HAS_SO") ||
+                        text.contains("NO_SO") ||
+                        text.contains("CP_OK") ||
+                        TempRootShellCommands.looksLikeRootSuccess(text)
+                // 探测/拷贝看标记；exploit/验活看 root 标记或 exit=0+非空。
+                // 禁止「进程结束就 ok=true」掩盖失败。
+                val ok = markerOk || (exit == 0 && text.isNotBlank())
+                Log.i(TAG, "shizuku shell exit=$exit ok=$ok out=${text.take(400)}")
+                ShellExecResult(
+                    ok = ok,
+                    output = text,
+                    reason = if (ok) "ok" else "shell_failed_exit_$exit",
+                )
             } catch (t: Throwable) {
                 Log.w(TAG, "shizuku shell failed: ${t.message}")
                 ShellExecResult(false, "", t.message ?: "exec_failed")
