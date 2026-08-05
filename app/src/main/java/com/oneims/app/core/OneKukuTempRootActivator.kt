@@ -107,12 +107,35 @@ object OneKukuTempRootActivator {
                     "root_ok via=$via device=$device build=$buildId so=$sourceLabel out=${exploit.output.take(120)}",
                 )
             } else {
+                val suProbe = exec(app, TempRootShellCommands.VERIFY_SU_TMP, 12_000L)
                 Outcome.Failed(
-                    "exploit_ran_but_su_missing",
-                    exploit.output.take(240),
+                    classifySuMissingReason(exploit.output, suProbe.output),
+                    listOf(exploit.output, suProbe.output)
+                        .filter { it.isNotBlank() }
+                        .joinToString(" | ")
+                        .take(280),
                 )
             }
         }
+
+    /** 把 SELinux / daemon 拒连从笼统的 su_missing 里拆出来，方便 UI 给可行动提示。 */
+    internal fun classifySuMissingReason(exploitOut: String, suOut: String): String {
+        val blob = "$exploitOut\n$suOut"
+        val denied =
+            blob.contains("Permission denied", ignoreCase = true) ||
+                blob.contains("connect daemon", ignoreCase = true) ||
+                blob.contains("temp_su.sock", ignoreCase = true)
+        val enforcing =
+            blob.contains("enforce=1", ignoreCase = true) ||
+                blob.contains("Enforcing", ignoreCase = true)
+        return when {
+            denied && enforcing -> "selinux_blocks_su_daemon"
+            denied -> "su_daemon_permission_denied"
+            enforcing && !TempRootShellCommands.looksLikeRootSuccess(exploitOut) ->
+                "exploit_failed_under_enforcing"
+            else -> "exploit_ran_but_su_missing"
+        }
+    }
 
     private suspend fun exec(
         context: Context,

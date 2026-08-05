@@ -2039,13 +2039,29 @@ private fun AppRoot(
                                         OneKukuTempRootActivator.Outcome.UnsupportedChannel ->
                                             context.getString(R.string.temp_root_oneclick_lite_hint)
                                         is OneKukuTempRootActivator.Outcome.Failed ->
-                                            context.getString(
-                                                R.string.temp_root_oneclick_fail,
-                                                listOf(outcome.reason, outcome.detail)
-                                                    .filter { it.isNotBlank() }
-                                                    .joinToString(" · ")
-                                                    .ifBlank { outcome.reason },
-                                            )
+                                            when (outcome.reason) {
+                                                "selinux_blocks_su_daemon",
+                                                "su_daemon_permission_denied",
+                                                ->
+                                                    context.getString(
+                                                        R.string.temp_root_oneclick_fail_selinux,
+                                                    )
+                                                "exploit_failed_under_enforcing",
+                                                "no_uid0_in_output",
+                                                "ld_preload_failed",
+                                                ->
+                                                    context.getString(
+                                                        R.string.temp_root_oneclick_fail_exploit,
+                                                    )
+                                                else ->
+                                                    context.getString(
+                                                        R.string.temp_root_oneclick_fail,
+                                                        listOf(outcome.reason, outcome.detail)
+                                                            .filter { it.isNotBlank() }
+                                                            .joinToString(" · ")
+                                                            .ifBlank { outcome.reason },
+                                                    )
+                                            }
                                     }
                                 } catch (error: Throwable) {
                                     context.getString(

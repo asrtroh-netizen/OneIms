@@ -52,11 +52,13 @@ object ShizukuTempRootShell {
                     if (TempRootShellCommands.looksLikeRootSuccess(text) ||
                         text.contains("HAS_SO") ||
                         text.contains("NO_SO") ||
-                        text.contains("CP_OK")
+                        text.contains("CP_OK") ||
+                        text.contains("KILL_OK")
                     ) {
-                        // 探测/拷贝可早退；exploit 成功也可早退
+                        // 探测/拷贝/清残留可早退；exploit 成功也可早退
                         if (text.contains("HAS_SO") || text.contains("NO_SO") ||
                             text.contains("CP_OK") ||
+                            text.contains("KILL_OK") ||
                             TempRootShellCommands.looksLikeRootSuccess(text)
                         ) {
                             break
@@ -86,19 +88,35 @@ object ShizukuTempRootShell {
                 }
                 val text = collected.toString()
                 val exit = runCatching { process.exitValue() }.getOrDefault(-1)
-                val markerOk =
+                val probeOrCp =
                     text.contains("HAS_SO") ||
                         text.contains("NO_SO") ||
                         text.contains("CP_OK") ||
-                        TempRootShellCommands.looksLikeRootSuccess(text)
-                // 探测/拷贝看标记；exploit/验活看 root 标记或 exit=0+非空。
-                // 禁止「进程结束就 ok=true」掩盖失败。
-                val ok = markerOk || (exit == 0 && text.isNotBlank())
-                Log.i(TAG, "shizuku shell exit=$exit ok=$ok out=${text.take(400)}")
+                        text.contains("KILL_OK")
+                val rootish = TempRootShellCommands.looksLikeRootSuccess(text)
+                val needsRoot =
+                    command.trim() == TempRootShellCommands.LD_PRELOAD ||
+                        command.trim() == TempRootShellCommands.VERIFY_SU_TMP ||
+                        command.trim() == TempRootShellCommands.VERIFY_SU_APEX ||
+                        (
+                            command.contains("LD_PRELOAD=") &&
+                                command.trim() != TempRootShellCommands.KILL_STUCK_PRELOAD
+                            )
+                // 探测/拷贝/清残留看标记；exploit/验活必须看到 uid=0，禁止「exit=0 + 一堆日志」假成功。
+                val ok = when {
+                    needsRoot -> rootish
+                    probeOrCp -> true
+                    else -> rootish || (exit == 0 && text.isNotBlank())
+                }
+                Log.i(TAG, "shizuku shell exit=$exit ok=$ok needsRoot=$needsRoot out=${text.take(400)}")
                 ShellExecResult(
                     ok = ok,
                     output = text,
-                    reason = if (ok) "ok" else "shell_failed_exit_$exit",
+                    reason = when {
+                        ok -> "ok"
+                        needsRoot && !rootish -> "no_uid0_in_output"
+                        else -> "shell_failed_exit_$exit"
+                    },
                 )
             } catch (t: Throwable) {
                 Log.w(TAG, "shizuku shell failed: ${t.message}")
