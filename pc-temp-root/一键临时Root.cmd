@@ -2,23 +2,43 @@
 setlocal EnableExtensions EnableDelayedExpansion
 chcp 65001 >nul
 cd /d "%~dp0"
-title PC Temp Root (no Python)
+title PC Temp Root
 
+set "UI=%~dp0ui\TempRoot-UI.ps1"
+set "MODE=ui"
+set "DRY="
+set "EXTRA="
+
+if /i "%~1"=="console" set "MODE=console"
+if /i "%~1"=="dry" set "DRY=1"
+if /i "%~1"=="-dry" set "DRY=1"
+if /i "%~1"=="--dry-run" set "DRY=1"
+if /i "%~2"=="console" set "MODE=console"
+if /i "%~2"=="dry" set "DRY=1"
+
+rem Default: polished UI with progress + device monitor (Windows PowerShell, no Python)
+if /i "!MODE!"=="ui" if exist "%UI%" (
+  if defined DRY (
+    powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -STA -File "%UI%" -DryRun
+  ) else (
+    powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -STA -File "%UI%"
+  )
+  exit /b !ERRORLEVEL!
+)
+
+rem ---- console fallback (also: 一键临时Root.cmd console [dry] [nopause]) ----
 set "ADB=%~dp0adb\adb.exe"
 set "SO_DIR=%~dp0so"
 set "SH_DIR=%~dp0sh"
 set "REMOTE_SO=/data/local/tmp/preload-comet.so"
 set "ATTEMPTS=4"
-set "DRY=0"
 set "NOPAUSE=0"
-if /i "%~1"=="dry" set "DRY=1"
-if /i "%~1"=="-dry" set "DRY=1"
-if /i "%~1"=="--dry-run" set "DRY=1"
 if /i "%~1"=="nopause" set "NOPAUSE=1"
 if /i "%~2"=="nopause" set "NOPAUSE=1"
+if /i "%~3"=="nopause" set "NOPAUSE=1"
 if /i "%PC_TEMPROOT_NOPAUSE%"=="1" set "NOPAUSE=1"
 
-echo ==^> PC Temp Root  (portable, no Python)
+echo ==^> PC Temp Root  (console fallback)
 echo.
 
 if not exist "%ADB%" (
@@ -53,25 +73,21 @@ echo     device=!DEVICE!  build=!BUILD!
 set "SOFILE=%SO_DIR%\preload-!DEVICE!-!BUILD!.so"
 if not exist "!SOFILE!" set "SOFILE=%SO_DIR%\preload-comet.so"
 if not exist "!SOFILE!" (
-  echo [FAIL] no matching so for !DEVICE!/!BUILD! and no preload-comet.so fallback
+  echo [FAIL] no matching so
   goto :fail
 )
 echo [3/6] so=!SOFILE!
-echo     remote=!REMOTE_SO!
-echo     plan: push -^> kill -^> LD_PRELOAD x!ATTEMPTS! -^> su verify
+echo     progress: push -^> kill -^> LD_PRELOAD x!ATTEMPTS! -^> su
 
-if "!DRY!"=="1" (
+if defined DRY (
   echo.
-  echo dry-run only. re-run without args to execute.
+  echo dry-run only.
   goto :ok
 )
 
 echo [4/6] adb push
 "%ADB%" -s !SERIAL! push "!SOFILE!" "!REMOTE_SO!"
-if errorlevel 1 (
-  echo [FAIL] adb push
-  goto :fail
-)
+if errorlevel 1 goto :fail
 "%ADB%" -s !SERIAL! shell chmod 644 !REMOTE_SO!
 
 echo [5/6] exploit attempts
@@ -84,7 +100,6 @@ for /L %%I in (1,1,!ATTEMPTS!) do (
     echo     LD_PRELOAD ...
     "%ADB%" -s !SERIAL! shell "LD_PRELOAD=!REMOTE_SO! /system/bin/id" > "%TEMP%\pc-temproot-out.txt" 2>&1
     type "%TEMP%\pc-temproot-out.txt"
-    rem Prefer uid=0(root); avoid bare "uid=0" (false-hits uid=2000)
     findstr /C:"uid=0(root)" /C:"root=1" "%TEMP%\pc-temproot-out.txt" >nul && set "OK=1"
     if "!OK!"=="0" (
       "%ADB%" -s !SERIAL! shell "/data/local/tmp/su -c /system/bin/id" > "%TEMP%\pc-temproot-out.txt" 2>&1
@@ -96,31 +111,19 @@ for /L %%I in (1,1,!ATTEMPTS!) do (
       type "%TEMP%\pc-temproot-out.txt"
       findstr /C:"uid=0(root)" /C:"root=1" "%TEMP%\pc-temproot-out.txt" >nul && set "OK=1"
     )
-    if "!OK!"=="0" if %%I LSS !ATTEMPTS! (
-      echo     no uid=0 yet, wait 3s...
-      timeout /t 3 /nobreak >nul
-    )
+    if "!OK!"=="0" if %%I LSS !ATTEMPTS! timeout /t 3 /nobreak >nul
   )
 )
 
 echo [6/6] getenforce
 "%ADB%" -s !SERIAL! shell getenforce
-
-if "!OK!"=="1" (
-  echo.
-  echo SUCCESS: temporary root looks good.
-  goto :ok
-)
-echo.
-echo [FAIL] no uid=0 after !ATTEMPTS! attempt^(s^).
+if "!OK!"=="1" (echo SUCCESS & goto :ok)
+echo [FAIL] no uid=0
 goto :fail
 
 :ok
-echo.
 if "!NOPAUSE!"=="0" pause
 exit /b 0
-
 :fail
-echo.
 if "!NOPAUSE!"=="0" pause
 exit /b 1

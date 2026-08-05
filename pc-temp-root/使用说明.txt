@@ -13,7 +13,10 @@ PC 便携临时 Root（无 Python）
 用法
 ----
 · 一键执行：双击 一键临时Root.cmd
+  （弹出进度窗：进度条 + 设备监测 + 实时日志；LD_PRELOAD 长等待会心跳提示）
 · 只探测不执行：一键临时Root.cmd dry
+· 纯黑窗回退：一键临时Root.cmd console
+· 黑窗探测：一键临时Root.cmd console dry nopause
 
 会做什么
 ----
