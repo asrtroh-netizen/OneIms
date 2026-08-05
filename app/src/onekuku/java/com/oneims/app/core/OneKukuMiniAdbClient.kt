@@ -108,16 +108,37 @@ object OneKukuMiniAdbClient {
             }
         }
 
-    /** 仅允许 [OneKukuCoreComponent.bridgeBootShellCommand] 一类固定启动串。 */
+    /** 仅允许 OneBridge 启动串，以及临时 Root 实验用的固定命令。 */
     fun isWhitelistedShell(command: String): Boolean {
         val c = command.trim()
         if (c.isEmpty()) return false
         if (c.contains("OneBridge_started") || c.contains("app_process")) {
             return c.contains("onebridge_server") || c.contains("BridgeService")
         }
-        // 休眠/状态检查预留：禁止任意用户串
+        // 临时 Root 实验：只放行 comet preload 相关固定形态，禁止任意用户串。
+        if (c == TEMP_ROOT_PROBE_SO) return true
+        if (c == TEMP_ROOT_VERIFY_SU_TMP || c == TEMP_ROOT_VERIFY_SU_APEX) return true
+        if (c.startsWith("LD_PRELOAD=") &&
+            c.contains("/data/local/tmp/preload-comet.so") &&
+            c.endsWith("/system/bin/id")
+        ) {
+            return true
+        }
+        if (c.startsWith("cp ") &&
+            c.contains("preload-comet.so") &&
+            c.contains("/data/local/tmp/preload-comet.so")
+        ) {
+            return true
+        }
         return false
     }
+
+    const val TEMP_ROOT_PROBE_SO: String =
+        "test -f /data/local/tmp/preload-comet.so && echo HAS_SO || echo NO_SO"
+    const val TEMP_ROOT_VERIFY_SU_TMP: String = "/data/local/tmp/su -c id"
+    const val TEMP_ROOT_VERIFY_SU_APEX: String = "/apex/com.android.virt/bin/su -c id"
+    const val TEMP_ROOT_LD_PRELOAD: String =
+        "LD_PRELOAD=/data/local/tmp/preload-comet.so /system/bin/id"
 
     @Suppress("unused")
     fun hostLoopback(): String = HOST

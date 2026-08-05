@@ -139,6 +139,99 @@ object OneKukuEmbeddedAdbActivator {
             activateLocked(context, pairingCode, pairPortOverride, forceRestart)
         }
 
+    data class ShellExecResult(
+        val ok: Boolean,
+        val output: String,
+        val reason: String = "",
+    )
+
+    /**
+     * 已配对设备上执行白名单 shell（不拉 OneBridge）。
+     * 供临时 Root 实验：LD_PRELOAD / su -c id / 探测 so。
+     */
+    suspend fun execWhitelistedShell(
+        context: Context,
+        command: String,
+        timeoutMs: Long = 120_000L,
+    ): ShellExecResult =
+        activateMutex.withLock {
+            withContext(Dispatchers.IO) {
+                if (!OneKukuMiniAdbClient.isWhitelistedShell(command)) {
+                    return@withContext ShellExecResult(false, "", "not_whitelisted")
+                }
+                val app = context.applicationContext
+                if (!hasPairedOnce(app)) {
+                    return@withContext ShellExecResult(false, "", "need_pair")
+                }
+                val manager = runCatching { OneKukuAdbConnectionManager.get(app) }
+                    .getOrElse {
+                        Log.w(TAG, "manager init failed", it)
+                        return@withContext ShellExecResult(false, "", "manager_init")
+                    }
+                if (!OneKukuAdbMdns.isWifiClientConnected(app) &&
+                    !OneKukuAdbMdns.waitForWifiClient(app, PAIRED_WIFI_WAIT_MS)
+                ) {
+                    return@withContext ShellExecResult(false, "", "wifi_sta_required")
+                }
+                val persistPort = OneKukuAdbEnvironment.persistTcpipPort(app)
+                val startable = OneKukuAdbEnvironment.resolveStartableConnectPort(app)
+                val ports = listOfNotNull(persistPort, startable).distinct()
+                var connected = false
+                for (port in ports) {
+                    connected = runCatching {
+                        manager.connect(HOST, port)
+                        true
+                    }.getOrDefault(false)
+                    if (connected) break
+                }
+                if (!connected) {
+                    val mdns = OneKukuAdbMdns.discover(app, timeoutMs = PAIRED_DISCOVER_MS)
+                    connected = tryConnectOnce(manager, app, mdns.connectPort)
+                }
+                if (!connected) {
+                    return@withContext ShellExecResult(false, "", "connect_failed")
+                }
+                val output = writeShellAndCollect(manager, command, timeoutMs)
+                ShellExecResult(ok = true, output = output, reason = "ok")
+            }
+        }
+
+    private fun writeShellAndCollect(
+        manager: AbsAdbConnectionManager,
+        command: String,
+        timeoutMs: Long,
+    ): String =
+        manager.openStream("shell:").use { stream ->
+            val cmd = if (command.endsWith("\n")) command else "$command\n"
+            stream.openOutputStream().use { out ->
+                out.write(cmd.toByteArray(StandardCharsets.UTF_8))
+                out.flush()
+            }
+            val input = stream.openInputStream()
+            val buf = ByteArray(4096)
+            val collected = StringBuilder()
+            val deadline = System.currentTimeMillis() + timeoutMs
+            while (System.currentTimeMillis() < deadline) {
+                val available = runCatching { input.available() }.getOrDefault(0)
+                if (available > 0) {
+                    val n = input.read(buf, 0, minOf(buf.size, available))
+                    if (n > 0) collected.append(String(buf, 0, n, StandardCharsets.UTF_8))
+                } else {
+                    Thread.sleep(80)
+                }
+                val text = collected.toString()
+                // 提权成功常见标志；提早结束避免空等满超时。
+                if (text.contains("uid=0(root)") || text.contains("root=1")) {
+                    break
+                }
+            }
+            val n = runCatching { input.read(buf) }.getOrDefault(-1)
+            if (n > 0) collected.append(String(buf, 0, n, StandardCharsets.UTF_8))
+            val text = collected.toString()
+            Log.i(TAG, "whitelist shell out=${text.take(400)}")
+            text
+        }
+
     private suspend fun activateLocked(
         context: Context,
         pairingCode: String?,

@@ -78,6 +78,7 @@ import com.oneims.app.core.OneClickDiagnosticsManager
 import com.oneims.app.core.ShizukuSetupHelper
 import com.oneims.app.core.OneKukuCoreComponent
 import com.oneims.app.core.OneKukuEmbeddedAdbActivator
+import com.oneims.app.core.OneKukuTempRootActivator
 import com.oneims.app.core.OneKukuMiniAdbClient
 import com.oneims.app.core.OneKukuPairingNotification
 import com.oneims.app.core.OneKukuActivationUi
@@ -1622,6 +1623,7 @@ private fun AppRoot(
                         sandboxPersistBypass = sandboxPersistBypass,
                         showRootBadge = showRootBadge,
                         showRootFeatures = showRootFeatures,
+                        showTempRootExperiment = ChannelLine.usesEmbeddedBridge,
                         tempRootCarrierPersist = rootPersistEnhance,
                         oneKukuDetailOverride = oneKukuDetailOverride,
                     ),
@@ -1987,6 +1989,63 @@ private fun AppRoot(
                                         result.message,
                                     )
                                 }
+                            }
+                        },
+                        onTempRootOneClick = {
+                            if (!ChannelLine.usesEmbeddedBridge) {
+                                publish(context.getString(R.string.temp_root_oneclick_lite_hint))
+                                return@HomeActions
+                            }
+                            if (busyLabel != null) {
+                                scope.launch {
+                                    snackbarHostState.showSnackbar(
+                                        context.getString(R.string.operation_already_running),
+                                    )
+                                }
+                                return@HomeActions
+                            }
+                            busyLabel = context.getString(R.string.temp_root_oneclick_title)
+                            scope.launch {
+                                val message = try {
+                                    when (
+                                        val outcome =
+                                            OneKukuTempRootActivator.runExperimental(context)
+                                    ) {
+                                        is OneKukuTempRootActivator.Outcome.Success ->
+                                            context.getString(
+                                                R.string.temp_root_oneclick_ok,
+                                                outcome.detail,
+                                            )
+                                        OneKukuTempRootActivator.Outcome.NeedPairing ->
+                                            context.getString(R.string.temp_root_oneclick_need_pair)
+                                        OneKukuTempRootActivator.Outcome.UnsupportedChannel ->
+                                            context.getString(R.string.temp_root_oneclick_lite_hint)
+                                        is OneKukuTempRootActivator.Outcome.Failed ->
+                                            context.getString(
+                                                R.string.temp_root_oneclick_fail,
+                                                listOf(outcome.reason, outcome.detail)
+                                                    .filter { it.isNotBlank() }
+                                                    .joinToString(" · ")
+                                                    .ifBlank { outcome.reason },
+                                            )
+                                    }
+                                } catch (error: Throwable) {
+                                    context.getString(
+                                        R.string.temp_root_oneclick_fail,
+                                        OperationErrors.describe(error),
+                                    )
+                                } finally {
+                                    busyLabel = null
+                                }
+                                // 成功后立刻刷 ROOT 徽标 / Root 功能区，不等 8s 轮询。
+                                runCatching {
+                                    val snap = withContext(Dispatchers.IO) {
+                                        RootPresenceProbe.probe()
+                                    }
+                                    showRootBadge = snap.showRootBadge
+                                    showRootFeatures = snap.showCarrierXmlSwitch
+                                }
+                                publish(message)
                             }
                         },
                         onOpenWirelessDebugging = {

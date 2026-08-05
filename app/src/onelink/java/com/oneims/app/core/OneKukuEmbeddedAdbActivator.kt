@@ -22,4 +22,16 @@ object OneKukuEmbeddedAdbActivator {
         pairPortOverride: Int? = null,
         forceRestart: Boolean = false,
     ): Outcome = Outcome.Failed("onelink_no_embedded_adb")
+
+    data class ShellExecResult(
+        val ok: Boolean,
+        val output: String,
+        val reason: String = "",
+    )
+
+    suspend fun execWhitelistedShell(
+        context: Context,
+        command: String,
+        timeoutMs: Long = 120_000L,
+    ): ShellExecResult = ShellExecResult(false, "", "onelink_no_embedded_adb")
 }

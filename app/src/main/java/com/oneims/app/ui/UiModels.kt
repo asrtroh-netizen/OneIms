@@ -75,6 +75,8 @@ data class HomeUiState(
     val showRootBadge: Boolean = false,
     /** Root 功能区（开机自启 / 临时 Root 持久化 / 工具）是否展示；有可用 Root 才为 true。 */
     val showRootFeatures: Boolean = false,
+    /** OneKuku 才有内嵌 ADB；用于显示「一键临时 Root」实验入口。 */
+    val showTempRootExperiment: Boolean = false,
     /** 与 [com.oneims.app.core.ConfigStore.isRootPersistEnhance] 同源。 */
     val tempRootCarrierPersist: Boolean = false,
     val oneKukuDetailOverride: String? = null,
@@ -109,6 +111,7 @@ data class HomeActions(
     val onTempRootCarrierPersistChange: (Boolean) -> Unit = {},
     val onTempRootNetworkCheck: () -> Unit = {},
     val onTempRootBackupCarrierConfig: () -> Unit = {},
+    val onTempRootOneClick: () -> Unit = {},
     val onOpenWirelessDebugging: () -> Unit = {},
     val onOpenHotspot: () -> Unit = {},
     val onCopyAdbGuide: () -> Unit = {},

@@ -705,6 +705,12 @@
     <string name="temp_root_carrier_persist_on">Temp-root carrier persist on</string>
     <string name="temp_root_carrier_persist_off">Temp-root carrier persist off</string>
     <string name="temp_root_carrier_persist_applied">Tried CarrierConfig XML write: %1$s</string>
+    <string name="temp_root_oneclick_title">One-tap temp root (experimental)</string>
+    <string name="temp_root_oneclick_sub">Re-run LD_PRELOAD via OneKuku wireless ADB; may take minutes; build-matched so only</string>
+    <string name="temp_root_oneclick_lite_hint">Lite has no embedded ADB — use PC adb or OneKuku build</string>
+    <string name="temp_root_oneclick_need_pair">Pair/activate OneKuku wireless debugging first</string>
+    <string name="temp_root_oneclick_ok">Temp root ready: %1$s</string>
+    <string name="temp_root_oneclick_fail">One-tap temp root failed: %1$s</string>
     <string name="temp_root_tools_title">Temp-root tools</string>
     <string name="temp_root_selinux_tip">If SELinux is Permissive, it usually cannot be restored this boot; reboot clears it (and drops temp root)</string>
     <string name="temp_root_network_check_title">Network check</string>

@@ -109,6 +109,16 @@ private fun OneKukuStandaloneHome(
             )
         }
 
+        // 一键临时 Root：重启后无 Root 也要能点；仅 OneKuku（内嵌 ADB）。
+        if (state.showTempRootExperiment) {
+            item {
+                TempRootOneClickHomeCard(
+                    enabled = state.actionsEnabled,
+                    onClick = actions.onTempRootOneClick,
+                )
+            }
+        }
+
         // Root 功能开关：有 Root 才整块显示。
         if (state.showRootFeatures) {
             item {
@@ -376,6 +386,28 @@ private fun SandboxPersistHomeCard(
             checked = checked,
             onCheckedChange = onCheckedChange,
             icon = Icons.Filled.Info,
+        )
+    }
+}
+
+/** OneKuku：重启后无 Root 也可点；走内嵌无线 ADB 白名单 shell。 */
+@Composable
+private fun TempRootOneClickHomeCard(
+    enabled: Boolean,
+    onClick: () -> Unit,
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        tonalElevation = 1.dp,
+    ) {
+        SettingsActionRow(
+            icon = Icons.Filled.Warning,
+            title = stringResource(R.string.temp_root_oneclick_title),
+            subtitle = stringResource(R.string.temp_root_oneclick_sub),
+            onClick = onClick,
+            enabled = enabled,
         )
     }
 }

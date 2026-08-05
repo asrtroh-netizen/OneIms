@@ -32,4 +32,11 @@ object OneKukuMiniAdbClient {
     fun isWhitelistedShell(command: String): Boolean = false
 
     fun hostLoopback(): String = "127.0.0.1"
+
+    const val TEMP_ROOT_PROBE_SO: String =
+        "test -f /data/local/tmp/preload-comet.so && echo HAS_SO || echo NO_SO"
+    const val TEMP_ROOT_VERIFY_SU_TMP: String = "/data/local/tmp/su -c id"
+    const val TEMP_ROOT_VERIFY_SU_APEX: String = "/apex/com.android.virt/bin/su -c id"
+    const val TEMP_ROOT_LD_PRELOAD: String =
+        "LD_PRELOAD=/data/local/tmp/preload-comet.so /system/bin/id"
 }

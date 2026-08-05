@@ -712,6 +712,12 @@
     <string name="temp_root_carrier_persist_on">已开启临时 Root 持久化改运营商</string>
     <string name="temp_root_carrier_persist_off">已关闭临时 Root 持久化改运营商</string>
     <string name="temp_root_carrier_persist_applied">已尝试写入 CarrierConfig XML：%1$s</string>
+    <string name="temp_root_oneclick_title">一键临时 Root（实验）</string>
+    <string name="temp_root_oneclick_sub">经 OneKuku 无线 ADB 重跑 LD_PRELOAD；可能需数分钟，仅匹配构建的 so</string>
+    <string name="temp_root_oneclick_lite_hint">Lite 无内嵌 ADB，请用电脑 adb 或改用 OneKuku 版</string>
+    <string name="temp_root_oneclick_need_pair">请先完成 OneKuku 无线调试配对/激活</string>
+    <string name="temp_root_oneclick_ok">临时 Root 已就绪：%1$s</string>
+    <string name="temp_root_oneclick_fail">一键临时 Root 失败：%1$s</string>
     <string name="temp_root_tools_title">临时 Root 工具</string>
     <string name="temp_root_selinux_tip">若 SELinux 为 Permissive：本次开机通常改不回去，重启后会恢复（临时 Root 也会掉）</string>
     <string name="temp_root_network_check_title">网络体检</string>
