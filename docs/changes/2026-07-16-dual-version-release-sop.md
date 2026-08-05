@@ -2,30 +2,31 @@
 
 ## 用户定调
 
-> **以后 OneKuku + OneLink 必须一起更新** — README、GitHub Release APK、版本号三者同步，禁止只发单线。
+> **以后 OneKuku + OneLink 必须一起更新** — README、GitHub Release APK、版本号三者同步，禁止只发单线。  
+> **2026-08-05 补刀：以后连 README** — 发版默认必须把 `README.md` 同步到 `origin/main`；禁止「只挂 APK、不推 README」。
 
 ## 每次发版清单（顺序固定）
 
 | 步 | 动作 | 产物 / 门禁 |
 |---|---|---|
 | 1 | 升 `app/build.gradle.kts` 的 `oneImsVersionName` / `versionCode` | 两 flavor 共用同一 versionName 基线 + suffix |
-| 2 | 更新 `README.md` What's New + 双版本下载直链 | 表格含 OneKuku / OneLink 两行 |
-| 3 | `./gradlew :app:packageDualDebugApks` | `OneIms-OneKuku-{ver}.apk` + `OneIms-OneLink-{ver}.apk` |
-| 4 | `gh release upload v{ver}` 上传**双包** | Release 资产必须含两条 APK |
-| 5 | `git worktree` 仅 push `README.md` → `origin/main` | **绝不推源码** |
+| 2 | 更新 `README.md` What's New + 双版本下载直链 | 表格含 OneKuku / OneLink 两行；**本步不可省** |
+| 3 | `./gradlew :app:packageDualDebugApks` | `OneIms-OneKuku-standalone-{ver}.apk` + `OneIms-Lite-Shizuku-{ver}.apk` |
+| 4 | `gh release create/upload v{ver}` 上传**双包** | Release 资产必须含两条 APK |
+| 5 | `git worktree` 仅 push `README.md` → `origin/main` | **硬门禁**；脚本会做 preflight/postflight 版本字串校验 |
 | 6 | 本地 `docs/changes/` 记一笔 | 便于回溯 |
 
 ## 一键脚本
 
 ```powershell
-.\scripts\publish-dual-readme-release.ps1 -Version 2.2.0
+.\scripts\publish-dual-readme-release.ps1 -Version 3.3.0
 ```
 
 参数：
 
 - `-SkipBuild` — 已有 APK 时跳过 Gradle
-- `-SkipApkUpload` — 只推 README
-- `-SkipReadmePush` — 只上传 APK
+- `-SkipApkUpload` — 只推 README（仍会校验 README 含本版号）
+- **不要**随便 `-SkipReadmePush`：默认拒绝；紧急跳过必须同时加 `-IKnowReadmeIsMandatoryAnyway`
 
 ## 命名约定
 
