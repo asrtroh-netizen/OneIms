@@ -837,14 +837,15 @@ fun StatusHero(
     }
 
     /**
-     * ROOT 徽标：永久=炭黑+香槟金；临时=深蓝灰+暖琥珀（避免「没 Root 还硬黑金」的廉价感）。
+     * ROOT 徽标：炭黑+香槟金（黑金标）。
+     * 有真实 Root 才显示；永久文案 ROOT，临时文案「临时 ROOT」（避免无 Root 假黑金）。
      */
     @Composable
     fun RootBadgeChip() {
         if (!showRootBadge) return
         val permanent = rootBadgePermanent
-        val fill = if (permanent) Color(0xFF1C1C1E) else Color(0xFF1B2430)
-        val accent = if (permanent) Color(0xFFC9A962) else Color(0xFFE0A84A)
+        val fill = Color(0xFF1C1C1E)
+        val accent = Color(0xFFC9A962)
         val label = stringResource(
             if (permanent) R.string.home_root_badge else R.string.home_root_badge_temp,
         )

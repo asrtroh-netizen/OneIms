@@ -351,6 +351,48 @@ html, body {
 .check-list .bad { color: var(--danger); }
 .check-list .soft { color: var(--muted); }
 
+.success-banner {
+  margin-top: 14px;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(201, 169, 98, 0.55);
+  background:
+    linear-gradient(135deg, rgba(28, 28, 30, 0.96), rgba(20, 22, 28, 0.94));
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+}
+.success-banner[hidden] { display: none !important; }
+.success-mark {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  background: #1c1c1e;
+  color: #c9a962;
+  border: 1px solid rgba(201, 169, 98, 0.7);
+  font-weight: 800;
+}
+.success-banner strong {
+  display: block;
+  color: #e8d7a8;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+}
+.success-banner p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.chip-root {
+  border-color: rgba(201, 169, 98, 0.55) !important;
+  color: #e8d7a8 !important;
+  background: rgba(28, 28, 30, 0.92) !important;
+}
 .progress-panel {
   margin-top: 14px;
   padding: 12px 14px;

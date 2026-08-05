@@ -24,10 +24,8 @@ object TempRootCarrierBackup {
     )
 
     fun backup(context: Context): Result {
-        if (!RootPresenceProbe.probe().any) {
-            return Result(false, "no_root")
-        }
-        val su = resolveWorkingSu() ?: return Result(false, "su_unavailable")
+        val su = resolveWorkingSu()
+            ?: return Result(false, if (RootPresenceProbe.probe().any) "su_unavailable" else "no_root")
         val stamp = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(Date())
         val publicDir = File(
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),

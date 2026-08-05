@@ -182,6 +182,18 @@ class HubApi:
             code = 1
         return code, buf.getvalue()
 
+    def _probe_temp_root(self) -> tuple[bool, str]:
+        """adb 侧验临时 Root（与 App / oneso 验活同路径）。"""
+        for cmd in (
+            "/data/local/tmp/su -c /system/bin/id",
+            "/apex/com.android.virt/bin/su -c /system/bin/id",
+        ):
+            code, out = oneso.adb_shell(cmd, timeout=8.0)
+            if oneso.looks_like_root_success(out):
+                return True, "临时 Root · 已就绪"
+            _ = code
+        return False, "临时 Root · 未检测到"
+
     def status(self) -> dict[str, Any]:
         device, build = oneso.adb_device_build()
         adb_ok = bool(device and build)
@@ -193,6 +205,9 @@ class HubApi:
             prefer_github=True,
         )
         so_ok = so is not None and so.is_file()
+        root_ok, root_label = (
+            self._probe_temp_root() if adb_ok else (False, "临时 Root · 无设备")
+        )
         checks = [
             {
                 "name": "adb / Pixel",
@@ -203,6 +218,11 @@ class HubApi:
                 "name": "so ← GitHub",
                 "ok": so_ok,
                 "detail": so.name if so_ok else "OneSo-assets 无匹配条目",
+            },
+            {
+                "name": "临时 Root",
+                "ok": root_ok,
+                "detail": "uid=0 已验证" if root_ok else "未检测到 su/uid=0",
             },
             {
                 "name": "本窗职责",
@@ -221,12 +241,14 @@ class HubApi:
             "adb_label": f"adb · {device}" if adb_ok else "adb · offline",
             "so_ok": so_ok,
             "so_label": f"so · {so.name}" if so_ok else "so · github?",
+            "root_ok": root_ok,
+            "root_label": root_label,
             "overall": overall,
             "checks": checks,
             "footer": f"{device or '?'} · {build or '?'} · OneRoot",
             "log": (
                 f"[status] device={device} build={build} so={so} "
-                f"src=GitHub/OneSo-assets"
+                f"root_ok={root_ok} src=GitHub/OneSo-assets"
             ),
         }
 

@@ -1113,14 +1113,14 @@ private fun AppRoot(
         }
     }
 
-    // 首页 ROOT 徽标 / 第三行开关：轮询临时或永久 Root（su 探测放 IO，避免卡 UI）。
+    // 首页 ROOT 徽标 / 第三行开关：轮询临时或永久 Root（含特权通道复核，避免 App 沙箱假阴性）。
     LaunchedEffect(Unit) {
         while (isActive) {
-            val snap = withContext(Dispatchers.IO) { RootPresenceProbe.probe() }
+            val snap = RootPresenceProbe.probeWithPrivilege(context)
             showRootBadge = snap.showRootBadge
             rootBadgePermanent = snap.badgePermanent
             showRootFeatures = snap.showCarrierXmlSwitch
-            delay(8_000)
+            delay(4_000)
         }
     }
 
@@ -2079,11 +2079,9 @@ private fun AppRoot(
                                 } finally {
                                     busyLabel = null
                                 }
-                                // 成功后立刻刷 ROOT 徽标 / Root 功能区，不等 8s 轮询。
+                                // 成功后立刻刷 ROOT 徽标 / Root 功能区（特权通道复核）。
                                 runCatching {
-                                    val snap = withContext(Dispatchers.IO) {
-                                        RootPresenceProbe.probe()
-                                    }
+                                    val snap = RootPresenceProbe.probeWithPrivilege(context)
                                     showRootBadge = snap.showRootBadge
                                     rootBadgePermanent = snap.badgePermanent
                                     showRootFeatures = snap.showCarrierXmlSwitch

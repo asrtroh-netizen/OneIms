@@ -30,7 +30,8 @@ object TempRootCarrierXmlPersist {
         if (!ConfigStore.isRootPersistEnhance(context)) {
             return ApplyResult(false, false, 0, "switch_off")
         }
-        if (!RootPresenceProbe.probe().any) {
+        // 不单靠 App 沙箱 probe：有可用 su 即可（与首页徽标特权复核一致）
+        if (!RootPresenceProbe.probe().any && resolveWorkingSu() == null) {
             return ApplyResult(false, false, 0, "no_root")
         }
         return applyMinimalNetwork(context, restartPhone, displayCarrierName)

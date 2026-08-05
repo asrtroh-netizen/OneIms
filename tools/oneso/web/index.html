@@ -18,6 +18,7 @@
         <div class="hero-controls">
           <div class="chip chip-muted" id="adbChip">adb · 等待</div>
           <div class="chip chip-muted" id="soChip">so · 等待</div>
+          <div class="chip chip-muted" id="rootChip">临时 Root · …</div>
           <div class="chip chip-muted" id="versionChip">OneRoot</div>
         </div>
       </div>
@@ -53,6 +54,13 @@
           <div class="check-panel">
             <p class="check-summary is-scan" id="checkSummary">尚未扫描。点「开始体检」。</p>
             <ul class="check-list" id="checkList"></ul>
+          </div>
+          <div class="success-banner" id="successBanner" hidden>
+            <span class="success-mark" aria-hidden="true">✓</span>
+            <div>
+              <strong id="successTitle">临时 Root 已就绪</strong>
+              <p id="successDetail">设备上已验证 uid=0。手机 OneIMS 首页应显示「临时 ROOT」徽标。</p>
+            </div>
           </div>
           <div class="progress-panel" id="progressPanel" hidden>
             <div class="progress-head">

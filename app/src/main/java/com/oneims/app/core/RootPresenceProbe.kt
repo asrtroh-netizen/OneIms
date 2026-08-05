@@ -1,5 +1,6 @@
 package com.oneims.app.core
 
+import android.content.Context
 import com.oneims.app.core.privilege.PrivilegeBridges
 import java.io.File
 import java.util.concurrent.TimeUnit
@@ -7,8 +8,11 @@ import java.util.concurrent.TimeUnit
 /**
  * 探测临时 / 永久 Root，供首页 ROOT 徽标与「临时 Root 持久化改运营商」开关显隐。
  *
- * - 永久：Magisk / KernelSU 痕迹，或系统路径 `su` 可用
- * - 临时：特权桥 uid=0，或临时 `su` **可执行且 uid=0**（仅文件残留不算）
+ * - 永久：Magisk / KernelSU 痕迹，或系统路径 `su` 可用 → 黑金徽标
+ * - 临时：特权桥 uid=0，或临时 `su` **可执行且 uid=0**（仅文件残留不算）→ 琥珀徽标
+ *
+ * App 沙箱经常被 SELinux 拦住直接 `ProcessBuilder(/data/local/tmp/su)`，
+ * 因此 [probeWithPrivilege] 会再经 OneKuku / Shizuku 白名单 shell 复核（与一键 Root 验活同路）。
  */
 object RootPresenceProbe {
 
@@ -53,6 +57,18 @@ object RootPresenceProbe {
     }
 
     /**
+     * 本地探测 + 特权通道复核。PC OneRoot / 手机一键 Root 成功后，应用此入口刷徽标。
+     */
+    suspend fun probeWithPrivilege(context: Context): Snapshot {
+        val local = probe()
+        if (local.any) return local
+        if (tempSuOkViaPrivilege(context)) {
+            return Snapshot(temporary = true, permanent = false)
+        }
+        return local
+    }
+
+    /**
      * 纯判定（可单测）：不再把「临时 su 路径存在」当成 Root。
      */
     internal fun resolve(
@@ -64,6 +80,26 @@ object RootPresenceProbe {
         val permanent = markerPermanent || permanentSu
         val temporary = bridgeRoot || temporarySu
         return Snapshot(temporary = temporary, permanent = permanent)
+    }
+
+    private suspend fun tempSuOkViaPrivilege(context: Context): Boolean {
+        val commands = listOf(
+            TempRootShellCommands.VERIFY_SU_TMP,
+            TempRootShellCommands.VERIFY_SU_APEX,
+        )
+        for (cmd in commands) {
+            val output = if (ChannelLine.usesEmbeddedBridge) {
+                OneKukuEmbeddedAdbActivator.execWhitelistedShell(
+                    context,
+                    cmd,
+                    12_000L,
+                ).let { if (it.ok) it.output else "" }
+            } else {
+                ShizukuTempRootShell.execWhitelistedShell(cmd, 12_000L).output
+            }
+            if (TempRootShellCommands.looksLikeRootSuccess(output)) return true
+        }
+        return false
     }
 
     private fun pathExists(path: String): Boolean =

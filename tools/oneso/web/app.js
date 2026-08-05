@@ -42,6 +42,25 @@
     el.className = "chip" + (kind ? " chip-" + kind : " chip-muted");
   }
 
+  function setRootSuccess(ok, detail) {
+    const banner = $("successBanner");
+    const title = $("successTitle");
+    const det = $("successDetail");
+    if (banner) banner.hidden = !ok;
+    if (title) title.textContent = ok ? "临时 Root 已就绪" : "临时 Root 未就绪";
+    if (det) {
+      det.textContent = ok
+        ? detail ||
+          "设备上已验证 uid=0。手机 OneIMS 首页应显示「临时 ROOT」徽标（永久 Root 才是黑金 ROOT）。"
+        : detail || "尚未检测到可用临时 Root。";
+    }
+    setChip(
+      $("rootChip"),
+      ok ? "临时 Root · 已就绪" : "临时 Root · 未检测到",
+      ok ? "root" : "muted",
+    );
+  }
+
   function renderChecks(items, overall) {
     if (!list || !summary) return;
     list.innerHTML = "";
@@ -122,6 +141,7 @@
       setChip($("adbChip"), st.adb_label, st.adb_ok ? "ok" : "warn");
       setChip($("soChip"), st.so_label, st.so_ok ? "ok" : "warn");
       setChip($("versionChip"), "OneRoot", "muted");
+      setRootSuccess(!!st.root_ok, st.root_label || "");
       const footerMeta = $("footerMeta");
       if (footerMeta) footerMeta.textContent = st.footer || "OneRoot";
       renderChecks(st.checks, st.overall);
@@ -131,6 +151,7 @@
       enableActions(false);
       setChip($("adbChip"), "adb · ?", "warn");
       setChip($("soChip"), "so · ?", "warn");
+      setRootSuccess(false, "本地服务未响应");
       renderChecks(
         [{ name: "本地 API", ok: false, detail: String(e) }],
         "warn",
@@ -172,8 +193,11 @@
             summary.className = "check-summary is-ok";
             summary.textContent =
               name === "temp-root"
-                ? "临时 Root 流程结束（成功）。本窗不做运营商持久化。"
+                ? "临时 Root 成功。请看上方黑金成功条与「临时 Root · 已就绪」芯片。"
                 : "预览完成。确认后可点「一键临时 Root」。";
+            if (name === "temp-root") {
+              setRootSuccess(true, "刚刚一键流程成功，正在复核设备 uid=0…");
+            }
           } else {
             summary.className = "check-summary is-warn";
             summary.textContent = "流程结束但未成功（exit=" + st.code + "）。详见日志。";
