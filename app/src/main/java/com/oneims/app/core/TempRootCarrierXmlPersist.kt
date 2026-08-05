@@ -2,6 +2,8 @@ package com.oneims.app.core
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.database.sqlite.SQLiteDatabase
+import android.os.Process
 import android.telephony.SubscriptionManager
 import android.util.Log
 import java.io.File
@@ -134,14 +136,22 @@ object TempRootCarrierXmlPersist {
             Log.w(TAG, "seed skipped: no active subscriptions")
             return 0
         }
+        // Android 常对普通 App 清空 SubscriptionInfo.iccId；有 Root 时从 telephony.db 回退。
+        val (iccidBySubId, carrierIdBySubId) = loadSimIdentityFromTelephonyDb(context, su)
         var created = 0
         for (sub in subs) {
-            val iccid = sub.iccId?.trim().orEmpty()
+            val subId = sub.subscriptionId
+            val iccid = sub.iccId?.trim().orEmpty().ifEmpty {
+                iccidBySubId[subId].orEmpty()
+            }
             if (iccid.isEmpty()) {
-                Log.w(TAG, "seed skip subId=${sub.subscriptionId}: empty iccid")
+                Log.w(TAG, "seed skip subId=$subId: empty iccid (sm+db)")
                 continue
             }
-            val carrierId = sub.carrierId
+            val carrierId = when {
+                sub.carrierId > 0 -> sub.carrierId
+                else -> carrierIdBySubId[subId] ?: -1
+            }
             val name = "carrierconfig-com.google.android.carrier-$iccid-$carrierId.xml"
             val local = File(context.cacheDir, "oneims-cc-seed-$name")
             try {
@@ -154,6 +164,7 @@ object TempRootCarrierXmlPersist {
                     ?.contains("ok:$name") == true
                 if (installed) {
                     created++
+                    Log.i(TAG, "seeded $name for subId=$subId")
                 } else {
                     Log.w(TAG, "seed install failed $name")
                 }
@@ -162,6 +173,63 @@ object TempRootCarrierXmlPersist {
             }
         }
         return created
+    }
+
+    private fun loadSimIdentityFromTelephonyDb(
+        context: Context,
+        su: String,
+    ): Pair<Map<Int, String>, Map<Int, Int>> {
+        val localDb = File(context.cacheDir, "oneims-telephony-seed.db")
+        val uid = Process.myUid()
+        val copy = execSuCapture(
+            su,
+            """
+                set -e
+                src=/data/user_de/0/com.android.providers.telephony/databases/telephony.db
+                dst='${localDb.absolutePath}'
+                cp -f "${'$'}src" "${'$'}dst"
+                chown $uid:$uid "${'$'}dst" 2>/dev/null || chown $uid "${'$'}dst" 2>/dev/null || true
+                chmod 600 "${'$'}dst" 2>/dev/null || chmod 644 "${'$'}dst"
+                echo COPIED
+            """.trimIndent(),
+        )
+        if (copy?.contains("COPIED") != true || !localDb.isFile) {
+            Log.w(TAG, "telephony.db copy failed: ${(copy ?: "").take(160)}")
+            return emptyMap<Int, String>() to emptyMap()
+        }
+        val iccids = linkedMapOf<Int, String>()
+        val carriers = linkedMapOf<Int, Int>()
+        runCatching {
+            SQLiteDatabase.openDatabase(
+                localDb.absolutePath,
+                null,
+                SQLiteDatabase.OPEN_READONLY,
+            ).use { db ->
+                db.rawQuery(
+                    "SELECT _id, icc_id, carrier_id FROM siminfo WHERE icc_id IS NOT NULL AND icc_id != ''",
+                    null,
+                ).use { c ->
+                    val iId = c.getColumnIndexOrThrow("_id")
+                    val iIcc = c.getColumnIndexOrThrow("icc_id")
+                    val iCid = c.getColumnIndexOrThrow("carrier_id")
+                    while (c.moveToNext()) {
+                        val subId = c.getInt(iId)
+                        val icc = c.getString(iIcc)?.trim().orEmpty()
+                        if (icc.isNotEmpty()) {
+                            iccids[subId] = icc
+                        }
+                        if (!c.isNull(iCid)) {
+                            carriers[subId] = c.getInt(iCid)
+                        }
+                    }
+                }
+            }
+        }.onFailure { err ->
+            Log.w(TAG, "telephony.db parse failed: ${err.message}")
+        }
+        localDb.delete()
+        Log.i(TAG, "telephony.db iccid hits=${iccids.size}")
+        return iccids to carriers
     }
 
     private fun buildInstallSnippet(name: String, allowCreate: Boolean): String {
