@@ -20,3 +20,10 @@
 
 - `installOnelinkDebug`：Installed on 1 device
 - 真机：`su -c libshizuku` → `ps` 为 root；kill + adb shell 拉起 → `ps` 为 shell；AVC binder deny 消失
+
+## PC OneRoot（追加）
+
+- `oneso.rebind_shell_shizuku()`：成功后 kill + **adb shell** 拉起；代码注释标明 **FORBIDDEN: su -c libshizuku**
+- `hub` status 增加 Shizuku shell/root 指示
+- `PC-TempRoot-Lite` / `PC-TempRoot-UI` 成功路径同样重绑
+- 已同步并 push `OneSo-assets` `oneroot/`（`b782870`）
