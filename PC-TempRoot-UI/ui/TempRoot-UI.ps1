@@ -1,4 +1,4 @@
-﻿# PC Temp Root — portable UI (no Python). WinForms + bundled adb/so.
+﻿# PC-TempRoot-UI — progress + monitor + OneIMS recommend + sponsor QR
 param(
     [switch]$DryRun,
     [switch]$NoAutoStart,
@@ -14,14 +14,18 @@ $Root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 $Adb = Join-Path $Root 'adb\adb.exe'
 $SoDir = Join-Path $Root 'so'
 $ShDir = Join-Path $Root 'sh'
+$Assets = Join-Path $Root 'assets'
+$SponsorImg = Join-Path $Assets 'sponsor_wechat.jpg'
 $RemoteSo = '/data/local/tmp/preload-comet.so'
 $Attempts = 4
 $RetryGapSec = 3
 $LdTimeoutSec = 180
 $StatusFile = Join-Path $env:TEMP 'pc-temproot-ui-last.txt'
+$OneImsUrl = 'https://github.com/asrtroh-netizen/OneIms'
+$OneImsReleases = 'https://github.com/asrtroh-netizen/OneIms/releases'
 
 if (-not (Test-Path -LiteralPath $Adb)) {
-    [System.Windows.Forms.MessageBox]::Show("Missing adb:`n$Adb", 'PC Temp Root', 'OK', 'Error') | Out-Null
+    [System.Windows.Forms.MessageBox]::Show("Missing adb:`n$Adb", 'PC-TempRoot-UI', 'OK', 'Error') | Out-Null
     exit 2
 }
 
@@ -61,16 +65,16 @@ function Test-RootOk([string]$text) {
 }
 
 $form = New-Object System.Windows.Forms.Form
-$form.Text = 'PC Temp Root'
-$form.Size = New-Object System.Drawing.Size(720, 560)
+$form.Text = 'PC-TempRoot-UI'
+$form.Size = New-Object System.Drawing.Size(960, 620)
 $form.StartPosition = 'CenterScreen'
 $form.BackColor = [System.Drawing.Color]::FromArgb(24, 28, 34)
 $form.ForeColor = [System.Drawing.Color]::FromArgb(230, 236, 242)
 $form.Font = New-Object System.Drawing.Font('Segoe UI', 9.5)
-$form.MinimumSize = New-Object System.Drawing.Size(640, 480)
+$form.MinimumSize = New-Object System.Drawing.Size(900, 560)
 
 $title = New-Object System.Windows.Forms.Label
-$title.Text = 'PC Temp Root'
+$title.Text = 'PC-TempRoot-UI'
 $title.Font = New-Object System.Drawing.Font('Segoe UI Semibold', 16)
 $title.ForeColor = [System.Drawing.Color]::FromArgb(94, 210, 180)
 $title.Location = New-Object System.Drawing.Point(20, 14)
@@ -78,7 +82,7 @@ $title.AutoSize = $true
 $form.Controls.Add($title)
 
 $subtitle = New-Object System.Windows.Forms.Label
-$subtitle.Text = 'Portable temp root · no Python · bundled adb/so · progress + monitor'
+$subtitle.Text = 'Temp root with progress · OneIMS recommend · WeChat sponsor'
 $subtitle.ForeColor = [System.Drawing.Color]::FromArgb(140, 150, 160)
 $subtitle.Location = New-Object System.Drawing.Point(22, 46)
 $subtitle.AutoSize = $true
@@ -88,22 +92,22 @@ function New-Mon($text, $x, $y) {
     $l = New-Object System.Windows.Forms.Label
     $l.Text = $text
     $l.Location = New-Object System.Drawing.Point($x, $y)
-    $l.Size = New-Object System.Drawing.Size(330, 22)
+    $l.Size = New-Object System.Drawing.Size(300, 22)
     $l.ForeColor = [System.Drawing.Color]::FromArgb(200, 210, 220)
     $form.Controls.Add($l)
     return $l
 }
 
 $lblSerial = New-Mon 'Serial: -' 20 84
-$lblDevice = New-Mon 'Device / Build: -' 360 84
+$lblDevice = New-Mon 'Device / Build: -' 330 84
 $lblSelinux = New-Mon 'SELinux: -' 20 108
-$lblAttempt = New-Mon 'Attempt: -' 360 108
+$lblAttempt = New-Mon 'Attempt: -' 330 108
 $lblStage = New-Mon 'Stage: idle' 20 132
-$lblElapsed = New-Mon 'Step elapsed: 0s' 360 132
+$lblElapsed = New-Mon 'Step elapsed: 0s' 330 132
 
 $progress = New-Object System.Windows.Forms.ProgressBar
 $progress.Location = New-Object System.Drawing.Point(20, 168)
-$progress.Size = New-Object System.Drawing.Size(660, 22)
+$progress.Size = New-Object System.Drawing.Size(620, 22)
 $progress.Style = 'Continuous'
 $form.Controls.Add($progress)
 
@@ -122,14 +126,83 @@ $log.BackColor = [System.Drawing.Color]::FromArgb(16, 18, 22)
 $log.ForeColor = [System.Drawing.Color]::FromArgb(210, 220, 230)
 $log.Font = New-Object System.Drawing.Font('Consolas', 9)
 $log.Location = New-Object System.Drawing.Point(20, 224)
-$log.Size = New-Object System.Drawing.Size(660, 230)
-$log.Anchor = 'Top,Bottom,Left,Right'
+$log.Size = New-Object System.Drawing.Size(620, 280)
+$log.Anchor = 'Top,Bottom,Left'
 $form.Controls.Add($log)
+
+# Right panel: recommend + sponsor
+$panel = New-Object System.Windows.Forms.Panel
+$panel.Location = New-Object System.Drawing.Point(660, 84)
+$panel.Size = New-Object System.Drawing.Size(260, 420)
+$panel.BackColor = [System.Drawing.Color]::FromArgb(30, 34, 42)
+$panel.Anchor = 'Top,Right,Bottom'
+$form.Controls.Add($panel)
+
+$recTitle = New-Object System.Windows.Forms.Label
+$recTitle.Text = 'OneIMS Recommend'
+$recTitle.Font = New-Object System.Drawing.Font('Segoe UI Semibold', 11)
+$recTitle.ForeColor = [System.Drawing.Color]::FromArgb(94, 210, 180)
+$recTitle.Location = New-Object System.Drawing.Point(12, 12)
+$recTitle.AutoSize = $true
+$panel.Controls.Add($recTitle)
+
+$recBody = New-Object System.Windows.Forms.Label
+$recBody.Text = "After temp root, use OneIMS App for carrier / VoLTE tools.`nThis pack only does PC temp root."
+$recBody.Location = New-Object System.Drawing.Point(12, 40)
+$recBody.Size = New-Object System.Drawing.Size(236, 70)
+$recBody.ForeColor = [System.Drawing.Color]::FromArgb(180, 190, 200)
+$panel.Controls.Add($recBody)
+
+$btnGitHub = New-Object System.Windows.Forms.Button
+$btnGitHub.Text = 'Open OneIMS GitHub'
+$btnGitHub.Location = New-Object System.Drawing.Point(12, 118)
+$btnGitHub.Size = New-Object System.Drawing.Size(236, 30)
+$btnGitHub.BackColor = [System.Drawing.Color]::FromArgb(40, 120, 100)
+$btnGitHub.ForeColor = [System.Drawing.Color]::White
+$btnGitHub.FlatStyle = 'Flat'
+$panel.Controls.Add($btnGitHub)
+
+$btnRel = New-Object System.Windows.Forms.Button
+$btnRel.Text = 'Open Releases (APK)'
+$btnRel.Location = New-Object System.Drawing.Point(12, 154)
+$btnRel.Size = New-Object System.Drawing.Size(236, 30)
+$btnRel.BackColor = [System.Drawing.Color]::FromArgb(50, 60, 72)
+$btnRel.ForeColor = [System.Drawing.Color]::White
+$btnRel.FlatStyle = 'Flat'
+$panel.Controls.Add($btnRel)
+
+$spTitle = New-Object System.Windows.Forms.Label
+$spTitle.Text = 'WeChat Sponsor'
+$spTitle.Font = New-Object System.Drawing.Font('Segoe UI Semibold', 11)
+$spTitle.ForeColor = [System.Drawing.Color]::FromArgb(94, 210, 180)
+$spTitle.Location = New-Object System.Drawing.Point(12, 200)
+$spTitle.AutoSize = $true
+$panel.Controls.Add($spTitle)
+
+$spHint = New-Object System.Windows.Forms.Label
+$spHint.Text = 'Same QR as OneIMS App. Voluntary.'
+$spHint.Location = New-Object System.Drawing.Point(12, 226)
+$spHint.Size = New-Object System.Drawing.Size(236, 32)
+$spHint.ForeColor = [System.Drawing.Color]::FromArgb(150, 160, 170)
+$panel.Controls.Add($spHint)
+
+$pic = New-Object System.Windows.Forms.PictureBox
+$pic.Location = New-Object System.Drawing.Point(42, 262)
+$pic.Size = New-Object System.Drawing.Size(176, 176)
+$pic.SizeMode = 'Zoom'
+$pic.BackColor = [System.Drawing.Color]::White
+$pic.BorderStyle = 'FixedSingle'
+if (Test-Path -LiteralPath $SponsorImg) {
+    $pic.Image = [System.Drawing.Image]::FromFile($SponsorImg)
+} else {
+    $spHint.Text = 'sponsor_wechat.jpg missing in assets\'
+}
+$panel.Controls.Add($pic)
 
 function New-Btn($text, $x, $back) {
     $b = New-Object System.Windows.Forms.Button
     $b.Text = $text
-    $b.Location = New-Object System.Drawing.Point($x, 470)
+    $b.Location = New-Object System.Drawing.Point($x, 530)
     $b.Size = New-Object System.Drawing.Size(140, 32)
     $b.BackColor = $back
     $b.ForeColor = [System.Drawing.Color]::White
@@ -142,9 +215,8 @@ function New-Btn($text, $x, $back) {
 $btnStart = New-Btn 'Start Temp Root' 20 ([System.Drawing.Color]::FromArgb(40, 120, 100))
 $btnDry = New-Btn 'Dry-run' 170 ([System.Drawing.Color]::FromArgb(50, 60, 72))
 $btnDry.Size = New-Object System.Drawing.Size(100, 32)
-$btnClose = New-Btn 'Close' 580 ([System.Drawing.Color]::FromArgb(50, 60, 72))
+$btnClose = New-Btn 'Close' 540 ([System.Drawing.Color]::FromArgb(50, 60, 72))
 $btnClose.Size = New-Object System.Drawing.Size(100, 32)
-$btnClose.Anchor = 'Bottom,Right'
 
 $script:busy = $false
 $stepWatch = [System.Diagnostics.Stopwatch]::StartNew()
@@ -162,7 +234,6 @@ function Ui-Log([string]$msg) {
     $log.AppendText($line + [Environment]::NewLine)
     [System.Windows.Forms.Application]::DoEvents()
 }
-
 function Ui-Progress([int]$pct, [string]$stage) {
     $pct = [Math]::Max(0, [Math]::Min(100, $pct))
     $progress.Value = $pct
@@ -171,7 +242,6 @@ function Ui-Progress([int]$pct, [string]$stage) {
     $stepWatch.Restart()
     [System.Windows.Forms.Application]::DoEvents()
 }
-
 function Ui-Monitor($serial, $device, $build, $selinux, $attemptText) {
     if ($null -ne $serial) { $lblSerial.Text = "Serial: $serial" }
     if ($null -ne $device) { $lblDevice.Text = "Device / Build: $device / $build" }
@@ -205,34 +275,27 @@ function Start-TempRootJob([bool]$dry) {
             return
         }
         Ui-Monitor $serial $null $null $null '-'
-
         Ui-Progress 15 'read props'
         $device = ((Invoke-Adb @('-s', $serial, 'shell', 'getprop', 'ro.product.device') 15).Text -replace '\s', '')
         $build = ((Invoke-Adb @('-s', $serial, 'shell', 'getprop', 'ro.build.id') 15).Text -replace '\s', '')
         Ui-Monitor $serial $device $build $null '-'
         Ui-Log "device=$device build=$build"
-
         $so = Join-Path $SoDir ("preload-$device-$build.so")
         if (-not (Test-Path -LiteralPath $so)) { $so = Join-Path $SoDir 'preload-comet.so' }
         if (-not (Test-Path -LiteralPath $so)) {
             Ui-Progress 100 'FAIL: no so'
-            Ui-Log 'FAIL: matching so not found'
             Set-Content -LiteralPath $StatusFile -Value 'FAIL no so' -Encoding UTF8
             return
         }
         Ui-Progress 25 'so matched'
         Ui-Log "so=$so"
-        Ui-Log "remote=$RemoteSo"
-        Ui-Log "plan: push -> kill -> LD_PRELOAD x$Attempts -> su verify"
-
         if ($dry) {
             Ui-Progress 100 'dry-run done'
-            Ui-Log 'dry-run only (click Start Temp Root to execute)'
+            Ui-Log 'dry-run only'
             Set-Content -LiteralPath $StatusFile -Value "DRY_OK device=$device build=$build so=$so" -Encoding UTF8
             if ($AutoClose) { $form.Close() }
             return
         }
-
         Ui-Progress 35 'push so'
         $push = Invoke-Adb @('-s', $serial, 'push', $so, $RemoteSo) 120
         Ui-Log ("push rc={0} {1}" -f $push.Code, $push.Text)
@@ -242,7 +305,6 @@ function Start-TempRootJob([bool]$dry) {
             return
         }
         [void](Invoke-Adb @('-s', $serial, 'shell', 'chmod', '644', $RemoteSo) 15)
-
         $ok = $false
         $last = ''
         for ($i = 1; $i -le $Attempts; $i++) {
@@ -253,14 +315,11 @@ function Start-TempRootJob([bool]$dry) {
             [void](Invoke-Adb @('-s', $serial, 'push', $killSh, '/data/local/tmp/oneroot-kill.sh') 30)
             $k = Invoke-Adb @('-s', $serial, 'shell', 'sh', '/data/local/tmp/oneroot-kill.sh') 20
             Ui-Log ("kill: {0}" -f $k.Text)
-
             Ui-Progress ($base + 8) "LD_PRELOAD $i/$Attempts"
             Ui-Log "LD_PRELOAD attempt $i ..."
-
             $psi = New-Object System.Diagnostics.ProcessStartInfo
             $psi.FileName = $Adb
             $psi.WorkingDirectory = (Split-Path -Parent $Adb)
-    $psi.WorkingDirectory = (Split-Path -Parent $Adb)
             $psi.Arguments = "-s $serial shell LD_PRELOAD=$RemoteSo /system/bin/id"
             $psi.UseShellExecute = $false
             $psi.RedirectStandardOutput = $true
@@ -276,10 +335,7 @@ function Start-TempRootJob([bool]$dry) {
                 Start-Sleep -Milliseconds 200
                 $elapsed = [int]$sw.Elapsed.TotalSeconds
                 $lblElapsed.Text = ('Step elapsed: {0}s' -f $elapsed)
-                if ($elapsed -ge $LdTimeoutSec) {
-                    try { $p.Kill() } catch {}
-                    break
-                }
+                if ($elapsed -ge $LdTimeoutSec) { try { $p.Kill() } catch {}; break }
                 if ($elapsed - $lastBeat -ge 5) {
                     Ui-Log ("... still running LD_PRELOAD {0}s / {1}s" -f $elapsed, $LdTimeoutSec)
                     Ui-Progress ($base + 8) ("LD_PRELOAD wait {0}s/{1}s" -f $elapsed, $LdTimeoutSec)
@@ -290,12 +346,8 @@ function Start-TempRootJob([bool]$dry) {
             if (-not $p.HasExited) { $last = ($last + "`n[timeout]").Trim() }
             Ui-Log ("ld_preload: {0}" -f $last)
             if (Test-RootOk $last) { $ok = $true; break }
-
             Ui-Progress ($base + 16) "verify su $i/$Attempts"
-            foreach ($suCmd in @(
-                    '/data/local/tmp/su -c /system/bin/id',
-                    '/apex/com.android.virt/bin/su -c /system/bin/id'
-                )) {
+            foreach ($suCmd in @('/data/local/tmp/su -c /system/bin/id','/apex/com.android.virt/bin/su -c /system/bin/id')) {
                 $s = Invoke-Adb @('-s', $serial, 'shell', $suCmd) 12
                 Ui-Log ("verify: {0}" -f $s.Text)
                 if (Test-RootOk $s.Text) { $ok = $true; $last = $s.Text; break }
@@ -310,7 +362,6 @@ function Start-TempRootJob([bool]$dry) {
                 }
             }
         }
-
         $en = (Invoke-Adb @('-s', $serial, 'shell', 'getenforce') 8).Text
         Ui-Monitor $serial $device $build $en 'done'
         Ui-Log ("getenforce: {0}" -f $en)
@@ -320,7 +371,6 @@ function Start-TempRootJob([bool]$dry) {
             Set-Content -LiteralPath $StatusFile -Value "SUCCESS $last" -Encoding UTF8
         } else {
             Ui-Progress 100 'FAIL: no uid=0'
-            Ui-Log "FAIL after $Attempts attempts"
             Set-Content -LiteralPath $StatusFile -Value 'FAIL no uid=0' -Encoding UTF8
         }
         if ($AutoClose) { $form.Close() }
@@ -336,15 +386,16 @@ function Start-TempRootJob([bool]$dry) {
     }
 }
 
+$btnGitHub.Add_Click({ Start-Process $OneImsUrl })
+$btnRel.Add_Click({ Start-Process $OneImsReleases })
 $btnClose.Add_Click({ $form.Close() })
 $btnStart.Add_Click({ Start-TempRootJob $false })
 $btnDry.Add_Click({ Start-TempRootJob $true })
-
 $form.Add_Shown({
     if ($DryRun) { Start-TempRootJob $true }
     elseif (-not $NoAutoStart) { Start-TempRootJob $false }
 })
-
 [void]$form.ShowDialog()
 $tick.Stop()
+if ($pic.Image) { $pic.Image.Dispose() }
 exit 0

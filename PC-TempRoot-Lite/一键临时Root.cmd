@@ -2,43 +2,23 @@
 setlocal EnableExtensions EnableDelayedExpansion
 chcp 65001 >nul
 cd /d "%~dp0"
-title PC Temp Root
+title PC Temp Root Lite
 
-set "UI=%~dp0ui\TempRoot-UI.ps1"
-set "MODE=ui"
-set "DRY="
-set "EXTRA="
-
-if /i "%~1"=="console" set "MODE=console"
-if /i "%~1"=="dry" set "DRY=1"
-if /i "%~1"=="-dry" set "DRY=1"
-if /i "%~1"=="--dry-run" set "DRY=1"
-if /i "%~2"=="console" set "MODE=console"
-if /i "%~2"=="dry" set "DRY=1"
-
-rem Default: polished UI with progress + device monitor (Windows PowerShell, no Python)
-if /i "!MODE!"=="ui" if exist "%UI%" (
-  if defined DRY (
-    powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -STA -File "%UI%" -DryRun
-  ) else (
-    powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -STA -File "%UI%"
-  )
-  exit /b !ERRORLEVEL!
-)
-
-rem ---- console fallback (also: 一键临时Root.cmd console [dry] [nopause]) ----
 set "ADB=%~dp0adb\adb.exe"
 set "SO_DIR=%~dp0so"
 set "SH_DIR=%~dp0sh"
 set "REMOTE_SO=/data/local/tmp/preload-comet.so"
 set "ATTEMPTS=4"
+set "DRY=0"
 set "NOPAUSE=0"
+if /i "%~1"=="dry" set "DRY=1"
+if /i "%~1"=="-dry" set "DRY=1"
+if /i "%~1"=="--dry-run" set "DRY=1"
 if /i "%~1"=="nopause" set "NOPAUSE=1"
 if /i "%~2"=="nopause" set "NOPAUSE=1"
-if /i "%~3"=="nopause" set "NOPAUSE=1"
 if /i "%PC_TEMPROOT_NOPAUSE%"=="1" set "NOPAUSE=1"
 
-echo ==^> PC Temp Root  (console fallback)
+echo ==^> PC-TempRoot-Lite  (console only, no Python / no UI)
 echo.
 
 if not exist "%ADB%" (
@@ -54,7 +34,7 @@ for /f "skip=1 tokens=1,2" %%A in ('"%ADB%" devices') do (
   if /i "%%B"=="device" if not defined SERIAL set "SERIAL=%%A"
 )
 if not defined SERIAL (
-  echo [FAIL] no authorized device. plug USB, allow debugging, retry.
+  echo [FAIL] no authorized device.
   goto :fail
 )
 echo     using serial=!SERIAL!
@@ -77,9 +57,8 @@ if not exist "!SOFILE!" (
   goto :fail
 )
 echo [3/6] so=!SOFILE!
-echo     progress: push -^> kill -^> LD_PRELOAD x!ATTEMPTS! -^> su
 
-if defined DRY (
+if "!DRY!"=="1" (
   echo.
   echo dry-run only.
   goto :ok
@@ -97,7 +76,6 @@ for /L %%I in (1,1,!ATTEMPTS!) do (
     echo     --- attempt %%I/!ATTEMPTS! ---
     "%ADB%" -s !SERIAL! push "%SH_DIR%\kill-stuck.sh" /data/local/tmp/oneroot-kill.sh >nul
     "%ADB%" -s !SERIAL! shell sh /data/local/tmp/oneroot-kill.sh
-    echo     LD_PRELOAD ...
     "%ADB%" -s !SERIAL! shell "LD_PRELOAD=!REMOTE_SO! /system/bin/id" > "%TEMP%\pc-temproot-out.txt" 2>&1
     type "%TEMP%\pc-temproot-out.txt"
     findstr /C:"uid=0(root)" /C:"root=1" "%TEMP%\pc-temproot-out.txt" >nul && set "OK=1"
