@@ -108,3 +108,13 @@ trim-cli --host 127.0.0.1 --port 9999 login   # 管理员
 | CLI `install-fpk --yes` | **BLOCKED**：`license confirmation`（无法 CLI 代点） |
 | 安装包位置 | `/vol1/1000/app-packages/fnos-hermes-agent_v0.19.0-50.fpk` 与 `/vol1/1000/应用安装包/` |
 | 装完后迁配置 | `/vol1/1000/hermes-migrate/post-fpk-migrate.sh`（停 trim.hermes、迁 WK config） |
+
+### 正式包已装（用户 UI 许可后）
+
+| 项 | 结果 |
+|---|---|
+| 应用 | `hermes-agent` **0.19.0-50** 已出现在应用中心；`trim.hermes` 已被卸掉 |
+| 配置 | 从 `hermes-migrate/pre-update-*` / `from-fnhome` 灌入 `@appdata/.../hermes` 与 `@apphome/.../data`（含 `custom-wkapi`） |
+| 启动 | App Center start 仍报依赖 `nodejs_v24` 需 UI；已用自带 node + `MONITOR_SOCKET_PATH` 拉起 `monitor.js` |
+| 入口 | `https://192.168.1.99/app/hermes-agent`（unix sock **200**） |
+| 已知坑 | `dashboard.js` 曾有 `` `,</style>` `` 语法损坏（已补丁）；monitor 首次启动会 “Config reset”，需再写回 WK 配置 |
