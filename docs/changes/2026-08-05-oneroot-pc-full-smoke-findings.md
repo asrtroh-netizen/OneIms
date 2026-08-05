@@ -150,3 +150,17 @@ Hub HTTP 日志可见；不影响功能。
 证据：`release/_tmp/so_hash_diff.json`；参见 `docs/changes/2026-08-05-oneroot-pc-lite-try-slide-drop.md`。
 
 建议下一刀：用 `e74cbc7d…` 覆盖回 `OneSo-assets`（及 assets）后再跑一键 Root 对照。
+
+### 还原 e74cbc7d 后实跑（已成功）
+
+动作：备份 `64ed9d74` → 用 `E:\Down\TEMP\preload-comet-cp2a-260705-006.so` 覆盖 OneSo-assets / app assets / Hub cache → Hub 实跑。
+
+| 项 | 结果 |
+|---|---|
+| dry-run 所见 sha256 | `e74cbc7d2e5a9416…` |
+| 实跑 job | **code=0** · `成功：已拿到临时 Root` |
+| status | `临时 Root · 已就绪` · `root_ok=True` |
+| 设备 | `ps` 见 `root … S su`；SELinux Permissive；Shizuku shell 重绑 ok |
+
+结论：**热补丁 so（64ed9d74）是近期 FAIL/重启的主因**；清单原版 `e74cbc7d` 恢复后 PC 完全体一键 Root 正常。  
+热补丁备份：`release/_tmp/so-backup-64ed9d74/` · 证据：`release/_tmp/hub_retest_e74_*`
