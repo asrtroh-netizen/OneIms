@@ -109,12 +109,13 @@ private fun OneKukuStandaloneHome(
             )
         }
 
-        // 一键临时 Root：重启后无 Root 也要能点；仅 OneKuku（内嵌 ADB）。
+        // 一键临时 Root：重启后无 Root 也要能点；OneKuku=内嵌 ADB。
         if (state.showTempRootExperiment) {
             item {
                 TempRootOneClickHomeCard(
                     enabled = state.actionsEnabled,
                     onClick = actions.onTempRootOneClick,
+                    liteChannel = false,
                 )
             }
         }
@@ -250,6 +251,16 @@ private fun OneLinkHome(
                 checked = state.sandboxPersistBypass,
                 onCheckedChange = actions.onSandboxPersistBypassChange,
             )
+        }
+
+        if (state.showTempRootExperiment) {
+            item {
+                TempRootOneClickHomeCard(
+                    enabled = state.actionsEnabled,
+                    onClick = actions.onTempRootOneClick,
+                    liteChannel = true,
+                )
+            }
         }
 
         if (state.showRootFeatures) {
@@ -390,11 +401,12 @@ private fun SandboxPersistHomeCard(
     }
 }
 
-/** OneKuku：重启后无 Root 也可点；走内嵌无线 ADB 白名单 shell。 */
+/** 重启后无 Root 也可点；OneKuku=内嵌 ADB，Lite=外置 Shizuku。 */
 @Composable
 private fun TempRootOneClickHomeCard(
     enabled: Boolean,
     onClick: () -> Unit,
+    liteChannel: Boolean = false,
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -405,7 +417,13 @@ private fun TempRootOneClickHomeCard(
         SettingsActionRow(
             icon = Icons.Filled.Warning,
             title = stringResource(R.string.temp_root_oneclick_title),
-            subtitle = stringResource(R.string.temp_root_oneclick_sub),
+            subtitle = stringResource(
+                if (liteChannel) {
+                    R.string.temp_root_oneclick_sub_lite
+                } else {
+                    R.string.temp_root_oneclick_sub
+                },
+            ),
             onClick = onClick,
             enabled = enabled,
         )

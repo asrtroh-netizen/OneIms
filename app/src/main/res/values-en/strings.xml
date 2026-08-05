@@ -707,8 +707,10 @@
     <string name="temp_root_carrier_persist_applied">Tried CarrierConfig XML write: %1$s</string>
     <string name="temp_root_oneclick_title">One-tap temp root (experimental)</string>
     <string name="temp_root_oneclick_sub">Re-run LD_PRELOAD via OneKuku wireless ADB; may take minutes; build-matched so only</string>
-    <string name="temp_root_oneclick_lite_hint">Lite has no embedded ADB — use PC adb or OneKuku build</string>
+    <string name="temp_root_oneclick_lite_hint">Start and grant external Shizuku, then tap one-tap temp root</string>
+    <string name="temp_root_oneclick_need_shizuku">Start and grant Shizuku first (Lite channel)</string>
     <string name="temp_root_oneclick_need_pair">Pair/activate OneKuku wireless debugging first</string>
+    <string name="temp_root_oneclick_sub_lite">Re-run LD_PRELOAD via external Shizuku; activate Shizuku first; may take minutes</string>
     <string name="temp_root_oneclick_ok">Temp root ready: %1$s</string>
     <string name="temp_root_oneclick_fail">One-tap temp root failed: %1$s</string>
     <string name="temp_root_tools_title">Temp-root tools</string>

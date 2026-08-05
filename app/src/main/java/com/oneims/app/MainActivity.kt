@@ -1623,7 +1623,7 @@ private fun AppRoot(
                         sandboxPersistBypass = sandboxPersistBypass,
                         showRootBadge = showRootBadge,
                         showRootFeatures = showRootFeatures,
-                        showTempRootExperiment = ChannelLine.usesEmbeddedBridge,
+                        showTempRootExperiment = true,
                         tempRootCarrierPersist = rootPersistEnhance,
                         oneKukuDetailOverride = oneKukuDetailOverride,
                     ),
@@ -1992,10 +1992,6 @@ private fun AppRoot(
                             }
                         },
                         onTempRootOneClick = {
-                            if (!ChannelLine.usesEmbeddedBridge) {
-                                publish(context.getString(R.string.temp_root_oneclick_lite_hint))
-                                return@HomeActions
-                            }
                             if (busyLabel != null) {
                                 scope.launch {
                                     snackbarHostState.showSnackbar(
@@ -2018,6 +2014,8 @@ private fun AppRoot(
                                             )
                                         OneKukuTempRootActivator.Outcome.NeedPairing ->
                                             context.getString(R.string.temp_root_oneclick_need_pair)
+                                        OneKukuTempRootActivator.Outcome.NeedShizuku ->
+                                            context.getString(R.string.temp_root_oneclick_need_shizuku)
                                         OneKukuTempRootActivator.Outcome.UnsupportedChannel ->
                                             context.getString(R.string.temp_root_oneclick_lite_hint)
                                         is OneKukuTempRootActivator.Outcome.Failed ->
