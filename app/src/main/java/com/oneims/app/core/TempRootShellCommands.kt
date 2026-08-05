@@ -8,6 +8,7 @@ object TempRootShellCommands {
     const val REMOTE_SO: String = "/data/local/tmp/preload-comet.so"
     const val PUBLIC_SO_NAME: String = "oneims-preload-comet.so"
     const val PUBLIC_SO_SHELL: String = "/sdcard/Download/$PUBLIC_SO_NAME"
+    /** 默认资产名；运行时以 [TempRootSoCatalog] 解析结果为准。 */
     const val ASSET_SO: String = "temproot/preload-comet.so"
 
     const val PROBE_SO: String =

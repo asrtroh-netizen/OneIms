@@ -716,6 +716,7 @@
     <string name="temp_root_oneclick_sub">经 OneKuku 无线 ADB 重跑 LD_PRELOAD；可能需数分钟，仅匹配构建的 so</string>
     <string name="temp_root_oneclick_lite_hint">请先启动并授权外置 Shizuku，再点一键临时 Root</string>
     <string name="temp_root_oneclick_need_shizuku">请先启动并授权 Shizuku（Lite 通道）</string>
+    <string name="temp_root_oneclick_unsupported_device">当前机型/构建未收录（首发仅 Pixel 9 Pro Fold comet · CP2A.260705.006）</string>
     <string name="temp_root_oneclick_need_pair">请先完成 OneKuku 无线调试配对/激活</string>
     <string name="temp_root_oneclick_sub_lite">经外置 Shizuku 重跑 LD_PRELOAD；须先激活 Shizuku；可能需数分钟</string>
     <string name="temp_root_oneclick_ok">临时 Root 已就绪：%1$s</string>

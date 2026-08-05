@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "note": "First ship locks Pixel 9 Pro Fold (comet) + CP2A.260705.006 only.",
+  "devices": {
+    "comet": {
+      "CP2A.260705.006": "preload-comet.so"
+    }
+  }
+}

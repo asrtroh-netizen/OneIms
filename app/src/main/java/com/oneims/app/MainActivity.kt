@@ -2016,6 +2016,10 @@ private fun AppRoot(
                                             context.getString(R.string.temp_root_oneclick_need_pair)
                                         OneKukuTempRootActivator.Outcome.NeedShizuku ->
                                             context.getString(R.string.temp_root_oneclick_need_shizuku)
+                                        OneKukuTempRootActivator.Outcome.UnsupportedDevice ->
+                                            context.getString(
+                                                R.string.temp_root_oneclick_unsupported_device,
+                                            )
                                         OneKukuTempRootActivator.Outcome.UnsupportedChannel ->
                                             context.getString(R.string.temp_root_oneclick_lite_hint)
                                         is OneKukuTempRootActivator.Outcome.Failed ->
