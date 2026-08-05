@@ -110,7 +110,7 @@ private fun OneKukuStandaloneHome(
             )
         }
 
-        // 一键临时 Root + 应用配置：重启后无 Root 也要能点（无 Root 时应用给明确提示）。
+        // 一键临时 Root：重启后无 Root 也要能点；OneKuku=内嵌 ADB。
         if (state.showTempRootExperiment) {
             item {
                 TempRootOneClickHomeCard(
@@ -119,20 +119,20 @@ private fun OneKukuStandaloneHome(
                     liteChannel = false,
                 )
             }
-            item {
-                TempRootCarrierConfigApplyHomeCard(
-                    enabled = state.actionsEnabled,
-                    onClick = actions.onTempRootCarrierConfigApply,
-                )
-            }
         }
 
-        // Root 功能开关：有 Root 才整块显示。
+        // Root 功能区（隐藏）：有可用 Root 才展示开机自启 / 应用配置 / 工具。
         if (state.showRootFeatures) {
             item {
                 RootBootHomeCard(
                     checked = state.rootBootStart,
                     onCheckedChange = actions.onRootBootStartChange,
+                )
+            }
+            item {
+                TempRootCarrierConfigApplyHomeCard(
+                    enabled = state.actionsEnabled,
+                    onClick = actions.onTempRootCarrierConfigApply,
                 )
             }
             item {
@@ -263,12 +263,6 @@ private fun OneLinkHome(
                     liteChannel = true,
                 )
             }
-            item {
-                TempRootCarrierConfigApplyHomeCard(
-                    enabled = state.actionsEnabled,
-                    onClick = actions.onTempRootCarrierConfigApply,
-                )
-            }
         }
 
         if (state.showRootFeatures) {
@@ -276,6 +270,12 @@ private fun OneLinkHome(
                 RootBootHomeCard(
                     checked = state.rootBootStart,
                     onCheckedChange = actions.onRootBootStartChange,
+                )
+            }
+            item {
+                TempRootCarrierConfigApplyHomeCard(
+                    enabled = state.actionsEnabled,
+                    onClick = actions.onTempRootCarrierConfigApply,
                 )
             }
             item {
