@@ -1,6 +1,6 @@
-# OneIms 双版本公开发布脚本（OneKuku + OneLink 必须一起更新）
-# 用法：.\scripts\publish-dual-readme-release.ps1 -Version 2.2.0 [-SkipBuild] [-SkipReadmePush]
-# 前提：gh 已登录；JAVA_HOME / Android SDK 可用（见 local.properties）
+# OneIms dual public release (OneKuku + OneLink must ship together)
+# Usage: .\scripts\publish-dual-readme-release.ps1 -Version 3.2.0 [-SkipBuild] [-SkipReadmePush]
+# Requires: gh logged in; JAVA_HOME / Android SDK (see local.properties)
 
 param(
     [Parameter(Mandatory = $true)]
@@ -31,7 +31,6 @@ Write-Host "==> OneIms dual publish $Version ($ReleaseTag)"
 if (-not $SkipBuild) {
     Write-Host "==> Build dual APKs"
     .\gradlew.bat :app:packageDualDebugApks --no-daemon
-    # packageDualDebugApks 已写出无 -debug 与带 -debug 两份；优先无后缀正式名
     if (-not (Test-Path $KukuApk)) {
         Copy-Item -Force "OneIms-OneKuku-standalone-$Version-debug.apk" $KukuApk
     }
@@ -42,12 +41,21 @@ if (-not $SkipBuild) {
 
 if (-not $SkipApkUpload) {
     Write-Host "==> Ensure GitHub Release $ReleaseTag then upload APKs"
-    $exists = gh release view $ReleaseTag 2>$null
-    if (-not $exists) {
+    if (-not (Test-Path $KukuApk) -or -not (Test-Path $LinkApk)) {
+        throw "Missing APK(s): $KukuApk / $LinkApk"
+    }
+    # gh writes "release not found" to stderr; with $ErrorActionPreference=Stop that aborts.
+    $prevEap = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    gh release view $ReleaseTag 1>$null 2>$null
+    $releaseExists = ($LASTEXITCODE -eq 0)
+    $ErrorActionPreference = $prevEap
+    if (-not $releaseExists) {
         gh release create $ReleaseTag $KukuApk $LinkApk --title "OneIms $Version" --generate-notes
     } else {
         gh release upload $ReleaseTag $KukuApk $LinkApk --clobber
     }
+    if ($LASTEXITCODE -ne 0) { throw "gh release create/upload failed (exit $LASTEXITCODE)" }
 }
 
 if (-not $SkipReadmePush) {
@@ -59,7 +67,7 @@ if (-not $SkipReadmePush) {
     Copy-Item -Force "README.md" "$Wt\README.md"
     Push-Location $Wt
     git add README.md
-    git commit -m "docs: README 双版本 $Version 同步（仅 README）"
+    git commit -m "docs: README dual $Version sync (README only)"
     git push origin HEAD:main
     Pop-Location
     git worktree remove --force $Wt 2>$null
