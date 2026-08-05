@@ -6,9 +6,13 @@ from __future__ import annotations
 
 import atexit
 import io
+import os
 import sys
 import tempfile
+import threading
 from contextlib import redirect_stderr, redirect_stdout
+from functools import partial
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
@@ -24,8 +28,6 @@ def _lock_path() -> Path:
 
 
 def acquire_single_instance() -> bool:
-    import os
-
     path = _lock_path()
     if path.is_file():
         try:
@@ -62,9 +64,23 @@ def acquire_single_instance() -> bool:
     return True
 
 
+def start_web_server() -> tuple[ThreadingHTTPServer, int]:
+    """file:// 下 pywebview js_api 常挂；改本机 HTTP 托管 web/。"""
+    handler = partial(SimpleHTTPRequestHandler, directory=str(WEB))
+    httpd = ThreadingHTTPServer(("127.0.0.1", 0), handler)
+    port = int(httpd.server_address[1])
+    thread = threading.Thread(target=httpd.serve_forever, daemon=True)
+    thread.start()
+    return httpd, port
+
+
 class Api:
     def __init__(self, config_path: Path | None) -> None:
         self.cfg_path = config_path
+        # Hub 进程保证能找到平台 adb
+        adb_dir = Path(r"E:\GQ\One\_toolchain\android-sdk\platform-tools")
+        if adb_dir.is_dir():
+            os.environ["PATH"] = str(adb_dir) + os.pathsep + os.environ.get("PATH", "")
         self.cfg = oneso.load_config(config_path)
 
     def _capture(self, fn) -> tuple[int, str]:
@@ -80,6 +96,9 @@ class Api:
             buf.write(f"ERROR: {exc}\n")
             code = 1
         return code, buf.getvalue()
+
+    def ping(self) -> dict[str, Any]:
+        return {"ok": True, "app": "OneRoot"}
 
     def status(self) -> dict[str, Any]:
         device, build = oneso.adb_device_build()
@@ -151,14 +170,18 @@ def run_hub(config_path: Path | None = None) -> int:
     except ImportError:
         print("pywebview required: pip install pywebview", file=sys.stderr)
         return 2
-    index = WEB / "index.html"
-    if not index.is_file():
-        print(f"missing {index}", file=sys.stderr)
+    if not (WEB / "index.html").is_file():
+        print(f"missing {WEB / 'index.html'}", file=sys.stderr)
         return 2
+
+    httpd, port = start_web_server()
+    url = f"http://127.0.0.1:{port}/index.html"
+    print(f"[OneRoot] serve {url}", file=sys.stderr)
+
     api = Api(config_path)
     window = webview.create_window(
         "OneRoot",
-        url=index.as_uri(),
+        url=url,
         js_api=api,
         width=1040,
         height=720,
@@ -178,7 +201,14 @@ def run_hub(config_path: Path | None = None) -> int:
         window.events.loaded += lambda: _kick_boot()
     except Exception:  # noqa: BLE001
         pass
-    webview.start(debug=False)
+
+    try:
+        webview.start(debug=False)
+    finally:
+        try:
+            httpd.shutdown()
+        except Exception:  # noqa: BLE001
+            pass
     return 0
 
 

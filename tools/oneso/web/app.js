@@ -89,9 +89,27 @@
       appendLog(st.log || "[boot] ok");
     } catch (e) {
       enableActions(false);
-      setChip($("adbChip"), "adb · 桥接失败", "warn");
-      setChip($("soChip"), "so · —", "warn");
-      renderChecks([{ name: "bridge", ok: false, detail: String(e) }], "warn");
+      // bridge = 页面↔Python 通道，不是 adb；勿写成 adb 失败误导
+      setChip($("adbChip"), "ui · 通道超时", "warn");
+      setChip($("soChip"), "so · 未检测", "warn");
+      renderChecks(
+        [
+          {
+            name: "页面通道",
+            ok: false,
+            detail: String(e),
+          },
+          {
+            name: "说明",
+            ok: false,
+            detail: "adb 可能已连接；这是 UI↔Python 桥，点「开始体检」重试",
+          },
+        ],
+        "warn",
+      );
+      summary.className = "check-summary is-warn";
+      summary.textContent =
+        "页面通道未就绪（不是 adb 掉线）。请再点「开始体检」。";
       appendLog("[boot] FAIL " + e);
     } finally {
       booting = false;
@@ -129,6 +147,7 @@
 
   window.__onerootBoot = boot;
   window.addEventListener("pywebviewready", () => boot());
-  // 多拍重试：事件早到 / 晚到都能刷芯片，避免一直卡在 …
-  [300, 800, 1600, 3000].forEach((ms) => setTimeout(() => boot(), ms));
+  // 少拍重试即可；通道好了会立刻刷芯片
+  setTimeout(() => boot(), 500);
+  setTimeout(() => boot(), 2000);
 })();
