@@ -2019,31 +2019,25 @@ private fun AppRoot(
                             )
                         },
                         onTempRootCarrierConfigApply = {
-                            runOperation(
-                                label = context.getString(R.string.temp_root_carrier_apply_title),
-                            ) {
-                                // 应用即开启「一键成功后也收尾」偏好，避免只点一次以后又不写。
-                                rootPersistEnhance = true
-                                RootPersistenceSupport.setEnhanceEnabled(context, true)
-                                val post = TempRootPostSuccessActions.run(
-                                    context = context,
-                                    displayCarrierName = selectedSim?.carrierName,
-                                    forceReferenceXml = true,
-                                )
-                                when {
-                                    post.xmlMessage == "su_unavailable" ||
-                                        post.xmlMessage == "no_root" ->
-                                        context.getString(R.string.temp_root_carrier_apply_need_root)
-                                    post.xmlMessage == "no_carrierconfig_xml" ->
-                                        context.getString(
-                                            R.string.temp_root_carrier_apply_no_xml,
-                                        )
-                                    else ->
-                                        context.getString(
-                                            R.string.temp_root_carrier_apply_done,
-                                            post.summary(context),
-                                        )
-                                }
+                            // 首页弹窗内 IO 线程调用；返回人话结果，不走 snackbar。
+                            rootPersistEnhance = true
+                            RootPersistenceSupport.setEnhanceEnabled(context, true)
+                            val post = TempRootPostSuccessActions.run(
+                                context = context,
+                                displayCarrierName = selectedSim?.carrierName,
+                                forceReferenceXml = true,
+                            )
+                            when {
+                                post.xmlMessage == "su_unavailable" ||
+                                    post.xmlMessage == "no_root" ->
+                                    context.getString(R.string.temp_root_carrier_apply_need_root)
+                                post.xmlMessage == "no_carrierconfig_xml" ->
+                                    context.getString(R.string.temp_root_carrier_apply_no_xml)
+                                else ->
+                                    context.getString(
+                                        R.string.temp_root_carrier_apply_done,
+                                        post.summary(context),
+                                    )
                             }
                         },
                         onTempRootNetworkCheck = {

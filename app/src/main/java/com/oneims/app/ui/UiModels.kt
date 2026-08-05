@@ -108,8 +108,11 @@ data class HomeActions(
     val onAutoSleepChange: (Boolean) -> Unit,
     val onRootBootStartChange: (Boolean) -> Unit = {},
     val onSandboxPersistBypassChange: (Boolean) -> Unit = {},
-    /** 立刻应用：参考运营商 XML + 已存「我的」核心/高级选项（非开关）。 */
-    val onTempRootCarrierConfigApply: () -> Unit = {},
+    /**
+     * 立刻应用：参考运营商 XML + 已存「我的」核心/高级选项。
+     * 在后台线程调用，返回给人看的结果文案（由首页弹窗展示，不再只靠 snackbar）。
+     */
+    val onTempRootCarrierConfigApply: () -> String = { "" },
     val onTempRootNetworkCheck: () -> Unit = {},
     val onTempRootBackupCarrierConfig: () -> Unit = {},
     val onTempRootOneClick: () -> Unit = {},

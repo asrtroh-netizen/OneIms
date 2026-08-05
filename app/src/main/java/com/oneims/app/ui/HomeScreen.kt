@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -52,6 +53,7 @@ private enum class HomeToolDialog {
     AdbTip,
     DeviceDetails,
     RootNetworkCheck,
+    CarrierApply,
 }
 
 @Composable
@@ -132,7 +134,7 @@ private fun OneKukuStandaloneHome(
             item {
                 TempRootCarrierConfigApplyHomeCard(
                     enabled = state.actionsEnabled,
-                    onClick = actions.onTempRootCarrierConfigApply,
+                    onClick = { openDialog = HomeToolDialog.CarrierApply },
                 )
             }
             item {
@@ -276,7 +278,7 @@ private fun OneLinkHome(
             item {
                 TempRootCarrierConfigApplyHomeCard(
                     enabled = state.actionsEnabled,
-                    onClick = actions.onTempRootCarrierConfigApply,
+                    onClick = { openDialog = HomeToolDialog.CarrierApply },
                 )
             }
             item {
@@ -671,6 +673,58 @@ private fun OneKukuHomeDialogs(
                 confirmButton = {
                     TextButton(onClick = onDismiss) {
                         Text(stringResource(R.string.action_close))
+                    }
+                },
+            )
+        }
+
+        HomeToolDialog.CarrierApply -> {
+            var result by remember { mutableStateOf<String?>(null) }
+            LaunchedEffect(Unit) {
+                result = withContext(Dispatchers.IO) {
+                    runCatching { actions.onTempRootCarrierConfigApply() }
+                        .getOrElse { err ->
+                            context.getString(
+                                R.string.operation_failed,
+                                err.message ?: err.javaClass.simpleName,
+                            )
+                        }
+                }
+            }
+            AlertDialog(
+                onDismissRequest = {
+                    if (result != null) onDismiss()
+                },
+                title = { Text(stringResource(R.string.temp_root_carrier_apply_dialog_title)) },
+                text = {
+                    Column(
+                        modifier = Modifier.verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        if (result == null) {
+                            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                            Text(
+                                text = stringResource(R.string.temp_root_carrier_apply_working),
+                                style = MaterialTheme.typography.bodyMedium,
+                            )
+                        } else {
+                            Text(
+                                text = result.orEmpty(),
+                                style = MaterialTheme.typography.bodyLarge,
+                            )
+                            Text(
+                                text = stringResource(R.string.temp_root_carrier_apply_keys_hint),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                },
+                confirmButton = {
+                    if (result != null) {
+                        TextButton(onClick = onDismiss) {
+                            Text(stringResource(R.string.action_close))
+                        }
                     }
                 },
             )

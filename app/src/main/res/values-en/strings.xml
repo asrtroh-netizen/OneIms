@@ -710,6 +710,9 @@
     <string name="temp_root_carrier_persist_applied">Tried CarrierConfig XML write: %1$s</string>
     <string name="temp_root_carrier_apply_title">Write carrier + my settings</string>
     <string name="temp_root_carrier_apply_sub">Apply the usual call/data switches, then restore your saved settings (needs working temp root)</string>
+    <string name="temp_root_carrier_apply_dialog_title">Write carrier + my settings</string>
+    <string name="temp_root_carrier_apply_working">Writing, please wait…</string>
+    <string name="temp_root_carrier_apply_keys_hint">Ensures on: VoLTE, VoNR, 4G icon, 5G available; also writes the selected SIM display name.</string>
     <string name="temp_root_carrier_apply_need_root">No root yet. Tap one-tap temp root successfully, then try again</string>
     <string name="temp_root_carrier_apply_no_xml">Couldn’t find or create carrier settings for your SIMs. Insert a SIM, grant phone permission, then retry</string>
     <string name="temp_root_carrier_apply_done">Done: %1$s</string>

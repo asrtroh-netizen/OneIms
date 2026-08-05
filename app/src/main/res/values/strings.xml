@@ -717,6 +717,9 @@
     <string name="temp_root_carrier_persist_applied">已尝试写入 CarrierConfig XML：%1$s</string>
     <string name="temp_root_carrier_apply_title">写入运营商和我的设置</string>
     <string name="temp_root_carrier_apply_sub">把常用的通话/上网相关开关写进去，并把你以前保存的设置再应用一次（要先有临时 Root）</string>
+    <string name="temp_root_carrier_apply_dialog_title">写入运营商和我的设置</string>
+    <string name="temp_root_carrier_apply_working">正在写入，请稍等…</string>
+    <string name="temp_root_carrier_apply_keys_hint">会确保打开：VoLTE、VoNR、显示 4G 图标、5G 可用；选中的卡还会写入显示名称。</string>
     <string name="temp_root_carrier_apply_need_root">还没拿到 Root。请先点「一键临时 Root」成功后再试</string>
     <string name="temp_root_carrier_apply_no_xml">运营商配置文件找不到，也没法按当前卡自动建。请确认已插卡、给了电话权限后再试</string>
     <string name="temp_root_carrier_apply_done">搞定：%1$s</string>
