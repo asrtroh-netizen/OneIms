@@ -63,25 +63,47 @@ class Api:
             path = assets / name
             checks.append(
                 {
-                    "name": d,
+                    "name": f"P9 {d}",
                     "ok": path.is_file(),
                     "detail": "ok" if path.is_file() else "missing",
                 },
             )
-        overall = "ok" if adb_ok and catalog_ok else "warn"
+        p10_ok = oneso.catalog_p10_complete(self.cfg)
+        for d in oneso.DEVICES_P10:
+            name = f"preload-{d}-{oneso.BUILD_P10}.so"
+            path = assets / name
+            checks.append(
+                {
+                    "name": f"P10 {d}",
+                    "ok": path.is_file(),
+                    "detail": "ok" if path.is_file() else "missing",
+                },
+            )
+        overall = "ok" if adb_ok and catalog_ok and p10_ok else "warn"
         return {
             "adb_ok": adb_ok,
             "adb_label": f"adb · {device}" if adb_ok else "adb · offline",
-            "catalog_ok": catalog_ok,
-            "catalog_label": "catalog · 0705 ok" if catalog_ok else "catalog · need pack",
+            "catalog_ok": catalog_ok and p10_ok,
+            "catalog_label": (
+                "catalog · P9+P10 ok"
+                if catalog_ok and p10_ok
+                else ("catalog · need P10" if catalog_ok else "catalog · need P9")
+            ),
             "overall": overall,
             "checks": checks,
-            "footer": f"{device or '?'} · {build or '?'} · 0805 desk",
-            "log": f"[status] device={device} build={build} catalog0705={catalog_ok}",
+            "footer": f"{device or '?'} · {build or '?'} · P9+P10 desk",
+            "log": (
+                f"[status] device={device} build={build} "
+                f"catalog0705={catalog_ok} catalogP10={p10_ok}"
+            ),
         }
 
     def pack_0705(self) -> dict[str, Any]:
         code, log = self._capture(lambda: oneso.cmd_pack_0705(self.cfg, None))
+        return {"code": code, "log": log}
+
+    def pack_p10(self) -> dict[str, Any]:
+        code, log = self._capture(lambda: oneso.cmd_pack_p10(self.cfg))
         return {"code": code, "log": log}
 
     def temp_root(self, run: bool = False) -> dict[str, Any]:

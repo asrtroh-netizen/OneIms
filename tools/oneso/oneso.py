@@ -28,6 +28,12 @@ LABEL_0705_SUFFIX = "_cp2a_260705_006"
 LABEL_0705_MAX = 22
 DEVICES_0705 = ("tokay", "caiman", "komodo", "comet")
 
+# Pixel 10 家族：blazer / frankel / mustang / rango（与 P9 二进制不同，不可交叉改 label）。
+# OneSo-assets 当前最新齐套档：CP2A.260605.012（尚无 0705 P10 成品）。
+BUILD_P10 = "CP2A.260605.012"
+DEVICES_P10 = ("blazer", "frankel", "mustang", "rango")
+DEFAULT_ONESO_ASSETS = Path(r"E:\GQ\One\OneSo-assets")
+
 
 def load_config(path: Path | None) -> dict[str, Any]:
     cfg_path = path or DEFAULT_CONFIG
@@ -475,6 +481,65 @@ def cmd_auto(cfg: dict[str, Any], *, force_pack: bool = False) -> int:
     return 0 if complete else 1
 
 
+def oneso_assets_root(cfg: dict[str, Any]) -> Path:
+    raw = cfg.get("oneso_assets_root") or str(DEFAULT_ONESO_ASSETS)
+    return Path(str(raw)).expanduser().resolve()
+
+
+def catalog_p10_complete(cfg: dict[str, Any], build: str = BUILD_P10) -> bool:
+    app = oneims_root(cfg)
+    catalog_path = app / "app" / "src" / "main" / "assets" / "temproot" / "catalog.json"
+    if not catalog_path.is_file():
+        return False
+    data = json.loads(catalog_path.read_text(encoding="utf-8"))
+    devices = data.get("devices") or {}
+    for device in DEVICES_P10:
+        name = (devices.get(device) or {}).get(build)
+        if not name:
+            return False
+        so = app / "app" / "src" / "main" / "assets" / "temproot" / name
+        if not so.is_file() or so.stat().st_size <= 0:
+            return False
+    return True
+
+
+def cmd_pack_p10(
+    cfg: dict[str, Any],
+    *,
+    build: str = BUILD_P10,
+    assets_root: Path | None = None,
+    devices: tuple[str, ...] = DEVICES_P10,
+) -> int:
+    """
+    把 P10 家族成品 so 从 OneSo-assets 导入 OneIMS catalog。
+    不改 label（P10 so 无 P9 那套 *_cp2a_260705_006 槽；且与 P9 不同二进制）。
+    """
+    root = (assets_root or oneso_assets_root(cfg)).expanduser().resolve()
+    so_dir = root / "so" / build
+    if not so_dir.is_dir():
+        raise SystemExit(f"P10 so dir missing: {so_dir}")
+    print(f"[oneso] pack-p10 build={build} from={so_dir}")
+    ok = 0
+    for device in devices:
+        src = so_dir / f"preload-{device}-{build}.so"
+        if not src.is_file():
+            print(f"[oneso] FAIL missing {src}", file=sys.stderr)
+            continue
+        project = f"{device}-{build}"
+        try:
+            result = import_so_core(cfg, project, src)
+        except Exception as exc:  # noqa: BLE001
+            print(f"[oneso] FAIL {project}: {exc}", file=sys.stderr)
+            continue
+        print(
+            f"[oneso] OK {project} -> {result['asset']} "
+            f"({result['sha256'][:12]}…)",
+        )
+        ok += 1
+    print(f"[oneso] pack-p10 done ok={ok}/{len(devices)}", file=sys.stderr)
+    return 0 if ok == len(devices) else 1
+
+
 def cmd_pack_0705(
     cfg: dict[str, Any],
     source_so: Path | None,
@@ -784,6 +849,22 @@ def build_parser() -> argparse.ArgumentParser:
         help="source preload.so (default: OneIMS comet 0705 asset)",
     )
 
+    pack10 = sub.add_parser(
+        "pack-p10",
+        help="import P10 family (blazer/frankel/mustang/rango) from OneSo-assets",
+    )
+    pack10.add_argument(
+        "--build",
+        default=BUILD_P10,
+        help=f"build id (default {BUILD_P10})",
+    )
+    pack10.add_argument(
+        "--assets-root",
+        type=Path,
+        default=None,
+        help="OneSo-assets root (default config oneso_assets_root or E:/GQ/One/OneSo-assets)",
+    )
+
     auto = sub.add_parser(
         "auto",
         help="automate: ensure 0705 pack + adb detect + temp dry-run",
@@ -873,6 +954,12 @@ def main(argv: list[str] | None = None) -> int:
         )
     if args.cmd == "pack-0705":
         return cmd_pack_0705(cfg, args.source)
+    if args.cmd == "pack-p10":
+        return cmd_pack_p10(
+            cfg,
+            build=str(args.build),
+            assets_root=args.assets_root,
+        )
     if args.cmd == "auto":
         return cmd_auto(cfg, force_pack=bool(args.force_pack))
     if args.cmd == "temp-root":

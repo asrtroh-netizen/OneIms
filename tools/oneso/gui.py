@@ -182,6 +182,10 @@ class OneSoApp(tk.Tk):
             side=tk.LEFT,
             padx=(8, 0),
         )
+        self._btn(hero_btns, "导入 P10 全家桶", self.on_pack_p10).pack(
+            side=tk.LEFT,
+            padx=(8, 0),
+        )
         self._btn(hero_btns, "adb 认机", self.on_adb_select).pack(
             side=tk.LEFT,
             padx=(8, 0),
@@ -375,6 +379,16 @@ class OneSoApp(tk.Tk):
         ):
             return
         self.run_bg("pack-0705", lambda: oneso.cmd_pack_0705(self.cfg, None))
+
+    def on_pack_p10(self) -> None:
+        if not messagebox.askyesno(
+            "OneSo",
+            "从 OneSo-assets 导入 P10 全家桶？\n"
+            + ", ".join(oneso.DEVICES_P10)
+            + f"\n@{oneso.BUILD_P10}",
+        ):
+            return
+        self.run_bg("pack-p10", lambda: oneso.cmd_pack_p10(self.cfg))
 
     def on_auto(self) -> None:
         """无确认：缺啥补啥 + adb 认机 + TEMP dry-run。"""

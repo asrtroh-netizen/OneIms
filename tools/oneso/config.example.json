@@ -1,6 +1,7 @@
 {
   "exploit_root": "E:/Down/TEMP/CyberMeowfia/IonStack/CVE-2026-43499/exploit",
   "oneims_root": "E:/GQ/One/OneIMS",
+  "oneso_assets_root": "E:/GQ/One/OneSo-assets",
   "use_wsl": true,
   "wsl_distro": "",
   "ndk_root_wsl": "",

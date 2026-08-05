@@ -14,6 +14,18 @@
     },
     "comet": {
       "CP2A.260705.006": "preload-comet-CP2A.260705.006.so"
+    },
+    "blazer": {
+      "CP2A.260605.012": "preload-blazer-CP2A.260605.012.so"
+    },
+    "frankel": {
+      "CP2A.260605.012": "preload-frankel-CP2A.260605.012.so"
+    },
+    "mustang": {
+      "CP2A.260605.012": "preload-mustang-CP2A.260605.012.so"
+    },
+    "rango": {
+      "CP2A.260605.012": "preload-rango-CP2A.260605.012.so"
     }
   }
 }

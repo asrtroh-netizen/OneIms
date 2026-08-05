@@ -41,6 +41,7 @@
 
   function enableActions(ready) {
     $("btnPack").disabled = !ready;
+    $("btnPackP10").disabled = !ready;
     $("btnTempDry").disabled = !ready;
     $("btnTempRun").disabled = !ready;
   }
@@ -92,6 +93,9 @@
   $("btnRefresh").addEventListener("click", () => boot());
   $("btnPack").addEventListener("click", () =>
     runAction("pack-0705", () => api("pack_0705")),
+  );
+  $("btnPackP10").addEventListener("click", () =>
+    runAction("pack-p10", () => api("pack_p10")),
   );
   $("btnTempDry").addEventListener("click", () =>
     runAction("temp-root dry", () => api("temp_root", false)),

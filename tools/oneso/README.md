@@ -33,6 +33,8 @@ python oneso.py gui
 python gui.py
 # 0705 P9 全家桶：改 label → tokay/caiman/komodo/comet 并写入 catalog
 python oneso.py pack-0705
+# P10 全家桶：从 OneSo-assets 导入 blazer/frankel/mustang/rango @ CP2A.260605.012
+python oneso.py pack-p10
 # 尽量自动化：catalog 不齐则 pack + adb 认机 + TEMP dry-run
 python oneso.py auto
 # PC 按需临时 Root（手机首页一键入口已撤；默认 dry-run，加 --run 才执行）
