@@ -19,6 +19,8 @@ enum class ReapplyTrigger(
     SHIZUKU_READY("shizuku_ready", R.string.reapply_trigger_bridge_ready),
     IMS_NOT_REGISTERED("ims_not_registered", R.string.reapply_trigger_ims_not_registered),
     BOOT("boot", R.string.reapply_trigger_boot),
+    /** 一键临时 Root 成功后的链式重放（用户核心/高级选项）。 */
+    TEMP_ROOT("temp_root", R.string.reapply_trigger_temp_root),
     ;
 
     companion object {

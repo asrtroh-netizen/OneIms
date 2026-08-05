@@ -708,7 +708,7 @@
     <string name="home_device_details">设备详情</string>
     <string name="home_root_badge">ROOT</string>
     <string name="temp_root_carrier_persist_title">临时 Root 持久化改运营商</string>
-    <string name="temp_root_carrier_persist_sub">有 Root 时把 VoLTE/VoNR/NR 与运营商显示名写入 phone 目录 XML，重启后配置更易留下</string>
+    <string name="temp_root_carrier_persist_sub">有 Root 时写入参考最小网络键到 phone XML，并同时重放你已存的核心与高级选项（双卡按卡、不串写）</string>
     <string name="temp_root_carrier_persist_on">已开启临时 Root 持久化改运营商</string>
     <string name="temp_root_carrier_persist_off">已关闭临时 Root 持久化改运营商</string>
     <string name="temp_root_carrier_persist_applied">已尝试写入 CarrierConfig XML：%1$s</string>
@@ -1047,6 +1047,14 @@
     <string name="reapply_trigger_shizuku_ready">OneKuku 通道就绪</string>
     <string name="reapply_trigger_boot">开机自动恢复</string>
     <string name="reapply_trigger_ims_not_registered">IMS 注册掉线</string>
+    <string name="reapply_trigger_temp_root">一键临时 Root 后重放</string>
+    <string name="temp_root_post_xml_ok">参考XML=%1$s</string>
+    <string name="temp_root_post_xml_fail">参考XML失败(%1$s)</string>
+    <string name="temp_root_post_xml_skipped">参考XML跳过(未开持久化)</string>
+    <string name="temp_root_post_reapply_ok">我的配置已重放</string>
+    <string name="temp_root_post_reapply_fail">我的配置重放失败(%1$s)</string>
+    <string name="temp_root_post_reapply_none">无已存核心/高级选项可重放</string>
+    <string name="temp_root_oneclick_ok_with_config">临时 Root 成功：%1$s\n配置收尾：%2$s</string>
     <string name="action_reapply">重应用最近配置</string>
     <string name="reapply_status_none">尚未执行过重应用</string>
     <string name="reapply_status_success">成功</string>

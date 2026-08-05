@@ -72,6 +72,7 @@ import com.oneims.app.core.RootPresenceProbe
 import com.oneims.app.core.SandboxPersistSupport
 import com.oneims.app.core.TempRootCarrierBackup
 import com.oneims.app.core.TempRootCarrierXmlPersist
+import com.oneims.app.core.TempRootPostSuccessActions
 import com.oneims.app.core.SafetyGuard
 import com.oneims.app.core.SystemUpdateShield
 import com.oneims.app.core.OneClickDiagnosticsManager
@@ -1955,14 +1956,15 @@ private fun AppRoot(
                                 runOperation(
                                     label = context.getString(R.string.temp_root_carrier_persist_title),
                                 ) {
-                                    val xml = TempRootCarrierXmlPersist.applyMinimalNetwork(
+                                    // 参考 XML + 用户已存核心/高级选项同一流程。
+                                    val post = TempRootPostSuccessActions.run(
                                         context = context,
-                                        restartPhone = true,
                                         displayCarrierName = selectedSim?.carrierName,
+                                        forceReferenceXml = true,
                                     )
                                     context.getString(
                                         R.string.temp_root_carrier_persist_applied,
-                                        xml.message,
+                                        post.summary(context),
                                     )
                                 }
                             } else {
@@ -2007,11 +2009,22 @@ private fun AppRoot(
                                         val outcome =
                                             OneKukuTempRootActivator.runExperimental(context)
                                     ) {
-                                        is OneKukuTempRootActivator.Outcome.Success ->
+                                        is OneKukuTempRootActivator.Outcome.Success -> {
+                                            val post = withContext(Dispatchers.IO) {
+                                                TempRootPostSuccessActions.run(
+                                                    context = context,
+                                                    displayCarrierName = selectedSim?.carrierName,
+                                                    forceReferenceXml = false,
+                                                )
+                                            }
+                                            reapplyStatus =
+                                                ConfigStore.lastReapplyStatus(context)
                                             context.getString(
-                                                R.string.temp_root_oneclick_ok,
+                                                R.string.temp_root_oneclick_ok_with_config,
                                                 outcome.detail,
+                                                post.summary(context),
                                             )
+                                        }
                                         OneKukuTempRootActivator.Outcome.NeedPairing ->
                                             context.getString(R.string.temp_root_oneclick_need_pair)
                                         OneKukuTempRootActivator.Outcome.NeedShizuku ->

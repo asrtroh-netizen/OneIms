@@ -701,7 +701,7 @@
     <string name="home_device_details">Device details</string>
     <string name="home_root_badge">ROOT</string>
     <string name="temp_root_carrier_persist_title">Temp-root carrier persist</string>
-    <string name="temp_root_carrier_persist_sub">With root, write VoLTE/VoNR/NR and carrier display-name keys into phone CarrierConfig XML so settings survive reboot better</string>
+    <string name="temp_root_carrier_persist_sub">With root, write reference minimal network keys into phone XML and reapply your saved core + advanced options (per-SIM, no cross-SIM writes)</string>
     <string name="temp_root_carrier_persist_on">Temp-root carrier persist on</string>
     <string name="temp_root_carrier_persist_off">Temp-root carrier persist off</string>
     <string name="temp_root_carrier_persist_applied">Tried CarrierConfig XML write: %1$s</string>
@@ -1035,6 +1035,14 @@
     <string name="reapply_trigger_shizuku_ready">OneKuku channel ready</string>
     <string name="reapply_trigger_boot">Boot auto-restore</string>
     <string name="reapply_trigger_ims_not_registered">IMS registration dropped</string>
+    <string name="reapply_trigger_temp_root">Reapply after one-tap temp root</string>
+    <string name="temp_root_post_xml_ok">reference XML=%1$s</string>
+    <string name="temp_root_post_xml_fail">reference XML failed (%1$s)</string>
+    <string name="temp_root_post_xml_skipped">reference XML skipped (persist off)</string>
+    <string name="temp_root_post_reapply_ok">your saved config reapplied</string>
+    <string name="temp_root_post_reapply_fail">your config reapply failed (%1$s)</string>
+    <string name="temp_root_post_reapply_none">no saved core/advanced options to reapply</string>
+    <string name="temp_root_oneclick_ok_with_config">Temp root OK: %1$s\nConfig follow-up: %2$s</string>
     <string name="action_reapply">Reapply last profile</string>
     <string name="reapply_status_none">No reapply has run yet</string>
     <string name="reapply_status_success">succeeded</string>

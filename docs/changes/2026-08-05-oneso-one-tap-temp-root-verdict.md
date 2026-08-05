@@ -37,6 +37,10 @@
 - `TempRootSoProviderTest`（onekukuDebug）：**BUILD SUCCESS**  
 - 本机 **adb NOT RUN**（PATH 无 `adb`）：未做真机一点冒烟
 
-## 文档漂移
+## 文档
 
-`docs/changes/2026-08-05-temproot-remote-so-fetch.md` 写「assets 优先」；现行 `TempRootSoProvider.ensure` 为**远端强制优先**，以代码为准。
+`docs/changes/2026-08-05-temproot-remote-so-fetch.md` 已与代码对齐为**远端强制优先**。
+
+## 后续补强（同日）
+
+一点成功后会链式 `TempRootPostSuccessActions`：参考 XML（开关开时）+ 用户核心/高级选项重放。
