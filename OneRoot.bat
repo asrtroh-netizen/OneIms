@@ -2,7 +2,11 @@
 setlocal
 cd /d "%~dp0"
 title OneRoot
-echo ==^> OneRoot (repo-root one-click)
+echo.
+echo   ========================================
+echo    OneRoot  ?  one-click start
+echo   ========================================
+echo.
 powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\OneRoot.ps1" %*
 set "EXITCODE=%ERRORLEVEL%"
 if not "%EXITCODE%"=="0" (
