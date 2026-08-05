@@ -1,0 +1,32 @@
+﻿OneRoot-Lite · 简易版（纯 CMD 主流程 · so 仅云端）
+===============================================
+
+一键临时 Root：彩色横幅 + 文字进度条。
+主流程是 CMD；仅「拉 so」一步会调用 powershell 跑
+sh\fetch-cloud-so.ps1（从 GitHub OneSo-assets 下载并校验 SHA256）。
+包内不再附带 preload-*.so，避免本地 hash 漂移。
+
+成功后会用 adb shell（shell uid）重绑 Shizuku；
+严禁 su -c libshizuku（会出 root 态 server、App 掉线）。
+
+用法
+----
+双击：一键临时Root.cmd
+探测：一键临时Root.cmd dry
+清理残留：清理残留.cmd
+         或 一键临时Root.cmd cleanup
+强力清理（有 uid=0 时连 /data/local/tmp/su 一并删）：
+         一键临时Root.cmd cleanup-aggressive
+无暂停：一键临时Root.cmd dry nopause
+
+需要
+----
+- 联网（拉 catalog / SHA256SUMS / so）
+- USB 调试已授权
+
+清理说明
+--------
+与本地 Hub「清理残留」同语义：杀挂起 LD_PRELOAD / 尽力删 temp_su.sock。
+若无 uid=0，root 属主残留 shell 删不掉——Root 成功后先清再重启更稳。
+
+需要进度窗 / OneIMS 推荐 / 赞赏码 → OneRoot-UI（PowerShell 窗体）
