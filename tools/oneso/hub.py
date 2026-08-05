@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""OneSo Hub — OneAE-style HTML splash + pywebview desk."""
+"""OneSo Hub — 单窗 · 仅 PC 一键临时 Root（so 工厂在 GitHub）。"""
 
 from __future__ import annotations
 
+import atexit
 import io
-import subprocess
 import sys
-import threading
+import tempfile
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from typing import Any
@@ -16,6 +16,52 @@ import oneso
 
 HERE = Path(__file__).resolve().parent
 WEB = HERE / "web"
+LOCK_NAME = "oneso-hub-single.lock"
+
+
+def _lock_path() -> Path:
+    return Path(tempfile.gettempdir()) / LOCK_NAME
+
+
+def acquire_single_instance() -> bool:
+    """Windows 简易单实例：锁文件写 pid；已有存活进程则拒绝。"""
+    import os
+
+    path = _lock_path()
+    if path.is_file():
+        try:
+            old = int(path.read_text(encoding="utf-8").strip() or "0")
+        except ValueError:
+            old = 0
+        if old and old != os.getpid():
+            try:
+                import ctypes
+
+                kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
+                SYNCHRONIZE = 0x00100000
+                handle = kernel32.OpenProcess(SYNCHRONIZE, False, old)
+                if handle:
+                    kernel32.CloseHandle(handle)
+                    print(
+                        f"[hub] already running pid={old} — keep one window only",
+                        file=sys.stderr,
+                    )
+                    return False
+            except Exception:  # noqa: BLE001
+                pass
+    path.write_text(str(os.getpid()), encoding="utf-8")
+
+    def _clear() -> None:
+        try:
+            if path.is_file() and path.read_text(encoding="utf-8").strip() == str(
+                os.getpid(),
+            ):
+                path.unlink(missing_ok=True)
+        except Exception:  # noqa: BLE001
+            pass
+
+    atexit.register(_clear)
+    return True
 
 
 class Api:
@@ -38,73 +84,53 @@ class Api:
         return code, buf.getvalue()
 
     def status(self) -> dict[str, Any]:
-        app = oneso.oneims_root(self.cfg)
-        assets = app / "app" / "src" / "main" / "assets" / "temproot"
         device, build = oneso.adb_device_build()
         adb_ok = bool(device and build)
-        catalog_ok = oneso.catalog_0705_complete(self.cfg)
-        checks: list[dict[str, Any]] = []
-        checks.append(
+        so = oneso.resolve_temp_root_so(
+            self.cfg,
+            so_override=None,
+            device=device,
+            build=build,
+        )
+        so_ok = so is not None and so.is_file()
+        remote = (
+            "https://github.com/asrtroh-netizen/OneSo-assets"
+        )
+        checks = [
             {
-                "name": "adb device",
+                "name": "adb",
                 "ok": adb_ok,
                 "detail": f"{device}/{build}" if adb_ok else "offline",
             },
-        )
-        checks.append(
             {
-                "name": "catalog 0705",
-                "ok": catalog_ok,
-                "detail": "4/4 ready" if catalog_ok else "incomplete",
+                "name": "匹配 so",
+                "ok": so_ok,
+                "detail": so.name if so_ok else "missing (拉 GitHub assets 或本地 catalog)",
             },
-        )
-        for d in oneso.DEVICES_0705:
-            name = f"preload-{d}-{oneso.BUILD_0705}.so"
-            path = assets / name
-            checks.append(
-                {
-                    "name": f"P9 {d}",
-                    "ok": path.is_file(),
-                    "detail": "ok" if path.is_file() else "missing",
-                },
-            )
-        p10_ok = oneso.catalog_p10_complete(self.cfg)
-        for d in oneso.DEVICES_P10:
-            name = f"preload-{d}-{oneso.BUILD_P10}.so"
-            path = assets / name
-            checks.append(
-                {
-                    "name": f"P10 {d}",
-                    "ok": path.is_file(),
-                    "detail": "ok" if path.is_file() else "missing",
-                },
-            )
-        overall = "ok" if adb_ok and catalog_ok and p10_ok else "warn"
+            {
+                "name": "so 工厂",
+                "ok": True,
+                "detail": "GitHub OneSo-assets（本窗不打包）",
+            },
+            {
+                "name": "本窗职责",
+                "ok": True,
+                "detail": "仅一键临时 Root",
+            },
+        ]
+        overall = "ok" if adb_ok and so_ok else "warn"
         return {
             "adb_ok": adb_ok,
             "adb_label": f"adb · {device}" if adb_ok else "adb · offline",
-            "catalog_ok": catalog_ok and p10_ok,
-            "catalog_label": (
-                "catalog · P9+P10 ok"
-                if catalog_ok and p10_ok
-                else ("catalog · need P10" if catalog_ok else "catalog · need P9")
-            ),
+            "so_ok": so_ok,
+            "so_label": f"so · {so.name}" if so_ok else "so · none",
             "overall": overall,
             "checks": checks,
-            "footer": f"{device or '?'} · {build or '?'} · P9+P10 desk",
+            "footer": f"{device or '?'} · {build or '?'} · factory→GitHub",
             "log": (
-                f"[status] device={device} build={build} "
-                f"catalog0705={catalog_ok} catalogP10={p10_ok}"
+                f"[status] device={device} build={build} so={so} remote={remote}"
             ),
         }
-
-    def pack_0705(self) -> dict[str, Any]:
-        code, log = self._capture(lambda: oneso.cmd_pack_0705(self.cfg, None))
-        return {"code": code, "log": log}
-
-    def pack_p10(self) -> dict[str, Any]:
-        code, log = self._capture(lambda: oneso.cmd_pack_p10(self.cfg))
-        return {"code": code, "log": log}
 
     def temp_root(self, run: bool = False) -> dict[str, Any]:
         code, log = self._capture(
@@ -119,16 +145,10 @@ class Api:
         )
         return {"code": code, "log": log}
 
-    def open_tk_gui(self) -> dict[str, Any]:
-        # 独立进程打开旧 Tk GUI，不阻塞 Hub
-        cmd = [sys.executable, str(HERE / "oneso.py"), "gui"]
-        if self.cfg_path:
-            cmd.extend(["--config", str(self.cfg_path)])
-        subprocess.Popen(cmd, cwd=str(HERE))  # noqa: S603
-        return {"code": 0, "log": "[hub] spawned oneso gui"}
-
 
 def run_hub(config_path: Path | None = None) -> int:
+    if not acquire_single_instance():
+        return 0
     try:
         import webview
     except ImportError:
@@ -139,13 +159,13 @@ def run_hub(config_path: Path | None = None) -> int:
         print(f"missing {index}", file=sys.stderr)
         return 2
     api = Api(config_path)
-    window = webview.create_window(
-        "OneSo Hub",
+    webview.create_window(
+        "OneSo · Temp Root",
         url=index.as_uri(),
         js_api=api,
-        width=1100,
-        height=760,
-        min_size=(900, 640),
+        width=1040,
+        height=720,
+        min_size=(880, 600),
         background_color="#0a0b12",
     )
     webview.start(debug=False)

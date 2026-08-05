@@ -40,12 +40,14 @@ python oneso.py auto
 # PC 按需临时 Root（手机首页一键入口已撤；默认 dry-run，加 --run 才执行）
 python oneso.py temp-root
 python oneso.py temp-root --run
-# OneAE 风格启动页 Hub（推荐）
+# 单窗 PC 一键临时 Root（推荐；so 生成请走 GitHub OneSo-assets，本窗不打包）
 python oneso.py hub
 # 或仓库根：
 #   .\scripts\oneso-hub.ps1
 #   .\scripts\temp-root-pc.ps1 -Hub
 #   .\scripts\temp-root-pc.ps1 [-Run]
+# CLI 打包仍可用（给 GitHub/assets 维护用，不在 Hub 暴露）：
+#   python oneso.py pack-0705 / pack-p10
 ```
 
 GUI 启动默认跑一遍 `auto`（`config.auto_pack_0705_on_gui_start`，可关）。主按钮「一键自动化」无确认。

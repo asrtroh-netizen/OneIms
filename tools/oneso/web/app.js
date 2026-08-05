@@ -1,4 +1,4 @@
-/* OneSo Hub — bridge via pywebview window.pywebview.api */
+/* OneSo Hub — TempRoot only (so factory lives on GitHub) */
 (function () {
   const $ = (id) => document.getElementById(id);
   const logEl = $("logPanel");
@@ -30,18 +30,18 @@
       li.appendChild(val);
       list.appendChild(li);
     }
-    summary.className = "check-summary " + (overall === "ok" ? "is-ok" : overall === "warn" ? "is-warn" : "is-scan");
+    summary.className =
+      "check-summary " +
+      (overall === "ok" ? "is-ok" : overall === "warn" ? "is-warn" : "is-scan");
     summary.textContent =
       overall === "ok"
-        ? "体检通过。可以打包 / 预览 TempRoot。"
+        ? "体检通过。可以预览或一键临时 Root。"
         : overall === "warn"
-          ? "部分项未就绪，仍可预览；执行前请补齐。"
+          ? "未完全就绪：可先预览；执行前请连上设备并确保有匹配 so。"
           : "扫描中…";
   }
 
   function enableActions(ready) {
-    $("btnPack").disabled = !ready;
-    $("btnPackP10").disabled = !ready;
     $("btnTempDry").disabled = !ready;
     $("btnTempRun").disabled = !ready;
   }
@@ -60,8 +60,8 @@
     try {
       const st = await api("status");
       setChip($("adbChip"), st.adb_label, st.adb_ok ? "ok" : "warn");
-      setChip($("catalogChip"), st.catalog_label, st.catalog_ok ? "ok" : "warn");
-      $("footerMeta").textContent = st.footer || "0805 desk";
+      setChip($("soChip"), st.so_label, st.so_ok ? "ok" : "warn");
+      $("footerMeta").textContent = st.footer || "temp-root only";
       renderChecks(st.checks, st.overall);
       enableActions(true);
       appendLog(st.log || "[boot] ok");
@@ -90,29 +90,18 @@
   }
 
   $("btnBoot").addEventListener("click", () => boot());
-  $("btnRefresh").addEventListener("click", () => boot());
-  $("btnPack").addEventListener("click", () =>
-    runAction("pack-0705", () => api("pack_0705")),
-  );
-  $("btnPackP10").addEventListener("click", () =>
-    runAction("pack-p10", () => api("pack_p10")),
-  );
   $("btnTempDry").addEventListener("click", () =>
     runAction("temp-root dry", () => api("temp_root", false)),
   );
   $("btnTempRun").addEventListener("click", async () => {
     const ok = window.confirm(
-      "确认在已连接设备上执行 TempRoot？\n会 push so 并跑多轮 LD_PRELOAD（可能数分钟）。",
+      "确认在已连接设备上执行一键临时 Root？\n会 push so 并跑多轮 LD_PRELOAD（可能数分钟）。",
     );
     if (!ok) return;
     await runAction("temp-root run", () => api("temp_root", true));
   });
-  $("btnOpenTk").addEventListener("click", () =>
-    runAction("open-tk", () => api("open_tk_gui")),
-  );
 
   window.addEventListener("pywebviewready", () => boot());
-  // fallback if event already fired
   setTimeout(() => {
     if (window.pywebview && window.pywebview.api) boot();
   }, 400);
