@@ -882,6 +882,7 @@ def cmd_info(cfg: dict[str, Any], project: str) -> int:
 
 # 与 App TempRootShellCommands 对齐（PC adb 真源；手机端一键入口已撤）。
 REMOTE_SO = "/data/local/tmp/preload-comet.so"
+# 只杀挂起的 exploit 进程，绝不 rm su/sock —— 成功后的 post-clean 若误删 sock 会弄死刚起来的 daemon。
 KILL_STUCK_PRELOAD = (
     "pkill -9 -f 'timeout .*LD_PRELOAD' 2>/dev/null; "
     "pkill -9 -f preload-comet.so 2>/dev/null; "
@@ -890,7 +891,6 @@ KILL_STUCK_PRELOAD = (
     "for p in $(pidof id 2>/dev/null); do "
     "grep -q preload-comet /proc/$p/maps 2>/dev/null && kill -9 $p; "
     "done; "
-    "rm -f /data/local/tmp/temp_su.sock /data/local/tmp/su 2>/dev/null; "
     "echo KILL_OK"
 )
 # Host-side defaults tuned vs old 4×180s (felt much slower than on-device Root My Pixel).
@@ -918,25 +918,63 @@ def looks_like_root_success(output: str) -> bool:
 
 
 def looks_like_stale_su_daemon(output: str) -> bool:
+    """su 客户端在、但 daemon/socket 半死（Permission denied / No such file 等）。"""
     t = (output or "").lower()
-    return "connect daemon" in t and "permission denied" in t
+    if "connect daemon" not in t:
+        return False
+    return (
+        "permission denied" in t
+        or "no such file" in t
+        or "connection refused" in t
+        or "not found" in t
+    )
+
+
+def _root_owned_su_undeletable() -> bool:
+    """shell 删不掉的 root 属主 /data/local/tmp/su（僵尸二进制）。"""
+    _c, lsout = adb_shell("ls -l /data/local/tmp/su 2>&1", timeout=5.0)
+    low = (lsout or "").lower()
+    if "no such file" in low or "no such" in low:
+        return False
+    if "permission denied" in low:
+        return True
+    # 典型：-rwsr-xr-x 1 root root … /data/local/tmp/su
+    if "root" not in low:
+        return False
+    _c2, rmout = adb_shell(
+        "rm -f /data/local/tmp/su 2>/dev/null; "
+        "test -e /data/local/tmp/su && echo STILL_THERE || echo GONE",
+        timeout=8.0,
+    )
+    _ = _c, _c2
+    return "STILL_THERE" in (rmout or "")
 
 
 def detect_stale_temp_root() -> str | None:
     """半死不活的临时 Root 残留：shell 连不上 daemon，也删不掉 sock/su。"""
     _code, out = adb_shell(VERIFY_SU_TMP, timeout=5.0)
+    if looks_like_root_success(out):
+        return None
     if looks_like_stale_su_daemon(out):
         return (
-            "检测到残留 temp_su（su: connect daemon: Permission denied）。"
+            "检测到残留 temp_su（su: connect daemon 失败："
+            f"{(out or '').strip()[:80]}）。"
             "shell 无法删除 /data/local/tmp/su 与 temp_su.sock。"
-            "请先点「清理残留」（需已有 uid=0）或重启手机后再一键。"
+            "请先在仍有 uid=0 时点「清理残留」，或再跑一键让 exploit 覆盖；"
+            "仅重启手机通常清不掉 root 属主的 su。"
+        )
+    if _root_owned_su_undeletable():
+        return (
+            "检测到僵尸 /data/local/tmp/su（root 属主、daemon 已死，shell 删不掉）。"
+            "清理按钮在无 uid=0 时无法移除它；请再跑一键临时 Root 让 exploit "
+            "以 root 覆盖，或在成功窗口内立刻点清理。"
         )
     _c, lsout = adb_shell("ls -l /data/local/tmp/temp_su.sock 2>&1", timeout=5.0)
     low = (lsout or "").lower()
     if "permission denied" in low:
         return (
             "检测到残留 temp_su.sock（shell Permission denied）。"
-            "请先点「清理残留」（需已有 uid=0）或重启手机后再一键。"
+            "请先点「清理残留」（需已有 uid=0）或再跑一键覆盖。"
         )
     _ = _c
     return None
@@ -994,17 +1032,19 @@ def cleanup_temp_root_residuals(*, aggressive: bool = False) -> dict[str, Any]:
         }
 
     stale = detect_stale_temp_root()
-    if looks_like_stale_su_daemon(root_out) or stale:
+    if looks_like_stale_su_daemon(root_out) or stale or _root_owned_su_undeletable():
         return {
             "ok": False,
             "mode": "blocked",
             "root_before": False,
-            "stale_after": stale or "stale_su_daemon",
-            "steps": steps,
+            "stale_after": stale or "stale_su_or_daemon",
+            "steps": steps + [f"su_probe={(root_out or '')[:100]}"],
             "detail": (
-                "当前无可用 uid=0，shell 删不掉 root 属主残留。"
-                "可：① 若刚才 Root 成功过请先别重启、再点清理；"
-                "② 否则重启手机后再一键（成功后会自动清）。"
+                "当前无可用 uid=0，shell 删不掉 root 属主残留"
+                f"（{(stale or root_out or 'zombie su')[:120]}）。"
+                "可：① 立刻再点「一键临时 Root」让 exploit 以 root 覆盖；"
+                "② 若刚成功过请先别重启、马上点清理；"
+                "③ 仅重启通常清不掉 /data/local/tmp/su。"
             ),
         }
 
@@ -1014,7 +1054,7 @@ def cleanup_temp_root_residuals(*, aggressive: bool = False) -> dict[str, Any]:
         "root_before": False,
         "stale_after": None,
         "steps": steps,
-        "detail": "无半死 daemon；已清理挂起的 LD_PRELOAD/id 进程",
+        "detail": "无半死 daemon / 僵尸 su；已清理挂起的 LD_PRELOAD/id 进程",
     }
 
 
@@ -1085,12 +1125,17 @@ def adb_shell(command: str, *, timeout: float) -> tuple[int, str]:
 
 
 def probe_su_uid0(*, timeout: float = 4.0) -> tuple[bool, str]:
-    """快速验临时 Root（不经 LD_PRELOAD 输出）。"""
+    """快速验临时 Root（不经 LD_PRELOAD 输出）。
+
+    失败时返回最后一次 su 输出（便于识别 connect daemon / 僵尸 su）。
+    """
+    last = ""
     for su_cmd in (VERIFY_SU_TMP, VERIFY_SU_APEX):
         _code, out = adb_shell(su_cmd, timeout=timeout)
+        last = out or last
         if looks_like_root_success(out):
             return True, out
-    return False, ""
+    return False, last
 
 
 def adb_shell_heartbeat(
@@ -1178,9 +1223,24 @@ def adb_shell_heartbeat(
                 last_su = now
                 ok, sout = probe_su_uid0(timeout=3.5)
                 if ok:
+                    # daemon 刚起来时常挂在 exploit 进程树下：先等它脱离，再杀 LD_PRELOAD。
                     print(
                         f"[oneso] {label} early-stop: su uid=0 at {int(elapsed)}s "
-                        f"(kill hung LD_PRELOAD)",
+                        f"— wait 4s for daemon detach",
+                        flush=True,
+                    )
+                    time.sleep(4.0)
+                    ok2, sout2 = probe_su_uid0(timeout=3.5)
+                    if not ok2:
+                        print(
+                            f"[oneso] {label} early-stop aborted: su died during "
+                            f"detach wait ({(sout2 or '')[:80]})",
+                            flush=True,
+                        )
+                        continue
+                    print(
+                        f"[oneso] {label} early-stop: daemon stable, "
+                        f"stop hung LD_PRELOAD",
                         flush=True,
                     )
                     try:
@@ -1192,7 +1252,17 @@ def adb_shell_heartbeat(
                         proc.wait(timeout=3)
                     except Exception:  # noqa: BLE001
                         pass
-                    return 0, sout
+                    # 杀完再验一次：避免把「杀穿 daemon」误判成成功
+                    ok3, sout3 = probe_su_uid0(timeout=3.5)
+                    if ok3:
+                        return 0, sout3
+                    print(
+                        f"[oneso] {label} WARN: su lost after killing LD_PRELOAD "
+                        f"({(sout3 or '')[:80]}) — treat as not-yet",
+                        flush=True,
+                    )
+                    # 不要把旧的 uid=0 文案带回，避免上层误判 SUCCESS
+                    return 1, f"[early-stop-su-lost] {(sout3 or '')[:120]}"
             if now - last_beat >= beat_sec:
                 print(
                     f"[oneso] …仍在执行 {label} "
@@ -1532,9 +1602,20 @@ def cmd_temp_root(
         )
         last_out = out
         print(f"[oneso] ld_preload rc={code} out={out[:240]}")
-        if looks_like_root_success(out):
-            verified = True
-            break
+        if "[early-stop-su-lost]" in (out or ""):
+            print("[oneso] early-stop 曾见 uid=0 但 daemon 未稳住，继续校验/重试")
+        elif looks_like_root_success(out):
+            # 心跳早停成功时再现场复验，防止「日志里有 uid=0、daemon 已死」
+            ok_live, live_out = probe_su_uid0(timeout=5.0)
+            if ok_live:
+                verified = True
+                last_out = live_out
+                break
+            print(
+                f"[oneso] WARN: 输出像 root 但现场 su 失败："
+                f"{(live_out or '')[:100]}",
+                flush=True,
+            )
         _progress(base + 12, f"校验 su · 第 {attempt}/{total} 轮")
         ok, sout = probe_su_uid0(timeout=8.0)
         if ok:
@@ -1551,13 +1632,19 @@ def cmd_temp_root(
     gcode, gout = adb_shell("getenforce", timeout=8)
     print(f"[oneso] getenforce rc={gcode} {gout}")
     if verified:
-        _progress(94, "成功后整理残留（挂起进程 / 旧 sock）")
-        post = cleanup_temp_root_residuals(aggressive=False)
-        print(
-            f"[oneso] post-clean ok={post.get('ok')} mode={post.get('mode')} "
-            f"{post.get('detail')}",
-            flush=True,
-        )
+        # 成功后只杀挂起 exploit，绝不走会拆 sock/su 的 cleanup（会弄死刚起来的 daemon）
+        _progress(94, "成功后清理挂起 exploit（保留 su daemon）")
+        kcode, kout = adb_shell(KILL_STUCK_PRELOAD, timeout=20)
+        print(f"[oneso] post-kill-stuck rc={kcode} {kout[:80]}", flush=True)
+        still_ok, still_out = probe_su_uid0(timeout=5.0)
+        if not still_ok:
+            print(
+                f"[oneso] WARN: uid=0 在收尾后丢失：{(still_out or '')[:120]}",
+                file=sys.stderr,
+            )
+            _progress(100, "失败：拿到后又丢了 uid=0（daemon 可能被误杀）")
+            return 1
+        last_out = still_out or last_out
         _progress(96, "重绑 Shizuku（shell，禁用 su 拉起）")
         rebind_ok = rebind_shell_shizuku()
         print(f"[oneso] shizuku shell rebind ok={rebind_ok}")

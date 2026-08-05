@@ -192,11 +192,11 @@ class HubApi:
             if oneso.looks_like_root_success(out):
                 return True, "临时 Root · 已就绪"
             if oneso.looks_like_stale_su_daemon(out):
-                return False, "临时 Root · 残留请重启"
+                return False, "临时 Root · 僵尸su(daemon死)"
             _ = code
         stale = oneso.detect_stale_temp_root()
         if stale:
-            return False, "临时 Root · 残留请重启"
+            return False, "临时 Root · 僵尸su残留"
         return False, "临时 Root · 未检测到"
 
     def _shizuku_ps_user(self) -> str:
@@ -259,7 +259,15 @@ class HubApi:
             {
                 "name": "临时 Root",
                 "ok": root_ok,
-                "detail": "uid=0 已验证" if root_ok else "未检测到 su/uid=0",
+                "detail": (
+                    "uid=0 已验证"
+                    if root_ok
+                    else (
+                        "僵尸 su：daemon 已死且 shell 删不掉（再跑一键覆盖，别只重启）"
+                        if "僵尸" in root_label
+                        else "未检测到 su/uid=0"
+                    )
+                ),
             },
             {
                 "name": "Shizuku",

@@ -54,10 +54,20 @@
           "设备上已验证 uid=0。手机 OneIMS 首页应显示「临时 ROOT」徽标（永久 Root 才是黑金 ROOT）。"
         : detail || "尚未检测到可用临时 Root。";
     }
+    const stale =
+      !ok &&
+      detail &&
+      (detail.includes("僵尸") ||
+        detail.includes("残留") ||
+        detail.includes("daemon"));
     setChip(
       $("rootChip"),
-      ok ? "临时 Root · 已就绪" : "临时 Root · 未检测到",
-      ok ? "root" : "muted",
+      ok
+        ? "临时 Root · 已就绪"
+        : stale
+          ? "临时 Root · 僵尸su"
+          : "临时 Root · 未检测到",
+      ok ? "root" : stale ? "warn" : "muted",
     );
   }
 
