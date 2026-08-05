@@ -249,7 +249,11 @@ class HubApi:
             {
                 "name": "adb / Pixel",
                 "ok": adb_ok,
-                "detail": f"{device}/{build}" if adb_ok else "offline",
+                "detail": (
+                    f"{device}/{build}"
+                    if adb_ok
+                    else "offline · 重插线并允许调试后再一键"
+                ),
             },
             {
                 "name": so_src_label,

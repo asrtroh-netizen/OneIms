@@ -89,11 +89,20 @@
     summary.className =
       "check-summary " +
       (overall === "ok" ? "is-ok" : overall === "warn" ? "is-warn" : "is-scan");
+    const adbOffline = (items || []).some(
+      (it) =>
+        it &&
+        typeof it.name === "string" &&
+        it.name.indexOf("adb") !== -1 &&
+        !it.ok,
+    );
     summary.textContent =
       overall === "ok"
         ? "体检通过。可以预览或一键临时 Root（本窗不做运营商持久化）。"
         : overall === "warn"
-          ? "未完全就绪：请连上 Pixel，并确认本机/缓存或 OneSo-assets 有匹配 so。"
+          ? adbOffline
+            ? "未完全就绪：请重插数据线并允许 USB 调试，再点「开始体检」/「一键临时 Root」。"
+            : "未完全就绪：请连上 Pixel，并确认本机/缓存或 OneSo-assets 有匹配 so。掉线时先重插线再一键。"
           : "扫描中…";
   }
 
@@ -111,11 +120,33 @@
     const clean = $("btnCleanup");
     if (clean) clean.disabled = true;
     try {
-      if (log) log.textContent = "正在清理残留（挂起进程 / temp_su.sock）…";
-      const r = await apiPost("/api/cleanup", {});
+      // 安全清理默认：只杀挂起 exploit，保留可用 uid=0。
+      // 取消后再确认才强力拆除 sock+su（禁止只拆 sock 留二进制 → 僵尸）。
+      const safe = window.confirm(
+        "清理残留（安全）\n\n只杀挂起的 LD_PRELOAD/id，保留当前可用临时 Root。\n\n确定？",
+      );
+      let aggressive = false;
+      if (!safe) {
+        const force = window.confirm(
+          "改为强力拆除？\n\n会删除 temp_su.sock + /data/local/tmp/su，临时 Root 失效。\n" +
+            "必须一起删，避免僵尸 su。\n\n确定强力拆除？",
+        );
+        if (!force) {
+          if (log) log.textContent = "已取消清理";
+          return;
+        }
+        aggressive = true;
+      }
+      if (log) {
+        log.textContent = aggressive
+          ? "正在强力拆除（sock + su 二进制）…"
+          : "正在安全清理挂起 exploit（保留临时 Root）…";
+      }
+      const r = await apiPost("/api/cleanup", { aggressive });
       const lines = [
         r.ok ? "清理完成" : "清理未完全成功",
         "mode=" + (r.mode || "?"),
+        "aggressive=" + aggressive,
         r.detail || "",
         ...(r.steps || []),
       ].filter(Boolean);
@@ -234,7 +265,10 @@
             }
           } else {
             summary.className = "check-summary is-warn";
-            summary.textContent = "流程结束但未成功（exit=" + st.code + "）。详见日志。";
+            summary.textContent =
+              "流程结束但未成功（exit=" +
+              st.code +
+              "）。若 adb 掉线：重插线并允许调试后再点一键；详见日志。";
           }
         }
         return st;

@@ -240,6 +240,13 @@ html, body {
   color: var(--text-soft);
   max-width: 42em;
 }
+.home-tip {
+  margin: 10px 0 0;
+  color: var(--warn);
+  font-size: 13px;
+  max-width: 42em;
+  line-height: 1.45;
+}
 .home-recommend {
   margin: 12px 0 0;
   color: var(--muted);
