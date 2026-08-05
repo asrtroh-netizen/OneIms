@@ -1,0 +1,13 @@
+﻿# OneRoot（本地完全体）
+
+本目录是 **Python 单窗完整版**（oneso hub + 工厂 CLI），仅作者本机自用。
+
+## 启动
+
+- 双击 `一键启动.cmd` / `OneRoot.cmd`
+- 或：`.\OneRoot.ps1`
+- 或：`python oneso.py hub`
+
+仓库根 `OneRoot.bat` 也会转到这里。
+
+公开分发请用 OneSo-assets 的 `OneRoot-Lite.zip` / `OneRoot-UI.zip`（不是本目录）。

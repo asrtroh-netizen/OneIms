@@ -31,7 +31,7 @@ if ($Hub) {
     exit $LASTEXITCODE
 }
 
-$Onesopy = Join-Path $RepoRoot "tools\oneso\oneso.py"
+$Onesopy = Join-Path $RepoRoot "OneRoot\oneso.py"
 if (-not (Test-Path $Onesopy)) {
     Write-Error "missing $Onesopy"
 }
