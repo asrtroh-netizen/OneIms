@@ -27,13 +27,15 @@ python oneso.py import-so comet-CP2A.260705.006 E:/Down/TEMP/preload-comet-cp2a-
 # 批量入库（先 dry-run 看映射）
 python oneso.py import-batch E:/Down/TEMP --dry-run
 python oneso.py import-batch E:/Down/TEMP
-# 简易 GUI
+# 简易 GUI（OneAE 深色青绿风）
 python oneso.py gui
 # 或
 python gui.py
+# 0705 P9 全家桶：改 label → tokay/caiman/komodo/comet 并写入 catalog
+python oneso.py pack-0705
 ```
 
-说明：`comet-CP2A.260705.006` 的 `target.h` 若仍是 `#error` 脚手架，`build` 会失败——此时用 `import-so` / `import-batch` 入库已验证成品。  
+说明：`comet-CP2A.260705.006` 的 `target.h` 若仍是 `#error` 脚手架，`build` 会失败——用 `pack-0705` / `import-so` 入库已验证成品。  
 `preload.so` 这种无型号文件名会被 SKIP，可用 `--map mapping.json` 指定。
 
 `install` 会：

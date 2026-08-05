@@ -20,6 +20,13 @@ DEFAULT_CONFIG = HERE / "config.json"
 EXAMPLE_CONFIG = HERE / "config.example.json"
 PROJECT_RE = re.compile(r"^([A-Za-z0-9_]+)-(.+)$")
 
+# Pixel 9 家族 · CP2A.260705.006：同构建共享偏移，仅改 label（见 comet README-ADAPT）。
+BUILD_0705 = "CP2A.260705.006"
+LABEL_0705_SUFFIX = "_cp2a_260705_006"
+# 标签槽：原串 comet_cp2a_260705_006 + \\0 + pad，最长 label 22 字节。
+LABEL_0705_MAX = 22
+DEVICES_0705 = ("tokay", "caiman", "komodo", "comet")
+
 
 def load_config(path: Path | None) -> dict[str, Any]:
     cfg_path = path or DEFAULT_CONFIG
@@ -356,6 +363,78 @@ def cmd_import_batch(
     return 0 if ok else 1
 
 
+def make_0705_label(device: str) -> str:
+    label = f"{device}{LABEL_0705_SUFFIX}"
+    if len(label) > LABEL_0705_MAX:
+        raise ValueError(f"label too long for in-place patch: {label} ({len(label)})")
+    return label
+
+
+def patch_0705_label(so_bytes: bytes, device: str) -> bytes:
+    """把 so 内 `*_cp2a_260705_006` 标签改成目标机型（利用尾随 NUL 填充槽）。"""
+    m = re.search(rb"([a-z0-9]+_cp2a_260705_006)(\x00+)", so_bytes)
+    if not m:
+        raise ValueError("source so missing *_cp2a_260705_006 label")
+    slot_start = m.start(1)
+    slot_end = m.end(2)  # 含全部尾随 \\0
+    slot = slot_end - slot_start
+    new_label = make_0705_label(device).encode("ascii")
+    if len(new_label) + 1 > slot:
+        raise ValueError(
+            f"label {new_label.decode()} does not fit slot={slot}",
+        )
+    patched = new_label + b"\x00" * (slot - len(new_label))
+    return so_bytes[:slot_start] + patched + so_bytes[slot_end:]
+
+
+def cmd_pack_0705(
+    cfg: dict[str, Any],
+    source_so: Path | None,
+    *,
+    devices: tuple[str, ...] = DEVICES_0705,
+) -> int:
+    """从已验证 0705 so 改标签，批量入库 OneIMS catalog（tokay/caiman/komodo/comet）。"""
+    app = oneims_root(cfg)
+    assets = app / "app" / "src" / "main" / "assets" / "temproot"
+    default_src = assets / f"preload-comet-{BUILD_0705}.so"
+    if source_so is None:
+        source_so = default_src
+    src = source_so.expanduser().resolve()
+    if not src.is_file():
+        alt = Path(r"E:\Down\TEMP\preload-comet-cp2a-260705-006.so")
+        if alt.is_file():
+            src = alt
+        else:
+            raise SystemExit(f"source so not found: {source_so}")
+    raw = src.read_bytes()
+    print(f"[oneso] pack-0705 source={src} bytes={len(raw)}")
+    ok = 0
+    for device in devices:
+        project = f"{device}-{BUILD_0705}"
+        try:
+            out_bytes = patch_0705_label(raw, device)
+        except Exception as exc:  # noqa: BLE001
+            print(f"[oneso] FAIL {device}: {exc}")
+            continue
+        tmp = HERE / f"_tmp-{device}-0705.so"
+        tmp.write_bytes(out_bytes)
+        try:
+            result = import_so_core(cfg, project, tmp)
+        finally:
+            tmp.unlink(missing_ok=True)
+        # 确认标签
+        label = make_0705_label(device)
+        if label.encode() not in Path(result["dst"]).read_bytes():
+            print(f"[oneso] WARN label not found after write: {label}")
+        print(
+            f"[oneso] OK {project} -> {result['asset']} "
+            f"({result['sha256'][:12]}…)",
+        )
+        ok += 1
+    print(f"[oneso] pack-0705 done ok={ok}/{len(devices)}", file=sys.stderr)
+    return 0 if ok == len(devices) else 1
+
+
 def cmd_info(cfg: dict[str, Any], project: str) -> int:
     root = exploit_root(cfg)
     device, build_id = parse_project(project)
@@ -430,7 +509,18 @@ def build_parser() -> argparse.ArgumentParser:
         help="optional JSON: {\"preload.so\": \"komodo-...\"}",
     )
 
-    sub.add_parser("gui", help="open simple Tk GUI")
+    pack = sub.add_parser(
+        "pack-0705",
+        help="retarget verified 0705 so labels for tokay/caiman/komodo/comet and import",
+    )
+    pack.add_argument(
+        "--source",
+        type=Path,
+        default=None,
+        help="source preload.so (default: OneIMS comet 0705 asset)",
+    )
+
+    sub.add_parser("gui", help="open OneAE-styled Tk GUI")
 
     return p
 
@@ -463,6 +553,8 @@ def main(argv: list[str] | None = None) -> int:
             dry_run=bool(args.dry_run),
             mapping_path=args.mapping,
         )
+    if args.cmd == "pack-0705":
+        return cmd_pack_0705(cfg, args.source)
     raise SystemExit(f"unknown cmd {args.cmd}")
 
 

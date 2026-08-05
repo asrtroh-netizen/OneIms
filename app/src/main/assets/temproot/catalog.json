@@ -1,7 +1,16 @@
 {
   "version": 1,
-  "note": "First ship locks Pixel 9 Pro Fold (comet) + CP2A.260705.006 only.",
+  "note": "CP2A.260705.006 P9 family: tokay/caiman/komodo/comet (label-retarget from verified so).",
   "devices": {
+    "tokay": {
+      "CP2A.260705.006": "preload-tokay-CP2A.260705.006.so"
+    },
+    "caiman": {
+      "CP2A.260705.006": "preload-caiman-CP2A.260705.006.so"
+    },
+    "komodo": {
+      "CP2A.260705.006": "preload-komodo-CP2A.260705.006.so"
+    },
     "comet": {
       "CP2A.260705.006": "preload-comet-CP2A.260705.006.so"
     }
