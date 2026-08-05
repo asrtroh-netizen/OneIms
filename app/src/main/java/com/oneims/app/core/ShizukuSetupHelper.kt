@@ -91,6 +91,31 @@ object ShizukuSetupHelper {
     fun openShizukuManager(context: Context): Boolean = openShizukuApp(context) == 0
 
     /**
+     * 临时 Root 后常见：`shizuku_server` 被 `su -c libshizuku` 拉成 **root** 态，
+     * binder 对 App 掉线，同时首页黑标因 `getUid()==0` 误亮。
+     *
+     * 处理：用临时 su **只杀** server，再走无线 SelfStarter（adbd shell=uid 2000）重绑。
+     * 禁止再次 `su -c libshizuku.so`（会立刻变回 root 僵尸）。
+     */
+    fun rebindShellServerAfterTempRoot(context: Context): Boolean {
+        val app = context.applicationContext
+        Log.i(TAG, "rebindShellServerAfterTempRoot: kill root/zombie server")
+        val killed = RootBootStarter.execSu(
+            "/system/bin/killall -9 shizuku_server 2>/dev/null; " +
+                "/system/bin/killall -9 shizuku_server_legacy 2>/dev/null; true",
+        )
+        try {
+            Thread.sleep(400L)
+        } catch (_: InterruptedException) {
+            Thread.currentThread().interrupt()
+        }
+        ensureAdbWifiEnabled(app)
+        val started = requestWirelessAutoStart(app)
+        Log.i(TAG, "rebindShellServerAfterTempRoot: killed=$killed wirelessStart=$started")
+        return killed || started
+    }
+
+    /**
      * 手机侧触发 Shizuku 无线自启（对齐 V15 `BootStartActionReceiver` / `SelfStarterService`）。
      * 用于 OneLink「立即激活」：不只打开 UI，还让已配对设备走无码直连，避免只点「启动」一直转。
      */

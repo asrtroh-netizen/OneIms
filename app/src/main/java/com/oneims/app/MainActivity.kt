@@ -1152,12 +1152,33 @@ private fun AppRoot(
     }
 
     // 首页 ROOT 徽标 / 第三行开关：轮询临时或永久 Root（含特权通道复核，避免 App 沙箱假阴性）。
+    // 黑标出现但 Shizuku 掉线：自动 shell 重绑（限频），避免「有 Root 无 OneLink」。
+    var lastShizukuRebindAt by remember { mutableLongStateOf(0L) }
     LaunchedEffect(Unit) {
         while (isActive) {
             val snap = RootPresenceProbe.probeWithPrivilege(context)
             showRootBadge = snap.showRootBadge
             rootBadgePermanent = snap.badgePermanent
             showRootFeatures = snap.showCarrierXmlSwitch
+            if (ChannelLine.usesShizuku &&
+                snap.any &&
+                !OneKukuManager.isRunning()
+            ) {
+                val now = System.currentTimeMillis()
+                if (now - lastShizukuRebindAt > 30_000L) {
+                    lastShizukuRebindAt = now
+                    withContext(Dispatchers.IO) {
+                        ShizukuSetupHelper.rebindShellServerAfterTempRoot(context)
+                    }
+                    syncPrivilegeFlagsFromBridge()
+                    if (OneKukuManager.isReady()) {
+                        settleOneKukuChannelAfterReady()
+                    } else if (OneKukuManager.isRunning() && !OneKukuManager.isGranted()) {
+                        OneKukuManager.requestActivation()
+                    }
+                    activationEpoch++
+                }
+            }
             delay(4_000)
         }
     }
@@ -2061,11 +2082,25 @@ private fun AppRoot(
                                     ) {
                                         is OneKukuTempRootActivator.Outcome.Success -> {
                                             val post = withContext(Dispatchers.IO) {
+                                                // 双保险：Activator 内已 rebind；此处再确保 binder 可授权。
+                                                if (ChannelLine.usesShizuku &&
+                                                    !OneKukuManager.isRunning()
+                                                ) {
+                                                    ShizukuSetupHelper.rebindShellServerAfterTempRoot(
+                                                        context,
+                                                    )
+                                                }
                                                 TempRootPostSuccessActions.run(
                                                     context = context,
                                                     displayCarrierName = selectedSim?.carrierName,
                                                     forceReferenceXml = false,
                                                 )
+                                            }
+                                            syncPrivilegeFlagsFromBridge()
+                                            if (OneKukuManager.isReady()) {
+                                                settleOneKukuChannelAfterReady()
+                                            } else if (OneKukuManager.isRunning()) {
+                                                OneKukuManager.requestActivation()
                                             }
                                             reapplyStatus =
                                                 ConfigStore.lastReapplyStatus(context)

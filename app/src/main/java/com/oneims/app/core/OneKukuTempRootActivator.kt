@@ -119,6 +119,18 @@ object OneKukuTempRootActivator {
             }
 
             if (verified) {
+                // 临 Root 后 Shizuku 极易变成 root 态 server → App binder 掉线。
+                // 立刻杀僵尸并以无线 shell 重绑（禁止再 su -c libshizuku）。
+                if (!ChannelLine.usesEmbeddedBridge) {
+                    runCatching {
+                        ShizukuSetupHelper.rebindShellServerAfterTempRoot(app)
+                        val deadline = System.currentTimeMillis() + 20_000L
+                        while (System.currentTimeMillis() < deadline) {
+                            if (OneKukuManager.isRunning()) break
+                            Thread.sleep(400L)
+                        }
+                    }.onFailure { Log.w(TAG, "rebind shizuku after temp root failed", it) }
+                }
                 Outcome.Success(
                     "root_ok via=$via device=$device build=$buildId so=$sourceLabel " +
                         "out=${lastExploit.output.take(120)}",

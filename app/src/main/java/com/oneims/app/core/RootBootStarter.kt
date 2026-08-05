@@ -8,7 +8,8 @@ import java.util.concurrent.TimeUnit
  * Root 开机旁路：开关开启时用 `su -c` 拉起**本产品对应**的特权桥。
  *
  * - OneIMS / OneKuku：拉起 `onebridge_server`（内嵌 OneBridge）
- * - OneIMS Lite / OneLink：拉起已安装 Shizuku 的 `libshizuku.so`（对齐官方 Root 启动命令）
+ * - OneIMS Lite / OneLink：**禁止** `su -c libshizuku.so`（会生成 root 态
+ *   `shizuku_server`，App 立刻掉线）；改为杀僵尸 + 无线 shell 自启
  *
  * 失败静默回落现有 Boot 重放 / 无线调试路径，不改非 Root 主逻辑。
  */
@@ -18,6 +19,12 @@ object RootBootStarter {
     fun maybeStartOnBoot(context: Context) {
         if (!ConfigStore.isRootBootStart(context)) {
             Log.i(TAG, "root boot switch off; skip")
+            return
+        }
+        if (ChannelLine.usesShizuku) {
+            // 绝不能 su 拉 Shizuku：root server = 黑标闪一下 + OneLink 掉线。
+            val ok = ShizukuSetupHelper.rebindShellServerAfterTempRoot(context)
+            Log.i(TAG, "onelink boot rebind shell shizuku ok=$ok")
             return
         }
         val cmd = resolveBootCommand(context)
@@ -37,7 +44,7 @@ object RootBootStarter {
             )
             cmd.takeIf { it.isNotBlank() }
         } else {
-            ShizukuSetupHelper.buildShizukuRootStartCommand(context)
+            null
         }
     }
 
@@ -46,6 +53,8 @@ object RootBootStarter {
      */
     internal fun execSu(command: String): Boolean {
         val candidates = listOf(
+            listOf("/data/local/tmp/su", "-c", command),
+            listOf("/apex/com.android.virt/bin/su", "-c", command),
             listOf("su", "-c", command),
             listOf("/system/bin/su", "-c", command),
             listOf("/system/xbin/su", "-c", command),
@@ -66,7 +75,9 @@ object RootBootStarter {
                 val markerOk = output.contains(OneKukuCoreComponent.SHELL_BOOT_OK) ||
                     output.contains("OneBridge_started") ||
                     output.contains("info: shizuku_started") ||
-                    output.contains("shizuku_starter")
+                    output.contains("shizuku_starter") ||
+                    // killall 成功时常见 exit=0 且无 starter 标记
+                    (command.contains("killall") && code == 0)
                 Log.i(TAG, "su via=${argv.first()} code=$code markerOk=$markerOk out=${output.take(200)}")
                 code == 0 || markerOk
             }.getOrElse { error ->
