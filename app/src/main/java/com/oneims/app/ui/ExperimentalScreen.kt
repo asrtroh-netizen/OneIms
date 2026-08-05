@@ -740,35 +740,43 @@ fun ExperimentalScreen(
 
 
 
-                SettingsSwitchRow(
+                if (state.showRootBootStart) {
 
 
 
-                    title = stringResource(R.string.root_boot_title),
+                    SettingsSwitchRow(
 
 
 
-                    subtitle = stringResource(R.string.root_boot_sub),
+                        title = stringResource(R.string.root_boot_title),
 
 
 
-                    checked = state.rootBootStart,
+                        subtitle = stringResource(R.string.root_boot_sub),
 
 
 
-                    onCheckedChange = actions.onRootBootStartChange,
+                        checked = state.rootBootStart,
 
 
 
-                    icon = Icons.Filled.Star,
+                        onCheckedChange = actions.onRootBootStartChange,
 
 
 
-                )
+                        icon = Icons.Filled.Star,
 
 
 
-                GroupDivider()
+                    )
+
+
+
+                    GroupDivider()
+
+
+
+                }
 
 
 

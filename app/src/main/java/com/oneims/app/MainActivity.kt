@@ -326,6 +326,7 @@ private fun AppRoot(
     var showRootBadge by remember { mutableStateOf(false) }
     var rootBadgePermanent by remember { mutableStateOf(false) }
     var showRootFeatures by remember { mutableStateOf(false) }
+    var showRootBootStart by remember { mutableStateOf(false) }
     var rootBootStart by remember {
         mutableStateOf(ConfigStore.isRootBootStart(context))
     }
@@ -1160,6 +1161,7 @@ private fun AppRoot(
             showRootBadge = snap.showRootBadge
             rootBadgePermanent = snap.badgePermanent
             showRootFeatures = snap.showCarrierXmlSwitch
+            showRootBootStart = snap.showRootBootStart
             if (ChannelLine.usesShizuku &&
                 snap.any &&
                 !OneKukuManager.isRunning()
@@ -1686,6 +1688,7 @@ private fun AppRoot(
                         showRootBadge = showRootBadge,
                         rootBadgePermanent = rootBadgePermanent,
                         showRootFeatures = showRootFeatures,
+                        showRootBootStart = showRootBootStart,
                         // 手机端一键临时 Root 已放弃（卡死/不稳定）；PC 按需：
                         // scripts/temp-root-pc.ps1 或 python tools/oneso/oneso.py temp-root --run
                         showTempRootExperiment = false,
@@ -2162,6 +2165,7 @@ private fun AppRoot(
                                     showRootBadge = snap.showRootBadge
                                     rootBadgePermanent = snap.badgePermanent
                                     showRootFeatures = snap.showCarrierXmlSwitch
+                                    showRootBootStart = snap.showRootBootStart
                                 }
                                 publish(message)
                             }
@@ -2461,6 +2465,7 @@ private fun AppRoot(
                         guardEnabled = guardEnabled,
                         rootPersistEnhance = rootPersistEnhance,
                         rootBootStart = rootBootStart,
+                        showRootBootStart = showRootBootStart,
                         forceTemporaryOverride = forceTemporaryOverride,
                         systemUpdateShield = systemUpdateShield,
                         rootPersistStatusDetail = RootPersistenceSupport.statusDetail(context),

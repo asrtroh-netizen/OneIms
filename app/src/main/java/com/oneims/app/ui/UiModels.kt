@@ -75,8 +75,10 @@ data class HomeUiState(
     val showRootBadge: Boolean = false,
     /** 徽标为永久 Root 样式；false 且 [showRootBadge] 时为临时样式。 */
     val rootBadgePermanent: Boolean = false,
-    /** Root 功能区（开机自启 / 临时 Root 持久化 / 工具）是否展示；有可用 Root 才为 true。 */
+    /** Root 功能区（临时 Root 持久化 / 工具）是否展示；有可用 Root 才为 true。 */
     val showRootFeatures: Boolean = false,
+    /** 「Root 开机自启」仅永久 Root 展示；临时 Root 不显示。 */
+    val showRootBootStart: Boolean = false,
     /** 历史「一键临时 Root」入口；产品默认关，改走 PC scripts/temp-root-pc.ps1。 */
     val showTempRootExperiment: Boolean = false,
     val oneKukuDetailOverride: String? = null,
@@ -223,6 +225,8 @@ data class ExperimentalUiState(
     val rootPersistEnhance: Boolean = false,
     /** Root 开机拉起 OneBridge；默认关。 */
     val rootBootStart: Boolean = false,
+    /** 「Root 开机拉起」开关仅永久 Root 展示。 */
+    val showRootBootStart: Boolean = false,
     /** 强制临时 CarrierConfig 写入；默认关。 */
     val forceTemporaryOverride: Boolean = false,
     /** 尽量屏蔽系统更新；默认开。 */

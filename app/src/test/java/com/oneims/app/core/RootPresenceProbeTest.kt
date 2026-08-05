@@ -29,6 +29,8 @@ class RootPresenceProbeTest {
         assertTrue(snap.showRootBadge)
         assertTrue(snap.temporary)
         assertFalse(snap.badgePermanent)
+        assertTrue(snap.showCarrierXmlSwitch)
+        assertFalse(snap.showRootBootStart)
     }
 
     @Test
@@ -41,5 +43,20 @@ class RootPresenceProbeTest {
         )
         assertTrue(snap.showRootBadge)
         assertTrue(snap.badgePermanent)
+        assertTrue(snap.showRootBootStart)
+    }
+
+    @Test
+    fun temporaryOnly_hidesRootBootStart() {
+        val snap = RootPresenceProbe.resolve(
+            bridgeRoot = true,
+            markerPermanent = false,
+            permanentSu = false,
+            temporarySu = false,
+        )
+        assertTrue(snap.any)
+        assertFalse(snap.permanent)
+        assertFalse(snap.showRootBootStart)
+        assertTrue(snap.showCarrierXmlSwitch)
     }
 }

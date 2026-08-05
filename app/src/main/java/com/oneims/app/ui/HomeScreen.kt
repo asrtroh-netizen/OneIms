@@ -122,14 +122,18 @@ private fun OneKukuStandaloneHome(
             }
         }
 
-        // Root 功能区（隐藏）：有可用 Root 才展示开机自启 / 应用配置 / 工具。
-        if (state.showRootFeatures) {
+        // Root 开机自启：仅永久 Root（临时 Root 重启即丢，开机语义不成立）。
+        if (state.showRootBootStart) {
             item {
                 RootBootHomeCard(
                     checked = state.rootBootStart,
                     onCheckedChange = actions.onRootBootStartChange,
                 )
             }
+        }
+
+        // Root 功能区（隐藏）：有可用 Root 才展示应用配置 / 工具。
+        if (state.showRootFeatures) {
             item {
                 TempRootCarrierConfigApplyHomeCard(
                     enabled = state.actionsEnabled,
@@ -267,13 +271,17 @@ private fun OneLinkHome(
             }
         }
 
-        if (state.showRootFeatures) {
+        // Root 开机自启：仅永久 Root（临时 Root 重启即丢，开机语义不成立）。
+        if (state.showRootBootStart) {
             item {
                 RootBootHomeCard(
                     checked = state.rootBootStart,
                     onCheckedChange = actions.onRootBootStartChange,
                 )
             }
+        }
+
+        if (state.showRootFeatures) {
             item {
                 TempRootCarrierConfigApplyHomeCard(
                     enabled = state.actionsEnabled,
@@ -361,7 +369,7 @@ private fun OneLinkHome(
     )
 }
 
-/** 首页 Root 开机自启框：与无线自启同级心智——有 Root、没无线也能拉起通道。 */
+/** 首页 Root 开机自启框：仅永久 Root 展示；与无线自启同级心智——没无线也能靠 Root 拉起通道。 */
 @Composable
 private fun RootBootHomeCard(
     checked: Boolean,

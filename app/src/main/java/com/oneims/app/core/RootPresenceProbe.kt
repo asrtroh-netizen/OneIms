@@ -23,8 +23,13 @@ object RootPresenceProbe {
         val any: Boolean get() = temporary || permanent
         /** 右上角 ROOT 标签：有真实 Root（临时或永久）才显示。 */
         val showRootBadge: Boolean get() = any
-        /** 首页 Root 功能区：有真实 Root 才显示。 */
+        /** 首页 Root 功能区（运营商写入 / 工具）：有真实 Root 才显示。 */
         val showCarrierXmlSwitch: Boolean get() = any
+        /**
+         * 「Root 开机自启」：仅永久 Root 显示。
+         * 临时 Root 重启即丢，开机拉起语义不成立，避免误导。
+         */
+        val showRootBootStart: Boolean get() = permanent
         /** 徽标样式：永久优先于临时。 */
         val badgePermanent: Boolean get() = permanent
     }

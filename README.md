@@ -14,17 +14,17 @@
 
 <br/>
 
-### ⬇️ 下载 APK（最新 · v3.3.0 · 请自选产品线）
+### ⬇️ 下载 APK（最新 · v3.3.1 · 请自选产品线）
 
 > **两个包功能相同（IMS/诊断/恢复），差别只在「特权通道怎么激活」——看下方选购指南，务必只装其中一个。**  
 > ⚠️ **不要同机共存**：OneKuku 内嵌通道会与 Shizuku **抢权限 / 抢 binder**，双开容易互相踩脚、激活失败或反复掉线。换线请先卸载当前包再装另一条。
 
 | 推荐给… | 包 | 下载 |
 |---|---|---|
-| 🟢 **想少装 App、App 内一键配对** | **OneKuku（独立激活）** | [OneIms-OneKuku-standalone-3.3.0.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.3.0/OneIms-OneKuku-standalone-3.3.0.apk) |
-| 🔵 **已有 / 想用 Shizuku 轻壳** | **OneIms Lite（Shizuku）** | [OneIms-Lite-Shizuku-3.3.0.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.3.0/OneIms-Lite-Shizuku-3.3.0.apk) |
+| 🟢 **想少装 App、App 内一键配对** | **OneKuku（独立激活）** | [OneIms-OneKuku-standalone-3.3.1.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.3.1/OneIms-OneKuku-standalone-3.3.1.apk) |
+| 🔵 **已有 / 想用 Shizuku 轻壳** | **OneIms Lite（Shizuku）** | [OneIms-Lite-Shizuku-3.3.1.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.3.1/OneIms-Lite-Shizuku-3.3.1.apk) |
 
-[📦 全部 Release 资产](https://github.com/asrtroh-netizen/OneIms/releases/tag/v3.3.0)
+[📦 全部 Release 资产](https://github.com/asrtroh-netizen/OneIms/releases/tag/v3.3.1)
 
 > 💙 **友情推荐特权通道**：[asrtroh 修缮版 Shizuku](https://github.com/asrtroh-netizen/shizuku)（配对一次 · 旧 Wi‑Fi 自连 · 开机 FGS 内激活）  
 > 下载正式包：[Releases](https://github.com/asrtroh-netizen/shizuku/releases) · 截图：
@@ -68,11 +68,25 @@
 
 | 对外名称 | 包名 | 特权通道 | 最新版下载 |
 |---|---|---|---|
-| **OneIms · OneKuku** `3.3.0-onekuku` | `com.oneims.app` | 内嵌 OneBridge + 无线调试配对 | [OneIms-OneKuku-standalone-3.3.0.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.3.0/OneIms-OneKuku-standalone-3.3.0.apk) |
-| **OneIms · OneIms Lite** `3.3.0-onelink` | `com.oneims.onelink` | 官方 Shizuku | [OneIms-Lite-Shizuku-3.3.0.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.3.0/OneIms-Lite-Shizuku-3.3.0.apk) |
+| **OneIms · OneKuku** `3.3.1-onekuku` | `com.oneims.app` | 内嵌 OneBridge + 无线调试配对 | [OneIms-OneKuku-standalone-3.3.1.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.3.1/OneIms-OneKuku-standalone-3.3.1.apk) |
+| **OneIms · OneIms Lite** `3.3.1-onelink` | `com.oneims.onelink` | 官方 Shizuku | [OneIms-Lite-Shizuku-3.3.1.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.3.1/OneIms-Lite-Shizuku-3.3.1.apk) |
 
 > **双包同版号一起更新**；请只从本页 Release 链接下载，勿混装未知来源包。  
 > **两线二选一**：OneKuku 与 Shizuku（含 Lite）同机共存会抢权限，安装前请清掉另一条线。
+
+---
+
+## ✨ What's New · 3.3.1
+
+* **Root 开机自启**：仅在持久/永久 Root（Magisk / KernelSU / 系统 su）时显示；临时 Root 不再露出该开关（避免重启即丢却还能开「开机拉起」的误导）
+* 临时 Root 下仍保留运营商写入 / 临时 Root 工具区与 ROOT 徽标（琥珀）
+* 双线同版齐发（覆盖 3.3.0）
+
+### 🔄 升级
+
+* 🟢 OneKuku：覆盖安装 `OneIms-OneKuku-standalone-3.3.1.apk`
+* 🔵 OneIms Lite：覆盖安装 `OneIms-Lite-Shizuku-3.3.1.apk`
+* versionCode `101`（相对 3.3.0 的 `100` 会提示升级）
 
 ---
 
