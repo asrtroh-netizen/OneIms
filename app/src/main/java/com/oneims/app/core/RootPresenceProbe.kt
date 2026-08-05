@@ -71,7 +71,8 @@ object RootPresenceProbe {
 
     private fun canExecSu(suPath: String): Boolean {
         return runCatching {
-            val process = ProcessBuilder(suPath, "-c", "id")
+            // 绝对路径 id，避免 Drop-In 对裸 `id` 的假 Root mock
+            val process = ProcessBuilder(suPath, "-c", "/system/bin/id")
                 .redirectErrorStream(true)
                 .start()
             val output = process.inputStream.bufferedReader().use { it.readText() }
