@@ -110,13 +110,19 @@ private fun OneKukuStandaloneHome(
             )
         }
 
-        // 一键临时 Root：重启后无 Root 也要能点；OneKuku=内嵌 ADB。
+        // 一键临时 Root + 应用配置：重启后无 Root 也要能点（无 Root 时应用给明确提示）。
         if (state.showTempRootExperiment) {
             item {
                 TempRootOneClickHomeCard(
                     enabled = state.actionsEnabled,
                     onClick = actions.onTempRootOneClick,
                     liteChannel = false,
+                )
+            }
+            item {
+                TempRootCarrierConfigApplyHomeCard(
+                    enabled = state.actionsEnabled,
+                    onClick = actions.onTempRootCarrierConfigApply,
                 )
             }
         }
@@ -127,12 +133,6 @@ private fun OneKukuStandaloneHome(
                 RootBootHomeCard(
                     checked = state.rootBootStart,
                     onCheckedChange = actions.onRootBootStartChange,
-                )
-            }
-            item {
-                TempRootCarrierPersistHomeCard(
-                    checked = state.tempRootCarrierPersist,
-                    onCheckedChange = actions.onTempRootCarrierPersistChange,
                 )
             }
             item {
@@ -263,6 +263,12 @@ private fun OneLinkHome(
                     liteChannel = true,
                 )
             }
+            item {
+                TempRootCarrierConfigApplyHomeCard(
+                    enabled = state.actionsEnabled,
+                    onClick = actions.onTempRootCarrierConfigApply,
+                )
+            }
         }
 
         if (state.showRootFeatures) {
@@ -270,12 +276,6 @@ private fun OneLinkHome(
                 RootBootHomeCard(
                     checked = state.rootBootStart,
                     onCheckedChange = actions.onRootBootStartChange,
-                )
-            }
-            item {
-                TempRootCarrierPersistHomeCard(
-                    checked = state.tempRootCarrierPersist,
-                    onCheckedChange = actions.onTempRootCarrierPersistChange,
                 )
             }
             item {
@@ -432,11 +432,11 @@ private fun TempRootOneClickHomeCard(
     }
 }
 
-/** 首页「临时 Root 持久化改运营商」：样式对齐上方两开关；仅探测到 Root 时展示。 */
+/** 首页「应用运营商与我的配置」：一点即写，不再用开关。仅探测到 Root 时展示。 */
 @Composable
-private fun TempRootCarrierPersistHomeCard(
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
+private fun TempRootCarrierConfigApplyHomeCard(
+    enabled: Boolean,
+    onClick: () -> Unit,
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -444,12 +444,12 @@ private fun TempRootCarrierPersistHomeCard(
         color = MaterialTheme.colorScheme.surfaceContainerLow,
         tonalElevation = 1.dp,
     ) {
-        SettingsSwitchRow(
-            title = stringResource(R.string.temp_root_carrier_persist_title),
-            subtitle = stringResource(R.string.temp_root_carrier_persist_sub),
-            checked = checked,
-            onCheckedChange = onCheckedChange,
+        SettingsActionRow(
             icon = Icons.Filled.Star,
+            title = stringResource(R.string.temp_root_carrier_apply_title),
+            subtitle = stringResource(R.string.temp_root_carrier_apply_sub),
+            onClick = onClick,
+            enabled = enabled,
         )
     }
 }

@@ -713,6 +713,10 @@
     <string name="temp_root_carrier_persist_on">已开启临时 Root 持久化改运营商</string>
     <string name="temp_root_carrier_persist_off">已关闭临时 Root 持久化改运营商</string>
     <string name="temp_root_carrier_persist_applied">已尝试写入 CarrierConfig XML：%1$s</string>
+    <string name="temp_root_carrier_apply_title">应用运营商与我的配置</string>
+    <string name="temp_root_carrier_apply_sub">立刻写入参考最小网络键，并重放已存的核心/高级选项（需可用 Root；双卡按卡不串写）</string>
+    <string name="temp_root_carrier_apply_need_root">应用失败：当前没有可用的临时/永久 Root（su 不可用）。请先点「一键临时 Root」成功后再应用</string>
+    <string name="temp_root_carrier_apply_done">已应用：%1$s</string>
     <string name="temp_root_oneclick_title">一键临时 Root（实验）</string>
     <string name="temp_root_oneclick_sub">经 OneKuku 无线 ADB 重跑 LD_PRELOAD；每次优先从 OneSo-assets 拉最新 so；可能需数分钟</string>
     <string name="temp_root_oneclick_lite_hint">请先启动并授权外置 Shizuku，再点一键临时 Root</string>

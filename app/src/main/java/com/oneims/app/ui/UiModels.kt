@@ -79,8 +79,6 @@ data class HomeUiState(
     val showRootFeatures: Boolean = false,
     /** 显示「一键临时 Root」实验入口（OneKuku / Lite 均可）。 */
     val showTempRootExperiment: Boolean = false,
-    /** 与 [com.oneims.app.core.ConfigStore.isRootPersistEnhance] 同源。 */
-    val tempRootCarrierPersist: Boolean = false,
     val oneKukuDetailOverride: String? = null,
 )
 
@@ -110,7 +108,8 @@ data class HomeActions(
     val onAutoSleepChange: (Boolean) -> Unit,
     val onRootBootStartChange: (Boolean) -> Unit = {},
     val onSandboxPersistBypassChange: (Boolean) -> Unit = {},
-    val onTempRootCarrierPersistChange: (Boolean) -> Unit = {},
+    /** 立刻应用：参考运营商 XML + 已存「我的」核心/高级选项（非开关）。 */
+    val onTempRootCarrierConfigApply: () -> Unit = {},
     val onTempRootNetworkCheck: () -> Unit = {},
     val onTempRootBackupCarrierConfig: () -> Unit = {},
     val onTempRootOneClick: () -> Unit = {},

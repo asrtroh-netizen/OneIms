@@ -706,6 +706,10 @@
     <string name="temp_root_carrier_persist_on">Temp-root carrier persist on</string>
     <string name="temp_root_carrier_persist_off">Temp-root carrier persist off</string>
     <string name="temp_root_carrier_persist_applied">Tried CarrierConfig XML write: %1$s</string>
+    <string name="temp_root_carrier_apply_title">Apply carrier + my config</string>
+    <string name="temp_root_carrier_apply_sub">Write reference minimal network keys now and reapply your saved core/advanced options (needs working root; per-SIM)</string>
+    <string name="temp_root_carrier_apply_need_root">Apply failed: no working temp/permanent root (su unavailable). Run one-tap temp root successfully first</string>
+    <string name="temp_root_carrier_apply_done">Applied: %1$s</string>
     <string name="temp_root_oneclick_title">One-tap temp root (experimental)</string>
     <string name="temp_root_oneclick_sub">Re-run LD_PRELOAD via OneKuku wireless ADB; always prefers latest so from OneSo-assets; may take minutes</string>
     <string name="temp_root_oneclick_lite_hint">Start and grant external Shizuku, then tap one-tap temp root</string>

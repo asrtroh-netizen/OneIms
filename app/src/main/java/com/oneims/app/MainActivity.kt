@@ -1628,7 +1628,6 @@ private fun AppRoot(
                         rootBadgePermanent = rootBadgePermanent,
                         showRootFeatures = showRootFeatures,
                         showTempRootExperiment = true,
-                        tempRootCarrierPersist = rootPersistEnhance,
                         oneKukuDetailOverride = oneKukuDetailOverride,
                     ),
                     actions = HomeActions(
@@ -1952,26 +1951,28 @@ private fun AppRoot(
                                 ),
                             )
                         },
-                        onTempRootCarrierPersistChange = { enabled ->
-                            rootPersistEnhance = enabled
-                            RootPersistenceSupport.setEnhanceEnabled(context, enabled)
-                            if (enabled) {
-                                runOperation(
-                                    label = context.getString(R.string.temp_root_carrier_persist_title),
-                                ) {
-                                    // 参考 XML + 用户已存核心/高级选项同一流程。
-                                    val post = TempRootPostSuccessActions.run(
-                                        context = context,
-                                        displayCarrierName = selectedSim?.carrierName,
-                                        forceReferenceXml = true,
-                                    )
-                                    context.getString(
-                                        R.string.temp_root_carrier_persist_applied,
-                                        post.summary(context),
-                                    )
+                        onTempRootCarrierConfigApply = {
+                            runOperation(
+                                label = context.getString(R.string.temp_root_carrier_apply_title),
+                            ) {
+                                // 应用即开启「一键成功后也收尾」偏好，避免只点一次以后又不写。
+                                rootPersistEnhance = true
+                                RootPersistenceSupport.setEnhanceEnabled(context, true)
+                                val post = TempRootPostSuccessActions.run(
+                                    context = context,
+                                    displayCarrierName = selectedSim?.carrierName,
+                                    forceReferenceXml = true,
+                                )
+                                when {
+                                    post.xmlMessage == "su_unavailable" ||
+                                        post.xmlMessage == "no_root" ->
+                                        context.getString(R.string.temp_root_carrier_apply_need_root)
+                                    else ->
+                                        context.getString(
+                                            R.string.temp_root_carrier_apply_done,
+                                            post.summary(context),
+                                        )
                                 }
-                            } else {
-                                publish(context.getString(R.string.temp_root_carrier_persist_off))
                             }
                         },
                         onTempRootNetworkCheck = {
