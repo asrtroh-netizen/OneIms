@@ -191,7 +191,12 @@ class HubApi:
             code, out = oneso.adb_shell(cmd, timeout=8.0)
             if oneso.looks_like_root_success(out):
                 return True, "临时 Root · 已就绪"
+            if oneso.looks_like_stale_su_daemon(out):
+                return False, "临时 Root · 残留请重启"
             _ = code
+        stale = oneso.detect_stale_temp_root()
+        if stale:
+            return False, "临时 Root · 残留请重启"
         return False, "临时 Root · 未检测到"
 
     def _shizuku_ps_user(self) -> str:

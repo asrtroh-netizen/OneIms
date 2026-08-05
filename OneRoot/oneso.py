@@ -883,11 +883,14 @@ def cmd_info(cfg: dict[str, Any], project: str) -> int:
 # 与 App TempRootShellCommands 对齐（PC adb 真源；手机端一键入口已撤）。
 REMOTE_SO = "/data/local/tmp/preload-comet.so"
 KILL_STUCK_PRELOAD = (
+    "pkill -9 -f 'timeout .*LD_PRELOAD' 2>/dev/null; "
     "pkill -9 -f preload-comet.so 2>/dev/null; "
     "pkill -9 -f 'LD_PRELOAD=/data/local/tmp/preload' 2>/dev/null; "
+    "killall -9 id 2>/dev/null; "
     "for p in $(pidof id 2>/dev/null); do "
     "grep -q preload-comet /proc/$p/maps 2>/dev/null && kill -9 $p; "
     "done; "
+    "rm -f /data/local/tmp/temp_su.sock /data/local/tmp/su 2>/dev/null; "
     "echo KILL_OK"
 )
 # Host-side defaults tuned vs old 4×180s (felt much slower than on-device Root My Pixel).
@@ -912,6 +915,31 @@ def looks_like_root_success(output: str) -> bool:
         or "root=1" in t
         or ("uid=0" in t and "gid=0" in t)
     )
+
+
+def looks_like_stale_su_daemon(output: str) -> bool:
+    t = (output or "").lower()
+    return "connect daemon" in t and "permission denied" in t
+
+
+def detect_stale_temp_root() -> str | None:
+    """半死不活的临时 Root 残留：shell 连不上 daemon，也删不掉 sock/su。"""
+    _code, out = adb_shell(VERIFY_SU_TMP, timeout=5.0)
+    if looks_like_stale_su_daemon(out):
+        return (
+            "检测到残留 temp_su（su: connect daemon: Permission denied）。"
+            "shell 无法删除 /data/local/tmp/su 与 temp_su.sock，"
+            "新一轮 LD_PRELOAD 会长时间挂起。请先【重启手机】再一键。"
+        )
+    _c, lsout = adb_shell("ls -l /data/local/tmp/temp_su.sock 2>&1", timeout=5.0)
+    low = (lsout or "").lower()
+    if "permission denied" in low:
+        return (
+            "检测到残留 temp_su.sock（shell Permission denied）。"
+            "请先【重启手机】清掉半死 daemon，再一键。"
+        )
+    _ = _c
+    return None
 
 
 def rebind_shell_shizuku() -> bool:
@@ -1306,10 +1334,19 @@ def cmd_temp_root(
         f"LD_PRELOAD×{attempts} (timeout={timeout_sec}s, fast defaults) → su verify",
     )
     if not run:
+        stale = detect_stale_temp_root()
+        if stale:
+            print(f"[oneso] WARN: {stale}", file=sys.stderr)
         _progress(100, "预览完成（未执行）")
         print("[oneso] dry-run only. Re-run with --run / OneRoot 一键临时 Root。")
         print("[oneso] tip: .\\OneRoot\\OneRoot.ps1  (or OneRoot\\一键启动.cmd)")
         return 0
+
+    stale = detect_stale_temp_root()
+    if stale:
+        print(f"[oneso] FAIL: {stale}", file=sys.stderr)
+        _progress(100, "失败：残留 temp_su，请重启手机")
+        return 4
 
     _progress(15, "推送 preload.so 到设备")
     print(f"[oneso] adb push {so} {REMOTE_SO}")
