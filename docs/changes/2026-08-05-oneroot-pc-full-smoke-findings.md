@@ -50,3 +50,41 @@ Hub HTTP 日志可见；不影响功能。
 1. 重启手机清孤儿 `su`，再跑一键 Root 对照是否仍 FAIL  
 2. 若仍 FAIL：对照 `exploit.log` 看是否 so/偏移/超时需调  
 3. 可选：补 favicon；README 标题改 OneRoot
+
+---
+
+## 复测（手机重启后 · 2026-08-05 夜）
+
+前提：用户已重启手机；复用已运行 Hub `pid=86644` · `http://127.0.0.1:51628` · version `2026.08.05.1`。  
+设备仍为 `comet` / `CP2A.260705.006` / `47111FDKD0009J`。
+
+### 复测结果摘要
+
+| 项 | 结果 |
+|---|---|
+| ADB | OK · device |
+| `/api/ping` | OK |
+| `/api/status`（跑前） | adb OK · so OK · **临时 Root · 未检测到**（僵尸 su 已消失）· Shizuku OK |
+| dry-run `/api/temp-root` | OK · code=0 |
+| 实跑一键 Root | **仍 FAIL** · job code=1 · `失败：2 轮后仍无 uid=0` |
+| `/data/local/tmp/su` | 仍不存在 |
+| 孤儿 `su` 进程 | **已清**（重启有效） |
+
+### 结论对照
+
+1. **上一刀建议 #1 已执行**：重启后孤儿 `su` / 僵尸态消失，status 不再报「僵尸su(daemon死)」。  
+2. **根因不在僵尸 su**：清干净后 LD_PRELOAD×2 仍各卡满约 90s → `ld_preload rc=124`，`verify su: not uid=0`。  
+3. **exploit 侧信号**（`/data/local/tmp/exploit.log`）：preload 以 `uid=2000` 启动；见 `delta=0000000000000000`；长时间停在 `pipe stage attempt=1/72`，未在超时前完成提权。  
+4. Hub / so 匹配 / 计划链路本轮正常，失败点在 **exploit 90s 内未出 uid=0**（偏移/稳定性/超时预算），不是 PC 完全体启动或连机问题。
+
+### 本轮证据
+
+- `release/_tmp/hub_retest_pre.json` · `hub_retest_final.json` · `hub_retest_job.log`
+- 设备：`/data/local/tmp/exploit.log`（约 530KB）、`preload-comet.so` 已 push
+- 冒烟脚本：`release/_tmp/hub_retest_smoke.py`
+
+### 建议下一刀（更新）
+
+1. 对照成功过的 `comet@0705` so / `target.h` 偏移，核对 `phys_offset`/`slide`/`delta=0` 是否异常  
+2. 评估加长 LD_PRELOAD timeout（当前 90s）或调整 pipe stage 策略后单机复验  
+3. 可选：补 favicon；README 标题改 OneRoot（仍为 P3）
