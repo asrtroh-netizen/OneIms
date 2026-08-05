@@ -61,3 +61,18 @@ trim-cli --host 127.0.0.1 --port 9999 login   # 管理员
 1. 浏览器打开 DDOS 飞牛 → 应用「Hermes」→ 确认供应商/对话是否已是家侧那套。
 2. 若必须与 FNHOME **同包**（`hermes-agent` 0.19 UI/monitor）：上传上述 fpk 并点许可安装；装完后再把 `hermes-migrate/from-fnhome` 迁入新包数据目录。
 3. 确认无误后，再决定是否停用 FNHOME 侧 `hermes-agent`（本轮未停源站）。
+
+## 2026-08-05 续 · WKAPI 核对（已完成）
+
+截图报错 `dashboard port 127.0.0.1:19119 ... address already in use`：**不是 WK 挂了**，而是已有 dashboard 占着 19119，UI 再点启动/Retry 会二次 bind 失败。
+
+| 检查 | 结果（本轮 SSH 证据） |
+|---|---|
+| 冲突根因 | 旧 wrapper/dashboard（约运行 8h）占 `127.0.0.1:19119`，`dash_http=200` |
+| 收敛 | 杀旧进程 → 起 wrapper；wrapper 未自动 spawn dashboard → fallback `hermes_cli.main dashboard` → **200** |
+| 配置 | `provider=custom-wkapi`，`default=kimi-k3`，`base_url=https://wkapi.vip/v1`，`.env` 有 `CUSTOM_WKAPI_API_KEY` |
+| WKAPI `/models` | **200**，`model_ids=['kimi-k3']` |
+| 对话探针 | `hermes -z "Reply with exactly: WK_OK" --provider custom-wkapi -m kimi-k3` → 输出 **`WK_OK`**，exit 0 |
+| `api_server :18642` | 未监听（本轮未强制拉起；对话链路不依赖它） |
+
+说明：飞牛应用入口再点「打开」若仍报端口占用，是因为 dashboard 已在跑——应直接用已运行实例，或先停再开；`status` 里官方 API Key 槽位多为空属正常，WK 走 custom provider。
