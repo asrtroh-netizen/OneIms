@@ -2046,6 +2046,10 @@ private fun AppRoot(
                                                     context.getString(
                                                         R.string.temp_root_oneclick_fail_selinux,
                                                     )
+                                                "kernel_mm_leak_failed" ->
+                                                    context.getString(
+                                                        R.string.temp_root_oneclick_fail_mm_leak,
+                                                    )
                                                 "exploit_failed_under_enforcing",
                                                 "no_uid0_in_output",
                                                 "ld_preload_failed",

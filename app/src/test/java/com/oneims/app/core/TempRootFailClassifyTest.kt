@@ -21,4 +21,13 @@ class TempRootFailClassifyTest {
         )
         assertEquals("exploit_ran_but_su_missing", reason)
     }
+
+    @Test
+    fun classifiesMmStructLeakOverSelinuxNoise() {
+        val reason = OneKukuTempRootActivator.classifySuMissingReason(
+            exploitOut = "[-] KernelSnitch mm_struct leak failed\n[-] prepare_kernel_page retry 4/12",
+            suOut = "su: connect daemon: Permission denied",
+        )
+        assertEquals("kernel_mm_leak_failed", reason)
+    }
 }

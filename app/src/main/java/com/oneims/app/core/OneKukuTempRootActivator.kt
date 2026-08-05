@@ -22,8 +22,12 @@ import java.util.concurrent.TimeUnit
 object OneKukuTempRootActivator {
     private const val TAG = "OneIMS-TempRootAct"
     private const val LD_TIMEOUT_MS = 600_000L
-    /** 真机 README：第一轮常卡 CFI/slide，杀掉再跑第二轮约 2 分钟。 */
-    private const val EXPLOIT_ATTEMPTS = 2
+    /**
+     * 真机 README-ADAPT：首轮常卡 CFI/slide；本轮实测还会卡在
+     * `KernelSnitch mm_struct leak failed`。杀残留多轮比只跑 2 次更接近曾成功路径。
+     */
+    private const val EXPLOIT_ATTEMPTS = 4
+    private const val EXPLOIT_RETRY_GAP_MS = 3_000L
 
     sealed class Outcome {
         data class Success(val detail: String) : Outcome()
@@ -109,6 +113,9 @@ object OneKukuTempRootActivator {
                     "exploit attempt=$attempt failed ok=${lastExploit.ok} " +
                         "reason=${lastExploit.reason} out=${lastExploit.output.take(160)}",
                 )
+                if (attempt < EXPLOIT_ATTEMPTS) {
+                    Thread.sleep(EXPLOIT_RETRY_GAP_MS)
+                }
             }
 
             if (verified) {
@@ -118,13 +125,17 @@ object OneKukuTempRootActivator {
                 )
             } else {
                 val suProbe = exec(app, TempRootShellCommands.VERIFY_SU_TMP, 12_000L)
+                val classified = classifySuMissingReason(lastExploit.output, suProbe.output)
                 val reason =
-                    if (!lastExploit.ok &&
-                        lastExploit.reason in setOf("timeout", "no_uid0_in_output", "ld_preload_failed")
-                    ) {
-                        lastExploit.reason.ifBlank { "ld_preload_failed" }
-                    } else {
-                        classifySuMissingReason(lastExploit.output, suProbe.output)
+                    when {
+                        classified == "kernel_mm_leak_failed" -> classified
+                        !lastExploit.ok &&
+                            lastExploit.reason in setOf(
+                                "timeout",
+                                "no_uid0_in_output",
+                                "ld_preload_failed",
+                            ) -> lastExploit.reason.ifBlank { "ld_preload_failed" }
+                        else -> classified
                     }
                 Outcome.Failed(
                     reason,
@@ -139,6 +150,9 @@ object OneKukuTempRootActivator {
     /** 把 SELinux / daemon 拒连从笼统的 su_missing 里拆出来，方便 UI 给可行动提示。 */
     internal fun classifySuMissingReason(exploitOut: String, suOut: String): String {
         val blob = "$exploitOut\n$suOut"
+        val mmLeak =
+            exploitOut.contains("mm_struct leak failed", ignoreCase = true) ||
+                exploitOut.contains("KernelSnitch mm_struct", ignoreCase = true)
         val denied =
             blob.contains("Permission denied", ignoreCase = true) ||
                 blob.contains("connect daemon", ignoreCase = true) ||
@@ -147,6 +161,8 @@ object OneKukuTempRootActivator {
             blob.contains("enforce=1", ignoreCase = true) ||
                 blob.contains("Enforcing", ignoreCase = true)
         return when {
+            // 泄漏失败时 SELinux 仍 Enforcing、su 也会 Permission denied——优先报真因。
+            mmLeak -> "kernel_mm_leak_failed"
             denied && enforcing -> "selinux_blocks_su_daemon"
             denied -> "su_daemon_permission_denied"
             enforcing && !TempRootShellCommands.looksLikeRootSuccess(exploitOut) ->

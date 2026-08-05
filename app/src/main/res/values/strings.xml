@@ -724,6 +724,7 @@
     <string name="temp_root_oneclick_fail">一键临时 Root 失败：%1$s</string>
     <string name="temp_root_oneclick_fail_selinux">一键临时 Root 失败：SELinux Enforcing 拦了 temp_su.sock（常见于上次残留 daemon 已死）。请保持亮屏再点一次让 exploit 完整跑完并重建守护；若连续失败，需换匹配 so 或等 so 在 Enforcing 下打通</string>
     <string name="temp_root_oneclick_fail_exploit">一键临时 Root 失败：exploit 未拿到 uid=0（首轮常卡在 slide/CFI）。请保持亮屏与 Shizuku 授权，再点一次（应用会自动杀残留并重试）</string>
+    <string name="temp_root_oneclick_fail_mm_leak">一键临时 Root 失败：卡在内核 mm_struct 泄漏（KernelSnitch）。请保持亮屏，再点一次；本版会自动杀残留并最多重试 4 轮，单轮可能要几分钟</string>
     <string name="temp_root_tools_title">临时 Root 工具</string>
     <string name="temp_root_selinux_tip">若 SELinux 为 Permissive：本次开机通常改不回去，重启后会恢复（临时 Root 也会掉）</string>
     <string name="temp_root_network_check_title">网络体检</string>

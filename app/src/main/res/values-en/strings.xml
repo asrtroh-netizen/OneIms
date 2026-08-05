@@ -717,6 +717,7 @@
     <string name="temp_root_oneclick_fail">One-tap temp root failed: %1$s</string>
     <string name="temp_root_oneclick_fail_selinux">One-tap temp root failed: SELinux Enforcing blocked temp_su.sock (often a dead leftover daemon). Keep the screen on and tap again so exploit can rebuild the daemon; if it keeps failing, so may not clear Enforcing on this build</string>
     <string name="temp_root_oneclick_fail_exploit">One-tap temp root failed: exploit did not reach uid=0 (first pass often sticks on slide/CFI). Keep screen on + Shizuku granted; tap again — app will kill leftovers and auto-retry</string>
+    <string name="temp_root_oneclick_fail_mm_leak">One-tap temp root failed: stuck on KernelSnitch mm_struct leak. Keep the screen on and tap again; this build kills leftovers and retries up to 4 rounds (each may take minutes)</string>
     <string name="temp_root_tools_title">Temp-root tools</string>
     <string name="temp_root_selinux_tip">If SELinux is Permissive, it usually cannot be restored this boot; reboot clears it (and drops temp root)</string>
     <string name="temp_root_network_check_title">Network check</string>
