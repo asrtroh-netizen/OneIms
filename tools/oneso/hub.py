@@ -111,14 +111,14 @@ class HubApi:
                 "detail": so.name if so_ok else "OneSo-assets 无匹配条目",
             },
             {
-                "name": "解锁要求",
+                "name": "本窗职责",
                 "ok": True,
-                "detail": "无需 Bootloader 解锁",
+                "detail": "仅一键临时 Root",
             },
             {
-                "name": "目标",
+                "name": "非本窗",
                 "ok": True,
-                "detail": "运营商配置持久化",
+                "detail": "运营商持久化 → 手机 App",
             },
         ]
         overall = "ok" if adb_ok and so_ok else "warn"

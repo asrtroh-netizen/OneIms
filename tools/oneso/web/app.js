@@ -36,7 +36,7 @@
       (overall === "ok" ? "is-ok" : overall === "warn" ? "is-warn" : "is-scan");
     summary.textContent =
       overall === "ok"
-        ? "体检通过。可以预览或一键持久化（未解锁 Pixel 也能写运营商配置）。"
+        ? "体检通过。可以预览或一键临时 Root（本窗不做运营商持久化）。"
         : overall === "warn"
           ? "未完全就绪：请连上 Pixel，并确认 GitHub OneSo-assets 有匹配 so。"
           : "扫描中…";
@@ -121,10 +121,10 @@
   );
   $("btnTempRun").addEventListener("click", async () => {
     const ok = window.confirm(
-      "确认一键持久化？\n会从 GitHub 取 so → 临时提权 → 便于写入运营商配置（可能数分钟）。\n无需解锁 Bootloader。",
+      "确认一键临时 Root？\n会从 GitHub 取 so 并跑 LD_PRELOAD（可能数分钟）。\n本窗不做运营商持久化。",
     );
     if (!ok) return;
-    await runAction("persist", () => apiPost("/api/temp-root", { run: true }));
+    await runAction("temp-root", () => apiPost("/api/temp-root", { run: true }));
   });
 
   window.__onerootBoot = boot;

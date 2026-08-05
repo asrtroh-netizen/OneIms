@@ -1,5 +1,5 @@
-# OneRoot — 单窗：未解锁 Pixel 运营商配置持久化
-# so 一律从 GitHub OneSo-assets 获取。用法：.\scripts\OneRoot.ps1
+# OneRoot — 单窗：仅 PC 一键临时 Root（不做运营商持久化）
+# so 从 GitHub OneSo-assets 获取。用法：.\scripts\OneRoot.ps1
 
 $ErrorActionPreference = "Stop"
 $RepoRoot = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)

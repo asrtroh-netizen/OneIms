@@ -951,7 +951,7 @@ def cmd_temp_root(
         device=device,
         build=build,
     )
-    print("[oneso] OneRoot · carrier persist via temp root (so ← GitHub)")
+    print("[oneso] OneRoot · one-tap temp root only (so ← GitHub)")
     print(f"[oneso] adb device={device or '?'} build={build or '?'}")
     if so is None:
         print(
@@ -965,11 +965,10 @@ def cmd_temp_root(
     print(f"[oneso] remote={REMOTE_SO}")
     print(
         f"[oneso] plan: push → kill stuck → "
-        f"LD_PRELOAD×{attempts} (timeout={timeout_sec}s) → su verify "
-        f"→ then apply carrier persist on device",
+        f"LD_PRELOAD×{attempts} (timeout={timeout_sec}s) → su verify",
     )
     if not run:
-        print("[oneso] dry-run only. Re-run with --run / OneRoot 一键执行。")
+        print("[oneso] dry-run only. Re-run with --run / OneRoot 一键临时 Root。")
         print("[oneso] tip: .\\scripts\\OneRoot.ps1")
         return 0
 
