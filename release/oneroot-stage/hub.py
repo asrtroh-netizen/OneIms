@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
+import diaglog
 import oneso
 
 HERE = Path(__file__).resolve().parent
@@ -64,7 +65,7 @@ class _LiveLog(io.TextIOBase):
 
 
 class JobState:
-    def __init__(self) -> None:
+    def __init__(self, diag: diaglog.SessionLogger | None = None) -> None:
         self.lock = threading.Lock()
         self.running = False
         self.done = False
@@ -73,6 +74,7 @@ class JobState:
         self.stage = "空闲"
         self.log = ""
         self.kind = ""
+        self.diag = diag
 
     def reset(self, kind: str) -> None:
         with self.lock:
@@ -83,6 +85,8 @@ class JobState:
             self.stage = "启动中…"
             self.log = ""
             self.kind = kind
+        if self.diag is not None:
+            self.diag.begin_job(kind)
 
     def append_line(self, line: str) -> None:
         m = _PROGRESS_RE.search(line)
@@ -91,6 +95,9 @@ class JobState:
             if m:
                 self.percent = int(m.group(1))
                 self.stage = m.group(2).strip()
+            logger = self.diag
+        if logger is not None:
+            logger.line(line, event=self.kind or "job")
 
     def finish(self, code: int) -> None:
         with self.lock:
@@ -104,6 +111,10 @@ class JobState:
                     self.stage = "完成"
             elif code != 0 and "失败" not in self.stage:
                 self.stage = f"结束（exit={code}）"
+            kind = self.kind
+            logger = self.diag
+        if logger is not None:
+            logger.end_job(kind or "job", int(code))
 
     def snapshot(self) -> dict[str, Any]:
         with self.lock:
@@ -165,8 +176,14 @@ class HubApi:
         if adb_dir.is_dir():
             os.environ["PATH"] = str(adb_dir) + os.pathsep + os.environ.get("PATH", "")
         self.cfg = oneso.load_config(config_path)
-        self.job = JobState()
+        self.diag = diaglog.SessionLogger(config=self.cfg)
+        self.job = JobState(self.diag)
         self._job_thread: threading.Thread | None = None
+        self._last_status_fp = ""
+        self.diag.info(
+            "hub.init",
+            f"config_path={config_path} version={diaglog.APP_VERSION}",
+        )
 
     def _capture(self, fn) -> tuple[int, str]:
         buf = io.StringIO()
@@ -290,6 +307,23 @@ class HubApi:
             },
         ]
         overall = "ok" if adb_ok and so_ok else "warn"
+        self.diag.update_meta(
+            adb_device=device or "",
+            adb_build=build or "",
+            so_name=so.name if so_ok else "",
+            so_src=so_src,
+            root_ok=root_ok,
+            root_label=root_label,
+        )
+        # 状态轮询很勤，只在指纹变化时落一条 INFO，避免刷屏
+        status_fp = f"{device}|{build}|{so}|{root_ok}|{so_src}|{root_label}"
+        if status_fp != self._last_status_fp:
+            self._last_status_fp = status_fp
+            self.diag.info(
+                "status",
+                f"device={device} build={build} so={so} "
+                f"root_ok={root_ok} src={so_src}",
+            )
         return {
             "adb_ok": adb_ok,
             "adb_label": f"adb · {device}" if adb_ok else "adb · offline",
@@ -299,7 +333,11 @@ class HubApi:
             "root_label": root_label,
             "overall": overall,
             "checks": checks,
-            "footer": f"{device or '?'} · {build or '?'} · OneRoot",
+            "footer": (
+                f"{device or '?'} · {build or '?'} · OneRoot {diaglog.APP_VERSION}"
+            ),
+            "version": diaglog.APP_VERSION,
+            "diag": self.diag.snapshot(),
             "log": (
                 f"[status] device={device} build={build} so={so} "
                 f"root_ok={root_ok} src={so_src}"
@@ -308,11 +346,20 @@ class HubApi:
 
     def cleanup_residuals(self, aggressive: bool = False) -> dict[str, Any]:
         """开始前 / 手动：清理临时 Root 残留。"""
+        self.diag.info("cleanup.begin", f"aggressive={bool(aggressive)}")
         result = oneso.cleanup_temp_root_residuals(aggressive=bool(aggressive))
+        self.diag.info(
+            "cleanup.end",
+            f"ok={result.get('ok')} mode={result.get('mode')} detail={result.get('detail')}",
+        )
+        for step in result.get("steps") or []:
+            self.diag.info("cleanup.step", str(step))
         return {"ok": bool(result.get("ok")), **result}
 
     def temp_root(self, run: bool = False) -> dict[str, Any]:
         """兼容旧同步调用（完整捕获后返回）。"""
+        kind = "temp-root" if run else "preview"
+        self.diag.begin_job(f"sync:{kind}")
         code, log = self._capture(
             lambda: oneso.cmd_temp_root(
                 self.cfg,
@@ -323,6 +370,8 @@ class HubApi:
                 retry_gap_sec=oneso.DEFAULT_TEMP_ROOT_RETRY_GAP_SEC,
             ),
         )
+        self.diag.line(log, event=f"sync:{kind}")
+        self.diag.end_job(f"sync:{kind}", int(code))
         return {"code": code, "log": log}
 
     def start_temp_root(self, run: bool = False) -> dict[str, Any]:
@@ -385,6 +434,34 @@ class HubApi:
         webbrowser.open(raw)
         return {"ok": True, "url": raw}
 
+    def diag_info(self) -> dict[str, Any]:
+        return self.diag.snapshot()
+
+    def diag_export(self, open_folder: bool = True) -> dict[str, Any]:
+        try:
+            zpath = self.diag.export_zip()
+            opened = False
+            if open_folder:
+                opened = self.diag.open_in_explorer(zpath.parent)
+            return {
+                "ok": True,
+                "zip": str(zpath),
+                "dir": str(self.diag.dir),
+                "opened": opened,
+                "version": diaglog.APP_VERSION,
+            }
+        except Exception as exc:  # noqa: BLE001
+            self.diag.error("export.fail", f"{exc}\n{traceback.format_exc()}")
+            return {"ok": False, "error": str(exc)}
+
+    def diag_open_dir(self) -> dict[str, Any]:
+        ok = self.diag.open_in_explorer(self.diag.dir)
+        return {
+            "ok": ok,
+            "dir": str(self.diag.dir),
+            "error": None if ok else "无法打开日志目录",
+        }
+
 
 class OneRootHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -405,7 +482,14 @@ class OneRootHandler(SimpleHTTPRequestHandler):
     def do_GET(self) -> None:  # noqa: N802
         path = urlparse(self.path).path
         if path == "/api/ping":
-            self._json(200, {"ok": True, "app": "OneRoot"})
+            self._json(
+                200,
+                {
+                    "ok": True,
+                    "app": "OneRoot",
+                    "version": diaglog.APP_VERSION,
+                },
+            )
             return
         if path == "/api/status":
             assert API is not None
@@ -429,6 +513,10 @@ class OneRootHandler(SimpleHTTPRequestHandler):
         if path == "/api/job":
             assert API is not None
             self._json(200, API.job_status())
+            return
+        if path == "/api/diag":
+            assert API is not None
+            self._json(200, API.diag_info())
             return
         if path in ("/", ""):
             self.path = "/index.html"
@@ -474,6 +562,29 @@ class OneRootHandler(SimpleHTTPRequestHandler):
             assert API is not None
             try:
                 self._json(200, API.open_url(str(data.get("url") or "")))
+            except Exception as exc:  # noqa: BLE001
+                self._json(
+                    500,
+                    {"ok": False, "error": str(exc), "trace": traceback.format_exc()},
+                )
+            return
+        if path == "/api/diag/export":
+            assert API is not None
+            try:
+                self._json(
+                    200,
+                    API.diag_export(open_folder=bool(data.get("open", True))),
+                )
+            except Exception as exc:  # noqa: BLE001
+                self._json(
+                    500,
+                    {"ok": False, "error": str(exc), "trace": traceback.format_exc()},
+                )
+            return
+        if path == "/api/diag/open":
+            assert API is not None
+            try:
+                self._json(200, API.diag_open_dir())
             except Exception as exc:  # noqa: BLE001
                 self._json(
                     500,

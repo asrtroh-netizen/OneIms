@@ -210,13 +210,20 @@
       const st = await apiGet("/api/status");
       setChip($("adbChip"), st.adb_label, st.adb_ok ? "ok" : "warn");
       setChip($("soChip"), st.so_label, st.so_ok ? "ok" : "warn");
-      setChip($("versionChip"), "OneRoot", "muted");
+      setChip(
+        $("versionChip"),
+        st.version ? "v" + st.version : "OneRoot",
+        "muted",
+      );
       setRootSuccess(!!st.root_ok, st.root_label || "");
       const footerMeta = $("footerMeta");
       if (footerMeta) footerMeta.textContent = st.footer || "OneRoot";
       renderChecks(st.checks, st.overall);
       enableActions(true);
       appendLog(st.log || "[boot] ok");
+      if (st.diag && st.diag.dir) {
+        appendLog("[diag] " + st.diag.dir);
+      }
     } catch (e) {
       enableActions(false);
       setChip($("adbChip"), "adb · ?", "warn");
@@ -306,6 +313,28 @@
     }
   }
 
+  async function exportDiag() {
+    const btn = $("btnDiagExport");
+    if (btn) btn.disabled = true;
+    try {
+      if (location.protocol === "file:") {
+        throw new Error("请用一键启动打开（file:// 无 API）");
+      }
+      appendLog("[diag] 正在打包详细日志…");
+      const r = await apiPost("/api/diag/export", { open: true });
+      if (!r.ok) {
+        appendLog("[diag] 导出失败：" + (r.error || "unknown"));
+        return;
+      }
+      appendLog("[diag] 已导出：" + (r.zip || ""));
+      appendLog("[diag] 把该 zip 发给作者即可排查");
+    } catch (e) {
+      appendLog("[diag] ERROR " + (e && e.message ? e.message : e));
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+
   wireOpenUrls();
 
   const btnBoot = $("btnBoot");
@@ -320,6 +349,8 @@
       if (!ok) return;
       await runAction("temp-root", true);
     });
+    const btnDiag = $("btnDiagExport");
+    if (btnDiag) btnDiag.addEventListener("click", () => exportDiag());
     window.__onerootBoot = boot;
     boot();
     setTimeout(() => boot(), 800);
