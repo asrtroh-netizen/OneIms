@@ -27,3 +27,18 @@
 
 - 未重打 Lite/UI 公开发布 zip（源已改，发包另议）。
 - 未删除历史包内 `so/` 文件（已被运行时忽略）。
+
+## 追加 · 云端 P9/P10 全量哈希核验（同日）
+
+实拉 GitHub catalog 全部 40 条 so，对照云端 `SHA256SUMS` + 本机 `OneSo-assets/SHA256SUMS`：
+
+| 指标 | 结果 |
+|---|---|
+| total | 40 |
+| OK | **40** |
+| MISMATCH | 0 |
+| DOWNLOAD_FAIL | 0 |
+| `64ed9d74` 命中 | **0** |
+| comet/0705 | `e74cbc7d…`（成功基线） |
+
+证据：`release/_tmp/cloud_p9p10_hash_audit.json`
