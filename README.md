@@ -8,23 +8,23 @@
 
 <div align="center">
 
-**VoLTE · VoWiFi · VoNR · OneKuku · 国家码 · IMS 诊断 · CarrierConfig · Android 16/17**
+**VoLTE · VoWiFi · VoNR · OneKuku · IMS 诊断 · CarrierConfig · Android 16/17**
 
 📱 [Telegram · OneBoardX](https://t.me/OneBoardX)
 
 <br/>
 
-### ⬇️ 下载 APK（最新 · v3.3.1 · 请自选产品线）
+### ⬇️ 下载 APK（最新 · v3.3.3 · 请自选产品线）
 
 > **两个包功能相同（IMS/诊断/恢复），差别只在「特权通道怎么激活」——看下方选购指南，务必只装其中一个。**  
 > ⚠️ **不要同机共存**：OneKuku 内嵌通道会与 Shizuku **抢权限 / 抢 binder**，双开容易互相踩脚、激活失败或反复掉线。换线请先卸载当前包再装另一条。
 
 | 推荐给… | 包 | 下载 |
 |---|---|---|
-| 🟢 **想少装 App、App 内一键配对** | **OneKuku（独立激活）** | [OneIms-OneKuku-standalone-3.3.1.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.3.1/OneIms-OneKuku-standalone-3.3.1.apk) |
-| 🔵 **已有 / 想用 Shizuku 轻壳** | **OneIms Lite（Shizuku）** | [OneIms-Lite-Shizuku-3.3.1.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.3.1/OneIms-Lite-Shizuku-3.3.1.apk) |
+| 🟢 **想少装 App、App 内一键配对** | **OneKuku（独立激活）** | [OneIms-OneKuku-standalone-3.3.3.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.3.3/OneIms-OneKuku-standalone-3.3.3.apk) |
+| 🔵 **已有 / 想用 Shizuku 轻壳** | **OneIms Lite（Shizuku）** | [OneIms-Lite-Shizuku-3.3.3.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.3.3/OneIms-Lite-Shizuku-3.3.3.apk) |
 
-[📦 全部 Release 资产](https://github.com/asrtroh-netizen/OneIms/releases/tag/v3.3.1)
+[📦 全部 Release 资产](https://github.com/asrtroh-netizen/OneIms/releases/tag/v3.3.3)
 
 > 💙 **友情推荐特权通道**：[asrtroh 修缮版 Shizuku](https://github.com/asrtroh-netizen/shizuku)（配对一次 · 旧 Wi‑Fi 自连 · 开机 FGS 内激活）  
 > 下载正式包：[Releases](https://github.com/asrtroh-netizen/shizuku/releases) · 截图：
@@ -42,23 +42,9 @@
 
 ---
 
-## 🖥️ 临时 Root / 装核 · 请用 PC OneRoot Hub
-
-手机 **OneRoot APK 已退役**。Pixel 一键临时 Root、ReSukiSU late-load 请用 PC 端：
-
-| | 链接 |
-|---|---|
-| 源码 / 说明 | [asrtroh-netizen/OneRoot](https://github.com/asrtroh-netizen/OneRoot) |
-| 便携 ZIP | [OneSo-assets/oneroot/OneRoot-Hub.zip](https://github.com/asrtroh-netizen/OneSo-assets/tree/main/oneroot) |
-
-**分工：** OneRoot Hub = PC 拿 Root / 装核 / shell 重绑 Shizuku；**OneIms（本仓）** = 手机 IMS / 运营商持久化。  
-装核成功后临时 su 变「僵尸」通常正常——以 ReSukiSU Manager 为准。详见 OneRoot 仓库 docs/使用说明与TIP.md。
-
----
-
 ## 🧭 怎么选？OneKuku vs OneLink
 
-两个 APK **业务功能一致**（VoLTE/VoWiFi/诊断/恢复/独家功能），区别只在 **特权通道** 怎么获得：
+两个 APK **业务功能一致**（VoLTE/VoWiFi/诊断/恢复/修复工具），区别只在 **特权通道** 怎么获得：
 
 | | **OneKuku（独立激活）** | **OneIms Lite（Shizuku）** |
 |---|---|---|
@@ -82,11 +68,39 @@
 
 | 对外名称 | 包名 | 特权通道 | 最新版下载 |
 |---|---|---|---|
-| **OneIms · OneKuku** `3.3.1-onekuku` | `com.oneims.app` | 内嵌 OneBridge + 无线调试配对 | [OneIms-OneKuku-standalone-3.3.1.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.3.1/OneIms-OneKuku-standalone-3.3.1.apk) |
-| **OneIms · OneIms Lite** `3.3.1-onelink` | `com.oneims.onelink` | 官方 Shizuku | [OneIms-Lite-Shizuku-3.3.1.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.3.1/OneIms-Lite-Shizuku-3.3.1.apk) |
+| **OneIms · OneKuku** `3.3.3-onekuku` | `com.oneims.app` | 内嵌 OneBridge + 无线调试配对 | [OneIms-OneKuku-standalone-3.3.3.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.3.3/OneIms-OneKuku-standalone-3.3.3.apk) |
+| **OneIms · OneIms Lite** `3.3.3-onelink` | `com.oneims.onelink` | 官方 Shizuku | [OneIms-Lite-Shizuku-3.3.3.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.3.3/OneIms-Lite-Shizuku-3.3.3.apk) |
 
 > **双包同版号一起更新**；请只从本页 Release 链接下载，勿混装未知来源包。  
 > **两线二选一**：OneKuku 与 Shizuku（含 Lite）同机共存会抢权限，安装前请清掉另一条线。
+
+---
+
+## ✨ What's New · 3.3.3
+
+* **下线实验页与掉线守护**：底栏不再暴露实验入口；掉线守护偏好冷启清理并停止前台服务
+* **修复工具弹窗**：强制临时写入、受限专家编辑器迁入 **能力 → 修复工具**（点击弹出）
+* 双线同版齐发（覆盖 3.3.2）
+
+### 🔄 升级
+
+* 🟢 OneKuku：覆盖安装 `OneIms-OneKuku-standalone-3.3.3.apk`
+* 🔵 OneIms Lite：覆盖安装 `OneIms-Lite-Shizuku-3.3.3.apk`
+* versionCode `103`（相对 3.3.2 的 `102` 会提示升级）
+
+---
+
+## ✨ What's New · 3.3.2
+
+* **5G 开关修复**：应用核心能力时，在保留现有网络制式选择的基础上补启用 NR，不再只写 CarrierConfig 后仍被用户网络制式掩码拦住
+* **实验功能收敛**：OneIMS 统一使用“实验功能”语义；身份显示覆盖与 SIM 国家码覆盖迁移至 **OneTools → 特色功能**，OneIMS 不再保留重复写入与恢复入口
+* 双线同版齐发（覆盖 3.3.1）
+
+### 🔄 升级
+
+* 🟢 OneKuku：覆盖安装 `OneIms-OneKuku-standalone-3.3.2.apk`
+* 🔵 OneIms Lite：覆盖安装 `OneIms-Lite-Shizuku-3.3.2.apk`
+* versionCode `102`（相对 3.3.1 的 `101` 会提示升级）
 
 ---
 
@@ -228,14 +242,14 @@
 
 ## ✨ What's New · 3.0.5
 
-**本版主线：VoWiFi 写入门对非 Tensor 放开尝试；独家页收敛为身份 / 国家码 / 守护 / APN / 专家编辑。**
+**本版主线：VoWiFi 写入门对非 Tensor 放开尝试；实验页收敛为身份 / 国家码 / 守护 / APN / 专家编辑。**
 
 ### 📶 VoWiFi
 
 * 非 Tensor（含联发科等）不再硬拒写入；是否在状态栏生效仍取决于 OEM SystemUI
 * 成功提示保持简短，不堆长 caveat
 
-### 🧪 独家页
+### 🧪 实验页
 
 * 移除三项显示/切卡入口（产品面不再宣传）
 * 保留：身份覆盖、国家码、掉线守护、离线 APN、专家编辑
@@ -261,7 +275,7 @@
 
 * 开启 VoNR 时同步写入 NR 可用性等 CarrierConfig，便于系统设置出现 VoNR 相关项（视机型 / 运营商而定）
 
-### 🛡️ 尽量屏蔽系统更新（独家功能，默认开）
+### 🛡️ 尽量屏蔽系统更新（实验功能，默认开）
 
 * 组件禁用 + `ota_disable_automatic_update` +（有 Root/Magisk 时）hosts 挡 Google OTA 域名
 * **能用则用**；不保证挡死所有更新渠道；关掉可恢复
@@ -554,13 +568,10 @@ OneIms 想做的事很简单：
 
 ---
 
-### 🧪 独家功能 · 调皮但可控
+### 🧪 实验功能 · 调皮但可控
 
-这里放的是“显示层 / 实验性”能力（**不改基带真实归属**）：
+这里放的是守护、持久化与专家能力；身份显示覆盖和 SIM 国家码覆盖已迁移至 **OneTools → 特色功能**，OneIMS 不再保留写入口：
 
-* 🏷️ **身份显示覆盖**：自定义运营商名称、IMS User‑Agent（看着爽，不等于改卡）
-* 🌍 **SIM 国家码覆盖**：ISO‑3166 两字母（US / JP / HK / TW …）+ TikTok 常用 US 预设  
-  → 只改上层读到的国家码，**不改 MCC/MNC**
 * 🛡️ **IMS 掉线守护**：掉线后按上次成功方案尝试重应用（实验开关）
 * 📚 **离线 APN 库**：全球候选本机检索，不上传 SIM
 * 🧩 **专家编辑**：只动已存在、类型可识别、且不踩通信红线的键
@@ -738,7 +749,7 @@ Android 12  →  Android 17（含预览；机型 / 构建差异请以真机体�
 * ✅ IMS 能力控制与推荐一键应用  
 * ✅ 诊断 / 注册态 / ePDG / 配置导出  
 * ✅ 离线 APN 库与受控 IMS APN 修复  
-* ✅ 独家：身份覆盖、国家码、掉线守护、专家编辑  
+* ✅ 实验功能：掉线守护、离线 APN、专家编辑
 * ✅ **OneKuku 内嵌通道 + 通知栏配对 + 五态总控（2.1.0）**  
 * ✅ **开机自动检查 / 静默拉起 / 快照恢复（2.1.0）**  
 * ✅ Android 16/17 权限模型适配与委托清理兼容  
@@ -781,8 +792,6 @@ Android 很强大。运营商网络也很拧巴。
 OneIms 想做的事很简单——
 
 让这三者重新坐下来，好好聊聊。
-
-（顺便把国家码这些小脾气，也哄开心一点。😉）
 
 ---
 
