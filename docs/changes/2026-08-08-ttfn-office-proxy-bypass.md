@@ -38,17 +38,37 @@
 3. 系统代理保持 `127.0.0.1:7897`，旁路列表维持含 `192.168.*` / `100.*`。
 4. WinHTTP 仍为「直接访问」（未指到家里 `192.168.2.2:7890`，避免重蹈 08-03 事故）。
 
-## 未完成 / 需你侧
+## 续 · 速修落地（同日）
 
-1. **Tailscale 重新登录**（托盘图标或 `tailscale login`），拿到 `100.x` 后再开：
-   - 飞牛 Web：`http://100.64.118.44:2048/` 或 `http://100.64.118.44:9999/`
-2. **提供 TTFN SSH 密钥/授权**（用户 `TTFN`，端口 `4848`），才能在远端核对 Mihomo 规则与历史 TUN/TS 排除。
-3. Clash Verge 请保持 **规则模式**，不要切回全局；端口以本机 **7897** 为准。
+### 端口语义（易混）
+
+| 入口 | 实际页面 |
+|---|---|
+| TTFN `…:9999` / 公网 `http://tn.itt.fan:9999/` | **飞牛 fnOS** |
+| TTFN `…:2048`（`192.168.2.2:2048`） | **AnGe-ClashBoard**（不是 fnOS） |
+| 办公室 DDOS `192.168.1.99:2048` | 本机 AnGe-ClashBoard |
+
+### 已打通的办公室入口（含走 `127.0.0.1:7897` 代理）
+
+| URL | 验证 |
+|---|---|
+| `http://tn.itt.fan:9999/` | **200** 飞牛 fnOS（直连/经 7897 皆通） |
+| `http://192.168.1.99:19999/` | **200** → TS `100.64.118.44:9999` fnOS |
+| `http://192.168.1.99:12048/` | **200** → TS `100.64.118.44:2048` AnGe（等价家里 `192.168.2.2:2048`） |
+
+桥接进程：办公室飞牛 DDOS 上 `python3 /home/admin/bin/ttfn_lan_bridge.py`（`@reboot` crontab 已写）。脚本源：`scripts/ttfn_lan_bridge.py`。
+
+### 仍待
+
+1. 本机 Tailscale 仍 **NeedsLogin / NoState**（节点私钥被清空）；要直连 `100.64.118.44` 需托盘重登。
+2. TTFN SSH（`TTFN@tfs.itt.fan:4848`）HexHub 密码为加密存储，本机现有密钥不可用；远端 Mihomo 细调仍需凭据。
 
 ## 回滚
 
 ```text
-# 若需恢复全局模式（不推荐）
-# 经命名管道 PATCH /configs {"mode":"global"}
-# 或 Clash Verge 托盘 → 全局
+# Clash 恢复全局（不推荐）
+# pipe PATCH /configs {"mode":"global"}
+
+# 停掉 DDOS 桥接
+ssh admin@192.168.1.99 "pkill -f ttfn_lan_bridge.py; crontab -l | grep -v ttfn_lan_bridge | crontab -"
 ```
