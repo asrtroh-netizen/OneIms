@@ -106,7 +106,88 @@
 
 ### 家里 TTFN（`192.168.2.2:7890` → `:2048`）
 
-同类根因高度疑似（TTFN 也跑 mihomo TUN；08-04 已为 TS 加过 exclude）。本轮 **无 TTFN SSH 密钥**，远端未改。拿到 `TTFN@tfs.itt.fan:4848` 凭据后，按 DDOS 同样两步即可。临时绕行：浏览器开 `http://127.0.0.1:2048/`，或办公室侧继续用 `http://192.168.1.99:12048/`。
+同类现象已在 **2026-08-09 XJ103** 家侧闭环（见下方「家侧内网」节）。根因不是单纯缺 DIRECT 规则，而是 **AnGe 走 Docker 端口映射时，经 mihomo TUN/mixed 访问宿主机 LAN IP 发夹 502**；TTFN 作为家用网关 **不能**照搬 DDOS「关掉 tun」。
+
+## 续 · 2026-08-09 TTFN 设备侧复验 + 办公室 TS 重登（XJ103）
+
+### TTFN 本机（SSH 已通）
+
+| 检查 | 结果 |
+|---|---|
+| SSH `TTFN@tfs.itt.fan:4848` | **口令登录成功**（此前「密钥全拒 / HexHub 未入库」条目作废） |
+| `hostname` / arch | `TTFN` · `aarch64` · up ≈8d |
+| fnOS `:9999` / AnGe `:2048` / onebord `:8866` | 本机 curl 皆 **200** |
+| mihomo TUN TS 排除 | 仍在：`exclude-interface: [tailscale0]` + `route-exclude-address: [100.64.0.0/10]` |
+| `mihomo-lan-forward.service` | **active** |
+| Tailscale 节点 | `home-feiniu-ttfn`=`100.64.118.44`；`ddos` active direct；办公室 `ddpc` 当时 offline |
+| lite.gallery / imagesrv / mediasrv / trim.photos / npc | 进程在跑 |
+| 磁盘 | `/` 16% · `/vol1` 6% |
+
+> 注意：TTFN 作为家用网关 **不宜**照搬 DDOS「关掉 tun」方案；家侧继续保留 TUN + TS 排除。
+
+### 办公室 PC（真正卡点）
+
+| 检查 | 结果 |
+|---|---|
+| Clash 配置 `mode` | **rule**（`clash-verge.yaml` / `config.yaml`） |
+| 桥接 `192.168.1.99:19999` / `:12048` | **200**（不依赖本机 TS） |
+| 公网 `tn.itt.fan:9999` | **200** |
+| 本机 Tailscale | 服务 Running，但 `PrivateNodeKey` 全 0 → 先 `NoState`，后 `NeedsLogin` |
+| 已发起重登 | `tailscale up --reset --accept-dns=false` → AuthURL `https://login.tailscale.com/a/68b33b50127be`（需浏览器完成 `asrtroh@gmail.com` 授权） |
+
+授权完成后应复验：`tailscale status` 出 `100.x`，且 `http://100.64.118.44:9999/` → **200**。
+
+## 续 · 2026-08-09 TTFN 家侧内网（XJ103 · 与单位无关）
+
+### 现象
+
+家侧经 mihomo `7890` 打不开 `http://192.168.2.2:2048/`（AnGe）→ **502**；直连 `:2048` / 经代理打 `:9999` / `127.0.0.1:2048` / docker 网桥 IP 皆 **200**。
+
+### 根因
+
+1. **AnGe Docker publish 端口发夹**：`network_mode` 原为 bridge + `0.0.0.0:2048->2048`，经 TUN/mixed 访问宿主机 LAN IP 时 DNAT 路径黑洞。  
+2. **仅加 `route-exclude` + LAN `DIRECT` 不够**（与 DDOS 结论一致），但 TTFN 需保留 TUN 作家用网关，故不关 tun。  
+3. 局域网访问 `tn/fn.itt.fan` 仍解析公网 `8.137.155.86`，大文件会 NAT 回环变慢（08-04 已记录）。
+
+### 已落地（TTFN）
+
+1. **AnGe → `network_mode: host`**  
+   - 运行态：`/home/TTFN/ange-clashboard-hostnet/compose.yaml` 重建容器  
+   - 持久化：`/opt/ange-clashboard/compose.yaml` 同步为 host（备份 `compose.yaml.bak-bridge-*`）  
+2. **mihomo**（`/opt/mihomo/config/config.yaml`，备份在 `/home/TTFN/config.yaml.bak-lan-intranet-*`）  
+   - `tun.route-exclude-address` 增补 `192.168.0.0/16` / `10.0.0.0/8` / `172.16.0.0/12`  
+   - `rules` 顶部增补私网/TS/loopback `IP-CIDR … DIRECT,no-resolve`  
+   - `hosts`：`tn.itt.fan` / `fn.itt.fan` → `192.168.2.2`  
+   - **未**关闭 `tun.enable`  
+3. **AdGuardHome split DNS**  
+   - `rewrites`：`tn.itt.fan` / `fn.itt.fan` → `192.168.2.2`（`enabled: true`）  
+   - 曾因 HUP/杀进程导致 AGH 掉线；已用 root `nsenter` + `appcenter-cli start AdGuardHome` 拉起
+
+### 验收
+
+| 检查 | 结果 |
+|---|---|
+| `curl -x 127.0.0.1:7890 http://192.168.2.2:2048/` | **200** |
+| `curl -x 127.0.0.1:7890 http://www.gstatic.com/generate_204` | **204**（代理出海仍可用） |
+| `nslookup tn.itt.fan 127.0.0.1` | **192.168.2.2** |
+| `nslookup fn.itt.fan 127.0.0.1` | **192.168.2.2** |
+| `docker inspect ange-clashboard` NetworkMode | **host** |
+| AdGuardHome `:53` | 在听（pid 挂在 init） |
+
+### 回滚（家侧）
+
+```bash
+# AnGe 恢复 bridge
+cp -a /opt/ange-clashboard/compose.yaml.bak-bridge-* /opt/ange-clashboard/compose.yaml   # 选对应备份
+cd /opt/ange-clashboard && docker compose up -d
+
+# mihomo 恢复
+cp -a /home/TTFN/config.yaml.bak-lan-intranet-* /opt/mihomo/config/config.yaml
+docker restart mihomo
+
+# AdGuard rewrite：面板删 rewrite，或恢复 AdGuardHome.yaml.bak-lan-intranet-*
+nsenter -t 1 -m -u -i -n -p appcenter-cli start AdGuardHome
+```
 
 ## 回滚
 
