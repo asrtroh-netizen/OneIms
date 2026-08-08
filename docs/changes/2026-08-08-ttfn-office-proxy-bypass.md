@@ -76,6 +76,38 @@
 | `tfs.itt.fan:4848` | TCP 通；banner `SSH-2.0-OpenSSH_9.2p1 Debian-2+deb12u7` |
 | `192.168.2.2:2048` / `100.64.118.44:2048` | 仍超时（本机 Tailscale `BackendState=NoState`，服务 Running 但未登录） |
 
+## 续 · 2026-08-09 「7890 打不开内网 :2048」根因与修复（DDOS）
+
+### 现象复现（办公室飞牛 DDOS）
+
+| 路径 | 结果 |
+|---|---|
+| 直连 `http://192.168.1.99:2048/` | **200** AnGe-ClashBoard |
+| `curl -x http://127.0.0.1:7890 http://192.168.1.99:2048/`（TUN 开） | **502**；日志 `dial DIRECT ... i/o timeout` |
+| 同代理访问 `http://192.168.1.99:12048/` | **200**（宿主 python 桥，不受影响） |
+| 同代理访问 docker 网桥 IP `:2048` | **200** |
+
+### 根因
+
+不是「没写 DIRECT」。配置里已有 `GEOIP,LAN,DIRECT`；补上 `IP-CIDR,192.168.0.0/16` / `100.64.0.0/10` 后规则也命中，但 **mihomo TUN（`auto-route`）会把 HTTP 入站后的 DIRECT 拨号黑洞**，访问本机/TS 的 AnGe `:2048` 超时成 502。  
+对照：`tun.enable=false` 后同一路径立即 **200**；仅 `route-exclude-address` 无法在本环境消除该黑洞。
+
+### 已落地（DDOS `/root/mihomo/config.yaml`）
+
+1. `rules` 顶部增加私网/TS `IP-CIDR … DIRECT,no-resolve`。
+2. `tun.enable: false`（保留 exclude 注释便于以后再开 TUN）。
+3. 备份：`config.yaml.bak-lan-direct-*` / `bak-before-tunoff-*`（主机 `/tmp` 与数据目录）。
+
+### 验收
+
+- DDOS 本机：`curl -x 127.0.0.1:7890 http://192.168.1.99:2048/` → **200**
+- 办公室 PC：经 `192.168.1.99:7890` 访问 `:2048` → **200**
+- 外网探测 `gstatic generate_204` 经 7890 仍 **204**
+
+### 家里 TTFN（`192.168.2.2:7890` → `:2048`）
+
+同类根因高度疑似（TTFN 也跑 mihomo TUN；08-04 已为 TS 加过 exclude）。本轮 **无 TTFN SSH 密钥**，远端未改。拿到 `TTFN@tfs.itt.fan:4848` 凭据后，按 DDOS 同样两步即可。临时绕行：浏览器开 `http://127.0.0.1:2048/`，或办公室侧继续用 `http://192.168.1.99:12048/`。
+
 ## 回滚
 
 ```text
