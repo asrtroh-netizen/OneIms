@@ -14,17 +14,17 @@
 
 <br/>
 
-### ⬇️ 下载 APK（最新 · v3.3.4 · 请自选产品线）
+### ⬇️ 下载 APK（最新 · v3.3.5 · 请自选产品线）
 
 > **两个包功能相同（IMS/诊断/恢复），差别只在「特权通道怎么激活」——看下方选购指南，务必只装其中一个。**  
 > ⚠️ **不要同机共存**：OneKuku 内嵌通道会与 Shizuku **抢权限 / 抢 binder**，双开容易互相踩脚、激活失败或反复掉线。换线请先卸载当前包再装另一条。
 
 | 推荐给… | 包 | 下载 |
 |---|---|---|
-| 🟢 **想少装 App、App 内一键配对** | **OneKuku（独立激活）** | [OneIms-OneKuku-standalone-3.3.4.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.3.4/OneIms-OneKuku-standalone-3.3.4.apk) |
-| 🔵 **已有 / 想用 Shizuku 轻壳** | **OneIms Lite（Shizuku）** | [OneIms-Lite-Shizuku-3.3.4.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.3.4/OneIms-Lite-Shizuku-3.3.4.apk) |
+| 🟢 **想少装 App、App 内一键配对** | **OneKuku（独立激活）** | [OneIms-OneKuku-standalone-3.3.5.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.3.5/OneIms-OneKuku-standalone-3.3.5.apk) |
+| 🔵 **已有 / 想用 Shizuku 轻壳** | **OneIms Lite（Shizuku）** | [OneIms-Lite-Shizuku-3.3.5.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.3.5/OneIms-Lite-Shizuku-3.3.5.apk) |
 
-[📦 全部 Release 资产](https://github.com/asrtroh-netizen/OneIms/releases/tag/v3.3.4)
+[📦 全部 Release 资产](https://github.com/asrtroh-netizen/OneIms/releases/tag/v3.3.5)
 
 > 💙 **友情推荐特权通道**：[asrtroh 修缮版 Shizuku](https://github.com/asrtroh-netizen/shizuku)（配对一次 · 旧 Wi‑Fi 自连 · 开机 FGS 内激活）  
 > 下载正式包：[Releases](https://github.com/asrtroh-netizen/shizuku/releases) · 截图：
@@ -68,23 +68,23 @@
 
 | 对外名称 | 包名 | 特权通道 | 最新版下载 |
 |---|---|---|---|
-| **OneIms · OneKuku** `3.3.4-onekuku` | `com.oneims.app` | 内嵌 OneBridge + 无线调试配对 | [OneIms-OneKuku-standalone-3.3.4.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.3.4/OneIms-OneKuku-standalone-3.3.4.apk) |
-| **OneIms · OneIms Lite** `3.3.4-onelink` | `com.oneims.onelink` | 官方 Shizuku | [OneIms-Lite-Shizuku-3.3.4.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.3.4/OneIms-Lite-Shizuku-3.3.4.apk) |
+| **OneIms · OneKuku** `3.3.5-onekuku` | `com.oneims.app` | 内嵌 OneBridge + 无线调试配对 | [OneIms-OneKuku-standalone-3.3.5.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.3.5/OneIms-OneKuku-standalone-3.3.5.apk) |
+| **OneIms · OneIms Lite** `3.3.5-onelink` | `com.oneims.onelink` | 官方 Shizuku | [OneIms-Lite-Shizuku-3.3.5.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.3.5/OneIms-Lite-Shizuku-3.3.5.apk) |
 
 > **双包同版号一起更新**；请只从本页 Release 链接下载，勿混装未知来源包。  
 > **两线二选一**：OneKuku 与 Shizuku（含 Lite）同机共存会抢权限，安装前请清掉另一条线。
 
 ---
 
-## ✨ What's New · 3.3.4
+## ✨ What's New · 3.3.5
 
-**本版为调试完成后的稳定修复构建，双产品线同步发布。**
+* **Pixel · Android 15 能力页闪退修复**：Pixel + API 35+ 写入 CarrierConfig 时改为 temporary-first，避免能力页应用过程中被系统杀进程冷启；更低版本 Pixel 仍优先 persistent；开机重放保持配置。
 
 ### 🔄 升级
 
-* 🟢 OneKuku：覆盖安装 `OneIms-OneKuku-standalone-3.3.4.apk`
-* 🔵 OneIms Lite：覆盖安装 `OneIms-Lite-Shizuku-3.3.4.apk`
-* versionCode `104`（高于 3.3.3 的 `103`，支持正常覆盖升级）
+* 🟢 OneKuku：覆盖安装 `OneIms-OneKuku-standalone-3.3.5.apk`
+* 🔵 OneIms Lite：覆盖安装 `OneIms-Lite-Shizuku-3.3.5.apk`
+* versionCode `106`
 
 ---
 
