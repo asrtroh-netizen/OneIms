@@ -19,6 +19,10 @@
 > **两个包功能相同（IMS/诊断/恢复），差别只在「特权通道怎么激活」——看下方选购指南，务必只装其中一个。**  
 > ⚠️ **不要同机共存**：OneKuku 内嵌通道会与 Shizuku **抢权限 / 抢 binder**，双开容易互相踩脚、激活失败或反复掉线。换线请先卸载当前包再装另一条。
 
+> 🔐 **本页两个包已改为正式签名 · 老用户必读**：此前所有公开包都是**调试签名**（`CN=Android Debug`，可被挂调试器读取应用数据）。Android 不允许跨签名覆盖安装，因此**装过任何旧版本的用户都必须先卸载旧包、再安装新包**；直接覆盖会以 `INSTALL_FAILED_UPDATE_INCOMPATIBLE` 失败，**应用内更新对旧包同样装不上**。卸载会清掉本地设置与激活状态，重装后需要重新激活，**请提前留好激活码**。  
+> 正式签名证书 SHA-256：`104ccd37ebe16945534b86e22f087601d984415c0a49ba15b4ad3d9113d3abfe`  
+> 想自行验货：`apksigner verify --print-certs <apk>`，指纹对得上才是本仓正式包。
+
 | 推荐给… | 包 | 下载 |
 |---|---|---|
 | 🟢 **想少装 App、App 内一键配对** | **OneKuku（独立激活）** | [OneIms-OneKuku-standalone-3.3.5.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.3.5/OneIms-OneKuku-standalone-3.3.5.apk) |
@@ -78,13 +82,16 @@
 
 ## ✨ What's New · 3.3.5
 
+* 🔐 **改用正式发布签名**：此前公开包一直是调试签名（`application-debuggable` + `CN=Android Debug`，可被挂调试器读取应用数据），本次重新发布已换成正式签名，并给发布流程加了硬门禁——可调试或调试签名的产物一律拒绝上传。**代价是老用户必须卸载重装**，详见下方升级说明。
 * **Pixel · Android 15 能力页闪退修复**：Pixel + API 35+ 写入 CarrierConfig 时改为 temporary-first，避免能力页应用过程中被系统杀进程冷启；更低版本 Pixel 仍优先 persistent；开机重放保持配置。
 
 ### 🔄 升级
 
-* 🟢 OneKuku：覆盖安装 `OneIms-OneKuku-standalone-3.3.5.apk`
-* 🔵 OneIms Lite：覆盖安装 `OneIms-Lite-Shizuku-3.3.5.apk`
-* versionCode `106`
+> ⚠️ **本版换了签名，不能覆盖安装**：Android 拒绝跨签名升级。**包括早前下载过 3.3.5 的用户在内，所有老用户都要先卸载旧包、再安装本页新包**；应用内更新对旧包同样会失败。卸载会清空本地设置与激活状态，重装后需重新激活，请提前留好激活码。
+
+* 🟢 OneKuku：**卸载旧包** → 安装 `OneIms-OneKuku-standalone-3.3.5.apk`
+* 🔵 OneIms Lite：**卸载旧包** → 安装 `OneIms-Lite-Shizuku-3.3.5.apk`
+* versionCode `106`（与早前那版 3.3.5 相同，App 内不会提示升级，请手动卸载重装）
 
 ---
 
