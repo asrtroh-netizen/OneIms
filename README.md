@@ -1,5 +1,6 @@
-# OneIms 📱✨
+# OneIms Ultra 📱✨
 
+> **付费版独立产品线**（包名与免费版隔离，可同机并列安装免费 OneIms）。
 > **让 Pixel 和运营商重新学会沟通。**
 > 一个面向 Google Pixel 的 IMS 配置、诊断与修复助手。
 > 不靠玄学，不靠反复刷机——只想把藏起来的能力，放回它该待的位置。
@@ -14,20 +15,19 @@
 
 <br/>
 
-### ⬇️ 下载 APK（最新 · v3.3.6 · 请自选产品线）
+### ⬇️ 下载 APK（最新 · v1.1.8 · 请自选产品线）
 
 > **两个包功能相同（IMS/诊断/恢复），差别只在「特权通道怎么激活」——看下方选购指南，务必只装其中一个。**  
 > ⚠️ **不要同机共存**：OneKuku 内嵌通道会与 Shizuku **抢权限 / 抢 binder**，双开容易互相踩脚、激活失败或反复掉线。换线请先卸载当前包再装另一条。
 
-> 🔐 **3.3.5 起改用正式签名 · 老用户必读**：此前所有公开包都是**调试签名**（`CN=Android Debug`，可被挂调试器读取应用数据）。Android 不允许跨签名覆盖安装，因此**装过 3.3.4 及更早版本的用户都必须先卸载旧包、再安装新包**；直接覆盖会以 `INSTALL_FAILED_UPDATE_INCOMPATIBLE` 失败。  
-> ⚠️ **旧版 App 内的「检查更新」会提示 3.3.6，但点「下载并安装」在最后一步必然失败**——这是签名限制、不是包坏了。请按上面的说法手动卸载重装。已经装了 3.3.5 正式包的用户可以直接覆盖安装 3.3.6，无需卸载。
-
 | 推荐给… | 包 | 下载 |
 |---|---|---|
-| 🟢 **想少装 App、App 内一键配对** | **OneKuku（独立激活）** | [OneIms-OneKuku-standalone-3.3.6.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.3.6/OneIms-OneKuku-standalone-3.3.6.apk) |
-| 🔵 **已有 / 想用 Shizuku 轻壳** | **OneIms Lite（Shizuku）** | [OneIms-Lite-Shizuku-3.3.6.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.3.6/OneIms-Lite-Shizuku-3.3.6.apk) |
+| 🟢 **想少装 App、App 内一键配对** | **OneKuku（独立激活）** | [OneIms-Ultra-OneKuku-standalone-1.1.8.apk](https://github.com/asrtroh-netizen/OneIms-Ultra-APK/releases/download/v1.1.8/OneIms-Ultra-OneKuku-standalone-1.1.8.apk) |
+| 🔵 **已有 / 想用 Shizuku 轻壳** | **OneLink（Shizuku）** | [OneIms-Ultra-OneLink-1.1.8.apk](https://github.com/asrtroh-netizen/OneIms-Ultra-APK/releases/download/v1.1.8/OneIms-Ultra-OneLink-1.1.8.apk) |
 
-[📦 全部 Release 资产](https://github.com/asrtroh-netizen/OneIms/releases/tag/v3.3.6)
+[📦 全部 Release 资产](https://github.com/asrtroh-netizen/OneIms-Ultra-APK/releases/tag/v1.1.8)
+
+> 现行资产真源（Gradle / 发布脚本）：`OneIms-Ultra-OneKuku-standalone-{ver}.apk` · `OneIms-Ultra-OneLink-{ver}.apk`。旧 Release 可能仍叫 `OneIms-Lite-Shizuku-*.apk`（即今日 OneLink）。
 
 > 💙 **友情推荐特权通道**：[asrtroh 修缮版 Shizuku](https://github.com/asrtroh-netizen/shizuku)（配对一次 · 旧 Wi‑Fi 自连 · 开机 FGS 内激活）  
 > 下载正式包：[Releases](https://github.com/asrtroh-netizen/shizuku/releases) · 截图：
@@ -36,7 +36,7 @@
 >
 > 
 >
-> 装 **OneIms Lite** 时按上表选包；装完请关掉电池优化，保持首页 **Active**。上游能力仍归 [RikkaApps/Shizuku](https://github.com/RikkaApps/Shizuku)。
+> 装 **OneLink** 时按上表选包；装完请关掉电池优化，保持首页 **Active**。上游能力仍归 [RikkaApps/Shizuku](https://github.com/RikkaApps/Shizuku)。
 
 > 本仓库 **只提供 README + APK 发布**，**不开放源代码**。  
 > 需要交流 / 反馈请走 Telegram，别来仓库里翻源码啦～
@@ -47,23 +47,24 @@
 
 ## 🧭 怎么选？OneKuku vs OneLink
 
-两个 APK **业务功能一致**（VoLTE/VoWiFi/诊断/恢复/修复工具），区别只在 **特权通道** 怎么获得：
+两个 APK **业务功能一致**（VoLTE/VoWiFi/诊断/恢复/实验功能），区别只在 **特权通道** 怎么获得：
 
-| | **OneKuku（独立激活）** | **OneIms Lite（Shizuku）** |
+| | **OneKuku（独立激活）** | **OneLink（Shizuku）** |
 |---|---|---|
 | **推荐机型** | **Pixel 绝配** | **国产机绝配** |
 | **适合谁** | 不想另外装 Shizuku；希望 **App 内无线调试 + 通知栏填码** 一条龙 | 已熟悉 Shizuku；想要 **更小安装包、更轻壳** |
-| **包名** | `com.oneims.app` | `com.oneims.onelink` |
+| **包名** | `com.oneims.ultra` | `com.oneims.ultra.lite` |
+| **显示名** | OneIms Ultra | OneIms Ultra Lite |
 | **激活方式** | 内嵌 OneBridge · 无线调试配对 · 可通知栏六位码 | **推荐搭配** [asrtroh 修缮版 Shizuku](https://github.com/asrtroh-netizen/shizuku)（开机自启更稳）；也可使用官方 [RikkaApps/Shizuku](https://shizuku.rikka.app/) |
 | **额外依赖** | 无（通道打进包内） | 需安装 Shizuku；日常保持 **Active** 即可 |
 | **体积** | 较大（含内嵌 ADB/Bridge） | 较小 |
-| **同机共存** | ❌ **不建议**与 Lite / 独立 Shizuku 同机 | ❌ **不建议**与 OneKuku 同机（会抢权限） |
+| **同机共存** | ❌ **不建议**与 OneLink / 独立 Shizuku 同机 | ❌ **不建议**与 OneKuku 同机（会抢权限） |
 
 **怎么选（一句话）：**
 
-* 你是 **「我只想在一个 App 里搞定」** → 下 **OneKuku（独立激活）**（请卸掉本机 Shizuku / Lite）
-* 你是 **「我手机本来就有 / 想用 Shizuku」** → 下 **OneIms Lite** + **[asrtroh Shizuku](https://github.com/asrtroh-netizen/shizuku/releases)**（请先卸掉 OneKuku）
-* 不确定 → 先试 **OneKuku**；若要用 Shizuku 生态，**先卸载 OneKuku** 再装 Lite，别两条一起留着
+* 你是 **「我只想在一个 App 里搞定」** → 下 **OneKuku（独立激活）**（请卸掉本机 Shizuku / OneLink）
+* 你是 **「我手机本来就有 / 想用 Shizuku」** → 下 **OneLink** + **[asrtroh Shizuku](https://github.com/asrtroh-netizen/shizuku/releases)**（请先卸掉 OneKuku）
+* 不确定 → 先试 **OneKuku**；若要用 Shizuku 生态，**先卸载 OneKuku** 再装 OneLink，别两条一起留着
 
 ---
 
@@ -71,42 +72,213 @@
 
 | 对外名称 | 包名 | 特权通道 | 最新版下载 |
 |---|---|---|---|
-| **OneIms · OneKuku** `3.3.6-onekuku` | `com.oneims.app` | 内嵌 OneBridge + 无线调试配对 | [OneIms-OneKuku-standalone-3.3.6.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.3.6/OneIms-OneKuku-standalone-3.3.6.apk) |
-| **OneIms · OneIms Lite** `3.3.6-onelink` | `com.oneims.onelink` | 官方 Shizuku | [OneIms-Lite-Shizuku-3.3.6.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.3.6/OneIms-Lite-Shizuku-3.3.6.apk) |
+| **OneIms Ultra · OneKuku** `1.1.8-onekuku` | `com.oneims.ultra` | 内嵌 OneBridge + 无线调试配对 | [OneIms-Ultra-OneKuku-standalone-1.1.8.apk](https://github.com/asrtroh-netizen/OneIms-Ultra-APK/releases/download/v1.1.8/OneIms-Ultra-OneKuku-standalone-1.1.8.apk) |
+| **OneIms Ultra · OneLink** `1.1.8-onelink` | `com.oneims.ultra.lite` | 官方 / asrtroh Shizuku | [OneIms-Ultra-OneLink-1.1.8.apk](https://github.com/asrtroh-netizen/OneIms-Ultra-APK/releases/download/v1.1.8/OneIms-Ultra-OneLink-1.1.8.apk) |
 
 > **双包同版号一起更新**；请只从本页 Release 链接下载，勿混装未知来源包。  
-> **两线二选一**：OneKuku 与 Shizuku（含 Lite）同机共存会抢权限，安装前请清掉另一条线。
+> **两线二选一**：OneKuku 与 Shizuku（含 OneLink）同机共存会抢权限，安装前请清掉另一条线。  
+> 免费版旧包名 `com.oneims.app` / `com.oneims.onelink` 与本 Ultra 线隔离，可同机并列；下方历史 changelog 里的「OneIms Lite / Lite-Shizuku」即今日 **OneLink**。
 
 ---
 
-## ✨ What's New · 3.3.6
+## ✨ What's New · 1.1.8
 
-* 📦 **安装包大幅瘦身**：开启代码压缩与混淆（R8），OneKuku 从 30.9 MB 降到 **9.1 MB**，OneIms Lite 从 21.3 MB 降到 **4.2 MB**。原生库与资源一个没少，缩掉的全是从未被裁剪过的死代码。
-* 🔐 沿用 3.3.5 的正式发布签名（证书指纹见页首）。
+* **独家页接回「身份识别」**：只改状态栏运营商显示名（可选 IMS UA），不碰基带真实归属；可一键恢复系统名
+* 写入走现有 CarrierConfig 特权路径，作用在当前选中的 SIM
+* **双卡下拉运营商名**：身份覆盖在漫游时仍亮 SPN（condition=2），避免 Pixel 通知栏只剩一张卡的名字
 
 ### 🔄 升级
 
-> ⚠️ **从 3.3.4 及更早版本升级**：那些版本是调试签名，Android 不允许跨签名覆盖，请**先卸载旧包再安装**；App 内的「下载并安装」在最后一步会失败，这是签名限制不是包坏了。卸载会清空本地设置与激活状态，请提前留好激活码。
-> ✅ **从 3.3.5 正式包升级**：签名相同，**直接覆盖安装即可，不用卸载、不丢数据**。
-
-* 🟢 OneKuku：`OneIms-OneKuku-standalone-3.3.6.apk`
-* 🔵 OneIms Lite：`OneIms-Lite-Shizuku-3.3.6.apk`
-* versionCode `107`
+* 🟢 OneKuku：覆盖安装 `OneIms-Ultra-OneKuku-standalone-1.1.8.apk`
+* 🔵 OneLink：覆盖安装 `OneIms-Ultra-OneLink-1.1.8.apk`
+* versionCode `121`（相对 1.1.7 的 `120` 会提示升级）
+* 制品仓：`asrtroh-netizen/OneIms-Ultra-APK`
 
 ---
 
-## ✨ What's New · 3.3.5
+## ✨ What's New · 1.1.7
 
-* 🔐 **改用正式发布签名**：此前公开包一直是调试签名（`application-debuggable` + `CN=Android Debug`，可被挂调试器读取应用数据），本次重新发布已换成正式签名，并给发布流程加了硬门禁——可调试或调试签名的产物一律拒绝上传。**代价是老用户必须卸载重装**，详见下方升级说明。
-* **Pixel · Android 15 能力页闪退修复**：Pixel + API 35+ 写入 CarrierConfig 时改为 temporary-first，避免能力页应用过程中被系统杀进程冷启；更低版本 Pixel 仍优先 persistent；开机重放保持配置。
+* **桌面标换新**：哑光黑底 + 实心白圆 + 细白环；冷启动闪屏跟标走，避免白标落在雾白底上看不见
+* **能力页模块回归**：增强区下方恢复高级显示 / 漫游开关与修复工具（重启 IMS、网络修复、国家 ISO、TikTok US 预设、强制临时、专家编辑）；APN 救急仍只在独家页
+* **选卡胶囊统一玻璃语言**：首页 / 能力 / 诊断共用同一套玻璃胶囊，选中主色 + 圆点
+* **独家页去金**：配色改回与其他页一致的 Glass + 主题色
 
 ### 🔄 升级
 
-> ⚠️ **本版换了签名，不能覆盖安装**：Android 拒绝跨签名升级。**包括早前下载过 3.3.5 的用户在内，所有老用户都要先卸载旧包、再安装本页新包**；应用内更新对旧包同样会失败。卸载会清空本地设置与激活状态，重装后需重新激活，请提前留好激活码。
+* 🟢 OneKuku：覆盖安装 `OneIms-Ultra-OneKuku-standalone-1.1.7.apk`
+* 🔵 OneLink：覆盖安装 `OneIms-Ultra-OneLink-1.1.7.apk`
+* versionCode `120`（相对 1.1.6 的 `119` 会提示升级）
+* 制品仓：`asrtroh-netizen/OneIms-Ultra-APK`
 
-* 🟢 OneKuku：**卸载旧包** → 安装 `OneIms-OneKuku-standalone-3.3.5.apk`
-* 🔵 OneIms Lite：**卸载旧包** → 安装 `OneIms-Lite-Shizuku-3.3.5.apk`
-* versionCode `106`（与早前那版 3.3.5 相同，App 内不会提示升级，请手动卸载重装）
+---
+
+## ✨ What's New · 1.1.4
+
+* **SIM 国家码覆盖回归「能力」页**：此前这项被迁去 OneTools，但 OneTools 是另一个独立 App，OneIMS 用户等于直接少了这个功能。现在回到「能力 → 修复工具」，点开是输入框 + 美国 / 日本 / 香港 / 台湾 / 英国 / 韩国 / 中国 / 新加坡 八个预设，列表行实时显示当前覆盖值。只改上层读到的国家码，不动基带 MCC/MNC，重启或点清除即恢复
+* **TikTok 常用预设（US）一键回归**：同一分组内一次点击覆盖为 US，带二次确认（它和上面写的是同一项配置，不是两套）
+* **清除失败不再谎报成功**：以前清除国家码覆盖时不检查特权写入结果，被系统拒绝也照样提示「已清除」并把界面上的当前值抹空。现在写入失败会如实报错，界面按回读的真实值刷新
+* **英文界面不再冒中文**：国家码相关提示、以及每次配置写入时那句「当前目标：卡X · 运营商」，此前是硬编码中文，英文机上不跟随系统语言。现已全部走资源串
+* 内部：`core` 目录 58 个平铺文件按业务域重组为 carrier / display / diagnostics / root / support / privilege 六个包；依赖版本收进 Gradle version catalog 统一管理。均为纯结构调整，不改任何运行逻辑
+
+### 🔄 升级
+
+* 🟢 OneKuku：覆盖安装 `OneIms-Ultra-OneKuku-standalone-1.1.4.apk`
+* 🔵 OneLink：覆盖安装 `OneIms-Ultra-OneLink-1.1.4.apk`
+* versionCode `117`（相对 1.1.3 的 `116` 会提示升级）
+* 制品仓：`asrtroh-netizen/OneIms-Ultra-APK`
+
+---
+
+## ✨ What's New · 1.1.3
+
+* **双卡恢复修复**：「一键恢复上次配置」与开机自动恢复现在会对**每张有记录的卡**分别重放核心 IMS（VoLTE / VoWiFi / VoNR / WFC 模式）。此前只恢复最后成功应用的那一张，双卡用户的另一张（含其信号格数调整）需要手动重设
+* **对抗系统重载配置**：新增运营商配置重载监听 —— 进入 `*#*#4636#*#*` 手机信息页等场景会让系统重载 CarrierConfig 并清空临时覆盖，现在能自动重放恢复。非 system app 无法写 `persistent=true`，属静默自愈而非根治
+* **Root 双线统一**（承接 1.1.2）：OneLink 与 OneKuku 一致暴露 Root 能力（ROOT 徽标 / 运营商写入 / 工具 / Root 开机自启 / 系统更新屏蔽），仅在设备真实探测到 Root 时显示；两线差异仅特权桥
+* 激活失败提示改为按服务端错误码分流的中文文案，不再把英文原文与 HTTP 状态码抛给用户
+* 诊断日志新增核心重放的目标卡记录，排查「只恢复一张卡」这类问题不必再靠猜
+
+### 🔄 升级
+
+* 🟢 OneKuku：覆盖安装 `OneIms-Ultra-OneKuku-standalone-1.1.3.apk`
+* 🔵 OneLink：覆盖安装 `OneIms-Ultra-OneLink-1.1.3.apk`
+* versionCode `116`（相对 1.1.2 的 `115` 会提示升级）
+* 制品仓：`asrtroh-netizen/OneIms-Ultra-APK`
+
+---
+
+## ✨ What's New · 1.0.34
+
+* 独家页黑金色板统一：弹层 / 页头 / Hero 与页内一致
+* 未激活引导与功能弹层同套黑金 Dialog
+* 双线同版齐发（覆盖 1.0.33）
+
+### 🔄 升级
+
+* 🟢 OneKuku：覆盖安装 `OneIms-Ultra-OneKuku-standalone-1.0.34.apk`
+* 🔵 OneLink：覆盖安装 `OneIms-Ultra-OneLink-1.0.34.apk`
+* versionCode `111`
+* 制品仓：`asrtroh-netizen/OneIms-Ultra-APK`
+
+---
+
+## ✨ What's New · 1.0.33
+
+* 强制临时写入改回行内开关，去掉说明文案
+* 首页标题略收、徽标缩小；其他页保持对齐免费版大标题
+* 双线同版齐发（覆盖 1.0.32）
+
+### 🔄 升级
+
+* 🟢 OneKuku：覆盖安装 `OneIms-Ultra-OneKuku-standalone-1.0.33.apk`
+* 🔵 OneLink：覆盖安装 `OneIms-Ultra-OneLink-1.0.33.apk`
+* versionCode `110`
+* 制品仓：`asrtroh-netizen/OneIms-Ultra-APK`
+
+---
+
+## ✨ What's New · 1.0.32
+
+* 页面标题字号与免费版对齐（headlineSmall / headlineLarge）
+* 独家弹窗容器与 APN 目录同一套 surface 语义色（不再黑金/米黄混搭）
+* 双线同版齐发（覆盖 1.0.31）
+
+### 🔄 升级
+
+* 🟢 OneKuku：覆盖安装 `OneIms-Ultra-OneKuku-standalone-1.0.32.apk`
+* 🔵 OneLink：覆盖安装 `OneIms-Ultra-OneLink-1.0.32.apk`
+* versionCode `109`
+* 制品仓：`asrtroh-netizen/OneIms-Ultra-APK`
+
+---
+
+## ✨ What's New · 1.0.31
+
+* 去掉激活页多余说明文案；设备绑定仍走静默指纹（序列号 + DRM + ANDROID_ID）
+* 双线同版齐发（覆盖 1.0.30）
+
+### 🔄 升级
+
+* 🟢 OneKuku：覆盖安装 `OneIms-Ultra-OneKuku-standalone-1.0.31.apk`
+* 🔵 OneLink：覆盖安装 `OneIms-Ultra-OneLink-1.0.31.apk`
+* versionCode `108`
+* 制品仓：`asrtroh-netizen/OneIms-Ultra-APK`
+
+---
+
+## ✨ What's New · 1.0.30
+
+* **设备绑定加固**：指纹 = 硬件序列号 + Widevine DRM ID + ANDROID_ID + 机型
+* **沿用 1.0.29 UI / 激活链路**
+* 双线同版齐发（覆盖 1.0.29）
+
+### 🔄 升级
+
+* 🟢 OneKuku：覆盖安装 `OneIms-Ultra-OneKuku-standalone-1.0.30.apk`
+* 🔵 OneLink：覆盖安装 `OneIms-Ultra-OneLink-1.0.30.apk`
+* versionCode `107`（相对 1.0.29 的 `106` 会提示升级）
+* 制品仓：`asrtroh-netizen/OneIms-Ultra-APK`（私有 Release）
+
+---
+
+## ✨ What's New · 1.0.29
+
+* **UI 收敛**：实验页退出主航；掉线守护默认关闭并收起入口；强制临时写入 / 专家编辑进「能力 → 修复工具」弹窗
+* **独家页统一**：Signal / 5G / 引导 / 快捷设置等与 APN 同款居中 Dialog
+* **设置归位**：Root 持久、开机相关与系统更新屏蔽迁到设置（按产品线显示）
+* **激活链路**：HTTPS 校验 + 正式签；飞牛定时拉取阿里云激活状态（无需飞牛公网）
+* 双线同版齐发（覆盖 1.0.2）
+
+### 🔄 升级
+
+* 🟢 OneKuku：覆盖安装 `OneIms-Ultra-OneKuku-standalone-1.0.29.apk`
+* 🔵 OneLink：覆盖安装 `OneIms-Ultra-OneLink-1.0.29.apk`
+* versionCode `106`（相对 1.0.2 的 `105` 会提示升级）
+* 制品仓：`asrtroh-netizen/OneIms-Ultra-APK`（私有 Release）
+
+---
+
+## ✨ What's New · 3.3.2
+
+* **5G 开关修复**：应用核心能力时，在保留现有网络制式选择的基础上补启用 NR，不再只写 CarrierConfig 后仍被用户网络制式掩码拦住
+* **实验功能收敛**：OneIMS 统一使用“实验功能”语义；身份显示覆盖与 SIM 国家码覆盖迁移至 **OneTools → 特色功能**，OneIMS 不再保留重复写入与恢复入口
+* 双线同版齐发（覆盖 3.3.1）
+
+### 🔄 升级
+
+* 🟢 OneKuku：覆盖安装 `OneIms-Ultra-OneKuku-standalone-3.3.2.apk`
+* 🔵 OneLink：覆盖安装 `OneIms-Ultra-OneLink-3.3.2.apk`
+* versionCode `102`（相对 3.3.1 的 `101` 会提示升级）
+
+> 以下历史条目仍保留旧资产名（`OneIms-OneKuku-standalone-*.apk` / `OneIms-Lite-Shizuku-*.apk` /「OneIms Lite」）；**现行名称**为 `OneIms-Ultra-OneKuku-standalone-*.apk` 与 `OneIms-Ultra-OneLink-*.apk`（产品线 OneLink）。
+
+---
+
+## ✨ What's New · 3.3.1
+
+* **Root 开机自启**：仅在持久/永久 Root（Magisk / KernelSU / 系统 su）时显示；临时 Root 不再露出该开关（避免重启即丢却还能开「开机拉起」的误导）
+* 临时 Root 下仍保留运营商写入 / 临时 Root 工具区与 ROOT 徽标（琥珀）
+* 双线同版齐发（覆盖 3.3.0）
+
+### 🔄 升级
+
+* 🟢 OneKuku：覆盖安装 `OneIms-OneKuku-standalone-3.3.1.apk`
+* 🔵 OneIms Lite：覆盖安装 `OneIms-Lite-Shizuku-3.3.1.apk`
+* versionCode `101`（相对 3.3.0 的 `100` 会提示升级）
+
+---
+
+## ✨ What's New · 3.3.0
+
+* **写入运营商与我的设置**：无 carrierconfig 时可按当前 SIM 自动创建；系统清空 ICCID 时从 `telephony.db` 回退
+* 已是目标态时不再误报「参考失败」；结果改成人话，并弹出进度（波浪条）+ 结果窗
+* **支持页**：一点「打开微信」跳进微信，赞助码同步存相册（扫一扫→相册兜底）
+* 配套临时 Root / OneRoot 链路体验与文案继续打磨（双线同版齐发）
+
+### 🔄 升级
+
+* 🟢 OneKuku：覆盖安装 `OneIms-OneKuku-standalone-3.3.0.apk`
+* 🔵 OneIms Lite：覆盖安装 `OneIms-Lite-Shizuku-3.3.0.apk`
+* versionCode `100`（相对 3.2.0 的 `90` 会提示升级）
 
 ---
 
