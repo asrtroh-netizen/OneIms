@@ -14,20 +14,20 @@
 
 <br/>
 
-### ⬇️ 下载 APK（最新 · v3.3.6 · 请自选产品线）
+### ⬇️ 下载 APK（最新 · v3.3.8 · 请自选产品线）
 
 > **两个包功能相同（IMS/诊断/恢复），差别只在「特权通道怎么激活」——看下方选购指南，务必只装其中一个。**  
 > ⚠️ **不要同机共存**：OneKuku 内嵌通道会与 Shizuku **抢权限 / 抢 binder**，双开容易互相踩脚、激活失败或反复掉线。换线请先卸载当前包再装另一条。
 
 > 🔐 **3.3.5 起改用正式签名 · 老用户必读**：此前所有公开包都是**调试签名**（`CN=Android Debug`，可被挂调试器读取应用数据）。Android 不允许跨签名覆盖安装，因此**装过 3.3.4 及更早版本的用户都必须先卸载旧包、再安装新包**；直接覆盖会以 `INSTALL_FAILED_UPDATE_INCOMPATIBLE` 失败。  
-> ⚠️ **旧版 App 内的「检查更新」会提示 3.3.6，但点「下载并安装」在最后一步必然失败**——这是签名限制、不是包坏了。请按上面的说法手动卸载重装。已经装了 3.3.5 正式包的用户可以直接覆盖安装 3.3.6，无需卸载。
+> ⚠️ **旧版 App 内的「检查更新」会提示 3.3.8，但点「下载并安装」在最后一步必然失败**——这是签名限制、不是包坏了。请按上面的说法手动卸载重装。已经装了 3.3.5 及之后正式包的用户可以直接覆盖安装 3.3.8，无需卸载。
 
 | 推荐给… | 包 | 下载 |
 |---|---|---|
-| 🟢 **想少装 App、App 内一键配对** | **OneKuku（独立激活）** | [OneIms-OneKuku-standalone-3.3.6.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.3.6/OneIms-OneKuku-standalone-3.3.6.apk) |
-| 🔵 **已有 / 想用 Shizuku 轻壳** | **OneIms Lite（Shizuku）** | [OneIms-Lite-Shizuku-3.3.6.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.3.6/OneIms-Lite-Shizuku-3.3.6.apk) |
+| 🟢 **想少装 App、App 内一键配对** | **OneKuku（独立激活）** | [OneIms-OneKuku-standalone-3.3.8.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.3.8/OneIms-OneKuku-standalone-3.3.8.apk) |
+| 🔵 **已有 / 想用 Shizuku 轻壳** | **OneIms Lite（Shizuku）** | [OneIms-Lite-Shizuku-3.3.8.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.3.8/OneIms-Lite-Shizuku-3.3.8.apk) |
 
-[📦 全部 Release 资产](https://github.com/asrtroh-netizen/OneIms/releases/tag/v3.3.6)
+[📦 全部 Release 资产](https://github.com/asrtroh-netizen/OneIms/releases/tag/v3.3.8)
 
 > 💙 **友情推荐特权通道**：[asrtroh 修缮版 Shizuku](https://github.com/asrtroh-netizen/shizuku)（配对一次 · 旧 Wi‑Fi 自连 · 开机 FGS 内激活）  
 > 下载正式包：[Releases](https://github.com/asrtroh-netizen/shizuku/releases) · 截图：
@@ -71,11 +71,41 @@
 
 | 对外名称 | 包名 | 特权通道 | 最新版下载 |
 |---|---|---|---|
-| **OneIms · OneKuku** `3.3.6-onekuku` | `com.oneims.app` | 内嵌 OneBridge + 无线调试配对 | [OneIms-OneKuku-standalone-3.3.6.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.3.6/OneIms-OneKuku-standalone-3.3.6.apk) |
-| **OneIms · OneIms Lite** `3.3.6-onelink` | `com.oneims.onelink` | 官方 Shizuku | [OneIms-Lite-Shizuku-3.3.6.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.3.6/OneIms-Lite-Shizuku-3.3.6.apk) |
+| **OneIms · OneKuku** `3.3.8-onekuku` | `com.oneims.app` | 内嵌 OneBridge + 无线调试配对 | [OneIms-OneKuku-standalone-3.3.8.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.3.8/OneIms-OneKuku-standalone-3.3.8.apk) |
+| **OneIms · OneIms Lite** `3.3.8-onelink` | `com.oneims.onelink` | 官方 Shizuku | [OneIms-Lite-Shizuku-3.3.8.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.3.8/OneIms-Lite-Shizuku-3.3.8.apk) |
 
 > **双包同版号一起更新**；请只从本页 Release 链接下载，勿混装未知来源包。  
 > **两线二选一**：OneKuku 与 Shizuku（含 Lite）同机共存会抢权限，安装前请清掉另一条线。
+
+---
+
+## ✨ What's New · 3.3.8
+
+* 🫧 **底栏液态玻璃**：悬浮导航岛改用 [Kyant Backdrop](https://github.com/Kyant0/AndroidLiquidGlass) 取样页面背景（轻模糊 + 透镜 + 可读性罩）。列表卡 / 状态 Hero / 宫格仍不透明，避免满屏磨砂。
+* 大屏侧栏保持实色；Android 12 无透镜、只保留模糊（库行为）。
+
+### 🔄 升级
+
+> ✅ **从 3.3.5 及之后正式包升级**：签名相同，**直接覆盖安装即可，不用卸载、不丢数据**。
+> ⚠️ **从 3.3.4 及更早版本升级**：那些版本是调试签名，请**先卸载旧包再安装**。
+
+* 🟢 OneKuku：覆盖安装 `OneIms-OneKuku-standalone-3.3.8.apk`
+* 🔵 OneIms Lite：覆盖安装 `OneIms-Lite-Shizuku-3.3.8.apk`
+* versionCode `109`（相对 3.3.7 的 `108` 会提示升级）
+
+---
+
+## ✨ What's New · 3.3.7
+
+* OneKuku：读卡 / 选卡特权回退修复
+* OneLink：版本号追平（无功能更新）
+* 继续 R8 压缩正式包
+
+### 🔄 升级
+
+* 🟢 OneKuku：覆盖安装 `OneIms-OneKuku-standalone-3.3.7.apk`
+* 🔵 OneIms Lite：覆盖安装 `OneIms-Lite-Shizuku-3.3.7.apk`
+* versionCode `108`
 
 ---
 
