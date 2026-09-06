@@ -14,20 +14,20 @@
 
 <br/>
 
-### ⬇️ 下载 APK（最新 · v3.3.12 · 请自选产品线）
+### ⬇️ 下载 APK（最新 · v3.4.0 · 请自选产品线）
 
 > **两个包功能相同（IMS/诊断/恢复），差别只在「特权通道怎么激活」——看下方选购指南，务必只装其中一个。**  
 > ⚠️ **不要同机共存**：OneKuku 内嵌通道会与 Shizuku **抢权限 / 抢 binder**，双开容易互相踩脚、激活失败或反复掉线。换线请先卸载当前包再装另一条。
 
 > 🔐 **3.3.5 起改用正式签名 · 老用户必读**：此前所有公开包都是**调试签名**（`CN=Android Debug`，可被挂调试器读取应用数据）。Android 不允许跨签名覆盖安装，因此**装过 3.3.4 及更早版本的用户都必须先卸载旧包、再安装新包**；直接覆盖会以 `INSTALL_FAILED_UPDATE_INCOMPATIBLE` 失败。  
-> ⚠️ **旧版 App 内的「检查更新」会提示 3.3.12，但点「下载并安装」在最后一步必然失败**——这是签名限制、不是包坏了。请按上面的说法手动卸载重装。已经装了 3.3.5 及之后正式包的用户可以直接覆盖安装 3.3.12，无需卸载。
+> ⚠️ **旧版 App 内的「检查更新」会提示新版本，但点「下载并安装」在最后一步必然失败**——这是签名限制、不是包坏了。请按上面的说法手动卸载重装。已经装了 3.3.5 及之后正式包的用户可以直接覆盖安装 3.4.0，无需卸载。
 
 | 推荐给… | 包 | 下载 |
 |---|---|---|
-| 🟢 **想少装 App、App 内一键配对** | **OneKuku（独立激活）** | [OneIms-OneKuku-standalone-3.3.12.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.3.12/OneIms-OneKuku-standalone-3.3.12.apk) |
-| 🔵 **已有 / 想用 Shizuku 轻壳** | **OneIms Lite（Shizuku）** | [OneIms-Lite-Shizuku-3.3.12.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.3.12/OneIms-Lite-Shizuku-3.3.12.apk) |
+| 🟢 **想少装 App、App 内一键配对** | **OneKuku（独立激活）** | [OneIms-OneKuku-standalone-3.4.0.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.4.0/OneIms-OneKuku-standalone-3.4.0.apk) |
+| 🔵 **已有 / 想用 Shizuku 轻壳** | **OneIms Lite（Shizuku）** | [OneIms-Lite-Shizuku-3.4.0.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.4.0/OneIms-Lite-Shizuku-3.4.0.apk) |
 
-[📦 全部 Release 资产](https://github.com/asrtroh-netizen/OneIms/releases/tag/v3.3.12)
+[📦 全部 Release 资产](https://github.com/asrtroh-netizen/OneIms/releases/tag/v3.4.0)
 
 > 💙 **友情推荐特权通道**：[asrtroh 修缮版 Shizuku](https://github.com/asrtroh-netizen/shizuku)（配对一次 · 旧 Wi‑Fi 自连 · 开机 FGS 内激活）  
 > 下载正式包：[Releases](https://github.com/asrtroh-netizen/shizuku/releases) · 截图：
@@ -71,11 +71,28 @@
 
 | 对外名称 | 包名 | 特权通道 | 最新版下载 |
 |---|---|---|---|
-| **OneIms · OneKuku** `3.3.12-onekuku` | `com.oneims.app` | 内嵌 OneBridge + 无线调试配对 | [OneIms-OneKuku-standalone-3.3.12.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.3.12/OneIms-OneKuku-standalone-3.3.12.apk) |
-| **OneIms · OneIms Lite** `3.3.12-onelink` | `com.oneims.onelink` | 官方 Shizuku | [OneIms-Lite-Shizuku-3.3.12.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.3.12/OneIms-Lite-Shizuku-3.3.12.apk) |
+| **OneIms · OneKuku** `3.4.0-onekuku` | `com.oneims.app` | 内嵌 OneBridge + 无线调试配对 | [OneIms-OneKuku-standalone-3.4.0.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.4.0/OneIms-OneKuku-standalone-3.4.0.apk) |
+| **OneIms · OneIms Lite** `3.4.0-onelink` | `com.oneims.onelink` | 官方 Shizuku | [OneIms-Lite-Shizuku-3.4.0.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.4.0/OneIms-Lite-Shizuku-3.4.0.apk) |
 
 > **双包同版号一起更新**；请只从本页 Release 链接下载，勿混装未知来源包。  
 > **两线二选一**：OneKuku 与 Shizuku（含 Lite）同机共存会抢权限，安装前请清掉另一条线。
+
+---
+
+## ✨ What's New · 3.4.0
+
+* 🎯 **面向 Android 17**：`targetSdk` 升到 37（与 `compileSdk` 对齐）。开机前台服务仍走 `specialUse`；16KB 页对齐已按 Pixel 新机要求打好。
+* 🟢 **OneKuku**：无 shell-uid 时不再用 App UID 空跑 `cmd phone`；开 NR 第三级改走类型化 phone 命令（旧 Bridge 会软失败提示，而不是假装成功）。
+* 🔵 **OneIms Lite**：同版号同步；Sui 授权框冷却仍沿用 3.3.12 的修复。
+
+### 🔄 升级
+
+> ✅ **从 3.3.5 及之后正式包升级**：签名相同，**直接覆盖安装即可，不用卸载、不丢数据**。
+> ⚠️ **从 3.3.4 及更早版本升级**：那些版本是调试签名，请**先卸载旧包再安装**。
+
+* 🟢 OneKuku：覆盖安装 `OneIms-OneKuku-standalone-3.4.0.apk`
+* 🔵 OneIms Lite：覆盖安装 `OneIms-Lite-Shizuku-3.4.0.apk`
+* versionCode `114`（相对 3.3.12 的 `113` 会提示升级）
 
 ---
 
@@ -177,7 +194,7 @@
 
 ### 🔄 升级
 
-> ⚠️ **从 3.3.4 及更早版本升级**：那些版本是调试签名，Android 不允许跨签名覆盖，请**先卸载旧包再安装**；App 内的「下载并安装」在最后一步会失败，这是签名限制不是包坏了。卸载会清空本地设置与激活状态，请提前留好激活码。
+> ⚠️ **从 3.3.4 及更早版本升级**：那些版本是调试签名，Android 不允许跨签名覆盖，请**先卸载旧包再安装**；App 内的「下载并安装」在最后一步会失败，这是签名限制不是包坏了。卸载会清空本地设置，重装后需重新应用方案。
 > ✅ **从 3.3.5 正式包升级**：签名相同，**直接覆盖安装即可，不用卸载、不丢数据**。
 
 * 🟢 OneKuku：`OneIms-OneKuku-standalone-3.3.6.apk`
@@ -193,7 +210,7 @@
 
 ### 🔄 升级
 
-> ⚠️ **本版换了签名，不能覆盖安装**：Android 拒绝跨签名升级。**包括早前下载过 3.3.5 的用户在内，所有老用户都要先卸载旧包、再安装本页新包**；应用内更新对旧包同样会失败。卸载会清空本地设置与激活状态，重装后需重新激活，请提前留好激活码。
+> ⚠️ **本版换了签名，不能覆盖安装**：Android 拒绝跨签名升级。**包括早前下载过 3.3.5 的用户在内，所有老用户都要先卸载旧包、再安装本页新包**；应用内更新对旧包同样会失败。卸载会清空本地设置，重装后需重新应用方案。
 
 * 🟢 OneKuku：**卸载旧包** → 安装 `OneIms-OneKuku-standalone-3.3.5.apk`
 * 🔵 OneIms Lite：**卸载旧包** → 安装 `OneIms-Lite-Shizuku-3.3.5.apk`
