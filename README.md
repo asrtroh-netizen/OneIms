@@ -8,24 +8,25 @@
 
 <div align="center">
 
-**VoLTE · VoWiFi · VoNR · OneKuku · IMS 诊断 · CarrierConfig · Android 16/17**
+**VoLTE · VoWiFi · VoNR · OneIms Lite · IMS 诊断 · CarrierConfig · Android 16/17**
 
 📱 [Telegram · OneBoardX](https://t.me/OneBoardX)
 
 <br/>
 
-### ⬇️ 下载 APK（最新 · v3.4.0 · 请自选产品线）
+### ⬇️ 下载 APK（最新 · v3.4.0 · 现行产品 = OneIms Lite）
 
-> **两个包功能相同（IMS/诊断/恢复），差别只在「特权通道怎么激活」——看下方选购指南，务必只装其中一个。**  
-> ⚠️ **不要同机共存**：OneKuku 内嵌通道会与 Shizuku **抢权限 / 抢 binder**，双开容易互相踩脚、激活失败或反复掉线。换线请先卸载当前包再装另一条。
+> **OneKuku 已于 2026-09-08 封存停更**：不再修、不再发新包。已装 3.4.0 的用户可以继续用最后一版；新用户与后续更新请只用 **OneIms Lite**（外置 Shizuku）。
+>
+> ⚠️ **不要同机共存**：封存中的 OneKuku 内嵌通道仍会与 Shizuku **抢权限 / 抢 binder**。换线请先卸载当前包再装另一条。
 
 > 🔐 **3.3.5 起改用正式签名 · 老用户必读**：此前所有公开包都是**调试签名**（`CN=Android Debug`，可被挂调试器读取应用数据）。Android 不允许跨签名覆盖安装，因此**装过 3.3.4 及更早版本的用户都必须先卸载旧包、再安装新包**；直接覆盖会以 `INSTALL_FAILED_UPDATE_INCOMPATIBLE` 失败。  
 > ⚠️ **旧版 App 内的「检查更新」会提示新版本，但点「下载并安装」在最后一步必然失败**——这是签名限制、不是包坏了。请按上面的说法手动卸载重装。已经装了 3.3.5 及之后正式包的用户可以直接覆盖安装 3.4.0，无需卸载。
 
 | 推荐给… | 包 | 下载 |
 |---|---|---|
-| 🟢 **想少装 App、App 内一键配对** | **OneKuku（独立激活）** | [OneIms-OneKuku-standalone-3.4.0.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.4.0/OneIms-OneKuku-standalone-3.4.0.apk) |
-| 🔵 **已有 / 想用 Shizuku 轻壳** | **OneIms Lite（Shizuku）** | [OneIms-Lite-Shizuku-3.4.0.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.4.0/OneIms-Lite-Shizuku-3.4.0.apk) |
+| 🔵 **现行产品 · 配 Shizuku** | **OneIms Lite（Shizuku）** | [OneIms-Lite-Shizuku-3.4.0.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.4.0/OneIms-Lite-Shizuku-3.4.0.apk) |
+| ⚪ **封存停更 · 仅存量** | **OneKuku 3.4.0（最后一版）** | [OneIms-OneKuku-standalone-3.4.0.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.4.0/OneIms-OneKuku-standalone-3.4.0.apk) |
 
 [📦 全部 Release 资产](https://github.com/asrtroh-netizen/OneIms/releases/tag/v3.4.0)
 
@@ -33,8 +34,6 @@
 > 下载正式包：[Releases](https://github.com/asrtroh-netizen/shizuku/releases) · 截图：
 >
 > <img src="docs/screenshots/shizuku-asrtroh-home-active.png" alt="asrtroh Shizuku Active" width="280" />
->
-> 
 >
 > 装 **OneIms Lite** 时按上表选包；装完请关掉电池优化，保持首页 **Active**。上游能力仍归 [RikkaApps/Shizuku](https://github.com/RikkaApps/Shizuku)。
 
@@ -45,37 +44,37 @@
 
 ---
 
-## 🧭 怎么选？OneKuku vs OneLink
+## 🧭 现行产品：OneIms Lite（OneKuku 已封存）
 
-两个 APK **业务功能一致**（VoLTE/VoWiFi/诊断/恢复/修复工具），区别只在 **特权通道** 怎么获得：
+**以后只维护 OneIms Lite。** IMS / 诊断 / 恢复功能仍在这一条线上；特权通道走外置 Shizuku。
 
-| | **OneKuku（独立激活）** | **OneIms Lite（Shizuku）** |
+| | **OneIms Lite（现行）** | **OneKuku（封存 · 3.4.0 最后一版）** |
 |---|---|---|
-| **推荐机型** | **Pixel 绝配** | **国产机绝配** |
-| **适合谁** | 不想另外装 Shizuku；希望 **App 内无线调试 + 通知栏填码** 一条龙 | 已熟悉 Shizuku；想要 **更小安装包、更轻壳** |
-| **包名** | `com.oneims.app` | `com.oneims.onelink` |
-| **激活方式** | 内嵌 OneBridge · 无线调试配对 · 可通知栏六位码 | **推荐搭配** [asrtroh 修缮版 Shizuku](https://github.com/asrtroh-netizen/shizuku)（开机自启更稳）；也可使用官方 [RikkaApps/Shizuku](https://shizuku.rikka.app/) |
-| **额外依赖** | 无（通道打进包内） | 需安装 Shizuku；日常保持 **Active** 即可 |
-| **体积** | 较大（含内嵌 ADB/Bridge） | 较小 |
-| **同机共存** | ❌ **不建议**与 Lite / 独立 Shizuku 同机 | ❌ **不建议**与 OneKuku 同机（会抢权限） |
+| **状态** | 继续更新 | **停更**，源码只读，不再发新包 |
+| **适合谁** | 所有新用户；已熟悉 / 愿意装 Shizuku | 仅存量用户暂时继续用最后一版 |
+| **包名** | `com.oneims.onelink` | `com.oneims.app` |
+| **激活方式** | **推荐搭配** [asrtroh 修缮版 Shizuku](https://github.com/asrtroh-netizen/shizuku)（开机自启更稳）；也可使用官方 [RikkaApps/Shizuku](https://shizuku.rikka.app/) | 内嵌 OneBridge · 无线调试配对（不再维护） |
+| **额外依赖** | 需安装 Shizuku；日常保持 **Active** | 无 |
+| **同机共存** | ❌ 不要与封存的 OneKuku 同机 | ❌ 不要与 Lite / Shizuku 同机 |
 
-**怎么选（一句话）：**
-
-* 你是 **「我只想在一个 App 里搞定」** → 下 **OneKuku（独立激活）**（请卸掉本机 Shizuku / Lite）
-* 你是 **「我手机本来就有 / 想用 Shizuku」** → 下 **OneIms Lite** + **[asrtroh Shizuku](https://github.com/asrtroh-netizen/shizuku/releases)**（请先卸掉 OneKuku）
-* 不确定 → 先试 **OneKuku**；若要用 Shizuku 生态，**先卸载 OneKuku** 再装 Lite，别两条一起留着
+**怎么选（一句话）：** 下 **OneIms Lite** + **[asrtroh Shizuku](https://github.com/asrtroh-netizen/shizuku/releases)**。若机上还有 OneKuku，**先卸载再装 Lite**。
 
 ---
 
-## 📦 双版本产品线（备注）
+## 📦 产品线
 
-| 对外名称 | 包名 | 特权通道 | 最新版下载 |
-|---|---|---|---|
-| **OneIms · OneKuku** `3.4.0-onekuku` | `com.oneims.app` | 内嵌 OneBridge + 无线调试配对 | [OneIms-OneKuku-standalone-3.4.0.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.4.0/OneIms-OneKuku-standalone-3.4.0.apk) |
-| **OneIms · OneIms Lite** `3.4.0-onelink` | `com.oneims.onelink` | 官方 Shizuku | [OneIms-Lite-Shizuku-3.4.0.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.4.0/OneIms-Lite-Shizuku-3.4.0.apk) |
+| 对外名称 | 包名 | 特权通道 | 状态 | 下载 |
+|---|---|---|---|---|
+| **OneIms Lite** `3.4.0-onelink` | `com.oneims.onelink` | 官方 / asrtroh Shizuku | **现行维护** | [OneIms-Lite-Shizuku-3.4.0.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.4.0/OneIms-Lite-Shizuku-3.4.0.apk) |
+| OneKuku `3.4.0-onekuku` | `com.oneims.app` | 内嵌 OneBridge | **2026-09-08 封存停更** | [最后一版 3.4.0](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.4.0/OneIms-OneKuku-standalone-3.4.0.apk) |
 
-> **双包同版号一起更新**；请只从本页 Release 链接下载，勿混装未知来源包。  
-> **两线二选一**：OneKuku 与 Shizuku（含 Lite）同机共存会抢权限，安装前请清掉另一条线。
+> 请只从本页 Release 链接下载。OneKuku 与 Shizuku（含 Lite）同机共存会抢权限。
+
+---
+
+## 📢 2026-09-08 · OneKuku 封存停更
+
+从即日起 **只维护 OneIms Lite**。OneKuku 以 **3.4.0 为最后一版**，不再修、不再发新包。已装 OneKuku 的用户可以继续用；要跟后续更新请卸载后改装 Lite，并搭配 Shizuku。
 
 ---
 
@@ -90,8 +89,8 @@
 > ✅ **从 3.3.5 及之后正式包升级**：签名相同，**直接覆盖安装即可，不用卸载、不丢数据**。
 > ⚠️ **从 3.3.4 及更早版本升级**：那些版本是调试签名，请**先卸载旧包再安装**。
 
-* 🟢 OneKuku：覆盖安装 `OneIms-OneKuku-standalone-3.4.0.apk`
-* 🔵 OneIms Lite：覆盖安装 `OneIms-Lite-Shizuku-3.4.0.apk`
+* 🟢 OneKuku：覆盖安装 `OneIms-OneKuku-standalone-3.4.0.apk`（**最后一版**，之后不再更新）
+* 🔵 OneIms Lite：覆盖安装 `OneIms-Lite-Shizuku-3.4.0.apk`（现行产品）
 * versionCode `114`（相对 3.3.12 的 `113` 会提示升级）
 
 ---
@@ -717,7 +716,7 @@ OneIms 的规矩：
 
 > VoWiFi 可以晚点研究，电话不能失踪。😂
 
-另外：CarrierConfig 覆盖默认 `persistent=false`——配错重启也有机会自愈。
+另外：CarrierConfig 覆盖优先 `persistent=true`（权限不足或 Pixel · Android 15+ 等机型自动回退 `persistent=false`）——持久成功的机型重启后配置仍在，配错请用首页「一键还原」；回退临时覆盖的机型重启即自愈，开机再由重放补回。
 
 ---
 
