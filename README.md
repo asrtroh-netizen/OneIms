@@ -14,21 +14,21 @@
 
 <br/>
 
-### ⬇️ 下载 APK（最新 · v3.5.3 · 现行产品 = OneIms Lite）
+### ⬇️ 下载 APK（最新 · v3.5.4 · 现行产品 = OneIms Lite）
 
 > **OneKuku 已于 2026-09-08 封存停更**：不再修、不再发新包。已装 3.4.0 的用户可以继续用最后一版；新用户与后续更新请只用 **OneIms Lite**（外置 Shizuku）。
 >
 > ⚠️ **不要同机共存**：封存中的 OneKuku 内嵌通道仍会与 Shizuku **抢权限 / 抢 binder**。换线请先卸载当前包再装另一条。
 
 > 🔐 **3.3.5 起改用正式签名 · 老用户必读**：此前所有公开包都是**调试签名**（`CN=Android Debug`，可被挂调试器读取应用数据）。Android 不允许跨签名覆盖安装，因此**装过 3.3.4 及更早版本的用户都必须先卸载旧包、再安装新包**；直接覆盖会以 `INSTALL_FAILED_UPDATE_INCOMPATIBLE` 失败。  
-> ⚠️ **旧版 App 内的「检查更新」会提示新版本，但点「下载并安装」在最后一步必然失败**——这是签名限制、不是包坏了。请按上面的说法手动卸载重装。已经装了 3.3.5 及之后正式包的用户可以直接覆盖安装 3.5.3，无需卸载。
+> ⚠️ **旧版 App 内的「检查更新」会提示新版本，但点「下载并安装」在最后一步必然失败**——这是签名限制、不是包坏了。请按上面的说法手动卸载重装。已经装了 3.3.5 及之后正式包的用户可以直接覆盖安装 3.5.4，无需卸载。
 
 | 推荐给… | 包 | 下载 |
 |---|---|---|
-| 🔵 **现行产品 · 配 Shizuku** | **OneIms Lite（Shizuku）** | [OneIms-Lite-Shizuku-3.5.3.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.5.3/OneIms-Lite-Shizuku-3.5.3.apk) |
+| 🔵 **现行产品 · 配 Shizuku** | **OneIms Lite（Shizuku）** | [OneIms-Lite-Shizuku-3.5.4.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.5.4/OneIms-Lite-Shizuku-3.5.4.apk) |
 | ⚪ **封存停更 · 仅存量** | **OneKuku 3.4.0（最后一版）** | [OneIms-OneKuku-standalone-3.4.0.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.4.0/OneIms-OneKuku-standalone-3.4.0.apk) |
 
-[📦 Lite 本版 Release](https://github.com/asrtroh-netizen/OneIms/releases/tag/v3.5.3) · [OneKuku 最后一版仍在 v3.4.0](https://github.com/asrtroh-netizen/OneIms/releases/tag/v3.4.0)
+[📦 Lite 本版 Release](https://github.com/asrtroh-netizen/OneIms/releases/tag/v3.5.4) · [OneKuku 最后一版仍在 v3.4.0](https://github.com/asrtroh-netizen/OneIms/releases/tag/v3.4.0)
 
 > 💙 **友情推荐特权通道**：[asrtroh 修缮版 Shizuku](https://github.com/asrtroh-netizen/shizuku)（配对一次 · 旧 Wi‑Fi 自连 · 开机 FGS 内激活）  
 > 下载正式包：[Releases](https://github.com/asrtroh-netizen/shizuku/releases) · 截图：
@@ -65,7 +65,7 @@
 
 | 对外名称 | 包名 | 特权通道 | 状态 | 下载 |
 |---|---|---|---|---|
-| **OneIms Lite** `3.5.3-onelink` | `com.oneims.onelink` | 官方 / asrtroh Shizuku | **现行维护** | [OneIms-Lite-Shizuku-3.5.3.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.5.3/OneIms-Lite-Shizuku-3.5.3.apk) |
+| **OneIms Lite** `3.5.4-onelink` | `com.oneims.onelink` | 官方 / asrtroh Shizuku | **现行维护** | [OneIms-Lite-Shizuku-3.5.4.apk](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.5.4/OneIms-Lite-Shizuku-3.5.4.apk) |
 | OneKuku `3.4.0-onekuku` | `com.oneims.app` | 内嵌 OneBridge | **2026-09-08 封存停更** | [最后一版 3.4.0](https://github.com/asrtroh-netizen/OneIms/releases/download/v3.4.0/OneIms-OneKuku-standalone-3.4.0.apk) |
 
 > 请只从本页 Release 链接下载。OneKuku 与 Shizuku（含 Lite）同机共存会抢权限。
@@ -74,7 +74,16 @@
 
 ## 📢 2026-09-08 · OneKuku 封存停更
 
-从即日起 **只维护 OneIms Lite**（本页最新包 **3.5.3**）。OneKuku 以 **3.4.0 为最后一版**，不再修、不再发新包。已装 OneKuku 的用户可以继续用；要跟后续更新请卸载后改装 Lite，并搭配 Shizuku。
+从即日起 **只维护 OneIms Lite**（本页最新包 **3.5.4**）。OneKuku 以 **3.4.0 为最后一版**，不再修、不再发新包。已装 OneKuku 的用户可以继续用；要跟后续更新请卸载后改装 Lite，并搭配 Shizuku。
+
+---
+
+## ✨ What's New · 3.5.4
+
+- VoNR 和 5G NR 可以分别配置。应用推荐或开机重放时，只开启 VoNR 会保留原有的 5G 制式和系统 SIM 语音偏好。
+- 能力页分别显示选中卡的蜂窝和 IMS 注册状态。等待注册时会短暂复查，双卡的查询结果独立。诊断页和状态磁贴能区分注册中、已注册、未注册和未知。
+- 如开启 VoNR 后持续无服务，在首页选中受影响的 SIM，点恢复系统默认。需要关闭 VoNR 时，可勾选打开该卡系统设置的选项，在系统页面核对开关，再实测通话和移动数据。
+- OneIms Lite 3.5.4（versionCode 119）支持从 3.5.3 直接覆盖升级。
 
 ---
 
